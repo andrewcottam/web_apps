@@ -11,7 +11,7 @@ require({
 		parser.parse();
 		var taxongroup, language, servicesDomain, queryObject;
 		queryObject = ioQuery.queryToObject(win.doc.location.search.substring(1));
-		servicesDomain = (document.domain !== "andrewcottam.github.io") ? "http://dopa-services.jrc.it/services/h05ibex/especies/" : "http://dopa-services.jrc.ec.europa.eu/services/h05ibex/especies/";
+		servicesDomain = "http://dopa-services.jrc.ec.europa.eu/services/h05ibex/especies/";
 		setLanguage();
 		setTaxonGroup();
 		on(registry.byId("selectLanguage"), "change", function(value) {
