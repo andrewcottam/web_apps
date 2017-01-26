@@ -2,7 +2,7 @@ require({
 		async: true,
 		packages: [{
 			name: "widgets",
-			location: "/../widgets"
+			location: "/../../widgets"
 		}]
 	}, ["dijit/registry", "dojo/on", "widgets/ReferenceList", "dojo/parser", "dojo/ready", "dijit/form/TextBox"],
 	function(registry, on, ReferenceList, parser, ready) {
