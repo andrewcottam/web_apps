@@ -1,0 +1,19 @@
+<div class="floatBox" data-dojo-attach-event="onmouseout:mouseLeave">
+	<div data-dojo-type="dijit/layout/LayoutContainer" data-dojo-props="design:'sidebar'" id="layoutContainer">
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'top'" style="padding-bottom:10px">
+			${scientificName}
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'center'">
+			<div data-dojo-attach-point="mapAttachNode" class="map"></div>
+			<div style="padding:10px 0px 10px 0px">
+				${records.length} record(s) from GBIF:
+			</div>
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'bottom'">
+			<div class="grid">
+				<div data-dojo-attach-point="gridAttachNode"></div>
+			</div>
+		</div>
+	</div>
+</div>
+

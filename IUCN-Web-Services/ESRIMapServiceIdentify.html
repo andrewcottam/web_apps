@@ -1,0 +1,77 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>ESRI Map Service - Identify</title>
+        <link rel="stylesheet" type="text/css" href="default.css" />
+        <script src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.2" type="text/javascript">
+        </script>
+        <script src="http://code.jquery.com/jquery-1.5.min.js" type="text/javascript">
+        </script>
+        <script type="text/javascript">
+            var map, identifyParameters, identifyTask; //the ESRI map control
+            dojo.addOnLoad(init);
+            dojo.require("esri.tasks.identify");
+            function init(){ //called when the page is loaded
+                var startExtent = new esri.geometry.Extent(-14000000, -10000000, 14000000, 14000000, new esri.SpatialReference({
+                    wkid: 102100
+                })); //create the initial map extent
+                map = new esri.Map("mapDiv", {
+                    wrapAround180: true,
+                    extent: startExtent
+                }); //instantiate the map control
+                var basemapURL = "http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer"; //address of the ESRI road layer
+                var basemap = new esri.layers.ArcGISTiledMapServiceLayer(basemapURL); //create a new tiled layer
+                map.addLayer(basemap); //add it to the map
+                dojo.connect(map, "onLoad", function(){
+                    dojo.connect(map, "onMouseMove", showCoordinates);
+                });
+                identifyTask = new esri.tasks.IdentifyTask("http://79.125.16.106/ArcGIS/rest/services/IUCN/Species_WGS84/MapServer");
+                identifyParameters = new esri.tasks.IdentifyParameters();
+                identifyParameters.layerDefinitions = new Array();
+                identifyParameters.layerDefinitions[0] = "ID_NO IN ('2474','2475','2476','2477','2478')";
+                identifyParameters.tolerance = 3;
+                identifyParameters.height = map.height;
+                identifyParameters.width = map.width;
+                symbol = new esri.symbol.SimpleFillSymbol(esri.symbol.SimpleFillSymbol.STYLE_SOLID, new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([255, 0, 0]), 2), new dojo.Color([255, 255, 0, 0.25]));
+            }
+            
+            function showCoordinates(evt){
+                var mp = esri.geometry.webMercatorToGeographic(evt.mapPoint);
+                dojo.byId("info").innerHTML = "Lat: " + dojo.number.format(mp.x, {
+                    places: 2
+                }) + " Long: " + dojo.number.format(mp.y, {
+                    places: 2
+                });
+            }
+            
+            function doIdentify(evt){
+                map.graphics.clear();
+                identifyParameters.geometry = evt.mapPoint;
+                identifyParameters.mapExtent = map.extent;
+                identifyTask.execute(identifyParameters, function(idResults){
+                    jQuery.each(idResults, function(){
+                        jQuery('.matches').append(document.createTextNode(this.feature.attributes.BINOMIAL + ", "))
+                    });
+                });
+            }
+            
+            function enableIdentify(){
+                dojo.connect(map, "onClick", function(evt){
+                    doIdentify(evt);
+                });
+            }
+        </script>
+    </head>
+    <body class="claro">
+        <h1 id="title">Click enable Identify and then click on the map to get a species list</h1>
+        <div id="mapDiv" style="width:900px; height:600px; border:1px solid #000;margin-top:15px">
+        </div>
+        <span id="info"></span>
+        <div id="matches">
+        </div>
+        <button onclick="enableIdentify()">
+            Enable identify
+        </button>
+    </body>
+</html>

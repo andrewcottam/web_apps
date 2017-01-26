@@ -1,0 +1,91 @@
+html, body {
+	height: 100%;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	font-family: Arial;
+	font-size: 12px;
+	color: #333;
+	overflow: hidden;
+}
+
+h1 {
+	margin-top: 0.5em;
+	display: inline;
+}
+
+#container {
+	height: 100%;
+}
+
+#mapDiv {
+	width: 50%;
+}
+
+#controls {
+	height: 200px;
+}
+
+.controlBoxes {
+	display: inline-block;
+	width: 180px;
+	vertical-align: top;
+}
+
+.contentPane {
+	padding: 7px;
+	margin: 1px;
+	background-color: #f0f0f0;
+}
+
+.uiheader {
+	font-size: 17px;
+	padding-bottom: 10px;
+}
+
+.box, .flickrBox {
+	display: inline-block;
+	text-align: center;
+	margin: 6px;
+	padding: 4px 4px 3px 4px;
+	box-shadow: 3px 3px 3px #ddd;
+	-moz-box-shadow: 3px 3px 3px #ddd;
+	border: 1px solid #ddd;
+}
+
+.box {
+	max-width: 240px;
+}
+
+.flickrBox {
+	width: 150px;
+}
+
+.box:hover, .flickrBox:hover {
+	box-shadow: 3px 3px 3px #bbb;
+	-moz-box-shadow: 3px 3px 3px #bbb;
+	border: 1px solid #bbb;
+}
+
+.panoramioLink {
+	vertical-align: middle;
+	text-align: left;
+	margin: 3px;
+	text-decoration: none;
+}
+
+.middle {
+	vertical-align: middle;
+}
+
+#slider {
+	width: 60px;
+	margin: 15px 0px 15px 0px;
+}
+
+svg {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	pointer-events: none;
+}

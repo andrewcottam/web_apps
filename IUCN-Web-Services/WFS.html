@@ -1,0 +1,21 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Web Feature Service (WFS)</title>
+        <link rel="stylesheet" type="text/css" href="default.css" />
+        <script src="constants.js" type="text/javascript">
+        </script>
+    </head>
+    <body>
+        <h1>Web Feature Service (WFS) Example calls</h1>
+        <p>
+            Return the feature with the GML ID of 'F6__28751':
+        </p>
+        <a onclick="window.location='http://79.125.16.106/ArcGIS/services/IUCN_Secure/Species_WGS84/MapServer/WFSServer?request=GetFeature&featureid=SpeciesRangeMaps.F6__28751&token=' + token">http://79.125.16.106/ArcGIS/services/IUCN_Secure/Species_WGS84/MapServer/WFSServer?request=GetFeature&featureid=SpeciesRangeMaps.F6__28751...</a>
+        <p>
+            Return all features with the species ID_NO of '8541'. This uses the ogc:filter specification (this is urlencoded):
+        </p>
+        <a onclick="window.location='http://79.125.16.106/ArcGIS/services/IUCN_Secure/Species_WGS84/MapServer/WFSServer?request=GetFeature&typeName=SpeciesRangeMaps&filter=%3cogc%3aFilter%3e%3cogc%3aPropertyIsEqualTo%3e%3cogc%3aPropertyName%3eID_NO%3c%2fogc%3aPropertyName%3e%3cogc%3aLiteral%3e8541%3c%2fogc%3aLiteral%3e%3c%2fogc%3aPropertyIsEqualTo%3e%3c%2fogc%3aFilter%3e&token=' + token">http://79.125.16.106/ArcGIS/services/IUCN_Secure/Species_WGS84/MapServer/WFSServer?request=GetFeature&typeName=SpeciesRangeMaps&filter=...</a>
+    </body>
+</html>

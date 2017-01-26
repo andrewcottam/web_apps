@@ -1,0 +1,107 @@
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Attractive species gallery</title>
+		<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/dojo/1.8.1/dijit/themes/claro/claro.css" media="screen">
+		<link rel="stylesheet" href="styles/charisma.css">
+		<script src="//ajax.googleapis.com/ajax/libs/dojo/1.8.1/dojo/dojo.js"></script>
+		<script src="scripts/charisma.js"></script>
+		<script>
+			(function(i, s, o, g, r, a, m) {
+				i['GoogleAnalyticsObject'] = r;
+				i[r] = i[r] ||
+				function() {
+					(i[r].q = i[r].q || []).push(arguments)
+				}, i[r].l = 1 * new Date();
+				a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+				a.async = 1;
+				a.src = g;
+				m.parentNode.insertBefore(a, m)
+			})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+			ga('create', 'UA-63309294-1', 'auto');
+			ga('send', 'pageview');
+
+		</script>
+	</head>
+	<body class="claro">
+		<div id="title">
+			Attractive species gallery
+		</div>
+		<div id="introText">
+			The following species are listed in order of 'attractiveness' according to the number of images for that species (in February 2012) in the <a href="http://www.flickr.com/services/api/">Flickr Image Search API</a> (when searching on "&lt;scientific name&gt;" - only the top ranking 100 species are shown). This page uses the <a href='http://dopa-services.jrc.ec.europa.eu/services/' target='_new'>DOPA REST Services</a> for the charisma data and the <a ref='http://www.flickr.com/services/api/' target='_new'>Flickr Image API</a> to display an image for each species. The data for all 30,000 species is available from the DOPA REST Services Directory <a href='http://dopa-services.jrc.ec.europa.eu/services/especies/get_species_charisma_all' target='_new'>here</a>, but there is still some work to do on the analysis to control for species range and other factors.
+		</div>
+		<table>
+			<tr>
+				<td>
+				<div class="filters">
+					<div class="uiheader">
+						Filter species
+					</div>
+					<div id="taxonFilterControls">
+						Taxonomic group:
+						<select id="select1" data-dojo-type="dijit/form/Select" style="width: 150px;margin-right:20px;">
+							<option value="All" selected="selected">All</option>
+							<option value="actinopterygii">Actinopterygii</option>
+							<option value="amphibia">Amphibia</option>
+							<option value="anthozoa">Anthozoa</option>
+							<option value="arachnida">Arachnida</option>
+							<option value="aves">Aves</option>
+							<!-- <option value="chlorophyceae">Chlorophyceae</option> SOME TAXON GROUPS HAVE NO FLICKR IMAGES-->
+							<option value="chondrichthyes">Chondrichthyes</option>
+							<option value="coniferopsida">Coniferopsida</option>
+							<option value="crustacea">Crustacea</option>
+							<!-- <option value="florideophyceae">Florideophyceae</option> -->
+							<option value="gastropoda">Gastropoda</option>
+							<option value="hydrozoa">Hydrozoa</option>
+							<option value="insecta">Insecta</option>
+							<!-- <option value="isoetopsida">Isoetopsida</option> -->
+							<option value="liliopsida">Liliopsida</option>
+							<option value="magnoliopsida">Magnoliopsida</option>
+							<option value="mammalia">Mammalia</option>
+							<option value="myxini">Myxini</option>
+							<!-- <option value="phaeophyceae">Phaeophyceae</option> -->
+							<option value="polypodiopsida">Polypodiopsida</option>
+							<option value="reptilia">Reptilia</option>
+							<option value="sellaginellopsida">Sellaginellopsida</option>
+							<!-- <option value="ulvophyceae">Ulvophyceae</option> -->
+						</select>
+					</div>
+					<div id="statusFilterControls">
+						Red List Status:
+						<input id="EX" name="EX" data-dojo-type="dijit/form/CheckBox" value="EX" checked/>
+						<img src="images/EX.png">
+						<input id="EW" name="EW" data-dojo-type="dijit/form/CheckBox" value="EW" checked/>
+						<img src="images/EW.png">
+						<input id="CR" name="CR" data-dojo-type="dijit/form/CheckBox" value="CR" checked/>
+						<img src="images/CR.png">
+						<input id="EN" name="EN" data-dojo-type="dijit/form/CheckBox" value="EN" checked/>
+						<img src="images/EN.png">
+						<input id="VU" name="VU" data-dojo-type="dijit/form/CheckBox" value="VU" checked/>
+						<img src="images/VU.png">
+						<input id="NT" name="NT" data-dojo-type="dijit/form/CheckBox" value="NT" checked/>
+						<img src="images/NT.png">
+						<input id="LC" name="LC" data-dojo-type="dijit/form/CheckBox" value="LC,LR/cd,LR/lc"/>
+						<img src="images/LC.png">
+						<input id="DD" name="DD" data-dojo-type="dijit/form/CheckBox" value="DD" checked/>
+						<img src="images/DD.png">
+					</div>
+				</div></td>
+				<td>
+				<div class="filters">
+					<div class="uiheader">
+						Language
+					</div>
+					<div>
+						<div>
+							Species common names:
+						</div>
+						<select id="selectLanguage" data-dojo-type="dijit/form/Select"></select>
+					</div>
+				</div></td>
+			</tr>
+		</table>
+		<div id='speciesList'></div>
+	</body>
+</html>

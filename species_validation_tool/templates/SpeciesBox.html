@@ -1,0 +1,19 @@
+<div data-dojo-attach-event="onclick:boxClicked" class="box">
+	<div class="mainDiv">
+		<div class="flickrImgDiv">
+			<a data-dojo-attach-point="flickrLinkNode" title="Click to go to the Flickr page" target="_new"> <img data-dojo-attach-point="flickrImgNode"> </a>
+		</div>
+		<div data-dojo-attach-point="checkImageHolder">
+			<span><img data-dojo-attach-point="red_list_statusImg"></span>
+			<span class="tickImage"><img data-dojo-attach-point="checkedImgNode" src="images/tick.png"></span>
+		</div>
+		<div class="speciesname">
+			<div data-dojo-attach-point="common_nameNode" class="commonname"></div>
+			<div data-dojo-attach-point="taxonNode" class="binomial"></div>
+		</div>
+		<div data-dojo-attach-point="presenceBoxNode"></div>
+		<div data-dojo-attach-point="gbifBoxNode" class="gbifImage"><img src="images/gbif2.png" title="View GBIF data"/>
+		</div>
+		<div data-dojo-type="jrc/redlistStatusImage"  data-dojo-attach-point="redlistimage"></div>
+	</div>
+</div>

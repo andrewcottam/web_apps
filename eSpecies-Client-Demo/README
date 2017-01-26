@@ -1,0 +1,43 @@
+This repo gives some examples of client applications to the JRC eSpecies services which are available at the following url:
+
+http://ehabitat-wps.jrc.ec.europa.eu/eSpecies/API.xml
+
+The following client applications are included:
+
+canvasTest.html	http://ehabitat-wps.jrc.ec.europa.eu/eSpecies/canvasTest.html
+Used to try out the various overlay operations with the HTML5 Canvas
+
+charisma.html http://ehabitat-wps.jrc.ec.europa.eu/eSpecies/charisma.html
+Charismatic species gallery that shows the 'charisma' of species by taxonomic group based on the number of Flickr images for the species.
+
+geeClient.html http://ehabitat-wps.jrc.ec.europa.eu/eSpecies/geeClient.html
+Google Earth Engine demonstration client used to show the integration of Google Earth Engine images related to a protected area.
+
+index.html	http://ehabitat-wps.jrc.ec.europa.eu/eSpecies/index.html
+Simple page that loads range maps, protected areas, richness maps and species lists
+
+landcover.html	http://ehabitat-wps.jrc.ec.europa.eu/eSpecies/landcover.html
+Uses the HTML5 canvas element to show different land cover types in the browser (not in IE<9)
+
+landcoverValidator.html http://ehabitat-wps.jrc.ec.europa.eu/eSpecies/landcoverValidator.html
+Web client for spectral classification of land cover classes and method detection using Google Earth Engine.
+
+overlay.html	http://ehabitat-wps.jrc.ec.europa.eu/eSpecies/overlay.html
+Uses the HTML5 canvas element to overlap different images in the browser (not in IE<9)
+
+richness.html	http://ehabitat-wps.jrc.ec.europa.eu/eSpecies/richness.html
+Uses the HTML5 canvas element to show species richness and allow you to set the threshold in the browser (not in IE<9)
+
+speciesValidator.html http://ehabitat-wps.jrc.ec.europa.eu/eSpecies/speciesValidator.html
+Demonstration web interface for updating species lists for protected areas based on the intersection of the WDPA and the IUCN Red List of Threatened Species.
+
+tourism.html http://ehabitat-wps.jrc.ec.europa.eu/eSpecies/tourism.html
+Web mapping application that shows the tourism potential for protected areas in Africa based on their total charisma.
+
+tourismGlobal.html http://ehabitat-wps.jrc.ec.europa.eu/eSpecies/tourismGlobal.html
+Web mapping application that shows the tourism potential for protected areas globally based on their total charisma.
+
+validateSites.html http://ehabitat-wps.jrc.ec.europa.eu/eSpecies/validateSites.html
+Simple web tool for the rapid validation of pixels classified using Google Earth Engine.
+
+

@@ -1,0 +1,189 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=7" />
+        <title>ESRI Map Service - Cloudmade basemap</title>
+        <link rel="stylesheet" type="text/css" href="http://orthogonal.esri.com/jsapi/arcgis/1.5/js/dojo/dijit/themes/tundra/tundra.css">
+        <script type="text/javascript" src="http://orthogonal.esri.com/jsapi/arcgis/?v=2.2">
+        </script>
+        <script src="constants.js" type="text/javascript">
+        </script>
+        <script type="text/javascript">
+            dojo.require("esri.map");
+            dojo.declare("CloudMadeLayer", esri.layers.TiledMapServiceLayer, {
+                size: 256,
+                styleid: 8,
+                apikey: "",
+                constructor: function(){
+                    this.spatialReference = new esri.SpatialReference({
+                        "wkid": 102113
+                    });
+                    
+                    //layer provides tile info                    
+                    this.tileInfo = new esri.layers.TileInfo({
+                        "rows": 256,
+                        "cols": 256,
+                        "dpi": 96,
+                        "format": "PNG8",
+                        "compressionQuality": 0,
+                        "origin": {
+                            "x": -20037508.342787,
+                            "y": 20037508.342787
+                        },
+                        "spatialReference": {
+                            "wkid": 102113
+                        },
+                        "lods": [{
+                            "level": 0,
+                            "scale": 591657527.591555,
+                            "resolution": 156543.033928
+                        }, {
+                            "level": 1,
+                            "scale": 295828763.795777,
+                            "resolution": 78271.5169639999
+                        }, {
+                            "level": 2,
+                            "scale": 147914381.897889,
+                            "resolution": 39135.7584820001
+                        }, {
+                            "level": 3,
+                            "scale": 73957190.948944,
+                            "resolution": 19567.8792409999
+                        }, {
+                            "level": 4,
+                            "scale": 36978595.474472,
+                            "resolution": 9783.93962049996
+                        }, {
+                            "level": 5,
+                            "scale": 18489297.737236,
+                            "resolution": 4891.96981024998
+                        }, {
+                            "level": 6,
+                            "scale": 9244648.868618,
+                            "resolution": 2445.98490512499
+                        }, {
+                            "level": 7,
+                            "scale": 4622324.434309,
+                            "resolution": 1222.99245256249
+                        }, {
+                            "level": 8,
+                            "scale": 2311162.217155,
+                            "resolution": 611.49622628138
+                        }, {
+                            "level": 9,
+                            "scale": 1155581.108577,
+                            "resolution": 305.748113140558
+                        }, {
+                            "level": 10,
+                            "scale": 577790.554289,
+                            "resolution": 152.874056570411
+                        }, {
+                            "level": 11,
+                            "scale": 288895.277144,
+                            "resolution": 76.4370282850732
+                        }, {
+                            "level": 12,
+                            "scale": 144447.638572,
+                            "resolution": 38.2185141425366
+                        }, {
+                            "level": 13,
+                            "scale": 72223.819286,
+                            "resolution": 19.1092570712683
+                        }, {
+                            "level": 14,
+                            "scale": 36111.909643,
+                            "resolution": 9.55462853563415
+                        }, {
+                            "level": 15,
+                            "scale": 18055.954822,
+                            "resolution": 4.77731426794937
+                        }, {
+                            "level": 16,
+                            "scale": 9027.977411,
+                            "resolution": 2.38865713397468
+                        }, {
+                            "level": 17,
+                            "scale": 4513.988705,
+                            "resolution": 1.19432856685505
+                        }, {
+                            "level": 18,
+                            "scale": 2256.994353,
+                            "resolution": 0.597164283559817
+                        }]
+                    });
+                    
+                    //layer provides initial extent & full extent.
+                    this.fullExtent = this.initialExtent = new esri.geometry.Extent({
+                        "xmin": -20037508.34,
+                        "ymin": -20037508.34,
+                        "xmax": 20037508.34,
+                        "ymax": 20037508.34,
+                        "spatialReference": {
+                            "wkid": 102113
+                        }
+                    });
+                    
+                    //custom layer properties for improving layer performance by retrieving tiled images from multiple servers
+                    this.servers = ["http://a.tile.cloudmade.com/", "http://b.tile.cloudmade.com/", "http://c.tile.cloudmade.com/"];
+                    this.serversLength = this.servers.length;
+                    this.serverIndex = 0;
+                },
+                setAPIKey: function(/*string*/){
+                    if (arguments[0]) {
+                        this.apikey = arguments[0];
+                        this.loaded = true;
+                        this.onLoad(this);
+                    }
+                    else {
+                        alert("No API key provided");
+                    }
+                    return this; //for chaining          
+                },
+                setStyle: function(/*int*/){
+                    this.styleid = 34085;// mine
+//                    this.styleid = 20760;//Gris=gris
+                },
+                getTileUrl: function(level, row, col){
+                    //implement abstract method and return url to cached tile based on level/row/column
+                    return this.servers[this.serverIndex++ % this.serversLength] + this.apikey + "/" + this.styleid + "/" + this.size + "/" + level + "/" + col + "/" + row + ".png";
+                }
+            });
+            
+            var map, cmlayer;
+            function init(){
+                map = new esri.Map("map", {
+                    extent: new esri.geometry.Extent({
+                        "xmin": 12050000,
+                        "ymin": 2000,
+                        "xmax": 13750000,
+                        "ymax": 400000,
+                        "spatialReference": {
+                            "wkid": 102113
+                        }
+                    }),
+                    wrapAround180: true
+                });
+                cmlayer = new CloudMadeLayer().setAPIKey("c77488293ca54a9cb28552018e1b540d");
+                cmlayer.setStyle();
+                map.addLayer(cmlayer);
+                dojo.byId("copyright").innerHTML = "&nbsp;&copy; 2009 <a target=_blank href='http://cloudmade.com' tabindex=-1>CloudMade</a> - Map data <a target=_blank href='http://creativecommons.org/licenses/by-sa/2.0/' tabindex=-1>CCBYSA</a> 2009 <a target=_blank href='http://openstreetmap.org' tabindex=-1>OpenStreetMap.org</a> contributors - <a target=_blank href='http://cloudmade.com/terms_conditions' tabindex=-1>Terms of Use</a>&nbsp;";
+                var rdbURL = "http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer"; //address of the species layer
+                rdbLayer = new esri.layers.ArcGISDynamicMapServiceLayer(rdbURL + "?token=" + token); //create a new dynamic layer
+                layerDefinitions = [];
+                layerDefinitions[0] = "ID_NO='17975'"; //set the initial definition expression
+                rdbLayer.setLayerDefinitions(layerDefinitions); //apply the definition expression
+                rdbLayer.setOpacity(0.7); //set the opacity
+                map.addLayer(rdbLayer); //add the species layer
+            }
+            
+            dojo.addOnLoad(init);
+        </script>
+    </head>
+    <body>
+        <div id="map" class="tundra" style="position:relative;width:800px; height:600px; border:1px solid #000;">
+            <div id="copyright" style="position:absolute;z-index:99;bottom:0px;left:0px;display:compact;background-color:#ddd;font-size:10pt;">
+            </div>
+        </div>
+    </body>
+</html>

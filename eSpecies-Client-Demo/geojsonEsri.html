@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=7,IE=9">
+		<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+		<title></title>
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dojo/dojo/resources/dojo.css">
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dgrid/css/skins/claro.css">
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dojo/dijit/themes/claro/claro.css">
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/esri/css/esri.css">
+		<style>
+			html, body, #map {
+				height: 100%;
+				width: 100%;
+				margin: 0;
+				padding: 0;
+			}
+		</style>
+
+		<script src="http://js.arcgis.com/3.6/"></script>
+		<!-- defines a global variable named borneoGeoJson -->
+		<script src="data/borneo.geojson"></script>
+		<!-- geo json to esri json converter directly from github, defines geoJsonConverter -->
+		<script src="http://esri.github.io/geojson-utils/src/jsonConverters.js"></script>
+		<script>
+			var map;
+			require(["esri/symbols/SimpleFillSymbol", "esri/map", "esri/layers/GraphicsLayer", "esri/layers/FeatureLayer", "esri/graphic", "esri/geometry/Polygon", "dojo/_base/array", "dojo/domReady!"], function(SimpleFillSymbol, Map, GraphicsLayer, FeatureLayer, Graphic, Polygon, arrayUtils) {
+				map = new Map("map", {
+					center : [116,5],
+					zoom : 9,
+					basemap : "gray",
+					sliderStyle : "large"
+				});
+				var jsonConverter = geoJsonConverter();
+				var esriJson = jsonConverter.toEsri(borneoGeoJson);
+				var featureArray = arrayUtils.map(esriJson.features, function(f, idx) {
+					f.attributes.objectid = idx;
+					// results from geoJson converter adds unnecessary type property
+					// delete it
+					delete f.geometry.type;
+					var polygon = new Polygon(f.geometry);
+					var graphic = new Graphic(polygon, new SimpleFillSymbol(), f.attributes);
+					return graphic;
+				});
+				var featureCollection = {
+					"layerDefinition" : null,
+					"featureSet" : {
+						"features" : featureArray,
+						"geometryType" : "esriGeometryPolygon"
+					}
+				};
+				featureCollection.layerDefinition = {
+					"geometryType" : "esriGeometryPolygon",
+					"objectIdField" : "objectid",
+					"fields" : [{
+						"name" : "objectid",
+						"alias" : "ObjectID",
+						"type" : "esriFieldTypeOID"
+					}, {
+						"name" : "Description",
+						"alias" : "Description",
+						"type" : "esriFieldTypeString"
+					}, {
+						"name" : "Name",
+						"alias" : "Name",
+						"type" : "esriFieldTypeString"
+					}]
+				};
+				var fl = new FeatureLayer(featureCollection);
+				map.addLayer(fl);
+			});
+		</script>
+	</head>
+	<body>
+		<div id="map"></div>
+	</body>
+</html>

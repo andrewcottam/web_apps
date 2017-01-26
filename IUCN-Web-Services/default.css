@@ -1,0 +1,30 @@
+h1
+{
+	color:#2a530a;
+	font-family:Verdana,arial,sans-serif;
+	font-size:1.4em;
+	min-height:30px; 
+	font-weight:normal;
+	margin:15px 0 0;
+	padding:0;
+}
+h2
+{
+	color:#2a530a;
+	font-family:Verdana,arial,sans-serif;
+	font-weight:normal;
+	font-size:1em
+}
+a
+{
+	color: #0C618D;
+	cursor: auto;
+	display: inline;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	text-decoration:none;
+}
+a:hover
+{
+	text-decoration: underline;
+}

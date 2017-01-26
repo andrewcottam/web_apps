@@ -1,0 +1,142 @@
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<title>Protected area species checker</title>
+		<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/dojo/1.8.1/dijit/themes/claro/claro.css" media="screen">
+		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+		<link rel="stylesheet" href="styles/speciesValidator.css">
+		<script src="//ajax.googleapis.com/ajax/libs/dojo/1.8.1/dojo/dojo.js"></script>
+		<script src="scripts/speciesValidator.js"></script>
+		<script>
+			(function(i, s, o, g, r, a, m) {
+				i['GoogleAnalyticsObject'] = r;
+				i[r] = i[r] ||
+				function() {
+					(i[r].q = i[r].q || []).push(arguments)
+				}, i[r].l = 1 * new Date();
+				a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+				a.async = 1;
+				a.src = g;
+				m.parentNode.insertBefore(a, m)
+			})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+			ga('create', 'UA-63309294-1', 'auto');
+			ga('send', 'pageview');
+
+		</script>
+	</head>
+	<body class="claro">
+		<div>
+			<div id="title" name="title"></div>
+			<div id="userDiv">
+				<a id="loginLink" title="Click here to login">Login</a>
+			</div>
+		</div>
+		<div id="introText">
+			This page shows a list of species that occur within the park according to the intersection of the protected areas boundary and the IUCN Red List of Threatened Species range polygons. Click on the species to change their presence on the site.
+		</div>
+		<div id="layoutContainerParent">
+			<div data-dojo-type="dijit/layout/LayoutContainer" data-dojo-props="design:'headline'" id="layoutContainer">
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'bottom'" class="contentPane">
+					<div id="toolbar">
+						<button type="button" id="validateAll" name="validateAll" data-dojo-type="dijit/form/Button">
+							Check all
+						</button>
+						<button type="button" id="unValidateAll" name="unValidateAll" data-dojo-type="dijit/form/Button">
+							Reset all
+						</button>
+						<!-- <div data-dojo-type="jrc/SpeciesBox" data-dojo-props="taxon:'Hoopoo',checked:'unchecked',common_name:'Interesting place',red_list_status:'Bad',presence_id:1"></div> -->
+						<div id="speciescount"></div>
+					</div>
+				</div>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'left'" class="contentPane">
+					<div class="uiheader">
+						Filter species
+					</div>
+					<div id="taxonFilterControls">
+						Taxonomic group:
+						<select id="select1" data-dojo-type="dijit/form/Select" style="width: 150px;margin-right:20px;">
+							<option value="All" selected="selected">All</option>
+							<option value="actinopterygii">Actinopterygii</option>
+							<option value="amphibia">Amphibia</option>
+							<option value="anthozoa">Anthozoa</option>
+							<option value="arachnida">Arachnida</option>
+							<option value="aves">Aves</option>
+							<!-- <option value="chlorophyceae">Chlorophyceae</option> SOME TAXON GROUPS HAVE NO FLICKR IMAGES-->
+							<option value="chondrichthyes">Chondrichthyes</option>
+							<option value="coniferopsida">Coniferopsida</option>
+							<option value="crustacea">Crustacea</option>
+							<!-- <option value="florideophyceae">Florideophyceae</option> -->
+							<option value="gastropoda">Gastropoda</option>
+							<option value="hydrozoa">Hydrozoa</option>
+							<option value="insecta">Insecta</option>
+							<!-- <option value="isoetopsida">Isoetopsida</option> -->
+							<option value="liliopsida">Liliopsida</option>
+							<option value="magnoliopsida">Magnoliopsida</option>
+							<option value="mammalia">Mammalia</option>
+							<option value="myxini">Myxini</option>
+							<!-- <option value="phaeophyceae">Phaeophyceae</option> -->
+							<option value="polypodiopsida">Polypodiopsida</option>
+							<option value="reptilia">Reptilia</option>
+							<option value="sellaginellopsida">Sellaginellopsida</option>
+							<!-- <option value="ulvophyceae">Ulvophyceae</option> -->
+						</select>
+					</div>
+					<div id="statusFilterControls">
+						Red List Status:
+						<input id="EX" name="EX" data-dojo-type="dijit/form/CheckBox" value="EX" checked/>
+						<img src="images/EX.png">
+						<input id="EW" name="EW" data-dojo-type="dijit/form/CheckBox" value="EW" checked/>
+						<img src="images/EW.png">
+						<input id="CR" name="CR" data-dojo-type="dijit/form/CheckBox" value="CR" checked/>
+						<img src="images/CR.png">
+						<input id="EN" name="EN" data-dojo-type="dijit/form/CheckBox" value="EN" checked/>
+						<img src="images/EN.png">
+						<input id="VU" name="VU" data-dojo-type="dijit/form/CheckBox" value="VU" checked/>
+						<img src="images/VU.png">
+						<input id="NT" name="NT" data-dojo-type="dijit/form/CheckBox" value="NT" checked/>
+						<img src="images/NT.png">
+						<input id="LC" name="LC" data-dojo-type="dijit/form/CheckBox" value="LC,LR/cd,LR/lc"/>
+						<img src="images/LC.png">
+						<input id="DD" name="DD" data-dojo-type="dijit/form/CheckBox" value="DD" checked/>
+						<img src="images/DD.png">
+					</div>
+				</div>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'center'" class="contentPane">
+					<div class="uiheader">
+						Options
+					</div>
+					<div>
+						<input id="showImages" name="showImages" data-dojo-type="dijit/form/CheckBox" value="showImages" checked/>
+						<label for="showImages">Show images</label>
+					</div>
+					<div>
+						<input id="showChecked" name="showChecked" data-dojo-type="dijit/form/CheckBox" value="showChecked" checked/>
+						<label for="showChecked">Show checked species</label>
+					</div>
+					<div>
+						<input id="confirmChanges" name="confirmChanges" data-dojo-type="dijit/form/CheckBox" value="confirmChanges"/>
+						<label for="confirmChanges">Confirm changes</label>
+					</div>
+					<div>
+						<input id="showGBIF" name="showGBIF" data-dojo-type="dijit/form/CheckBox" value="showGBIF"/>
+						<label for="showGBIF">Show GBIF data</label>
+					</div>
+				</div>
+				<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'right'" class="contentPane">
+					<div class="uiheader">
+						Language
+					</div>
+					<div>
+						<div>
+							Species common names:
+						</div>
+						<select id="selectLanguage" data-dojo-type="dijit/form/Select"></select>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id='speciesList'></div>
+	</body>
+</html>

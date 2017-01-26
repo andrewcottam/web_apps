@@ -1,0 +1,766 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>IUCN Red List Mapper</title>
+		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.2/js/dojo/dijit/themes/tundra/tundra.css">
+		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.2/js/esri/dijit/css/Popup.css">
+		<link rel="stylesheet" type="text/css" href="styles/styles.css">
+		<script type="text/javascript">
+			var djConfig = {
+				parseOnLoad : true
+			};
+
+		</script>
+		<script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.2"></script>
+		<script src="js/constants.js" type="text/javascript"></script>
+		<script src="js/tempo.js" type="text/javascript"></script>
+		<script type="text/javascript">
+			dojo.require("dijit.layout.BorderContainer");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.require("esri.toolbars.navigation");
+			dojo.require("esri.tasks.query");
+			dojo.require("dijit.form.Button");
+			dojo.require("dijit.form.CheckBox");
+			dojo.require("dijit.Toolbar");
+			dojo.require("dijit.dijit");
+			dojo.require("dijit.form.Button");
+			dojo.require("esri.dijit.BasemapGallery");
+			dojo.require("esri.dijit.Scalebar");
+			dojo.require("dojo.window");
+			dojo.require("esri.map");
+			dojo.require("dijit.Tooltip");
+			dojo.require("dijit.Dialog");
+			var ID_NO, map, extentMap, renderer, navToolbar, resizeTimer, basemapGalleryOpen, pfafstetterLevel, watershedsLayer, centre;
+			var layerDefinitions = [];
+			//used to filter the results for an individual species
+			var LODs = [{
+				LOD : 0,
+				Resolution : 156543.033928
+			}, {
+				LOD : 1,
+				Resolution : 78271.5169639999
+			}, {
+				LOD : 2,
+				Resolution : 39135.7584820001
+			}, {
+				LOD : 3,
+				Resolution : 19567.8792409999
+			}, {
+				LOD : 4,
+				Resolution : 9783.93962049996
+			}, {
+				LOD : 5,
+				Resolution : 4891.96981024998
+			}, {
+				LOD : 6,
+				Resolution : 2445.98490512499
+			}, {
+				LOD : 7,
+				Resolution : 1222.99245256249
+			}, {
+				LOD : 8,
+				Resolution : 611.49622628138
+			}, {
+				LOD : 9,
+				Resolution : 305.748113140558
+			}, {
+				LOD : 10,
+				Resolution : 152.874056570411
+			}, {
+				LOD : 11,
+				Resolution : 76.4370282850732
+			}, {
+				LOD : 12,
+				Resolution : 38.2185141425366
+			}, {
+				LOD : 13,
+				Resolution : 19.1092570712683
+			}, {
+				LOD : 14,
+				Resolution : 9.55462853563415
+			}, {
+				LOD : 15,
+				Resolution : 4.77731426794937
+			}, {
+				LOD : 16,
+				Resolution : 2.38865713397468
+			}, {
+				LOD : 17,
+				Resolution : 1.19432856685505
+			}, {
+				LOD : 18,
+				Resolution : 0.597164283559817
+			}, {
+				LOD : 19,
+				Resolution : 0.298582141647617
+			}]
+			dojo.addOnLoad(onLoad);
+
+			function onLoad() {
+				getSpeciesID();
+				//get the species ID from the query string
+				getSpatialDataSource();
+				map = new esri.Map("map", {
+					wrapAround180 : true
+				});
+				dojo.connect(map, "onLoad", createScaleBar);
+				dojo.connect(map, "onZoomStart", showLoading);
+				dojo.connect(map, "onPanStart", showLoading);
+				dojo.connect(map, "onExtentChange", extentChanged);
+
+				//ADD THE DYNAMIC LAYERS TO THE MAP
+				var basemap = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer");
+				map.addLayer(basemap);
+
+				//ADD THE TOOLBAR
+				navToolbar = new esri.toolbars.Navigation(map);
+				dojo.connect(navToolbar, "onExtentHistoryChange", extentHistoryChangeHandler);
+
+				//CREATE THE BASEMAP GALLERY
+				var basemapGallery = new esri.dijit.BasemapGallery({
+					map : map,
+					bingMapsKey : "ApEtXt6OQmIxxBtaii01DEEG23Fx8OjcYrVFzWogoW96NcsjHsI6U8XjzdeG73RP"
+				}, "basemapGallery");
+				basemapGallery.startup();
+			}
+
+			function getSpatialDataSource() {
+				esri.request({
+					url : "http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer/1/query/",
+					callbackParamName : "callback",
+					content : {
+						f : "json",
+						where : "ID_NO='" + ID_NO + "'",
+						token : token,
+						returnGeometry : false,
+						outFields : "SpatialDataSource"
+					},
+					load : function(response) {
+						if(response.features.length == 0) {
+							myDialog = new dijit.Dialog({// create the dialog:
+								title : "IUCN Red List Mapper",
+								content : "<div><p>Spatial data for this species is still being processed and will be made available shortly</p><div style='width:100%;padding-left:90px'><img src='images/iucn.png'/></div></div>",
+								style : "width: 300px"
+							});
+							myDialog.show();
+							return;
+						}
+						spatialDataSource = response.features[0].attributes["SpatialDataSource"];
+						switch (spatialDataSource) {
+							case "SpeciesRangeMaps":
+								getExtent();
+								//get the extent of the current species
+								getLegendClasses();
+								//get the legend classes of the current species, e.g. native, extinct etc.
+								getSource();
+								//get the source
+								break;
+							case "Watersheds":
+								createWatershedsLayer();
+								getLegendClassesWatersheds();
+								getExtentWatersheds();
+								//get the extent of the current species (watersheds)
+								break;
+							default:
+								alert("default");
+						}
+						getSpeciesInfo();
+						//get the species info
+					},
+					error : esriConfig.defaults.io.errorHandler
+				});
+			}
+
+			var pfafstetterStartLevel = 9;
+			function createWatershedsLayer() {
+				var imageParameters = new esri.layers.ImageParameters();
+				var layerDefs = [];
+				//        layerDefs[0] = "\"PFAF_1\" in (select PFAF_1 from SpeciesDataWithPFAFs where \"ID_NO\" ='" + ID_NO + "')";
+				// layerDefs[pfafstetterStartLevel] = "\"PFAF_" + (pfafstetterStartLevel + 1).toString() + "\" in (select PFAF_" + (pfafstetterStartLevel + 1).toString() + " from SpeciesDataWithPFAFs where \"ID_NO\" ='" + ID_NO + "')";
+				layerDefs[9] = "\"BasinID\" in (select BasinID from SpeciesDataWithPFAFs where \"ID_NO\" ='" + ID_NO + "')";
+				imageParameters.layerDefinitions = layerDefs;
+				watershedsLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Watersheds/MapServer?token=" + token, {
+					"imageParameters" : imageParameters,
+					opacity : 0.7
+				});
+				watershedsLayer.setVisibleLayers([9]);
+				watershedsLayer.setVisibleLayers([pfafstetterStartLevel]);
+				map.addLayer(watershedsLayer);
+				addOnLoadComplete(watershedsLayer);
+				addOnLayerUpdate(watershedsLayer);
+				// dojo.connect(map, "onExtentChange", function(extent, delta, levelChange, lod) {
+				// if(levelChange) {
+				// setPfafstetterLevel(lod);
+				// }
+				// });
+			}
+
+			function setPfafstetterLevel(lod) {
+				pfafstetterLevel = lod.level + pfafstetterStartLevel;
+				if(pfafstetterLevel > 10) {
+					pfafstetterLevel = 10;
+				}
+				// switch (lod.level) {
+				// case 1:
+				// pfafstetterLevel = 1;
+				// break;
+				// case 2:
+				// pfafstetterLevel = 2;
+				// break;
+				// case 3:
+				// pfafstetterLevel = 3;
+				// break;
+				// case 4:
+				// pfafstetterLevel = 4;
+				// break;
+				// case 5:
+				// pfafstetterLevel = 5;
+				// break;
+				// case 6:
+				// pfafstetterLevel = 6;
+				// break;
+				// case 7:
+				// pfafstetterLevel = 7;
+				// break;
+				// case 8:
+				// pfafstetterLevel = 8;
+				// break;
+				// case 9:
+				// pfafstetterLevel = 9;
+				// break;
+				// default:
+				// pfafstetterLevel = 10;
+				// break;
+				// }
+				watershedsLayer.setVisibleLayers([pfafstetterLevel - 1]);
+				var layerDefs = [];
+				if(pfafstetterLevel < 10) {
+					var tmp = pfafstetterLevel.toString();
+					layerDefs[pfafstetterLevel - 1] = "\"PFAF_" + tmp + "\" in (select PFAF_" + tmp + " from SpeciesDataWithPFAFs where \"ID_NO\" ='" + ID_NO + "')";
+				} else {
+					layerDefs[9] = "\"BasinID\" in (select BasinID from SpeciesDataWithPFAFs where \"ID_NO\" ='" + ID_NO + "')";
+				}
+				watershedsLayer.setLayerDefinitions(layerDefs);
+			}
+
+			function createExtentMap() {
+				extentMap = new esri.Map("extentMap", {
+					slider : false,
+					nav : false,
+					wrapAround180 : true
+				});
+				//BASEMAP FOR THE OVERVIEW MAP
+				var basemap = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer");
+				extentMap.addLayer(basemap);
+
+				//EVENT LISTENERS FOR THE MAPS
+				dojo.connect(extentMap, "onLoad", loadExtentMap);
+				//disable the map navigation controls for the extent map
+			}
+
+			function createScaleBar() {
+				var scalebar = new esri.dijit.Scalebar({
+					map : map,
+					scalebarUnit : "metric"
+				});
+				var esriScalebarRuler = scalebar.domNode.childNodes[0];
+				// esriScalebarRuler.className = "myScaleBar";
+				dojo.connect(dijit.byId('map'), 'resize', function() {//resize the map if the div is resized
+					clearTimeout(resizeTimer);
+					console.log('resize');
+					resizeTimer = setTimeout(function() {
+						map.resize();
+						map.reposition();
+					}, 500);
+				});
+			}
+
+			function toggleBasemap() {
+				div = dojo.byId("basemapGalleryDiv");
+				if(div.style.visibility == "hidden") {
+					showBasemapGallery();
+				} else {
+					hideBasemapGallery();
+				}
+			}
+
+			function showBasemapGallery() {
+				var button = dojo.byId("basemapGalleryButton");
+				var coords = dojo.coords(button);
+				var div = dojo.byId("basemapGalleryDiv");
+				var windowBox = dojo.window.getBox();
+				var divHeightStr = div.style.height;
+				var divHeight = divHeightStr.substr(0, divHeightStr.length - 2);
+				div.style.right = (windowBox.w - coords.x + 15) + "px";
+				div.style.top = Math.round((windowBox.h - divHeight) / 2) + "px";
+				div.style.visibility = "visible";
+				dijit.byId("basemapGalleryButton").attributes.value = "off";
+			}
+
+			function hideBasemapGallery() {
+				div = dojo.byId("basemapGalleryDiv");
+				div.style.visibility = "hidden";
+				dijit.byId("basemapGalleryButton").setValue(false);
+			}
+
+			function extentHistoryChangeHandler() {
+				dijit.byId("zoomprev").disabled = navToolbar.isFirstExtent();
+				dijit.byId("zoomnext").disabled = navToolbar.isLastExtent();
+			}
+
+			function toggleExtentMap() {
+				if((dojo.byId("extentMapHolder").style.visibility == "visible") || (dojo.byId("extentMapHolder").style.visibility == "")) {
+					hideExtentMap();
+				} else {
+					showExtentMap();
+				}
+			}
+
+			function hideExtentMap() {
+				extentMap.destroy();
+				dojo.byId("extentMapHolder").style.visibility = "hidden";
+				dijit.byId("extentButton").setValue(false);
+			}
+
+			function showExtentMap() {
+				createExtentMap();
+				//this is a hack as setting the maps style.visibility to hidden does not remove it!
+				dojo.byId("extentMapHolder").style.visibility = "visible";
+			}
+
+			//GETS THE SPECIES ID FROM THE QUERYSTRING
+			function getSpeciesID() {
+				var queryParams = dojo.queryToObject(window.location.search.slice(1));
+				//get the query parameters
+				ID_NO = parseInt(queryParams["ID_NO"]);
+				//get the ID_NO for the species
+			}
+
+			//SHOWS THE LOADING IMAGE WHEN THE RDB LAYER IS LOADING
+			function showLoading() {
+				dojo.byId("loadingDiv").style.visibility = "visible";
+			}
+
+			//HIDES THE LOADING IMAGE WHEN THE RDB LAYER IS LOADING
+			function hideLoading() {
+				dojo.byId("loadingDiv").style.visibility = "hidden";
+			}
+
+			//GETS THE EXTENT OF THE PASSED SPECIES USING A SOE
+			function getExtent() {
+				esri.request({
+					url : "http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer/exts/IUCNRedListSOE/GetSpeciesExtent",
+					callbackParamName : "callback",
+					content : {
+						f : "json",
+						ID_NO : ID_NO,
+						token : token
+					},
+					load : function(response) {
+						setExtent(response.extent);
+						addSpeciesRangeMap();
+					},
+					error : esriConfig.defaults.io.errorHandler
+				});
+			}
+
+			function setExtent(extent) {
+				var sr = new esri.SpatialReference({
+					wkid : 102100
+				});
+				var speciesExtent = new esri.geometry.Extent(extent);
+				speciesExtent.spatialReference = sr;
+				var windowBox = dojo.window.getBox();
+				var visibleHeight = windowBox.h;
+				var coords = dojo.coords(dojo.byId("panel"));
+				var visibleWidth = coords.x;
+				var speciesExtentWidth = speciesExtent.getWidth();
+				var speciesExtentHeight = speciesExtent.getHeight();
+				for(var i = LODs.length - 1; i >= 0; i--) {
+					if(visibleHeight * LODs[i].Resolution > speciesExtentHeight) {
+						if(visibleWidth * LODs[i].Resolution > speciesExtentWidth) {
+							var LOD = i;
+							var resolution = LODs[i].Resolution;
+							break;
+						}
+					}
+				};
+				var visibleWidthMetres = visibleWidth * resolution;
+				var topLeftx = (speciesExtent.xmin - ((visibleWidthMetres - speciesExtentWidth) / 2));
+				var centreAtx = (topLeftx + (resolution * (windowBox.w / 2)));
+				var centreAty = speciesExtent.getCenter().y;
+				centre = new esri.geometry.Point(centreAtx, centreAty, sr);
+				map.centerAndZoom(centre, LOD);
+			}
+
+			function getExtentWatersheds() {
+				esri.request({
+					url : "http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer/1/query",
+					callbackParamName : "callback",
+					content : {
+						where : "ID_NO='" + ID_NO + "'",
+						f : "json",
+						outFields : ["xmin", "ymin", "xmax", "ymax"],
+						token : token
+					},
+					load : function(response) {
+						setExtent(response.features[0].attributes);
+					},
+					error : esriConfig.defaults.io.errorHandler
+				});
+			}
+
+			function addSpeciesRangeMap() {
+				var imageParameters = new esri.layers.ImageParameters();
+				//image parameters for the layer
+				imageParameters.layerIds = [0];
+				//layer filter for species range data
+				imageParameters.layerOption = esri.layers.ImageParameters.LAYER_OPTION_SHOW;
+				rdbLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer?token=" + token, {
+					"imageParameters" : imageParameters,
+					opacity : 0.7
+				});
+				layerDefinitions[0] = "ID_NO='" + ID_NO + "'";
+				//set the initial definition expression
+				rdbLayer.setLayerDefinitions(layerDefinitions);
+				//apply the definition expression
+				addOnLoadComplete(rdbLayer);
+				addOnLayerUpdate(rdbLayer);
+				//hide the loading div at the end of the rdblayer update
+				map.addLayer(rdbLayer);
+			}
+
+			function addOnLoadComplete(layer) {
+				var handle = dojo.connect(layer, "onUpdate", function(e) {
+					showExtentMap();
+					dojo.byId("mainLoadingDiv").style.visibility = "hidden";
+					//hide the main loading div
+					dojo.byId("mapDiv").style.opacity = "1";
+					//show the map
+					dojo.byId("extentMapHolder").style.opacity = "1";
+					//show the extent map
+					dojo.disconnect(handle);
+				});
+			}
+
+			function addOnLayerUpdate(layer) {
+				dojo.connect(layer, "onUpdate", function(e) {
+					hideLoading();
+					//hide the loading div at the end of the rdblayer update
+				});
+			}
+
+			//GETS THE LEGEND CLASSES OF THE PASSED SPECIES USING A SOE
+			function getLegendClasses() {
+				esri.request({
+					url : "http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer/exts/IUCNRedListSOE/GetLegendClasses",
+					callbackParamName : "callback",
+					content : {
+						f : "json",
+						ID_NO : ID_NO,
+						token : token
+					},
+					load : function(response) {
+						var legendClasses = response.legendclasses;
+						Tempo.prepare('legendItems').render(legendClasses);
+					},
+					error : esriConfig.defaults.io.errorHandler
+				});
+			}
+
+			function getLegendClassesWatersheds() {
+				var legendClasses = [{
+					"legendclass" : "Extant (resident)",
+					"imageurl" : "watersheds.png"
+				}];
+				Tempo.prepare('legendItems').render(legendClasses);
+			}
+
+			//GETS THE Source THE PASSED SPECIES USING A SOE
+			function getSource() {
+				esri.request({
+					url : "http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer/exts/IUCNRedListSOE/GetSources",
+					callbackParamName : "callback",
+					content : {
+						f : "json",
+						ID_NO : ID_NO,
+						token : token
+					},
+					load : function(response) {
+						var sources = response.sources;
+						if(sources[0].Source == " ") {
+							dojo.byId("sources").innerHTML = "Citation: No citation available";
+						} else {
+							dojo.byId("sources").innerHTML = "Citation: " + sources[0].Source;
+						}
+					},
+					error : esriConfig.defaults.io.errorHandler
+				});
+			}
+
+			//DISABLE THE INTERACTIVITY IN THE OVERVIEW MAP
+			function loadExtentMap() {
+				extentMap.disableKeyboardNavigation();
+				extentMap.disableMapNavigation();
+				extentMap.disablePan();
+				extentChanged(map.extent);
+			}
+
+			//CALLED WHEN THE MAP EXTENT CHANGES AND DRAWS THE POLYGON ON THE OVERVIEW MAP
+			function extentChanged(extent) {
+				if(extentMap == undefined) {
+					return;
+				};
+				extentMap.graphics.clear();
+				var polygon = new esri.geometry.Polygon(new esri.SpatialReference({
+					wkid : 102100
+				}));
+				polygon.addRing([[extent.xmin, extent.ymin], [extent.xmin, extent.ymax], [extent.xmax, extent.ymax], [extent.xmax, extent.ymin], [extent.xmin, extent.ymin]]);
+				//create the polygon for the overview map
+				var screenGeometry = esri.geometry.toScreenGeometry(extentMap.extent, extentMap.width, extentMap.height, polygon);
+				//convert it to a screen geometry to see how big it will be
+				var screenPolygon = screenGeometry.rings[0];
+				//get the first ring of the screen geometry
+				var minX = screenPolygon[0][0];
+				//get the minimum x screen coordinate
+				var maxX = screenPolygon[2][0];
+				//get the maximum x screen coordinate
+				if(minX < 0) {
+					return;
+					//dont show the extent map if the main map is zoomed out too far otherwise you get an ugly red box that crosses itself on the extent map
+				};
+				if((maxX - minX) < 3) {//if the polygon is smaller than 3 pixels across then it will not be visible, so draw as a point symbol
+					var centroid = extent.getCenter();
+					//get the centroid of the extent
+					symbol = new esri.symbol.SimpleMarkerSymbol(esri.symbol.SimpleMarkerSymbol.STYLE_SQUARE, 3, new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([255, 0, 0]), 1), new dojo.Color([255, 0, 0]), 1);
+					extentMap.graphics.add(new esri.Graphic(centroid, symbol));
+					//create a simple marker symbol at the centroid of the extent
+				} else {
+					symbol = new esri.symbol.SimpleLineSymbol(esri.symbol.SimpleLineSymbol.STYLE_SOLID, new dojo.Color([255, 0, 0]), 1);
+					extentMap.graphics.add(new esri.Graphic(polygon, symbol));
+					//create a polygon that is the size and shape of the main map
+				}
+				var newCentre = new esri.geometry.Point(extent.getCenter().x, 0, new esri.SpatialReference({
+					wkid : 102100
+				}))
+				extentMap.centerAt(newCentre);
+			}
+
+			//CALLED WHEN THE PAGE LOADS AND GETS THE SPECIES INFO
+			function getSpeciesInfo() {
+				dojo.io.script.get({
+					url : "http://api.iucnredlist.org/common_names/" + ID_NO + ".js?callback=parseSpeciesData"
+				});
+			}
+
+			//ASYNCHRONOUS CALLBACK FUNCTION WITH THE RESULTS FOR THE SPECIES INFO
+			function parseSpeciesData(results) {
+				if(results.species.length > 0) {
+					var primarySpecies = dojo.filter(results.species, function(item) {
+						return item.primary == true;
+					});
+					//get the preferred species name
+					if(primarySpecies.length > 0) {
+						var species = primarySpecies[0];
+					} else {
+						species = results.species[0]
+					}
+					//get the species data
+					dojo.byId("spClass").innerHTML = capitaliseFirstLetter(species['class']);
+					dojo.byId("spOrder").innerHTML = capitaliseFirstLetter(species['order']);
+					dojo.byId("spFamily").innerHTML = capitaliseFirstLetter(species['family']);
+					dojo.byId("spAuthority").innerHTML = species['authority'];
+					dojo.byId("statusImage").src = "images/RL_" + species['category'] + ".png";
+					dojo.byId("species").innerHTML = "<i>" + species['scientific_name'] + "</i>";
+					dojo.doc.title = species['scientific_name'];
+					setImageTitle(species['category']);
+					var synonymy = results.common_names;
+					if(synonymy.length > 0) {
+						dojo.doc.title = species['scientific_name'] + " (" + synonymy[0]['name'] + ")";
+						dojo.byId("commonName").innerHTML = synonymy[0]['name'];
+					}
+					if(species['modified_year'] > 0) {
+						dojo.byId("yearOfAssessment").innerHTML = "Assessment date: " + species['modified_year'];
+					} else {
+						dojo.byId("yearOfAssessment").innerHTML = "Assessment date: Not known";
+					}
+				} else {
+					dojo.byId("title").innerHTML = "No species found";
+				}
+				dojo.byId("panel").style.visibility = "visible";
+				//show the panel
+			}
+
+			function capitaliseFirstLetter(word) {
+				return word.substr(0, 1).toUpperCase() + word.substr(1, word.length - 1).toLowerCase();
+			}
+
+			function setImageTitle(category) {
+				var img = dojo.byId("statusImage")
+				switch (category) {
+					case "NE":
+						img.title = "Not Evaluated";
+						break;
+					case "DD":
+						img.title = "Data Deficient";
+						break;
+					case "LC":
+						img.title = "Least Concern";
+						break;
+					case "NT":
+						img.title = "Near Threatened";
+						break;
+					case "VU":
+						img.title = "Vulnerable";
+						break;
+					case "EN":
+						img.title = "Endangered";
+						break;
+					case "CR":
+						img.title = "Critically Endangered";
+						break;
+					case "EW":
+						img.title = "Extinct in the Wild";
+						break;
+					case "EX":
+						img.title = "Extinct";
+						break;
+					default:
+						img.title = "No information";
+				}
+			}
+
+			function togglePanel() {
+				if(dojo.byId("panel").style.visibility == "hidden") {
+					dojo.byId("panel").style.visibility = "visible";
+					dojo.byId("closeImg").style.visibility = "visible";
+					dojo.byId("openImg").style.visibility = "hidden";
+				} else {
+					dojo.byId("panel").style.visibility = "hidden";
+					dojo.byId("closeImg").style.visibility = "hidden";
+					dojo.byId("openImg").style.visibility = "visible";
+				}
+			}
+		</script>
+	</head>
+	<body class="tundra">
+		<div id="mainLoadingDiv">
+			<img src="images/loading.gif" alt="Loading image"/>
+		</div>
+		<div id="closePanel">
+			<img id="closeImg" src="images/close.png" alt="Close button" onclick="togglePanel()" class="img"/><img id="openImg" src="images/open.png" alt="Open button" onclick="togglePanel()" class="img" style="visibility:hidden"/>
+		</div>
+		<div id="extentMapHolder">
+			<div id="extentMap"></div>
+		</div>
+		<div id="panel">
+			<div id="header">
+				<div>
+					<ul id="taxonHierarchy">
+						<li id="spClass" class="leftLI"></li>
+						<li id="spOrder" class="LI"></li>
+						<li id="spFamily" class="LI"></li>
+					</ul>
+				</div>
+				<div id="species" onclick="window.open('http://www.iucnredlist.org/apps/redlist/details/' + parseInt(ID_NO) + '/0')" title="View full species page"></div>
+				<div id="commonName" onclick="window.open('http://www.iucnredlist.org/apps/redlist/details/' + parseInt(ID_NO) + '/0')" title="View full species page"></div>
+				<div id="spAuthority"></div>
+			</div>
+			<div id="middle">
+				<img id="statusImage" src=""/>
+				<div>
+					<span id="legend">Legend:</span>
+					<ul id="legendItems">
+						<li data-template class="legendItem">
+							<img src="images/{{imageurl}}" style="vertical-align:middle;"/><span style="vertical-align:middle;padding-left:5px;font-family:'Lucida grande'">{{legendclass}}</span>
+						</li>
+						<li data-template data-if-legendclass=""></li>
+					</ul>
+				</div>
+				<div id="checkboxes">
+					<span>
+						<input dojoType="dijit.form.CheckBox" onclick="toggleBasemap()" id="basemapGalleryButton">
+						</input> <label for="basemapGalleryButton"> Basemap </label> </span>
+					<span>
+						<input dojoType="dijit.form.CheckBox" onclick="toggleExtentMap()" id="extentButton" checked="true">
+						</input> <label for="extentButton"> Overview map </label> </span>
+					<div id="sources"></div>
+					<div id="yearOfAssessment"></div>
+				</div>
+				<div id="footer">
+					<div id="termsText">
+						<div onclick="window.open('http://www.iucnredlist.org/info/terms-of-use')" class="terms" title="Click for Terms of Use">
+							Terms of Use
+						</div>
+					</div>
+				</div>
+				<div id="logos">
+					<div class="iucnImage" style="padding-top:15px;">
+						<img src="images/iucn_logo.gif" alt="IUCN Image" title="IUCN" onclick="window.open('http://www.iucn.org/')">
+					</div>
+					<div class="iucnImage" style="padding-top:20px;">
+						<img src="images/ssc_logo.gif" alt="SSC Image" title="Species Survival Commission" onclick="window.open('http://www.iucn.org/about/work/programmes/species/about_ssc/')">
+					</div>
+				</div>
+				<div class="iucnImage" style="float:right;">
+					<img src="images/iucn.png" alt="IUCN Image" title="IUCN Redlist Website" onclick="window.open('http://www.iucnredlist.org/')">
+				</div>
+			</div>
+		</div>
+		<div id="mapDiv" dojotype="dijit.layout.BorderContainer" design="headline" gutters="false">
+			<div id="map" dojotype="dijit.layout.ContentPane" region="center" style="background-color: #dddddd">
+				<div id="loadingDiv">
+					<img id="loadingImg" src="images/loading.gif" alt="Loading image"/>
+				</div>
+			</div>
+			<div id="navToolbar" dojoType="dijit.Toolbar">
+				<div dojoType="dijit.form.Button" id="zoomin" iconClass="zoominIcon" onClick="navToolbar.activate(esri.toolbars.Navigation.ZOOM_IN);"></div>
+				<div dojoType="dijit.form.Button" id="zoomout" iconClass="zoomoutIcon" onClick="navToolbar.activate(esri.toolbars.Navigation.ZOOM_OUT);"></div>
+				<div dojoType="dijit.form.Button" id="zoomfullext" iconClass="zoomfullextIcon" onClick="navToolbar.zoomToFullExtent();"></div>
+				<div dojoType="dijit.form.Button" id="zoomprev" iconClass="zoomprevIcon" onClick="navToolbar.zoomToPrevExtent();"></div>
+				<div dojoType="dijit.form.Button" id="zoomnext" iconClass="zoomnextIcon" onClick="navToolbar.zoomToNextExtent();"></div>
+				<div dojoType="dijit.form.Button" id="pan" iconClass="panIcon" onClick="navToolbar.activate(esri.toolbars.Navigation.PAN);"></div>
+				<div dojoType="dijit.form.Button" id="deactivate" iconClass="deactivateIcon" onClick="navToolbar.deactivate()"></div>
+			</div>
+			<div dojoType="dijit.Tooltip" connectId="zoomin" position="below">
+				Zoom in
+			</div>
+			<div dojoType="dijit.Tooltip" connectId="zoomout" position="below">
+				Zoom out
+			</div>
+			<div dojoType="dijit.Tooltip" connectId="zoomfullext" position="below">
+				Zoom to the full extent
+			</div>
+			<div dojoType="dijit.Tooltip" connectId="zoomprev" position="below">
+				Zoom to the previous extent
+			</div>
+			<div dojoType="dijit.Tooltip" connectId="zoomnext" position="below">
+				Zoom to the next extent
+			</div>
+			<div dojoType="dijit.Tooltip" connectId="pan" position="below">
+				Move the map
+			</div>
+			<div dojoType="dijit.Tooltip" connectId="deactivate" position="below">
+				Deactivate the current tool
+			</div>
+			<div id="basemapGalleryDiv" dojoType="dijit.layout.ContentPane" id="basemapGalleryDiv" style="width:360px;height:440px;visibility:hidden">
+				<img src="images/cross.png" class="close" title="Close" onclick="hideBasemapGallery()"/>
+				<div id="basemapGallery"></div>
+			</div>
+		</div>
+		<script type="text/javascript">
+			var _gaq = _gaq || [];
+			_gaq.push(['_setAccount', 'UA-27198243-1']);
+			_gaq.push(['_trackPageview']); (function() {
+				var ga = document.createElement('script');
+				ga.type = 'text/javascript';
+				ga.async = true;
+				ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+				var s = document.getElementsByTagName('script')[0];
+				s.parentNode.insertBefore(ga, s);
+			})();
+
+		</script>
+	</body>
+</html>

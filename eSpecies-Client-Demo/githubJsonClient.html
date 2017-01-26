@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>gihubJsonClient</title>
+		<meta name="author" content="cottaan" />
+		<script src="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.js"></script>
+		<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.6.4/leaflet.css"/>
+		<script src='//api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.standalone.js'></script>
+		<link href='//api.tiles.mapbox.com/mapbox.js/v1.3.1/mapbox.standalone.css' rel='stylesheet' />
+		<script src="//ajax.googleapis.com/ajax/libs/dojo/1.9.1/dojo/dojo.js" data-dojo-config="async: true"></script>
+	</head>
+	<body>
+		<style>
+			#map {
+				height: 400px;
+				width: 400px;
+			}
+			#map2 {
+				height: 400px;
+				width: 400px;
+			}
+		</style>
+		<div>
+			Map using Github HTML-embed code:
+		</div>
+		<script src="https://embed.github.com/view/geojson/andrewcottam/eSpecies-Client-Demo/master/data/kinabalu.geojson"></script>
+		<div>
+			Map using Leaflet and Cloudmade layer:
+		</div>
+		<div id="map"></div>
+		<script> 
+			var map = L.map('map').setView([6.5, 116.8], 9);
+			L.tileLayer('http://{s}.tile.cloudmade.com/764997bbc4ce4575b53becb16286219c/997/256/{z}/{x}/{y}.png', {
+				attribution : 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
+				maxZoom : 18
+			}).addTo(map);
+		</script>
+		<div>
+			Map using Mapbox:
+		</div>
+		<div id="map2"></div>
+		<script type='text/javascript'>
+			var map2 = L.mapbox.map('map2').setView([6.5, 116.8], 9);
+			//L.mapbox.tileLayer('examples.map-zr0njcqy').addTo(map2);
+			L.mapbox.tileLayer('examples.map-20v6611k').addTo(map2);
+		</script>
+		<script type='text/javascript'>
+			require(["dojo/request", "dojo/json"], function(request, JSON) {
+				request("https://api.github.com/gists/6353997").then(function(geojsonStr) {
+					var geojson = [];
+					var files = JSON.parse(geojsonStr).files;
+					for (var f in files) {
+						geojson.push(JSON.parse(files[f].content));
+						L.geoJson(geojson, {
+							onEachFeature : function(feature, layer) {
+								layer.bindPopup(feature.properties.name);
+							}
+						}).addTo(map);
+					};
+				});
+			});
+		</script>
+	</body>
+</html>

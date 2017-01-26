@@ -1,0 +1,75 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>Zipped shapefile for a Family</title>
+        <link rel="stylesheet" type="text/css" href="default.css" />
+        <script src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.2" type="text/javascript">
+        </script>
+        <script src="constants.js" type="text/javascript">
+        </script>
+        <script type="text/javascript">
+            dojo.require("esri.tasks.gp");
+            var gp; //ESRI Geoprocessor
+            var IDs; //simple comma delimited string of tax_ids to zip and return 
+            var searchTerm; 
+            //get the matching IDs for the family
+            function downloadData(){
+                var queryTask = new esri.tasks.QueryTask("http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer/1?token=" + token);
+                var query = new esri.tasks.Query();
+                query.outFields = ["tax_id"]; //only return the IDs
+                searchTerm = dojo.byId("searchText").value.toUpperCase();
+                query.where = "family='" + searchTerm + "'"; //get the value that is input
+                queryTask.execute(query, parseIDs); //execute the query task
+            }
+            
+            //called when the querytask has completed and the IDs have been returned
+            function parseIDs(results){
+                var s = "";
+                if (results.features.length==0) //if no species are returned then show a message and exit the function
+                {
+                  alert("No species found for " + searchTerm);
+                  return;
+                }
+                for (var i = 0; i < results.features.length; i++) //build the comma separated IDs string 
+                {
+                    id = results.features[i].attributes["tax_id"];
+                    s = s + parseInt(id) + ",";
+                }
+                IDs = s.substring(0, s.length - 1);
+                zip(); //run the GP Task to extract the data and zip it
+            }
+            
+            //runs a Geoprocessing Task to extract the data and zip it and return it to the client
+            function zip(){
+                gp = new esri.tasks.Geoprocessor("http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_Zip/GPServer/Zip%20Species?token=" + token);
+                var params = {
+                    "IDs": IDs,
+                    "Filename": "species"
+                };
+                gp.submitJob(params, zipFileCreated); //call the GP task asynchronously
+            }
+            
+            //called when the zip file has been created
+            function zipFileCreated(jobInfo){
+                gp.getResultData(jobInfo.jobId, "Zipfile", zipFileReturned); //returns the task result data asynchronously 
+            }
+            
+            //called when the task result data is returned
+            function zipFileReturned(data){
+                var url = data.value.url;
+                window.location = url;
+            }
+        </script>
+    </head>
+    <body>
+        <h1>Zipped shapefile for a Family</h1>
+        <label style="font-size:14px">
+            Enter a Family name:
+        </label>
+        <input id="searchText" value="Felidae" style="width:60px">
+        <button onclick="downloadData()">
+            Download data
+        </button>
+    </body>
+</html>

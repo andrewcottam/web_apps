@@ -1,0 +1,78 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+	<head>
+		<title>African Protected Areas Assessment and Monitoring Tool</title>
+		<script src="http://ajax.googleapis.com/ajax/libs/dojo/1.7/dojo/dojo.js"></script>
+		<script type="text/javascript">
+			var chart;
+			dojo.require("dojo.io.script");
+			dojo.require("dojox.charting.Chart2D");
+			dojo.require("dojox.charting.themes.Wetland");
+			dojo.ready(function() {
+				chart = new dojox.charting.Chart2D("chartOne");
+				dojo.io.script.get({
+					url : "../cgi-bin/eSpecies/pa/parin/1079/json?jsoncallback=indicesRetrieved"
+				});
+			});
+			function indicesRetrieved(response) {
+				chart.addPlot("default", {
+					type : "Spider",
+					labelOffset : -10,
+					hMajorLines : false,
+					hMinorLines : false,
+					vMajorLines : false,
+					vMinorLines : false,
+					divisions : 4, // number of axises
+					seriesFillAlpha : .2, // transparency of the color overlay
+					markerSize : 1, // size of the circular marker
+					precision : 0,
+					spiderType : "circle", // style of background grid. can be "circle" also.
+					htmlLabels : true, // use html to draw labels
+					animationType : dojo.fx.easing.backOut // method for easing out
+				});
+				chart.addSeries("maxvals", {
+					data : {
+						"CHONDRICHTHYES" : 100,
+						"CRUSTACEA" : 100,
+						"REPTILIA" : 100,
+						"MAMMALIA" : 100,
+						"AMPHIBIA" : 100,
+						"AVES" : 100
+					}
+				})
+				chart.addSeries("minvals", {
+					data : {
+						"CHONDRICHTHYES" : 0,
+						"CRUSTACEA" : 0,
+						"REPTILIA" : 0,
+						"MAMMALIA" : 0,
+						"AMPHIBIA" : 0,
+						"AVES" : 0
+					}
+				})
+				chart.addSeries("PA", {
+					data : response.indices
+				}, {
+					fill : "purple",
+				});
+				chart.addSeries("Country", {
+					data : {
+						"CHONDRICHTHYES" : 1,
+						"CRUSTACEA" : 2,
+						"REPTILIA" : 4,
+						"MAMMALIA" : 34,
+						"AMPHIBIA" : 25,
+						"AVES" : 11
+					}
+				})
+				chart.render();
+				chart.removeSeries("maxvals")//this is a hack otherwise the dojo radar chart doesnt work properly
+				chart.removeSeries("minvals")
+			}
+		</script>
+	</head>
+	<body>
+		<div id="chartOne" style="width: 400px; height: 400px;"></div>
+	</body>
+</html>

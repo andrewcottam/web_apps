@@ -1,0 +1,150 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<!--Birdlife Marine IBA Mapper 
+	The website consists of three main files:
+	default.html - this file - contains the UI with all of the HTML and Dojo components
+	layout.js - javascript file containing all of the logic and javascript code for the application
+	layout.css - the external style sheet file with layout and styling information 
+	
+	The architecture of the website is a single html page with multiple AJAX calls to update regions of the page using spatial and non-spatial services from ArcGIS Server 10.1. The user 
+	interface is defined by this file and all of the business logic and interaction is in the layout.js file. All Dojo UI components are instantiated programmatically in the layout.js file
+	and populated using DataStore objects. The Dojo Framework is version 1.7 but AMD is not fully supported as the ArcGIS Javascript API does not fully support AMD yet. Therefore the js
+	file is a hybrid between AMD and non-AMD code.
+	
+	Andrew Cottam 12/10/12
+	a.cottam@gmail.com
+	-->
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>BirdLife Marine IBA Inventory</title>
+        <!--Reference required stylesheets for ESRI and Dojo-->
+        <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.1/js/dojo/dijit/themes/claro/claro.css">
+        <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.1/js/dojo/dojox/grid/resources/Grid.css">
+        <link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.1/js/esri/dijit/css/Popup.css">
+        <link href='http://fonts.googleapis.com/css?family=Cabin' rel='stylesheet' type='text/css'>
+        <!--Local stylesheet -->
+        <link rel="stylesheet" type="text/css" href="layout.css">
+        <script type="text/javascript">
+            var djConfig = {
+                parseOnLoad : true
+            };
+        </script>
+        <!--ArcGIS Javascript Web API Version 3.1-->
+        <script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=3.1"></script>
+        <!--Local logic and code file-->
+        <script type="text/javascript" src="layout.js"></script>
+        <script type="text/javascript">
+            dojo.require("dijit.dijit");
+            dojo.require("dijit.form.CheckBox");
+            dojo.require("dijit.form.Button");
+            dojo.require("dijit.form.FilteringSelect");
+            dojo.require("dijit.form.RadioButton");
+            dojo.require("dijit.layout.BorderContainer");
+            dojo.require("dijit.layout.ContentPane");
+            dojo.require("dijit.Toolbar");
+            dojo.require("dojox.grid.DataGrid");
+            dojo.require("dojo.data.ItemFileReadStore");
+            dojo.require("esri.arcgis.utils");
+            dojo.require("esri.dijit.Legend");
+            dojo.require("esri.dijit.Popup");
+            dojo.require("esri.tasks.query");
+            dojo.require("esri.toolbars.navigation");
+        </script>
+    </head>
+    <body class="claro">
+        <div id="mainWindow" dojotype="dijit.layout.BorderContainer" design="headline" gutters="false">
+            <div id="header" dojotype="dijit.layout.ContentPane" region="top">
+                <img src="images/logo.png" id="logo" width="119" height="111">
+                <div id="logo-text">
+                    <h1>Marine e-atlas</h1>
+                    <h2>Delivering site networks for seabird conservation</h2>
+                </div>
+                <div id="linkBox">
+                    <a href='http://www.birdlife.org/datazone/info/marintro' target="_new">About</a>
+                    <a href='http://www.birdlife.org/datazone/info/marmethods' target="_new">Methods</a>
+                    <a href='http://www.birdlife.org/datazone/info/marpolicy' target="_new">Policy Influence</a>
+                    <a href='http://www.birdlife.org/datazone/info/maracknowledge' target="_new">Contributors</a>
+                    <a href='http://www.birdlife.org/datazone/info/marfaqs' target="_new">FAQs</a>
+                    <a href='http://www.birdlife.org/datazone/info/marcontacts' target="_new">Contacts</a>
+                </div>
+            </div>
+            <div id="map" dojotype="dijit.layout.ContentPane" region="center">
+                <img id="loadingImg" src="images/loading.gif"/>
+                <div id="navToolbar" dojoType="dijit.Toolbar">
+                    <div dojoType="dijit.form.Button" id="zoomfullext" iconClass="zoomfullextIcon" onClick="setFullExtent()" title="Zoom to full extent"></div>
+                    <div dojoType="dijit.form.Button" id="wmProjection" iconClass="fullIcon" onClick="changeSRS(3857);" title="Web Mercator Projection"></div>
+                    <div dojoType="dijit.form.Button" id="antarcticProjection" iconClass="southIcon" onClick="changeSRS(102037);" title="Antarctic Polar Projection"></div>
+                    <div dojoType="dijit.form.Button" id="arcticProjection" iconClass="northIcon" onClick="changeSRS(102035);" title="Arctic Polar Projection"></div>
+                    <div dojoType="dijit.form.Button" id="clearButton" iconClass="clearIcon" onClick="reset();" title="Reset species and countries"></div>
+                </div>
+            </div>
+            <div dojotype="dijit.layout.ContentPane" id="legend" class="roundedCorners" region="center">
+                <h3>Legend</h3>
+                <div dojotype="dijit.layout.ContentPane" region="center">
+                    <div id="legendDiv"></div>
+                </div>
+                <div dojotype="dijit.layout.ContentPane" id="open-close" region="center">
+                </div>
+            </div>
+            <div dojotype="dijit.layout.ContentPane" id="rightPane" class="roundedCorners" region="right" splitter="true" >
+                <div dojotype="dijit.layout.BorderContainer" design="headline" gutters="false" style="width:100%; height:100%">
+                    <div dojotype="dijit.layout.ContentPane" region="top" id="rightpanetop" style="width:100%; height:100%">
+                        <div dojotype="dijit.layout.BorderContainer" design="headline" gutters="false">
+                            <div dojotype="dijit.layout.ContentPane" region="top">
+                                <h3>Filter Data</h3>
+                                <h4 style="display: inline">Species Information<img src="images/information.gif" style="vertical-align: middle;padding-left: 5px;" title="Filter the marine IBA layer by species, to see the sites where they occur as an IBA trigger species"></h4>
+                                <div class="subpanel">
+                                    <div>
+                                        <input id="familySelect" title="Select a Family">
+                                        <div style="height:8px"></div>
+                                        <input id="speciesSelect" title="Select a Species">
+                                        <a id="speciesFactsheetLink" target="_new"><img src="images/casestudy.png" style="vertical-align: middle" title="BirdLife Species Factsheet"></a>
+                                    </div>
+                                    <br/>
+                                    <img src="images/information.gif" style="vertical-align: middle;padding-right: 5px;" title="Showing the IBAs for the species you have selected in the species drop down menu above"><input id="ibasToggle" value=0 class="layerToggleIBAs" name="ibasToggle" checked data-dojo-type="dijit.form.CheckBox">
+                                    <label for="ibasToggle">Species IBA</label>
+                                    <br />
+                                    <img src="images/information.gif" style="vertical-align: middle;padding-right: 5px;" title="Showing key sites for different life-history stages of species, as identified from satellite tracking devices"><input id="speciesHotspotsToggle" value=0 class="layerToggle" name="speciesHotspotsToggle" data-dojo-type="dijit.form.CheckBox">
+                                    <label for="speciesHotspotsToggle">Species Hotspots</label>
+                                    <br/>
+                                    <img src="images/information.gif" style="vertical-align: middle;padding-right: 5px;" title="Showing the known overall range of a species"><input id="speciesRangeToggle" value=1 class="layerToggle" name="speciesRangeToggle" data-dojo-type="dijit.form.CheckBox">
+                                    <label for="speciesRangeToggle">Species Range</label>
+                                </div>
+                                <h4>Country/Territory Information <img src="images/information.gif" style="vertical-align: middle;padding-left: 5px;" title="Select a country and zoom to its Exclusive Economic Zone to view the IBAs"></h4>
+                                <div class="subpanel">
+                                    <div>
+                                        <input id="countrySelect">
+                                        <a id="countryFactsheetLink" target="_new"><img src="images/casestudy.png" style="vertical-align: middle" title="BirdLife Country Factsheet"></a>
+                                    </div>
+                                </div>
+                                <h4>Additional Layers <img src="images/information.gif" style="vertical-align: middle;padding-left: 5px;" title="Allow you to overlay ocean classification systems, and areas of competency for policy processes, to view the IBAs that fall within these areas"></h4>
+                                <div class="subpanel">
+                                    <select dojotype="dijit.form.FilteringSelect" id="contextSelect" name="contextSelect">
+                                        <option value=6 selected>None</option>
+                                        <option value=0>EBSA Workshop Boundaries</option>
+                                        <option value=1>LMEs</option>
+                                        <option value=2>Longhurst</option>
+                                        <option value=3>MEOW</option>
+                                        <option value=4>Pelagic Provinces (GOODS)</option>
+                                        <option value=5>SPA Marine</option>
+                                    </select>
+                                </div>
+                                <h3>Case studies <img src="images/information-white.png" style="vertical-align: middle;padding-left: 15px; margin-top: -2px;" title="Showing State of the World Birds (SOWB) case studies that are of relevance to the species selected in the drop down list"></h3>
+                                <table dojotype="dojox.grid.DataGrid" jsid="grid" id="grid" selectionMode="none">
+                                    <thead>
+                                        <tr>
+                                            <th field="id" hidden="true"></th>
+                                            <th field="id" formatter="makeZoomButton" width="20px"><img alt="Link" src="images/casestudy.png"/></th>
+                                            <th field="title" width="100%">Title</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div dojotype="dijit.layout.ContentPane" region="center" id="rightpanecenter"></div>
+                    <div dojotype="dijit.layout.ContentPane" region="bottom" id="rightpanebottom"></div>
+                </div>
+                <div id="footer" class="roundedCorners" dojotype="dijit.layout.ContentPane" region="bottom"></div>
+    </body>
+</html>

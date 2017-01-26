@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>ESRI Map Service - ESRI basemap</title>
+        <link href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.2/js/dojo/dijit/themes/claro/claro.css" rel="stylesheet" type="text/css"/>
+        <link rel="stylesheet" type="text/css" href="default.css" />
+        <script src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.2" type="text/javascript">
+        </script>
+        <script src="constants.js" type="text/javascript">
+        </script>
+        <script type="text/javascript">
+            var map; //the ESRI map control
+            var layerDefinitions = []; //used to filter the results for an individual species
+            var rdbLayer; //the layer on the map with the RDB species data
+            var queryTask, query; //the query that is used to retrieve the species binomial 
+            dojo.addOnLoad(init);
+            function init(){ //called when the page is loaded
+                var startExtent = new esri.geometry.Extent(-14000000, -10000000, 14000000, 14000000, new esri.SpatialReference({
+                    wkid: 102100
+                })); //create the initial map extent
+                map = new esri.Map("mapDiv", {
+                    wrapAround180: true,
+                    extent: startExtent
+                }); //instantiate the map control
+                var basemapURL = "http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer"; //address of the ESRI road layer
+                var basemap = new esri.layers.ArcGISTiledMapServiceLayer(basemapURL); //create a new tiled layer
+                map.addLayer(basemap); //add it to the map
+                var rdbURL = "http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer"; //address of the species layer
+                rdbLayer = new esri.layers.ArcGISDynamicMapServiceLayer(rdbURL + "?token=" + token); //create a new dynamic layer
+                layerDefinitions[0] = "ID_NO='8543'"; //set the initial definition expression
+                rdbLayer.setLayerDefinitions(layerDefinitions); //apply the definition expression
+                rdbLayer.setOpacity(0.7); //set the opacity
+                map.addLayer(rdbLayer); //add the species layer
+                queryTask = new esri.tasks.QueryTask("http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer/0?token=" + token); //instantiate a querytask that will be used to get the species binomial
+                query = new esri.tasks.Query(); //instantiate a query to filter the query task
+                dojo.connect(queryTask, "onComplete", showResults); //connect the results of the queryTask to the showResults function
+                var spcInputBox = dojo.byId("spcInput"); //get a pointer to the species input box
+                dojo.connect(spcInputBox, "onkeypress", keyPress) //connect the keypress event of the species box to the keyPress function
+            }
+            
+            function keyPress(e){ //function that executes if the user presses return while in the input box
+                if (e.which == 13) {
+                    getSpecies(); //get the new species map and taxon name
+                }
+            }
+            
+            //called if the user clicks go or presses return while in the input box
+            function getSpecies(method){
+                var spcID = dojo.byId("spcInput").value; //get the value of the species ID
+                getSpeciesBinomial(spcID); //call the querytask to get the binomial
+                getExtent(spcID, method);
+                layerDefinitions[0] = "ID_NO='" + spcID + "'"; //set the layer definition for the species layer
+                rdbLayer.setLayerDefinitions(layerDefinitions); //apply the definition expression
+            }
+            
+            //called when the user requests a new species
+            function getSpeciesBinomial(spcID){
+                query.returnGeometry = false;
+                query.outFields = ["BINOMIAL"];
+                query.where = "ID_NO='" + spcID + "'";
+                queryTask.execute(query, showResults); //call the query to get the binomial
+            }
+            
+            //asynchronous callback function with the results for the species binomial
+            function showResults(results){
+                if (results.features.length > 0) {
+                    var featureAttributes = results.features[0].attributes; //get the attributes of any features returned
+                    dojo.byId("title").innerHTML = "Showing data for: <i>" + featureAttributes["BINOMIAL"] + "</i>"; //set the text in the UI
+                }
+                else {
+                    dojo.byId("title").innerHTML = "No species found";
+                }
+            }
+            
+            function getExtent(spcID, method){
+                if (method==1){
+                  gp = new esri.tasks.Geoprocessor("http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/GetExtent/GPServer/Get%20Extent?token=" + token);
+                }
+                else{
+                  gp = new esri.tasks.Geoprocessor("http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/GetExtent/GPServer/Get%20Extent%202?token=" + token);
+                }
+                var spcID = dojo.byId("spcInput").value;
+                var params = {
+                    "ID_NO": spcID
+                };
+                gp.submitJob(params, jobCompleted);
+            }
+            
+            function jobCompleted(jobInfo){
+                gp.getResultData(jobInfo.jobId, "Extent", extentReturned);
+            }
+            
+            function extentReturned(data){
+                alert(data.value);
+                var obj = dojo.fromJson(data.value);
+                var extent = new esri.geometry.Extent(obj);
+                map.setExtent(extent, true);
+            }
+        </script>
+    </head>
+    <body class="claro">
+        <h1 id="title">Showing data for: <i>Felis silvestris</i> (Web Mercator projection)</h1>
+        <label style="font-size:14px">
+            Enter a ID_NO:
+        </label>
+        <input id="spcInput" value="8543" style="width:60px">
+        <button onclick="getSpecies(1)">
+            Go using Get Extent 1
+        </button>
+        <button onclick="getSpecies(2)">
+            Go using Get Extent 2
+        </button>
+        <div id="mapDiv" style="width:900px; height:600px; border:1px solid #000;margin-top:15px">
+        </div>
+    </body>
+</html>

@@ -1,0 +1,94 @@
+html, body {
+	width: 100%;
+	height: 100%;
+	margin: 10px;
+	padding: 0;
+	overflow: hidden;
+	color: #ddd;
+	background-color: black;
+}
+#title {
+	font-size: 22px;
+	padding-bottom: 10px;
+}
+#sitePane {
+	display: inline-block;
+	vertical-align: top;
+}
+.mapPane {
+	display: inline-block;
+	vertical-align: top;
+}
+#image {
+	width: 400px;
+	height: 400px;
+	position: relative;
+	left: 0;
+	top: 0;
+}
+#image2, #image3 {
+	width: 400px;
+	height: 400px;
+	position: relative;
+	left: 0;
+	top: 0;
+}
+#geimage {
+	position: relative;
+	top: 0;
+	left: 0;
+}
+#loading {
+	position: absolute;
+	top: 192px;
+	left: 192px;
+	z-index: 100;
+}
+svg {
+	position: absolute;
+	top: 0px;
+}
+#predictedClass {
+	font-size: 24px;
+	width: 390px;
+	text-align: center;
+	padding: 5px;
+}
+#tickImage {
+	display: none;
+	position: relative;
+	left: 360px;
+	top: -30px;
+}
+.not_water{
+	background-color: grey;
+	color: white;
+}
+.no_data{
+	background-color: black;
+	color: white;
+}
+.cloud{
+	background-color: white;
+	color: #333;
+}
+.water{
+	background-color: blue;
+	color: white;
+}
+.ice{
+	background-color: #14ffff;
+	color: white;
+}
+.shadow{
+	background-color: #666666;
+	color: white;
+}
+.bare_rock{
+	background-color: #985e3f;
+	color: white;	
+}
+.flooded_vegetation{
+	background-color: #008000;
+	color: white;	
+}

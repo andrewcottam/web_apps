@@ -1,0 +1,22 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>DOPA REST Client</title>
+		<script src="//ajax.googleapis.com/ajax/libs/dojo/1.8.1/dojo/dojo.js" data-dojo-config="async: true"></script>
+		<script>
+			require(["dojo/request/script", "dojo/dom"], function(script, dom) {
+				script.get("http://dopa-services.jrc.it/services/especies/_set_test?param1=1", {
+					jsonp : "callback"
+				}).then(function(response) {
+					dom.byId("feedback").innerHTML = "Successful";
+				}, function(err) {
+					dom.byId("feedback").innerHTML = err;
+				});
+			});
+		</script>
+	</head>
+	<body>
+		<div id='feedback'></div>
+	</body>
+</html>

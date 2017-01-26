@@ -1,0 +1,603 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=7,IE=9" />
+		<!--The viewport meta tag is used to improve the presentation and behavior of the samples
+		on iOS devices-->
+		<meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+		<title>eSpecies REST Services Client Demo</title>
+		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.5/js/dojo/dijit/themes/claro/claro.css">
+		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.5/js/dojo/dojox/grid/resources/Grid.css">
+		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.5/js/dojo/dojox/grid/resources/claroGrid.css">
+		<script type="text/javascript">
+			dojoConfig = {
+				parseOnLoad : true
+			}
+		</script>
+		<script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.5"></script>
+		<script type="text/javascript" src="classes/QuadkeyLayer.js"></script>
+		<script type="text/javascript" src="classes/OverlayLayer.js"></script>
+		<script type="text/javascript" src="classes/CanvasLayer.js"></script>
+		<script type="text/javascript" src="classes/ESpeciesDynamicMapServiceLayer.js"></script>
+		<script type="text/javascript">
+			var map, rdbLayer, wdpaLayer, speciesLayer, pieChart, pieChartStatuses, richnessLayer, wdpaOverlayLayer, quadkeyLayer;
+			var STARTSPECIES = 17975;
+			var speciesList = [];
+			dojo.require("esri.map");
+			dojo.require("esri.layers.wms");
+			dojo.require("esri.dijit.BasemapGallery");
+			dojo.require("esri.dijit.Scalebar");
+			dojo.require("dojox.grid.DataGrid");
+			dojo.require("dojo.data.ItemFileReadStore");
+			dojo.require("dojo.io.script");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.require("dijit.layout.BorderContainer");
+			dojo.require("dijit.form.TextBox");
+			dojo.require("dijit.form.Slider");
+			dojo.require("dijit.form.Button");
+			dojo.require("dijit.form.CheckBox");
+			dojo.require("dijit.form.HorizontalSlider");
+			dojo.require("dojox.charting.widget.Chart2D");
+			dojo.require("dojox.charting.widget.Legend");
+			dojo.require("dojox.charting.themes.PlotKit.red");
+			dojo.require("dojox.charting.themes.PlotKit.blue");
+			dojo.require("jrc.QuadkeyLayer");
+			dojo.require("jrc.ESpeciesDynamicMapServiceLayer");
+			dojo.require("jrc.OverlayLayer");
+			function init() {
+				slider = new dijit.form.HorizontalSlider({
+					name : "slider",
+					intermediateChanges : true,
+					style : "width:150px;",
+					value : 70,
+					onChange : function(value) {
+						opacity = value / 100;
+						richnessLayer.setOpacity(opacity);
+					}
+				}, "slider");
+				var initExtent = new esri.geometry.Extent({
+					"xmin" : 11506000,
+					"ymin" : -392000,
+					"xmax" : 13854000,
+					"ymax" : 725000,
+					"spatialReference" : {
+						"wkid" : 102100
+					}
+				});
+				map = new esri.Map("map", {
+					extent : initExtent,
+					wrapAround180 : true
+				});
+				dojo.connect(map, 'onLoad', function(theMap) {
+					var scalebar = new esri.dijit.Scalebar({
+						map : map,
+						scalebarUnit : 'metric'
+					});
+					dojo.connect(dijit.byId('mapContentPane'), 'resize', mapResize);
+				});
+				backgroundLayer = new esri.layers.ArcGISTiledMapServiceLayer("http://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer");
+				map.addLayer(backgroundLayer);
+				speciesLayer = new jrc.ESpeciesDynamicMapServiceLayer({
+					product : "map",
+					typeid : 1,
+					objid : STARTSPECIES,
+					opacity : 0.7
+				});
+				wdpaLayer = new jrc.ESpeciesDynamicMapServiceLayer({
+					opacity : 0.7,
+					product : "map",
+					typeid : 2,
+					objid : 785
+				});
+				richnessLayer = new jrc.ESpeciesDynamicMapServiceLayer({
+					opacity : 0.7,
+					product : "richness"
+				});
+				var wmsLayer = new esri.layers.WMSLayer("http://ehabitat-wps.jrc.ec.europa.eu/cgi-bin/wdpa2011", {
+					resourceInfo : {
+						extent : initExtent,
+						version : "1.1.1",
+						layerInfos : [{
+							name : "pa_wdpa_2011"
+						}]
+					},
+					visibleLayers : ["pa_wdpa_2011"],
+					opacity : 0
+				});
+				map.addLayer(wmsLayer);
+				wdpaOverlayLayer = new jrc.OverlayLayer({
+					operator : "source-atop"
+				});
+				wdpaOverlayLayer.setBaseLayer(wmsLayer);
+				wdpaOverlayLayer.setOverlayLayer(richnessLayer);
+				map.addLayer(wdpaOverlayLayer);
+				wdpaOverlayLayer.hide();
+				getSpeciesInfo(STARTSPECIES);
+				map.addLayer(speciesLayer);
+				map.addLayer(wdpaLayer);
+				wdpaLayer.hide();
+				map.addLayer(richnessLayer);
+				richnessLayer.hide();
+				quadkeyLayer = new jrc.QuadkeyLayer();
+				map.addLayer(quadkeyLayer);
+				quadkeyLayer.hide();
+				dojo.connect(speciesLayer, "onUpdateStart", showLoading);
+				dojo.connect(speciesLayer, "onUpdateEnd", hideLoading);
+				dojo.connect(wdpaLayer, "onUpdateStart", showLoading);
+				dojo.connect(wdpaLayer, "onUpdateEnd", hideLoading);
+				dojo.connect(richnessLayer, "onUpdateStart", showLoading);
+				dojo.connect(richnessLayer, "onUpdateEnd", hideLoading);
+				dojo.connect(map, "onClick", getSpeciesList);
+				dojo.connect(map, "onMouseMove", showCoordinates);
+				dojo.connect(map, "onMouseDrag", showCoordinates);
+				dojo.connect(grid, "onRowClick", gridRowClick);
+				var speciesTextBox = dojo.byId("speciesid");
+				dojo.connect(speciesTextBox, "onkeypress", updateSpeciesMap);
+				var basemapGallery = new esri.dijit.BasemapGallery({
+					map : map,
+					bingMapsKey : "ApEtXt6OQmIxxBtaii01DEEG23Fx8OjcYrVFzWogoW96NcsjHsI6U8XjzdeG73RP"
+				}, "basemapGallery");
+				basemapGallery.startup();
+			}
+
+			function mapResize() {
+				var div = dojo.byId("map");
+				var divContainer = dojo.byId("mapContentPane");
+				div.style.width = divContainer.style.width;
+				map.resize();
+			}
+
+			function toggleBasemap() {
+				div = dojo.byId("basemapGalleryDiv");
+				if (div.style.visibility == "hidden") {
+					showBasemapGallery();
+				} else {
+					hideBasemapGallery();
+				}
+			}
+
+			function toggleQuadkeyLayer() {
+				if (quadkeyLayer.visible) {
+					quadkeyLayer.hide();
+				} else {
+					quadkeyLayer.show();
+				}
+			}
+
+			function showBasemapGallery() {
+				var button = dojo.byId("basemapGalleryButton");
+				var coords = dojo.coords(button);
+				var div = dojo.byId("basemapGalleryDiv");
+				var windowBox = dojo.window.getBox();
+				var divHeightStr = div.style.height;
+				var divHeight = divHeightStr.substr(0, divHeightStr.length - 2);
+				div.style.right = (windowBox.w - coords.x + 15) + "px";
+				div.style.top = Math.round(windowBox.h - divHeight - 100) + "px";
+				div.style.visibility = "visible";
+				dijit.byId("basemapGalleryButton").attributes.value = "off";
+			}
+
+			function hideBasemapGallery() {
+				div = dojo.byId("basemapGalleryDiv");
+				div.style.visibility = "hidden";
+				dijit.byId("basemapGalleryButton").setValue(false);
+			}
+
+			function updateSpeciesMap(evt) {
+				if (evt.keyCode == dojo.keys.ENTER) {
+					showHideSpeciesLayer();
+				};
+			}
+
+			function showCoordinates(evt) {
+				var mp = esri.geometry.webMercatorToGeographic(evt.mapPoint);
+				tile = getTile(evt.mapPoint.x, evt.mapPoint.y, 15);
+				// dojo.byId("info").innerHTML = "x: " + evt.mapPoint.x + " y: " + evt.mapPoint.y;
+				dojo.byId("info").innerHTML = "tx: " + tile.tx + " ty: " + tile.ty;
+			}
+
+			function getSpeciesList(evt) {
+				quadkey = getQuadkeyForPoint(evt.mapPoint.x, evt.mapPoint.y, 15);
+				dojo.io.script.get({
+					url : "http://ehabitat-wps.jrc.ec.europa.eu/cgi-bin/eSpecies/quadkey/" + quadkey + "/specieslist?jsoncallback=speciesListRetrieved"
+				});
+				dojo.io.script.get({
+					url : "http://ehabitat-wps.jrc.ec.europa.eu/cgi-bin/eSpecies/quadkey/" + quadkey + "/speciescount?jsoncallback=speciesCountRetrieved"
+				});
+			}
+
+			function speciesListRetrieved(response) {
+				speciesList = dojo.map(response.species, function(row) {
+					return {
+						objid : row["objid"],
+						kingdom : row["kingdom"].toLowerCase(),
+						phylum : row["phylum"].toLowerCase(),
+						_class : row["class"].toLowerCase(),
+						order : row["order"].toLowerCase(),
+						family : row["family"].toLowerCase(),
+						taxon : row["taxon"],
+						rl_status : row["rl_status"],
+						rl_status_date : new Date(row["rl_status_date"]).getFullYear()
+					}
+				});
+				var data = {
+					label : "taxon",
+					items : speciesList
+				};
+				var store = new dojo.data.ItemFileReadStore({
+					data : data
+				});
+				var grid = dijit.byId("grid");
+				grid.setStore(store);
+				//grid.filter({_class:'aves'});
+				createCharts();
+				dojo.byId("speciescount").innerHTML = grid.rowCount.toString() + " species";
+			}
+
+			function speciesCountRetrieved(response) {
+				// dojo.byId("speciescount").innerHTML = response.speciescount.toString() + " species";
+			}
+
+			function createCharts() {
+				if (speciesList == undefined) {
+					return
+				};
+				var uniqueClasses = countvalues(speciesList, "_class");
+				if (pieChart == undefined) {
+					pieChart = createChart("viewsChart", "Species by Class", dojox.charting.themes.PlotKit.red);
+				};
+				pieChart.addSeries("uniqueClass", uniqueClasses);
+				pieChart.render();
+				var uniqueStatuses = countvalues(speciesList, "rl_status");
+				if (pieChartStatuses == undefined) {
+					pieChartStatuses = createChart("statusChart", "Species by Status", dojox.charting.themes.PlotKit.blue);
+				};
+				pieChartStatuses.addSeries("uniqueStatuses", uniqueStatuses);
+				pieChartStatuses.render();
+			}
+
+			function createChart(div, title, theme) {
+				var chart = new dojox.charting.Chart2D(div, {
+					title : title,
+					titlePos : "bottom",
+					titleFont : "normal normal normal 12pt Arial",
+					titleFontColor : "Black"
+				});
+				chart.setTheme(theme);
+				chart.addPlot("default", {
+					type : "Pie",
+					radius : 70,
+					fontColor : "black",
+					labelOffset : "-20"
+				});
+				chart.resize(200, 200);
+				new dojox.charting.action2d.MoveSlice(chart, "default");
+				new dojox.charting.action2d.Tooltip(chart, "default");
+				return chart;
+			}
+
+			function countvalues(array, attribute) {
+				var b = {}, i = array.length, j;
+				while (i--) {
+					j = b[array[i][attribute][0]];
+					b[array[i][attribute][0]] = j ? j + 1 : 1;
+				}
+				countedValues = [];
+				for (var propertyName in b) {
+					countedValues.push({
+						"x" : propertyName,
+						"y" : b[propertyName],
+						"text" : propertyName,
+						"tooltip" : b[propertyName]
+					});
+				}
+				return countedValues;
+			}
+
+			function showHideWDPALayer() {
+				var checkBox = dojo.byId("wdpaCheckBox");
+				if (checkBox.checked) {
+					var wdpaidbox = dijit.byId("wdpaid");
+					wdpaid = wdpaidbox.attr("value");
+					wdpaLayer.objid = wdpaid;
+					if (wdpaLayer.visible) {
+						wdpaLayer.refresh();
+					} else {
+						wdpaLayer.show();
+					}
+				} else {
+					wdpaLayer.hide();
+				}
+			}
+
+			function showHideSpeciesLayer() {
+				var checkBox = dojo.byId("speciesCheckBox");
+				if (checkBox.checked) {
+					var speciesidbox = dijit.byId("speciesid");
+					speciesLayer.objid = speciesidbox.attr("value");
+					getSpeciesInfo(speciesLayer.objid);
+					if (speciesLayer.visible) {
+						speciesLayer.refresh();
+					} else {
+						speciesLayer.show();
+					}
+				} else {
+					speciesLayer.hide();
+				}
+			}
+
+			function showHideRichnessLayer() {
+				var checkBox = dojo.byId("richnessVisibility");
+				if (checkBox.checked) {
+					var taxonGroup = dojo.query("#taxonSelectors input[type=radio]:checked")[0].value;
+					(taxonGroup == "all") ? richnessLayer.product = "richness" : richnessLayer.product = "richness " + taxonGroup;
+					if (richnessLayer.visible) {
+						richnessLayer.refresh();
+					} else {
+						richnessLayer.show();
+					}
+				} else {
+					richnessLayer.hide();
+				}
+			}
+
+			function showHideWDPAOverlay() {
+				var checkBox = dojo.byId("wdpaOverlayCheckbox");
+				if (checkBox.checked) {
+					if (wdpaOverlayLayer.visible) {
+						wdpaOverlayLayer.refresh();
+					} else {
+						wdpaOverlayLayer.show();
+					}
+				} else {
+					wdpaOverlayLayer.hide();
+				}
+			}
+
+			function getTile(mx, my, zoom) {
+				var resolution = (2 * Math.PI * 6378137) / Math.pow(2, zoom)
+				var tx = parseInt((mx + 20037508.3428) / resolution);
+				var ty = parseInt((my + 20037508.3428) / resolution);
+				var tile = new Object();
+				tile.tx = tx;
+				tile.ty = ty;
+				return tile;
+			}
+
+			function getCoordinate(tx, ty, zoom) {
+				var resolution = (2 * Math.PI * 6378137) / Math.pow(2, zoom)
+				mx = tx * resolution - 20037508.3428
+				my = ty * resolution - 20037508.3428
+				var coordinate = new Object();
+				coordinate.mx = mx;
+				coordinate.my = my;
+				return coordinate;
+			}
+
+			function getQuadkeyForTile(tile, zoom) {
+				var quadKey = "";
+				tile.ty = Math.pow(2, zoom) - tile.ty - 1
+				for (var i = zoom; i > 0; i--) {
+					digit = 0;
+					mask = 1 << (i - 1);
+					if ((tile.tx & mask) != 0) {
+						digit = digit + 1
+					}
+					if ((tile.ty & mask) != 0) {
+						digit = digit + 2
+					}
+					quadKey = quadKey + digit.toString();
+				}
+				return quadKey;
+			}
+
+			function getQuadkeyForPoint(mx, my, zoom) {
+				var coordinate = new Object();
+				coordinate.mx = mx;
+				coordinate.my = my;
+				var tile = getTile(mx, my, zoom);
+				return getQuadkeyForTile(tile, zoom);
+			}
+
+			function setVisibleLayers() {
+				if (rdbLayer == undefined) {
+					var imageParameters = new esri.layers.ImageParameters();
+					imageParameters.layerIds = [0];
+					imageParameters.layerOption = esri.layers.ImageParameters.LAYER_OPTION_SHOW;
+					var redListURL = "http://mapservices.iucnredlist.org/arcgis/rest/services/IUCN/SpeciesRange/MapServer";
+					if (document.domain == 'h03-dev-vm7') {
+						token = "20dmPwYAeZ2oZZaepH1RS9wgpl0VNqePsXBk4LCpCkqZ-P194VzNA3eyImI6fEH7G3GZQiT66M1YRPOT0SpqbQ..";
+						//token for HTTP referer: h03-dev-vm7 
+					} else {
+						token = "20dmPwYAeZ2oZZaepH1RS791QoLewIh_tu9swN20ZE-EkWh0LxhWwUAscbIKJ_5W-OgXYYkYwUIA5ogfpuDhDIyD25ZVP7L2LXO_Ejcdaeg.";
+						//token for HTTP referer: ehabitat-wps.jrc.ec.europa.eu
+					}					rdbLayer = new esri.layers.ArcGISDynamicMapServiceLayer(redListURL + "?token=" + token, {
+						"imageParameters" : imageParameters,
+						opacity : 0.7
+					});
+					map.addLayer(rdbLayer);
+				}
+				if ((dojo.byId("showVectorLayer")).checked == true) {
+					var speciesidbox = dijit.byId("speciesid");
+					speciesid = speciesidbox.attr("value");
+					var layerDefinitions = [];
+					layerDefinitions[0] = "ID_NO=" + speciesid;
+					rdbLayer.setLayerDefinitions(layerDefinitions);
+					rdbLayer.setVisibleLayers([-1]);
+					rdbLayer.setVisibleLayers([0]);
+				} else {
+					rdbLayer.setVisibleLayers([-1]);
+				}
+			}
+
+			function showLoading() {
+				dojo.byId("loadingDiv").style.visibility = "visible";
+			}
+
+			function hideLoading(error) {
+				if (error) {
+					console.log("Update completed with error: ", error);
+				} else {
+					console.log("Update completed");
+				}
+				dojo.byId("loadingDiv").style.visibility = "hidden";
+			}
+
+			function getSpeciesInfo(speciesid) {
+				dojo.io.script.get({
+					url : "http://api.iucnredlist.org/common_names/" + speciesid + ".js?callback=parseSpeciesData"
+				});
+			}
+
+			function parseSpeciesData(results) {
+				if (results.species.length > 0) {
+					var species = results.species[0];
+					dojo.byId("speciesName").innerHTML = "<i>" + species['scientific_name'] + "</i>";
+				}
+			}
+
+			function gridRowClick(e) {
+				var value = e.grid.getItem(e.rowIndex).objid[0];
+				dijit.byId("speciesid").set("value", value.toString());
+				showHideSpeciesLayer();
+			}
+
+
+			dojo.addOnLoad(init);
+
+		</script>
+		<style type="text/css">
+			html, body {
+				width: 100%;
+				height: 100%;
+				margin: 0;
+				overflow: hidden;
+				font-size: 0.8em;
+				font-family: Arial;
+			}
+			.borderContainer {
+				width: 100%;
+				height: 100%;
+			}
+			#basemapGalleryDiv {
+				position: absolute;
+				z-Index: 5;
+				background-color: white;
+				overflow: auto;
+				visibility: hidden;
+				padding: 15px 15px 0px 15px;
+				border: 1px solid #666;
+				border-top-left-radius: 6px;
+				border-bottom-left-radius: 6px;
+				border-top-right-radius: 6px;
+				border-bottom-right-radius: 6px;
+				opacity: 0.95;
+			}
+			.close {
+				right: 7px;
+				top: 7px;
+				float: right;
+				position: absolute;
+				z-index: 10;
+			}
+		</style>
+	</head>
+	<body class="claro">
+		<div id="basemapGalleryDiv" dojoType="dijit.layout.ContentPane" id="basemapGalleryDiv" style="width:370px;height:450px;visibility:hidden">
+			<img src="images/cross.png" class="close" title="Close" onclick="hideBasemapGallery()"/>
+			<div id="basemapGallery"></div>
+		</div>
+		<div dojoType="dijit.layout.BorderContainer" design="sidebar" class="borderContainer">
+			<div dojoType="dijit.layout.ContentPane" region="leading" style="position:absolute" splitter="true" id="mapContentPane">
+				<div id="map" style="position:relative; width:1024px; height:1024px; border:2px solid #000"></div>
+				<div style="position: absolute;left: 500px;top:500px;visibility: hidden" id="loadingDiv">
+					<img id="loadingImg" src="images/loading.gif" alt="Loading image"/>
+				</div>
+			</div>
+			<div dojoType="dijit.layout.ContentPane" region="center">
+				<div dojoType="dijit.layout.BorderContainer" class="borderContainer">
+					<div dojoType="dijit.layout.ContentPane" region="top">
+						<div style="width: 50%;float: left">
+							<h1>Species Range</h1>
+							<div>
+								<label for="speciesid" style="vertical-align: middle">Species ID: </label>
+								<input type="text" name="speciesid" value="17975" dojoType="dijit.form.TextBox" id="speciesid">
+								<input dojoType="dijit.form.CheckBox" id="speciesCheckBox" checked onChange="showHideSpeciesLayer()">
+							</div>
+							<br/>
+							<label id="speciesName" style="font-size: 16px"> </label>
+							<br/>
+						</div>
+						<div style="width: 50%;float: right">
+							<h1>Protected Area</h1>
+							<div style="vertical-align: centre">
+								<label for="wdpaid" style="vertical-align: middle">WDPA ID: </label>
+								<input type="text" name="wdpaid" value="785" dojoType="dijit.form.TextBox" id="wdpaid">
+								<input dojoType="dijit.form.CheckBox" id="wdpaCheckBox" onChange="showHideWDPALayer()">
+							</div>
+						</div>
+					</div>
+					<div dojoType="dijit.layout.ContentPane" region="center">
+						<h1>Species Richness</h1>
+						<table id="taxonSelectors" style="width: 100%; height :30px;padding-bottom:10px">
+							<tr>
+								<td style="width:30%">
+								<input dojoType="dijit.form.CheckBox" id="richnessVisibility" onChange="showHideRichnessLayer()">
+								<input type="radio" dojoType="dijit.form.RadioButton" checked name="taxonGroup" value="aves" onclick="showHideRichnessLayer()"/>
+								<label for="all">Aves</label>
+								<input type="radio" dojoType="dijit.form.RadioButton" name="taxonGroup" value="mammalia" onclick="showHideRichnessLayer()"/>
+								<label for="all" style="padding-right: 80px">Mammalia</label></td><td style="width:200px"><div id="slider"></div>
+								<div style="margin-left: 50px">
+									Transparency
+								</div></td>
+								<td>
+								<input dojoType="dijit.form.CheckBox" id="wdpaOverlayCheckbox" onChange="showHideWDPAOverlay()">
+								Overlay PAs</input></td>
+								<td style="text-align: right"><label id="speciescount" style="font-size: 2em;"> </label></td>
+							</tr>
+						</table>
+						<table data-dojo-type="dojox.grid.DataGrid" data-dojo-id="grid" id="grid" style="height:300px" >
+							<thead style="width:100%">
+								<tr style="width:100%">
+									<th field="objid" width="65px">SpeciesID</th>
+									<th field="taxon" width="150px">Species</th>
+									<th field="kingdom" width="75px">Kingdom</th>
+									<th field="phylum" width="75px">Phylum</th>
+									<th field="_class" width="75px">Class</th>
+									<th field="order" width="75px">Order</th>
+									<th field="family" width="125px">Family</th>
+									<th field="rl_status" width="50px">Status</th>
+									<th field="rl_status_date" width="50px">Date</th>
+								</tr>
+							</thead>
+						</table>
+						<div style="position:absolute;bottom:5px">
+							<table>
+								<tr>
+									<td><div id="viewsChart"></div></td><td><div id="statusChart"></div></td>
+								</tr>
+							</table>
+						</div>
+					</div>
+					<div dojoType="dijit.layout.ContentPane" region="bottom" style="height:150px;position:absolute">
+						<h1>Other layers</h1>
+						<input dojoType="dijit.form.CheckBox" id="showVectorLayer" onclick="setVisibleLayers()"/>
+						<label for="basemapGalleryButton">IUCN Red List Vector data</label>
+						<div id="checkboxes">
+							<span>
+								<input dojoType="dijit.form.CheckBox" onclick="toggleBasemap()" id="basemapGalleryButton">
+								</input> <label for="basemapGalleryButton"> Basemap </label> </span>
+						</div>
+						<div>
+							<span>
+								<input dojoType="dijit.form.CheckBox" onclick="toggleQuadkeyLayer()" id="quadkeyLayerButton">
+								</input> <label for="quadkeyLayerButton"> Quadkey layer </label> </span>
+						</div>
+						<div id="info"></div>
+					</div>
+				</div>
+			</div>
+	</body>
+</html>

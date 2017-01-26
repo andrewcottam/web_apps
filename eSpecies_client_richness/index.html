@@ -1,0 +1,184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<title>Species Richness Visualisation</title>
+		<style>
+			body {
+				font-family: Helvetica;
+				font-size: 0.8em;
+			}
+			#basemapGalleryDiv {
+				position: absolute;
+				z-Index: 5;
+				background-color: white;
+				overflow: auto;
+				visibility: hidden;
+				padding: 15px 15px 0px 15px;
+				border: 1px solid #666;
+				border-top-left-radius: 6px;
+				border-bottom-left-radius: 6px;
+				border-top-right-radius: 6px;
+				border-bottom-right-radius: 6px;
+				opacity: 0.95;
+				font-size: 13px;
+			}
+			#mainLoadingDiv {
+				width: 16px;
+				left: 50%;
+				top: 50%;
+				position: absolute;
+				z-index: 1;
+			}
+		</style>
+		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.5/js/dojo/dijit/themes/claro/claro.css">
+		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.2/js/dojo/dijit/themes/tundra/tundra.css">
+		<script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.5"></script>
+		<script type="text/javascript" src="classes/ThresholdLayer.js"></script>
+		<script type="text/javascript" src="classes/CanvasLayer.js"></script>
+		<script type="text/javascript">
+			var dojoConfig = {
+				parseOnLoad : true
+			};
+			dojo.require("esri.map");
+			dojo.require("esri.dijit.BasemapGallery");
+			dojo.require("jrc.ThresholdLayer");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.require("dijit.form.Slider");
+			dojo.addOnLoad(init);
+			var map, thresholdLayer, slider;
+			function init() {
+				slider = new dijit.form.HorizontalSlider({
+					name : "slider",
+					intermediateChanges : true,
+					style : "width:150px;",
+					onChange : function(value) {
+						dojo.byId("slidervalue").innerHTML = "&gt " + Math.round(value) + " species";
+						thresholdLayer.setThreshold(dijit.byId('slider').value);
+					}
+				}, "slider");
+				var initialExtent = new esri.geometry.Extent({
+					"xmin" : 11506000,
+					"ymin" : -392000,
+					"xmax" : 13854000,
+					"ymax" : 725000,
+					"spatialReference" : {
+						"wkid" : 102100
+					}
+				});
+				map = new esri.Map("map", {
+					extent : initialExtent
+				});
+				var basemap = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer");
+				map.addLayer(basemap);
+				thresholdLayer = new jrc.ThresholdLayer({
+					opacity : 1,
+					product : "richness aves"
+				});
+				map.addLayer(thresholdLayer);
+				dojo.connect(thresholdLayer, "onUpdateStart", layerUpdateStarted);
+				dojo.connect(thresholdLayer, "onUpdateEnd", layerUpdateEnded);
+				var basemapGallery = new esri.dijit.BasemapGallery({
+					map : map,
+					bingMapsKey : "ApEtXt6OQmIxxBtaii01DEEG23Fx8OjcYrVFzWogoW96NcsjHsI6U8XjzdeG73RP"
+				}, "basemapGallery");
+				basemapGallery.startup();
+			}
+
+			function layerUpdateStarted() {
+				dojo.byId("loadingImg").style.visibility = "visible";
+				slider.enabled = true;
+			}
+
+			function layerUpdateEnded() {
+				dojo.byId("loadingImg").style.visibility = "hidden";
+				slider.minimum = thresholdLayer.uniqueValues[0];
+				slider.maximum = thresholdLayer.uniqueValues[thresholdLayer.uniqueValues.length - 1];
+				slider.enabled = false;
+			}
+
+			function toggleBasemap() {
+				div = dojo.byId("basemapGalleryDiv");
+				if (div.style.visibility == "hidden") {
+					showBasemapGallery();
+				} else {
+					hideBasemapGallery();
+				}
+			}
+
+			function showBasemapGallery() {
+				var button = dojo.byId("basemapGalleryButton");
+				var coords = dojo.coords(button);
+				var div = dojo.byId("basemapGalleryDiv");
+				div.style.left = coords.x + "px";
+				div.style.top = coords.y + 15 + "px";
+				div.style.visibility = "visible";
+			}
+
+			function hideBasemapGallery() {
+				div = dojo.byId("basemapGalleryDiv");
+				div.style.visibility = "hidden";
+				dojo.byId("basemapGalleryButton").checked = false;
+			}
+
+			function toggleMap() {
+				for (var j = 0; j < map.layerIds.length; j++) {
+					var layer = map.getLayer(map.layerIds[j]);
+					if (layer.url != "http://ehabitat-wps.jrc.ec.europa.eu") {
+						break;
+					}
+				}
+				if (dojo.byId("mapButton").checked) {
+					layer.show();
+					map.showZoomSlider();
+				} else {
+					layer.hide();
+					map.hideZoomSlider();
+				}
+			}
+		</script>
+		<script>
+			(function(i, s, o, g, r, a, m) {
+				i['GoogleAnalyticsObject'] = r;
+				i[r] = i[r] ||
+				function() {
+					(i[r].q = i[r].q || []).push(arguments)
+				}, i[r].l = 1 * new Date();
+				a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+				a.async = 1;
+				a.src = g;
+				m.parentNode.insertBefore(a, m)
+			})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+			ga('create', 'UA-63309294-1', 'auto');
+			ga('send', 'pageview');
+
+		</script>
+	</head>
+	<body class="claro">
+		<div style="margin: 0 auto; width: 1200px;">
+			<h2 style="text-align: center">Species Richness Visualisation</h2>
+			<table>
+				<tr>
+					<td>
+					<div id="mainLoadingDiv">
+						<img id="loadingImg" src="images/loading.gif" alt="Loading image"/>
+					</div><div id="map" style="height:950px;width:950px;"></div></td>
+					<td style="vertical-align: top;padding-left: 30px"><div id="slider"></div>
+					<div id="slidervalue" style="margin-left: 50px">
+						Move slider
+					</div>
+					<div style="padding-top: 30px">
+						<input type="checkbox" onclick="toggleBasemap()" id="basemapGalleryButton">
+						Basemap</input>
+						<input type="checkbox" onclick="toggleMap()" checked id="mapButton">
+						Show map</input>
+					</div>
+					<div id="basemapGalleryDiv" dojoType="dijit.layout.ContentPane" id="basemapGalleryDiv" style="width:370px;height:450px;visibility:hidden">
+						<div id="basemapGallery"></div>
+					</div></td>
+				</tr>
+			</table>
+		</div>
+	</body>
+</html>

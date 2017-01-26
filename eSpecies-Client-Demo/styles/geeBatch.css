@@ -1,0 +1,17 @@
+html, body {
+	height: 100%;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	font-family: Lucida Sans, Lucida Grande, Arial;
+	font-size: 12px;
+	color: #333;
+	overflow: hidden;
+}
+#title {
+	font-size: 22px;
+}
+#mapDiv {
+	width: 100px;
+	height: 100px;
+}

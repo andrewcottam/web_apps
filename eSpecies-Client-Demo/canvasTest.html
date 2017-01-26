@@ -1,0 +1,101 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<title>Canvas Test</title>
+		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.5/js/dojo/dijit/themes/claro/claro.css">
+		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.2/js/dojo/dijit/themes/tundra/tundra.css">
+		<script type="text/javascript">
+			dojoConfig = {
+				parseOnLoad : true
+			}
+		</script>
+		<script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.5"></script>
+		<script type="text/javascript" src="classes/CanvasTestLayer.js"></script>
+		<script type="text/javascript">
+			dojo.require("esri.map");
+			dojo.require("jrc.CanvasTestLayer");
+			dojo.addOnLoad(init);
+			var map, canvasTestLayer;
+			function init() {
+				var initialExtent = new esri.geometry.Extent({
+					"xmin" : 11506000,
+					"ymin" : -392000,
+					"xmax" : 13854000,
+					"ymax" : 725000,
+					"spatialReference" : {
+						"wkid" : 102100
+					}
+				});
+				map = new esri.Map("map", {
+					extent : initialExtent,
+					logo : false
+				});
+				dojo.connect(map, "onLoad", function() {
+					map.hideZoomSlider();
+				});
+				var basemap = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer");
+				//map.addLayer(basemap);
+				canvasTestLayer = new jrc.CanvasTestLayer({
+					operator : "source-over",
+					opacity : 1
+				});
+				map.addLayer(canvasTestLayer);
+			}
+
+			function refreshOverlayLayer(operator) {
+				canvasTestLayer.operator = operator;
+				canvasTestLayer.draw();
+			}
+		</script>
+	</head>
+	<body class="tundra">
+		<div>
+			<h3>Canvas Test</h3>
+			<table>
+				<tr>
+					<td><div id="map" style="height:950px;width:950px;"></div></td>
+					<td style="vertical-align: top;padding-left: 30px">
+					<div>
+						<input type="radio" name="operator" checked id="source-over" onclick="refreshOverlayLayer(this.id)">
+						source-over</input>
+						<br/>
+						<input type="radio" name="operator" id="source-in" onclick="refreshOverlayLayer(this.id)">
+						source-in</input>
+						<br/>
+						<input type="radio" name="operator" id="source-out" onclick="refreshOverlayLayer(this.id)">
+						source-out</input>
+						<br/>
+						<input type="radio" name="operator" id="source-atop" onclick="refreshOverlayLayer(this.id)">
+						source-atop</input>
+						<br/>
+						<input type="radio" name="operator" id="destination-over" onclick="refreshOverlayLayer(this.id)">
+						destination-over</input>
+						<br/>
+						<input type="radio" name="operator" id="destination-in" onclick="refreshOverlayLayer(this.id)">
+						destination-in</input>
+						<br/>
+						<input type="radio" name="operator" id="destination-out" onclick="refreshOverlayLayer(this.id)">
+						destination-out</input>
+						<br/>
+						<input type="radio" name="operator" id="destination-atop" onclick="refreshOverlayLayer(this.id)">
+						destination-atop</input>
+						<br/>
+						<input type="radio" name="operator" id="lighter" onclick="refreshOverlayLayer(this.id)">
+						lighter</input>
+						<br/>
+						<input type="radio" name="operator" id="darker" onclick="refreshOverlayLayer(this.id)">
+						darker</input>
+						<br/>
+						<input type="radio" name="operator" id="xor" onclick="refreshOverlayLayer(this.id)">
+						xor</input>
+						<br/>
+						<input type="radio" name="operator" id="copy" onclick="refreshOverlayLayer(this.id)">
+						copy</input>
+						<br/>
+					</div></td>
+				</tr>
+			</table>
+		</div>
+	</body>
+</html>

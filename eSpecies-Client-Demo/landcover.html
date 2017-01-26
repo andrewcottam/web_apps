@@ -1,0 +1,209 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<title>Land Cover Visualisation</title>
+		<style>
+			body {
+				font-family: Helvetica;
+				font-size: 0.8em;
+			}
+			#basemapGalleryDiv {
+				position: absolute;
+				z-Index: 5;
+				background-color: white;
+				overflow: auto;
+				visibility: hidden;
+				padding: 15px 15px 0px 15px;
+				border: 1px solid #666;
+				border-top-left-radius: 6px;
+				border-bottom-left-radius: 6px;
+				border-top-right-radius: 6px;
+				border-bottom-right-radius: 6px;
+				opacity: 0.95;
+				font-size: 13px;
+			}
+			#mainLoadingDiv {
+				width: 16px;
+				left: 50%;
+				top: 50%;
+				position: absolute;
+				z-index: 1;
+			}
+			.legend {
+				padding: 8px;
+				margin: 0px;
+				color: white;
+				display: block;
+				cursor: pointer;
+			}
+		</style>
+		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.5/js/dojo/dijit/themes/claro/claro.css">
+		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.2/js/dojo/dijit/themes/tundra/tundra.css">
+		<script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.5"></script>
+		<script type="text/javascript" src="classes/UniqueClassLayer.js"></script>
+		<script type="text/javascript" src="classes/CanvasLayer.js"></script>
+		<script type="text/javascript">
+			var dojoConfig = {
+				parseOnLoad : true
+			};
+			dojo.require("esri.map");
+			dojo.require("esri.dijit.BasemapGallery");
+			dojo.require("jrc.UniqueClassLayer");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.addOnLoad(init);
+			var map, uniqueClassLayer, red;
+			function init() {
+				var initialExtent = new esri.geometry.Extent({
+					"xmin" : 11506000,
+					"ymin" : -392000,
+					"xmax" : 13854000,
+					"ymax" : 725000,
+					"spatialReference" : {
+						"wkid" : 102100
+					}
+				});
+				map = new esri.Map("map", {
+					extent : initialExtent
+				});
+				//				var basemap = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer");
+				var basemap = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer");
+				map.addLayer(basemap);
+				uniqueClassLayer = new jrc.UniqueClassLayer({
+					product : "map",
+					typeid : 4,
+					objid : 1,
+					effect : "show",
+					opacity : 1
+				});
+				map.addLayer(uniqueClassLayer);
+				dojo.connect(map, "onMouseMove", function(evt) {
+					//var newred = uniqueClassLayer.getRedValue(evt.layerX, evt.layerY);
+					//if (!newred) return;
+					//if (red!=newred){
+					//	dojo.byId("s" + String(newred)).style.color = "black";
+					//	if (red) dojo.byId("s" + String(red)).style.color = "white";
+					//	red = newred;
+					//}
+				});
+				dojo.connect(uniqueClassLayer, "onUpdateStart", layerUpdateStarted);
+				dojo.connect(uniqueClassLayer, "onUpdateEnd", layerUpdateEnded);
+				var basemapGallery = new esri.dijit.BasemapGallery({
+					map : map,
+					bingMapsKey : "ApEtXt6OQmIxxBtaii01DEEG23Fx8OjcYrVFzWogoW96NcsjHsI6U8XjzdeG73RP"
+				}, "basemapGallery");
+				basemapGallery.startup();
+			}
+
+			function layerUpdateStarted() {
+				dojo.byId("loadingImg").style.visibility = "visible";
+			}
+
+			function selectClass(redValue) {
+				uniqueClassLayer.setFilterValue(redValue);
+				dojo.byId("s" + String(redValue)).style.color = "black";
+			}
+
+			function unSelectClass(id) {
+				uniqueClassLayer.reset();
+				dojo.byId(id).style.color = "white";
+			}
+
+			function layerUpdateEnded() {
+				var html = "";
+				dojo.byId("loadingImg").style.visibility = "hidden";
+				var uniqueVals = uniqueClassLayer.uniqueValues;
+				var palette = uniqueClassLayer.palette;
+				dojo.io.script.get({
+					url : "../../cgi-bin/eSpecies/lookupValues/umdlandcoverclasses",
+					callbackParamName : "jsoncallback",
+					load : function(data) {
+						for(var k = 0; k < uniqueVals.length; k++) {
+							color = "rgb(" + palette[k][0] + "," + palette[k][1] + "," + palette[k][2] + ")";
+							html += "<span class='legend' onmouseover='selectClass(" + palette[k][0] + ")' id='s" + palette[k][0] + "' onmouseout='unSelectClass(this.id)' style='background-color:" + color + "'>" + data.rows[uniqueVals[k]][1] + "</span>"
+						}
+						dojo.byId("pixelVals").innerHTML = html;
+					}
+				});
+			}
+
+			function toggleBasemap() {
+				div = dojo.byId("basemapGalleryDiv");
+				if(div.style.visibility == "hidden") {
+					showBasemapGallery();
+				} else {
+					hideBasemapGallery();
+				}
+			}
+
+			function showBasemapGallery() {
+				var button = dojo.byId("basemapGalleryButton");
+				var coords = dojo.coords(button);
+				var div = dojo.byId("basemapGalleryDiv");
+				div.style.left = coords.x + "px";
+				div.style.top = coords.y - 20 - (div.style.height.substr(0, div.style.height.length - 2)) + "px";
+				div.style.visibility = "visible";
+			}
+
+			function hideBasemapGallery() {
+				div = dojo.byId("basemapGalleryDiv");
+				div.style.visibility = "hidden";
+				dojo.byId("basemapGalleryButton").checked = false;
+			}
+
+			function toggleMap() {
+				for(var j = 0; j < map.layerIds.length; j++) {
+					var layer = map.getLayer(map.layerIds[j]);
+					if(layer.url != "http://ehabitat-wps.jrc.ec.europa.eu") {
+						break;
+					}
+				}
+				if(dojo.byId("mapButton").checked) {
+					layer.show();
+					map.showZoomSlider();
+				} else {
+					layer.hide();
+					map.hideZoomSlider();
+				}
+			}
+
+			function setEffect(effect) {
+				uniqueClassLayer.setEffect(effect);
+			}
+		</script>
+	</head>
+	<body class="claro">
+		<div style="margin: 0 auto; width: 1200px;">
+			<h2 style="text-align: center">Land Cover Visualisation</h2>
+			<table>
+				<tr>
+					<td>
+					<div id="mainLoadingDiv">
+						<img id="loadingImg" src="images/loading.gif" alt="Loading image"/>
+					</div><div id="map" style="height:950px;width:950px;"></div></td>
+					<td style="vertical-align: top"><div id="pixelVals"></div>
+					<div style="padding-left: 30px">
+						<div style="padding-top: 30px">
+							<span>
+								<input type='radio' name='uniqueVal' onClick="setEffect('highlight')">
+								highlight</input> </span>
+							<span>
+								<input type='radio' name='uniqueVal' checked onClick="setEffect('show')">
+								show</input> </span>
+						</div>
+						<div style="padding-top: 10px">
+							<input type="checkbox" onclick="toggleBasemap()" id="basemapGalleryButton">
+							Basemap</input>
+							<input type="checkbox" onclick="toggleMap()" checked id="mapButton">
+							Show map</input>
+						</div>
+					</div>
+					<div id="basemapGalleryDiv" dojoType="dijit.layout.ContentPane" id="basemapGalleryDiv" style="width:370px;height:450px;visibility:hidden">
+						<div id="basemapGallery"></div>
+					</div></td>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</body>
+</html>

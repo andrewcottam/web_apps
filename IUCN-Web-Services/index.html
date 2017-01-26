@@ -1,0 +1,52 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <title>IUCN Red List of Threatened Species - Web Service Examples</title>
+        <link rel="stylesheet" type="text/css" href="default.css" />
+    </head>
+    <body> 
+        <h1>IUCN Red List of Threatened Species - Web Service Examples</h1>
+        <p>
+            The following sections link to examples of clients and tools that use the IUCN Web Services. For full documentation on how to use the Web Services and the source code for all of these tools, go <a href="https://github.com/andrewcottam/IUCN-Web-Services/wiki/Using-the-IUCN-Web-Services">here</a>.
+        </p>
+        <h2>ESRI Map Service</h2>
+        <a href="ESRIMapServiceWebMercatorSecure.html">ESRI Map Service - ESRI basemap</a><br/>
+        <a href="MapServiceCloudMade.html">ESRI Map Service - Cloudmade basemap</a>
+        <h2>Web Mapping Service (WMS)</h2>
+        <a href="WMS.html">OpenLayers using WMS</a>
+        <h2>Web Feature Service (WFS)</h2>
+        <a href="WFS.html">Examples of using WFS</a>
+        <h2>Google Earth (KMZ)</h2>
+        <a href="KML.html">Example of using KMZ (synchronous)</a><br/>
+        <a href="SpeciesKMZClient.html">Example of using KMZ (asynchronous using a Geoprocessing Task)</a>
+        <h2>Zipped shapefile download</h2>
+        <a href="SpeciesZipClient.html">Example of getting a zipped shapefile for a set of species</a>
+        <br/>
+        <a href="FamilyZipClient.html">Example of getting a zipped shapefile for a family</a>
+        <br/>
+        <br/>
+        <p>
+            All of these servies use secure Web Services with token-based authentication.
+        </p>
+        <label>
+            The token for these examples expires on 11/3/2012
+        </label>
+        <br/>
+        <p>
+            In order to use the secured Web Services within your own web applications:
+        </p>
+        <ul>
+            <li>
+                Request a username and password from IUCN
+            </li>
+            <li>
+                On receipt of your credentials, create a token for your website using the <a href="https://79.125.16.106/ArcGIS/tokens/gettoken.html">token service</a>.
+            </li>
+            <li>
+                Copy and paste the token into your web application - 
+            </li>
+        </ul>
+        <p>For information on working with secure ArcGIS Services using the Javascript API see <a href="http://help.arcgis.com/en/webapi/javascript/arcgis/help/jshelp/ags_security.htm">here</a></p>
+    </body>
+</html>

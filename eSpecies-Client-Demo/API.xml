@@ -1,0 +1,383 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="wadl.xsl"?>
+<!--
+example.wadl (06-May-2011)
+
+Example Web Application Description Language (WADL) Web Service interface specification,
+which demonstrates my WADL XSLT stylesheet, wadl.xsl.
+
+Mark Sawers <mark.sawers@ipc.com>
+
+Copyright (c) 2011 IPC Systems, Inc.
+
+This work is licensed under the Creative Commons Attribution-ShareAlike 3.0 License.
+To view a copy of this license, visit
+http://creativecommons.org/licenses/by-sa/3.0/
+or send a letter to
+Creative Commons
+543 Howard Street, 5th Floor
+San Francisco, California, 94105, USA
+-->
+<wadl:application xmlns:wadl="http://wadl.dev.java.net/2009/02"
+xmlns:jr="http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" xmlns:r="http://anydomain/ReportParameters.xsd"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://wadl.dev.java.net/2009/02 wadl.xsd ">
+	<wadl:doc title="eSpecies Services">This document is a discovery and metadata tool for accessing and using the eSpecies REST services published by the Joint Research Centre in Ispra, Italy. It was published in January 2012 and will remain at this url for the foreseable future.</wadl:doc>
+	<wadl:grammars>
+		<wadl:include href="species.xsd" />
+		<wadl:include href="habitats.xsd" />
+	</wadl:grammars>
+	<wadl:resources base="../cgi-bin/eSpecies">
+		<wadl:resource path="species" theme="Species">
+			<wadl:method name="map" id="1">
+				<wadl:doc>Creates an image of the species range</wadl:doc>
+				<wadl:doc title="Example">species/map/17975</wadl:doc>
+				<wadl:request>
+					<wadl:param name="speciesid" style="query" type="xsi:int" required="true">
+						<wadl:doc>Unique species identifier (using the IUCN Red List coding)</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:doc title="Description">Return information about a species</wadl:doc>
+			<wadl:method name="xyz" id="2">
+				<wadl:doc>Returns the xyz coordinates of the species range</wadl:doc>
+				<wadl:doc title="Example">species/xyz/17975</wadl:doc>
+				<wadl:request>
+					<wadl:param name="speciesid" style="query" type="xsi:int" required="true">
+						<wadl:doc>Unique species identifier (using the IUCN Red List coding)</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="pacount" id="3">
+				<wadl:doc>Returns the number of protected areas within the species range</wadl:doc>
+				<wadl:doc title="Example">species/pacount/17975</wadl:doc>
+				<wadl:request>
+					<wadl:param name="speciesid" style="query" type="xsi:int" required="true">
+						<wadl:doc>Unique species identifier (using the IUCN Red List coding)</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="palist" id="4">
+				<wadl:doc>Returns a list of protected areas within the species range</wadl:doc>
+				<wadl:doc title="Example">species/palist/17975/json</wadl:doc>
+				<wadl:request>
+					<wadl:param name="speciesid" style="query" type="xsi:int" required="true">
+						<wadl:doc>Unique species identifier (using the IUCN Red List coding)</wadl:doc>
+					</wadl:param>
+					<wadl:param name="format" style="query" type="xsi:string" required="true">
+						<wadl:doc>Format for the return data. Either 'json' or 'xml'.</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="area" id="4b">
+				<wadl:doc>Returns the total area of the species range</wadl:doc>
+				<wadl:doc title="Example">species/area/17975</wadl:doc>
+				<wadl:request>
+					<wadl:param name="speciesid" style="query" type="xsi:int" required="true">
+						<wadl:doc>Unique species identifier (using the IUCN Red List coding)</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="gap" id="5">
+				<wadl:doc>Returns a list of species that do not intersect any protected areas</wadl:doc>
+				<wadl:doc title="Example">species/gap/json</wadl:doc>
+				<wadl:request>
+					<wadl:param name="format" style="query" type="xsi:string" required="true">
+						<wadl:doc>Format for the return data. Either 'json' or 'xml'.</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="gapCountry" id="4b">
+				<wadl:doc>Returns a list of species that do not intersect any protected areas within the country</wadl:doc>
+				<wadl:doc title="Example">species/gapCountry/458/json</wadl:doc>
+				<wadl:request>
+					<wadl:param name="countryid" style="query" type="xsi:int" required="true">
+						<wadl:doc>Countryid from http://en.wikipedia.org/wiki/ISO_3166-1</wadl:doc>
+					</wadl:param>
+					<wadl:param name="format" style="query" type="xsi:string" required="true">
+						<wadl:doc>Format for the return data. Either 'json' or 'xml'.</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+		</wadl:resource>
+		<wadl:resource path="pa" theme="Protected Areas">
+			<wadl:doc title="Description">Return information about a protected area</wadl:doc>
+			<wadl:method name="map" id="5">
+				<wadl:doc>Creates an image of the protected areas location</wadl:doc>
+				<wadl:doc title="Example">pa/map/785</wadl:doc>
+				<wadl:request>
+					<wadl:param name="speciesid" style="query" type="xsi:int" required="true">
+						<wadl:doc>Unique protected area identifier (using the UNEP-WCMC coding from protectedplanet)</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="xyz" id="6">
+				<wadl:doc>Returns the xyz coordinates of the protected areas location</wadl:doc>
+				<wadl:doc title="Example">pa/xyz/785</wadl:doc>
+				<wadl:request>
+					<wadl:param name="speciesid" style="query" type="xsi:int" required="true">
+						<wadl:doc>Unique protected area identifier (using the UNEP-WCMC coding from protectedplanet)</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="speciescount" id="7">
+				<wadl:doc>Returns a count of the number of species that occur within the protected area</wadl:doc>
+				<wadl:doc title="Example">pa/speciescount/785</wadl:doc>
+				<wadl:request>
+					<wadl:param name="speciesid" style="query" type="xsi:int" required="true">
+						<wadl:doc>Unique protected area identifier (using the UNEP-WCMC coding from protectedplanet)</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="specieslist" id="8">
+				<wadl:doc>Returns a list of species that occur within the protected area</wadl:doc>
+				<wadl:doc title="Example">pa/specieslist/785/json</wadl:doc>
+				<wadl:request>
+					<wadl:param name="speciesid" style="query" type="xsi:int" required="true">
+						<wadl:doc>Unique protected area identifier (using the UNEP-WCMC coding from protectedplanet)</wadl:doc>
+					</wadl:param>
+					<wadl:param name="format" style="query" type="xsi:string" required="true">
+						<wadl:doc>Format for the return data. Either 'json' or 'xml'.</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="parin" id="9">
+				<wadl:doc>Returns a set of Species Irreplacibility Indices for the protected area by taxonomic group</wadl:doc>
+				<wadl:doc title="Example">pa/parin/1079/json</wadl:doc>
+				<wadl:request>
+					<wadl:param name="speciesid" style="query" type="xsi:int" required="true">
+						<wadl:doc>Unique protected area identifier (using the UNEP-WCMC coding from protectedplanet)</wadl:doc>
+					</wadl:param>
+					<wadl:param name="format" style="query" type="xsi:string" required="true">
+						<wadl:doc>Format for the return data. Either 'json' or 'xml'.</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="sprichness" id="10">
+				<wadl:doc>Returns protected areas, their lat/long values and the number of species that intersect the PA ordered in reverse order of most rich.</wadl:doc>
+				<wadl:doc title="Example">pa/richness/100</wadl:doc>
+				<wadl:request>
+					<wadl:param name="limit" style="query" type="xsi:int" required="true">
+						<wadl:doc>The number of protected areas to limit the output to.</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="sprichnessTable" id="10">
+				<wadl:doc>Returns the protected area name, the country and the count of the species that occur within them in reverse order.</wadl:doc>
+				<wadl:doc title="Example">pa/richnessTable/100</wadl:doc>
+				<wadl:request>
+					<wadl:param name="limit" style="query" type="xsi:int" required="true">
+						<wadl:doc>The number of protected areas to limit the output to.</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+		</wadl:resource>
+		<wadl:resource path="country" theme="Country">
+			<wadl:method name="countrylist" id="28">
+				<wadl:doc>Returns a list of countries and their 3 letter country codes</wadl:doc>
+				<wadl:doc title="Example">country/list/json</wadl:doc>
+				<wadl:request>
+					<wadl:param name="format" style="query" type="xsi:string" required="true">
+						<wadl:doc>Format for the return data. Either 'json' or 'xml'.</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="speciescount" id="9">
+				<wadl:doc>Returns a count of the number of species that occur within the country</wadl:doc>
+				<wadl:doc title="Example">country/speciescount/458</wadl:doc>
+				<wadl:request>
+					<wadl:param name="countryid" style="query" type="xsi:string" required="true">
+						<wadl:doc>Numeric code for the country (taken from http://en.wikipedia.org/wiki/ISO_3166-1)</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="specieslist" id="10">
+				<wadl:doc>Returns a list of species that occur within the country</wadl:doc>
+				<wadl:doc title="Example">country/specieslist/458/json</wadl:doc>
+				<wadl:request>
+					<wadl:param name="countryid" style="query" type="xsi:string" required="true">
+						<wadl:doc>Numeric code for the country (taken from http://en.wikipedia.org/wiki/ISO_3166-1)</wadl:doc>
+					</wadl:param>
+					<wadl:param name="format" style="query" type="xsi:string" required="true">
+						<wadl:doc>Format for the return data. Either 'json' or 'xml'.</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="pacount" id="11">
+				<wadl:doc>Returns the number of protected areas within the country</wadl:doc>
+				<wadl:doc title="Example">country/pacount/MYS</wadl:doc>
+				<wadl:request>
+					<wadl:param name="countryid" style="query" type="xsi:string" required="true">
+						<wadl:doc>Numeric code for the country (taken from http://en.wikipedia.org/wiki/ISO_3166-1)</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="palist" id="12">
+				<wadl:doc>Returns a list of protected areas within the country</wadl:doc>
+				<wadl:doc title="Example">country/palist/MYS</wadl:doc>
+				<wadl:request>
+					<wadl:param name="countryid" style="query" type="xsi:string" required="true">
+						<wadl:doc>ISO 3 letter country code for the country (taken from http://en.wikipedia.org/wiki/ISO_3166-1)</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+		</wadl:resource>
+		<wadl:resource path="richness" theme="Species Richness">
+			<wadl:method name="map" id="13">
+				<wadl:doc>Returns a species richness map for the taxonomic group</wadl:doc>
+				<wadl:doc title="Example">richness/map/aves</wadl:doc>
+				<wadl:request>
+					<wadl:param name="taxongroup" style="query" type="xsi:string" required="true">
+						<wadl:doc>Class name for the taxonomic group, e.g. aves</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="xyz" id="14">
+				<wadl:doc>Returns the richness data for the taxonomic group as xyz coordinates</wadl:doc>
+				<wadl:doc title="Example">richness/xyz/aves</wadl:doc>
+				<wadl:request>
+					<wadl:param name="taxongroup" style="query" type="xsi:string" required="true">
+						<wadl:doc>Class name for the taxonomic group, e.g. aves</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+		</wadl:resource>
+		<wadl:resource path="bbox" theme="Bounding Box">
+			<wadl:method name="species/map" id="15">
+				<wadl:doc>Returns an image of the species range map filtered for the passed bounding box</wadl:doc>
+				<wadl:doc title="Example">bbox/25728,16008,27776,17032/species/map/17975</wadl:doc>
+				<wadl:request>
+					<wadl:param name="speciesid" style="query" type="xsi:int" required="true">
+						<wadl:doc>Unique species identifier (using the IUCN Red List coding)</wadl:doc>
+					</wadl:param>
+					<wadl:param name="bbox" style="query" type="xsi:string" required="true">
+						<wadl:doc>The bounding box as a comma-separated string in the format: minx,miny,maxx,maxy</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="pa/map" id="16">
+				<wadl:doc>Returns an image of the protected areas location filtered for the passed bounding box</wadl:doc>
+				<wadl:doc title="Example">bbox/25728,16008,27776,17032/pa/map/785</wadl:doc>
+				<wadl:request>
+					<wadl:param name="bbox" style="query" type="xsi:string" required="true">
+						<wadl:doc>The bounding box as a comma-separated string in the format: minx,miny,maxx,maxy</wadl:doc>
+					</wadl:param>
+					<wadl:param name="speciesid" style="query" type="xsi:int" required="true">
+						<wadl:doc>Unique protected area identifier (using the UNEP-WCMC coding from protectedplanet)</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="richness/map" id="17">
+				<wadl:doc>Return species richness information for specific taxonomic groups filtered for the passed bounding box</wadl:doc>
+				<wadl:doc title="Example">bbox/25728,16008,27776,17032/richness/map/aves</wadl:doc>
+				<wadl:request>
+					<wadl:param name="bbox" style="query" type="xsi:string" required="true">
+						<wadl:doc>The bounding box as a comma-separated string in the format: minx,miny,maxx,maxy</wadl:doc>
+					</wadl:param>
+					<wadl:param name="taxongroup" style="query" type="xsi:string" required="true">
+						<wadl:doc>Class name for the taxonomic group, e.g. aves</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="speciescount" id="18">
+				<wadl:doc>Returns a count of the number of species that occur within the passed bounding box</wadl:doc>
+				<wadl:doc title="Example">bbox/25728,16008,27776,17032/speciescount</wadl:doc>
+				<wadl:request>
+					<wadl:param name="bbox" style="query" type="xsi:string" required="true">
+						<wadl:doc>The bounding box as a comma-separated string in the format: minx,miny,maxx,maxy</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="specieslist" id="19">
+				<wadl:doc>Returns a list of species that occur within the passed bounding box</wadl:doc>
+				<wadl:doc title="Example">bbox/25728,16008,27776,17032/specieslist</wadl:doc>
+				<wadl:request>
+					<wadl:param name="bbox" style="query" type="xsi:string" required="true">
+						<wadl:doc>The bounding box as a comma-separated string in the format: minx,miny,maxx,maxy</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="pacount" id="20">
+				<wadl:doc>Returns the number of protected areas within the passed bounding box</wadl:doc>
+				<wadl:doc title="Example">bbox/25728,16008,27776,17032/pacount</wadl:doc>
+				<wadl:request>
+					<wadl:param name="bbox" style="query" type="xsi:string" required="true">
+						<wadl:doc>The bounding box as a comma-separated string in the format: minx,miny,maxx,maxy</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="palist" id="21">
+				<wadl:doc>Returns a list of protected areas within the passed bounding box</wadl:doc>
+				<wadl:doc title="Example">bbox/25728,16008,27776,17032/palist</wadl:doc>
+				<wadl:request>
+					<wadl:param name="bbox" style="query" type="xsi:string" required="true">
+						<wadl:doc>The bounding box as a comma-separated string in the format: minx,miny,maxx,maxy</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+		</wadl:resource>
+		<wadl:resource path="quadkey" theme="Quadkey">
+			<wadl:method name="speciescount" id="22">
+				<wadl:doc>Returns a count of the number of species that occur within the passed quadkey</wadl:doc>
+				<wadl:doc title="Example">quadkey/132320330232030/speciescount</wadl:doc>
+				<wadl:request>
+					<wadl:param name="quadkey" style="query" type="xsi:string" required="true">
+						<wadl:doc>The unique quad key address, e.g. 132320330232030. This can be retrieved by one of the utility methods</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="specieslist" id="23">
+				<wadl:doc>Returns a list of species that occur within the passed quadkey</wadl:doc>
+				<wadl:doc title="Example">quadkey/132320330232030/specieslist</wadl:doc>
+				<wadl:request>
+					<wadl:param name="quadkey" style="query" type="xsi:string" required="true">
+						<wadl:doc>The unique quad key address, e.g. 132320330232030. This can be retrieved by one of the utility methods</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="pacount" id="24">
+				<wadl:doc>Returns the number of protected areas within the passed quadkey</wadl:doc>
+				<wadl:doc title="Example">quadkey/132320330232030/pacount</wadl:doc>
+				<wadl:request>
+					<wadl:param name="quadkey" style="query" type="xsi:string" required="true">
+						<wadl:doc>The unique quad key address, e.g. 132320330232030. This can be retrieved by one of the utility methods</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="palist" id="25">
+				<wadl:doc>Returns a list of protected areas within the passed quadkey</wadl:doc>
+				<wadl:doc title="Example">quadkey/132320330232030/palist</wadl:doc>
+				<wadl:request>
+					<wadl:param name="quadkey" style="query" type="xsi:string" required="true">
+						<wadl:doc>The unique quad key address, e.g. 132320330232030. This can be retrieved by one of the utility methods</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+		</wadl:resource>
+		<wadl:resource path="quadkeydata" theme="Quadkey data">
+			<wadl:method name="map" id="26">
+				<wadl:doc>Returns the data in the quadkeydata table according to the passed typeid and objid</wadl:doc>
+				<wadl:doc title="Example">quadkeydata/map/1/17975</wadl:doc>
+				<wadl:request>
+					<wadl:param name="typeid" style="query" type="xsi:int" required="true">
+						<wadl:doc>typeid to filter the quadkey data by. For more information see: typeid. Species = 1, protected areas =2</wadl:doc>
+					</wadl:param>
+					<wadl:param name="objid" style="query" type="xsi:int" required="true">
+						<wadl:doc>objid to filter the quadkey data by. This is a unique identifier for the species or protected area.</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+			<wadl:method name="xyz" id="27">
+				<wadl:doc>Returns the data in the quadkeydata table according to the passed typeid and objid</wadl:doc>
+				<wadl:doc title="Example">quadkeydata/xyz/1/17975</wadl:doc>
+				<wadl:request>
+					<wadl:param name="typeid" style="query" type="xsi:int" required="true">
+						<wadl:doc>typeid to filter the quadkey data by. For more information see: typeid. Species = 1, protected areas =2</wadl:doc>
+					</wadl:param>
+					<wadl:param name="objid" style="query" type="xsi:int" required="true">
+						<wadl:doc>objid to filter the quadkey data by. This is a unique identifier for the species or protected area.</wadl:doc>
+					</wadl:param>
+				</wadl:request>
+			</wadl:method>
+		</wadl:resource>
+	</wadl:resources>
+</wadl:application>

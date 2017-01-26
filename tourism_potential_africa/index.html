@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Tourism Potential in Africa</title>
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dojo/dojo/resources/dojo.css">
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dgrid/css/dgrid.css">
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dgrid/css/skins/claro.css">
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dojo/dijit/themes/claro/claro.css">
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/esri/css/esri.css">
+		<link rel="stylesheet" href="styles/tourism.css">
+		<script src="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/" type="text/javascript"></script>
+		<script src="scripts/tourism.js" type="text/javascript" charset="utf-8"></script>
+		<script>
+			(function(i, s, o, g, r, a, m) {
+				i['GoogleAnalyticsObject'] = r;
+				i[r] = i[r] ||
+				function() {
+					(i[r].q = i[r].q || []).push(arguments)
+				}, i[r].l = 1 * new Date();
+				a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+				a.async = 1;
+				a.src = g;
+				m.parentNode.insertBefore(a, m)
+			})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+			ga('create', 'UA-63309294-1', 'auto');
+			ga('send', 'pageview');
+
+		</script>
+	</head>
+	<body class="claro">
+		<div id="container" dojotype="dijit.layout.BorderContainer" design="headline" gutters="false">
+			<div id="topPane" dojotype="dijit.layout.ContentPane" region="top">
+				<h1>Protected Areas Tourism Potential</h1>
+				<a href='tourismHelp.html' target='_help'> Help </a>
+			</div>
+			<div id="map" dojotype="dijit.layout.ContentPane" region="left"></div>
+			<div id="rightPane" dojotype="dijit.layout.ContentPane" region="center">
+				<div id="sitesArea">
+					<h2>Ranked protected areas</h2>
+					<div class='filtercontrols'>
+						<label>Show the top</label>
+						<input type="text" value="20" style="width:2em" data-dojo-type="dijit/form/TextBox" id="limitto_id_text"/>
+						<label> protected areas for nature-based tourism potential</label>
+						<button type="button" id="refresh" data-dojo-type="dijit/form/Button">
+							Refresh
+						</button>
+					</div>
+					<label>(click column to sort, click row to get species)</label>
+					<div id='sitesGrid'></div>
+				</div>
+				<div id='speciesArea'>
+					<h2>Species</h2>
+					<div class='filtercontrols'>
+						<select id="taxa_select" data-dojo-type="dijit/form/Select" style="width: 120px;margin-right:20px;">
+							<option value="ALL" selected="selected">All</option>
+							<option value="ACTINOPTERYGII">Actinopterygii</option>
+							<option value="AMPHIBIA">Amphibia</option>
+							<option value="ANTHOZOA">Anthozoa</option>
+							<option value="ARACHNIDA">Arachnida</option>
+							<option value="AVES">Aves</option>
+							<option value="CHONDRICHTHYES">Chondrichthyes</option>
+							<option value="CONIFEROPSIDA">Coniferopsida</option>
+							<option value="CRUSTACEA">Crustacea</option>
+							<option value="GASTROPODA">Gastropoda</option>
+							<option value="HYDROZOA">Hydrozoa</option>
+							<option value="INSECTA">Insecta</option>
+							<option value="LILIOPSIDA">Liliopsida</option>
+							<option value="MAGNOLIOPSIDA">Magnoliopsida</option>
+							<option value="MAMMALIA">Mammalia</option>
+							<option value="MYXINI">Myxini</option>
+							<option value="POLYPODIOPSIDA">Polypodiopsida</option>
+							<option value="REPTILIA">Reptilia</option>
+							<option value="REPTILIA">Reptilia</option>
+							<option value="SELLAGINELLOPSIDA">Sellaginellopsida</option>
+						</select>
+						<span id="statusFilterControls">
+							<input id="CR" name="CR" data-dojo-type="dijit/form/CheckBox" value="CR" checked/>
+							<label for="CR">CR</label>
+							<input id="EN" name="EN" data-dojo-type="dijit/form/CheckBox" value="EN" checked/>
+							<label for="EN">EN</label>
+							<input id="VU" name="VU" data-dojo-type="dijit/form/CheckBox" value="VU" checked/>
+							<label for="VU">VU</label>
+							<input id="NT" name="NT" data-dojo-type="dijit/form/CheckBox" value="NT" checked/>
+							<label for="NT">NT</label>
+							<input id="LC" name="LC" data-dojo-type="dijit/form/CheckBox" value="LC,LR/cd,LR/lc"/>
+							<label for="LC">LC</label>
+							<input id="DD" name="DD" data-dojo-type="dijit/form/CheckBox" value="DD" checked/>
+							<label for="DD">DD</label> </span>
+						<input id="showimages" name="showimages" data-dojo-type="dijit/form/CheckBox"/>
+						<label for="showimages">Show images</label>
+					</div>
+					<div id="speciesGrid"></div>
+					<div id="speciesCount"></div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

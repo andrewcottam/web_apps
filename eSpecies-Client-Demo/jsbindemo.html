@@ -1,0 +1,148 @@
+<html>
+	<head>
+		<title>DOPA REST Client</title>
+		<script src="//ajax.googleapis.com/ajax/libs/dojo/1.8.1/dojo/dojo.js" data-dojo-config="async: true"></script>
+		<script src="http://openlayers.org/api/OpenLayers.js"></script>
+		<script>
+			var wdpa_id = 116257; 
+			// 116257 Marakele (South Africa)
+			// 220101 Portland Bight (Jamaica)
+			// 555547833 Votua village (Fiji)
+			// 785 Kinabalu Park (Malaysia) 
+
+			require(["dojo/request/script", "dojo/_base/array", "dojo/dom", "dojox/charting/Chart", "dojox/charting/axis2d/Default", "dojox/charting/plot2d/Lines"], function(script, arrayUtil, dom, Chart, Default, Lines) {
+
+				//get the species information for the PA
+				script.get("http://dopa-services.jrc.ec.europa.eu/services/ibex/especies/get_pa_species_list?wdpa_id=" + wdpa_id + "&category=EN,CR,VU", {
+					jsonp : "callback"
+				}).then(function(response) {
+					sp = '';
+					arrayUtil.forEach(response.records, function(item) {
+						sp += item.status + ' ' + item.taxon + '<br>';
+					});
+					dom.byId("species").innerHTML = "There are " + response.metadata.recordCount + " matching species:<br/>" + sp;
+					script.get("http://api.flickr.com/services/rest/?format=json&method=flickr.photos.search&text=" + escape(response.records[0].taxon) + "&api_key=6d3e521646cdd1391a6dee32d8e54d62", {
+						jsonp : "jsoncallback"
+					}).then(function(response) {
+						f = response.photos.photo[0];
+						dom.byId("speciesimage").src = "http://farm" + f["farm"] + ".staticflickr.com/" + f["server"] + "/" + f["id"] + "_" + f["secret"] + ".jpg";
+					});
+				});   
+
+				//get the PA information
+				script.get("http://dopa-services.jrc.ec.europa.eu/services/ibex/especies/get_pa_centroid?wdpa_id=" + wdpa_id, {
+					jsonp : "callback"
+				}).then(function(response) {
+					var centroidstr = response.records[0].get_pa_centroid;
+					var lng = centroidstr.substring(16, centroidstr.search(' '));
+					var lat = centroidstr.substring(centroidstr.search(' ') + 1, centroidstr.length - 1);
+					var map = new OpenLayers.Map('map');
+					map.addLayer(new OpenLayers.Layer.WMS("OpenLayers WMS", "http://vmap0.tiles.osgeo.org/wms/vmap0", {
+						layers : 'basic'
+					}));
+					map.addLayer(new OpenLayers.Layer.WMS("GBIF Density", "http://geoserver.gbif.org/wms?", {
+						layers : "gbif:gbifDensityLayer",
+						'transparent' : true
+					}));
+					var gslayers = ['http://lrm-maps.jrc.ec.europa.eu/geoserver/ows?', 'http://lrm-maps1.jrc.ec.europa.eu/geoserver/ows?', 'http://lrm-maps2.jrc.ec.europa.eu/geoserver/ows?', 'http://lrm-maps3.jrc.ec.europa.eu/geoserver/ows?', 'http://lrm-maps4.jrc.ec.europa.eu/geoserver/ows?'];
+					map.addLayer(new OpenLayers.Layer.WMS("World Protected Areas", gslayers, {
+						layers : "lrm:wdpa_latest",
+						'transparent' : true
+					}));
+					map.setCenter(new OpenLayers.LonLat(lng, lat), 6);
+					dom.byId("centroid").innerHTML = 'Long: ' + lng + '<br/>Lat: ' + lat + '<br/><br/>';
+					script.get("http://downloads.wdpa.org/ArcGIS/rest/services/EuroGEOSS/EuroGEOSS_WDPA/MapServer/1/query/query?where=Site_ID%3D" + wdpa_id + "&returnGeometry=false&outFields=Local_Name&f=pjson", {
+						jsonp : "callback"
+					}).then(function(response) {
+						dom.byId("sitename").innerHTML = document.title = response.features[0].attributes.Local_Name;
+					});
+					script.get("http://www.panoramio.com/map/get_panoramas.php?set=public&from=0&to=20&minx=" + (parseFloat(lng) - 0.08) + "&miny=" + (parseFloat(lat) - 0.08) + "&maxx=" + (parseFloat(lng) + 0.08) + "&maxy=" + (parseFloat(lat) + 0.08) + "&size=medium&mapfilter=true", {
+						jsonp : "callback"
+					}).then(function(response) {
+						dom.byId("siteimage").src = response.photos[0].photo_file_url;
+					});
+					script.get("http://api.worldweatheronline.com/free/v1/weather.ashx?q=" + lat + "," + lng + "&format=json&num_of_days=2&key=8x585vna6xku2ry7h6jn9c59", {
+						jsonp : "callback"
+					}).then(function(response) {
+						dom.byId("weather").innerHTML = "Weather: " + response.data.current_condition[0].weatherDesc[0].value + " " + response.data.current_condition[0].temp_C + "<br/>Tomorrow: " + response.data.weather[0].weatherDesc[0].value + "<br/>Day after: " + response.data.weather[1].weatherDesc[0].value;
+					});
+				});
+
+				//get the environmental information
+				script.get("http://dopa-services.jrc.ec.europa.eu/services/ibex/especies/get_pa_bbox?wdpa_id=" + wdpa_id, {
+					jsonp : "callback"
+				}).then(function(response) {
+					var url = "http://bioval.jrc.ec.europa.eu/cgi-bin/cgiwps.cgi?request=execute&service=wps&version=1.0.0&identifier=timeseries&datainputs=timeseriesGroupCode=NDVI_TS;wktPolygon=" + response['records'][0].get_pa_bbox + ";timeSeriesToApply=LTAVG;yearTS=2011&RawDataOutput=timeseriesJSON";
+					script.get(url, {
+						jsonp : "callBack"
+					}).then(function(response) {
+						var coordpairs = [];
+						for (var i=0; i < response.timeseries[0].categories.length; i++) {
+							coordpairs.push({
+								x : response.timeseries[0].categories[i],
+								y : response.timeseries[0].values[i]
+							});
+						};
+						var chart1 = new Chart("simplechart");
+						chart1.addPlot("default");
+						var myLabelFunc = function(text, value, precision) {
+							var monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+							var monthNum = (text.length > 3) ? text.substring(0, 2) : text.substring(0, 1)
+							return monthNames[monthNum - 1];
+						};
+						chart1.addAxis("x", {
+							labelFunc : myLabelFunc,
+							title : 'Month',
+							titleOrientation : 'away',
+							majorTickStep : 2000
+						});
+						chart1.addAxis("y", {
+							vertical : true
+						});
+						chart1.addSeries("Series 1", coordpairs);
+						chart1.render();
+					});
+				});
+				script.get("http://dopa-services.jrc.ec.europa.eu/services/ibex/estation/getfireoccurrencewdpa?wdpa_id=" + wdpa_id + "&startdate=20120101&enddate=20121231", {
+					jsonp : "callback"
+				}).then(function(response) {
+					firedata = '<table><tr><th>Date</th><th>Count</th><th>Sum</th></tr>';
+					arrayUtil.forEach(response.records, function(item) {
+						firedata += '<tr><td>' + item.stamp.toString().substring(6, 8) + '/' + item.stamp.toString().substring(4, 6) + '/' + item.stamp.toString().substring(0, 4) + '</td><td align="center">' + item.count + '</td><td align="center">' + item.sum + '</td><tr>';
+					});
+					dom.byId("fires").innerHTML = firedata + "</table>";
+				});
+
+			});
+		</script>
+	</head>
+	<body>
+		<div>
+			<h1 id="sitename">&lt;unep-wcmc-service&gt;</h1>
+			<table>
+				<tr>
+					<th>Site information</th><th>Species information</th><th>Environmental information</th>
+				</tr>
+				<tr style="vertical-align: top">
+					<td style="padding:20px;">
+					<div id='centroid'>
+						&lt;jrc-reference-service&gt;
+					</div><img id='siteimage' style="width: 250px;"><div id="map" style="width:250px;height:250px"></div></td>
+					<td style="padding:20px"><img id='speciesimage' style="width: 250px;">
+					<br/>
+					<br/>
+					<div id='species'>
+						&lt;jrc-species-service&gt;
+					</div></td>
+					<td style="padding:20px"><h3>NDVI 2012</h3><div id="simplechart" style="width: 250px; height: 150px;"></div><h3>Recent fires</h3>
+					<div id='fires'>
+						&lt;jrc-fire-service&gt;
+					</div><h3>Current Weather</h3>
+					<div id='weather'>
+						&lt;free.worldweatheronline.com-service&gt;
+					</div></td>
+				</tr>
+			</table>
+		</div>
+	</body>
+</html>

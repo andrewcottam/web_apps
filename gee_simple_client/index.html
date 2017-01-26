@@ -1,0 +1,154 @@
+<html>
+	<head>
+		<title>Google Earth Engine - Landsat 8 demo</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=7,IE=9">
+		<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dojo/dojo/resources/dojo.css">
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dgrid/css/skins/claro.css">
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dojo/dijit/themes/claro/claro.css">
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/esri/css/esri.css">
+		<link rel="stylesheet" href="styles/geeClient.css">
+		<script src="http://js.arcgis.com/3.7/"></script>
+		<script src="scripts/geeClient.js"></script>
+		<script src="data/borneo.geojson"></script>
+		<!-- <script src="data/SE_DRC.geojson"></script> -->
+		<script src="http://esri.github.io/geojson-utils/src/jsonConverters.js"></script>
+		<script>
+			(function(i, s, o, g, r, a, m) {
+				i['GoogleAnalyticsObject'] = r;
+				i[r] = i[r] ||
+				function() {
+					(i[r].q = i[r].q || []).push(arguments)
+				}, i[r].l = 1 * new Date();
+				a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+				a.async = 1;
+				a.src = g;
+				m.parentNode.insertBefore(a, m)
+			})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+			ga('create', 'UA-63309294-1', 'auto');
+			ga('send', 'pageview');
+
+		</script>
+	</head>
+	<body class="claro">
+		<div id="container" data-dojo-type="dijit/layout/BorderContainer" design="headline" gutters="false" gutters="false">
+			<div data-dojo-type="dijit/layout/ContentPane" region="top">
+				<h1>Google Earth Engine - Landsat 8 demo</h1>
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" region="left" id="mapDiv"></div>
+			<div data-dojo-type="dijit/layout/ContentPane" region="center">
+				<div data-dojo-type="dijit/layout/BorderContainer" design="headline" gutters="false" gutters="false">
+					<div data-dojo-type="dijit/layout/ContentPane" region="top" class="contentPane">
+						<div class="controlBoxes">
+							<div class="uiheader">
+								Date:
+							</div>
+							<select id="dateSelect" data-dojo-type="dijit/form/Select"></select>
+							<br/>
+							<br/>
+							<div id="loading">
+								Loading...<img src="images/loading.gif"/>
+							</div>
+						</div>
+						<div class="controlBoxes">
+							<div class="uiheader">
+								Algorithms:
+							</div>
+							<input type="checkbox" id="remove_illumination_cb" data-dojo-type="dijit/form/CheckBox">
+							<label for="remove_illumination_cb">Shadow removal</label>
+							<br/>
+							<input type="checkbox" id="remove_cloud_cb" data-dojo-type="dijit/form/CheckBox">
+							<label for="remove_cloud_cb">Cloud layer</label>
+							<br/>
+							<input type="checkbox" id="classify_cb" data-dojo-type="dijit/form/CheckBox">
+							<label for="classify_cb">Detect logging tracks</label>
+							<br/>
+							<input type="checkbox" id="pa_cb" data-dojo-type="dijit/form/CheckBox">
+							<label for="pa_cb">Protected areas</label>
+						</div>
+						<div class="controlBoxes">
+							<div class="uiheader">
+								RGB Bands:
+							</div>
+							<select id="red" data-dojo-type="dijit/form/Select">
+								<option value="1">1</option>
+								<option value="2">2</option>
+								<option value="3">3</option>
+								<option value="4" selected="selected">4</option>
+								<option value="5">5</option>
+								<option value="6">6</option>
+								<option value="7">7</option>
+								<option value="8">8</option>
+								<option value="9">9</option>
+								<option value="10">10</option>
+								<option value="11">11</option>
+							</select>
+							<select id="green" data-dojo-type="dijit/form/Select">
+								<option value="1">1</option>
+								<option value="2">2</option>
+								<option value="3" selected="selected">3</option>
+								<option value="4">4</option>
+								<option value="5">5</option>
+								<option value="6">6</option>
+								<option value="7">7</option>
+								<option value="8">8</option>
+								<option value="9">9</option>
+								<option value="10">10</option>
+								<option value="11">11</option>
+							</select>
+							<select id="blue" data-dojo-type="dijit/form/Select">
+								<option value="1">1</option>
+								<option value="2" selected="selected">2</option>
+								<option value="3">3</option>
+								<option value="4">4</option>
+								<option value="5">5</option>
+								<option value="6">6</option>
+								<option value="7">7</option>
+								<option value="8">8</option>
+								<option value="9">9</option>
+								<option value="10">10</option>
+								<option value="11">11</option>
+							</select>
+							<button id="updateButton" data-dojo-type="dijit/form/Button" type="button">
+								Go
+							</button>
+						</div>
+						<div class="controlBoxes">
+							<div class="uiheader">
+								Basemap:
+							</div>
+							<input type="radio" data-dojo-type="dijit/form/RadioButton" name="basemapLayer" value="topo" id="topoRadio" checked/>
+							<label for="topoRadio">Topo</label>
+							<input type="radio" data-dojo-type="dijit/form/RadioButton" name="basemapLayer" value="satellite" id="imageryRadio"/>
+							<label for="imageryRadio">Imagery</label>
+							<input type="radio" data-dojo-type="dijit/form/RadioButton" name="basemapLayer" value="gray" id="grayRadio"/>
+							<label for="grayRadio">Gray</label>
+							<input type="radio" data-dojo-type="dijit/form/RadioButton" name="basemapLayer" value="none" id="noneRadio"/>
+							<label for="noneRadio">None</label>
+							<div id="slider" name="slider" data-dojo-type="dijit/form/HorizontalSlider" data-dojo-props="value:1,minimum: 0,maximum:1,intermediateChanges:true, showButtons:false"></div>
+						</div>
+					</div>
+					<div data-dojo-type="dijit/layout/ContentPane" region="left" style="width: 0px;padding:0px"></div>
+					<div data-dojo-type="dijit/layout/ContentPane" region="center">
+						<div data-dojo-type="dijit/layout/StackContainer" id="contentStack">
+							<div id="photos"></div>
+							<div data-dojo-type="dijit/layout/ContentPane" title="Panoramio" style="padding:0px" id="panoramioPane">
+								<div id="panoramioImages"></div>
+							</div>
+							<div data-dojo-type="dijit/layout/ContentPane" title="Flickr" style="padding:0px" id="flickrPane">
+								<div id="flickrImages"></div>
+							</div>
+						</div>
+					</div>
+					<div data-dojo-type="dijit/layout/ContentPane" region="bottom" style="vertical-align: middle">
+						<img src="images/panoramio_big.png" style="vertical-align: middle" id='panoramioImage' title="Click for Panoramio images of the current map extent">
+						<img src="images/flickr_big.png" style="vertical-align: middle" id='flickrImage' title="Click for Flickr images of the current  map extent">
+						<div style="display:inline">Satellite imagery provided by:<span><img src="images/gee.png"></span></div>
+					</div>
+				</div>
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" region="bottom"></div>
+	</body>
+</html>

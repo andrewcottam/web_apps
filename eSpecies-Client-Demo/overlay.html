@@ -1,0 +1,358 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
+		<title>Protected Area Overlay Visualisation</title>
+		<style>
+			body {
+				font-family: Helvetica;
+				font-size: 0.8em;
+			}
+			#basemapGalleryDiv {
+				position: absolute;
+				z-Index: 5;
+				background-color: white;
+				overflow: auto;
+				visibility: hidden;
+				padding: 15px 15px 0px 15px;
+				border: 1px solid #666;
+				border-top-left-radius: 6px;
+				border-bottom-left-radius: 6px;
+				border-top-right-radius: 6px;
+				border-bottom-right-radius: 6px;
+				opacity: 0.95;
+				font-size: 13px;
+			}
+			#mainLoadingDiv {
+				width: 16px;
+				left: 50%;
+				top: 50%;
+				position: absolute;
+				z-index: 1;
+			}
+		</style>
+		<link href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.1/js/dojo/dijit/themes/claro/claro.css" rel="stylesheet" type="text/css" >
+		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.1/js/dojo/dijit/themes/tundra/tundra.css">
+		<script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.7" type="text/javascript"></script>
+		<script type="text/javascript" src="classes/ESpeciesDynamicMapServiceLayer.js"></script>
+		<script type="text/javascript" src="classes/OverlayLayer.js"></script>
+		<script type="text/javascript" src="classes/UniqueClassLayer.js"></script>
+		<script type="text/javascript" src="classes/CanvasLayer.js"></script>
+		<script type="text/javascript" src="classes/IUCNRedListProxyLayer.js"></script>
+		<script type="text/javascript">
+			var dojoConfig = {
+				parseOnLoad : true
+			};
+			dojo.require("esri.map");
+			dojo.require("esri.layers.wms");
+			dojo.require("esri.dijit.BasemapGallery");
+			dojo.require("dijit.form.Slider");
+			dojo.require("dijit.layout.ContentPane");
+			dojo.require("jrc.ESpeciesDynamicMapServiceLayer");
+			dojo.require("jrc.OverlayLayer");
+			dojo.require("jrc.UniqueClassLayer");
+			dojo.require("jrc.IUCNRedListProxyLayer");
+			dojo.addOnLoad(init);
+			var map, richnessLayer, overlayLayer, uniqueClassLayer, speciesLayer, startR, startG, startB, imageData;
+			function init() {
+				opacity = 1;
+				slider = new dijit.form.HorizontalSlider({
+					name : "slider",
+					intermediateChanges : true,
+					style : "width:150px;",
+					value : 100,
+					onChange : function(value) {
+						opacity = value / 100;
+						overlayLayer.overlayLayer.setOpacity(opacity);
+					}
+				}, "slider");
+				var initialExtent = new esri.geometry.Extent({
+					"xmin" : 12786000,
+					"ymin" : 488000,
+					"xmax" : 13153000,
+					"ymax" : 752000,
+					"spatialReference" : {
+						"wkid" : 3857
+					}
+				});
+				map = new esri.Map("map", {
+					extent : initialExtent
+				});
+				var basemap = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer");
+				map.addLayer(basemap);
+				dojo.connect(map, "onMouseMove", function(evt) {
+					var sp = evt.screenPoint;
+					getRichness(sp.x, sp.y);
+				});
+				richnessLayer = new jrc.ESpeciesDynamicMapServiceLayer({
+					product : "richness aves"
+				});
+				map.addLayer(richnessLayer);
+				var wmsLayer = new esri.layers.WMSLayer("../cgi-bin/wdpa2011", {
+					resourceInfo : {
+						extent : initialExtent,
+						version : "1.1.1",
+						layerInfos : [{
+							name : "pa_wdpa_2011"
+						}]
+					},
+					visibleLayers : ["pa_wdpa_2011"],
+					opacity : 0
+				});
+				map.addLayer(wmsLayer);
+				uniqueClassLayer = new jrc.UniqueClassLayer({
+					product : "map",
+					typeid : 4,
+					objid : 1,
+					effect : "show",
+					opacity : 0
+				});
+				map.addLayer(uniqueClassLayer);
+				speciesLayer = new jrc.IUCNRedListProxyLayer({
+					opacity : 0
+				});
+				map.addLayer(speciesLayer);
+				overlayLayer = new jrc.OverlayLayer({
+					operator : "source-atop"
+				});
+				overlayLayer.setBaseLayer(wmsLayer);
+				overlayLayer.setOverlayLayer(richnessLayer);
+				map.addLayer(overlayLayer);
+				dojo.connect(overlayLayer, "onUpdateStart", layerUpdateStarted);
+				dojo.connect(overlayLayer, "onUpdateEnd", layerUpdateEnded);
+				dojo.connect(overlayLayer, "onMouseInPixels", mouseInPixels);
+				dojo.connect(overlayLayer, "onMouseOutPixels", mouseOutPixels);
+				var basemapGallery = new esri.dijit.BasemapGallery({
+					map : map,
+					bingMapsKey : "ApEtXt6OQmIxxBtaii01DEEG23Fx8OjcYrVFzWogoW96NcsjHsI6U8XjzdeG73RP"
+				}, "basemapGallery");
+				basemapGallery.startup();
+			}
+
+			function layerUpdateStarted() {
+				dojo.byId("loadingImg").style.visibility = "visible";
+			}
+
+			function layerUpdateEnded() {
+				dojo.byId("loadingImg").style.visibility = "hidden";
+			}
+
+			function toggleBasemap() {
+				div = dojo.byId("basemapGalleryDiv");
+				if (div.style.visibility == "hidden") {
+					showBasemapGallery();
+				} else {
+					hideBasemapGallery();
+				}
+			}
+
+			function toggleOverlay() {
+				var checkBox = dojo.byId("overlayVisibility");
+				if (checkBox.checked) {
+					if (overlayLayer.visible) {
+						overlayLayer.refresh();
+					} else {
+						overlayLayer.show();
+					}
+				} else {
+					overlayLayer.hide();
+				}
+
+			}
+
+			function showBasemapGallery() {
+				var button = dojo.byId("basemapGalleryButton");
+				var coords = dojo.coords(button);
+				var div = dojo.byId("basemapGalleryDiv");
+				div.style.left = coords.x + "px";
+				div.style.top = coords.y + 15 + "px";
+				div.style.visibility = "visible";
+			}
+
+			function hideBasemapGallery() {
+				div = dojo.byId("basemapGalleryDiv");
+				div.style.visibility = "hidden";
+				dojo.byId("basemapGalleryButton").checked = false;
+			}
+
+			function toggleMap() {
+				for (var j = 0; j < map.layerIds.length; j++) {
+					var layer = map.getLayer(map.layerIds[j]);
+					if (layer.url != "http://ehabitat-wps.jrc.ec.europa.eu") {
+						break;
+					}
+				}
+				if (dojo.byId("mapButton").checked) {
+					layer.show();
+					map.showZoomSlider();
+				} else {
+					layer.hide();
+					map.hideZoomSlider();
+				}
+			}
+
+			function getRichness(x, y) {
+				var value = overlayLayer.getValue(x, y);
+				if (!value) {
+					dojo.byId("numSpecies").innerHTML = '';
+				} else {
+					dojo.byId("numSpecies").innerHTML = "Species richness: " + value;
+				}
+			}
+
+			function changeOverlay(overlay) {
+				switch(overlay) {
+					case "richness":
+						overlayLayer.operator = "source-atop";
+						overlayLayer.setOverlayLayer(richnessLayer);
+						break;
+					case "species":
+						overlayLayer.operator = "source-in";
+						//this doesnt work in firefox!!
+						//i.e. only show the source layer (species range data) where it is intersects the PA layer
+						overlayLayer.setOverlayLayer(speciesLayer);
+						break;
+					default:
+						overlayLayer.operator = "source-atop";
+						overlayLayer.setOverlayLayer(uniqueClassLayer);
+				}
+			}
+
+			function calculateProtection() {
+				dojo.xhrGet({
+					url : "../cgi-bin/eSpecies/species/area/17975",
+					load : function(data) {
+						//dojo.byId("percentProtected").innerHTML = data + " m2";
+					}
+				});
+				var percentProtected = (overlayLayer.getNonNullPixelCount() / overlayLayer.getPixelCount()) * 100;
+				dojo.byId("percentProtected").innerHTML = percentProtected.toFixed(2) + "% of the species range lies with protected areas";
+			}
+
+			function mouseInPixels(evt) {
+				selectRasterPolygon(evt.screenPoint.x, evt.screenPoint.y);
+				console.log("mouseInPixels");
+			}
+
+			function mouseOutPixels(evt) {
+				deselectRasterPolygon(evt.screenPoint.x, evt.screenPoint.y);
+				console.log("mouseOutPixels");
+			}
+
+			function deselectRasterPolygon(evt) {
+				overlayLayer._draw();
+			}
+
+			function selectRasterPolygon(startX, startY) {
+				startR = overlayLayer.getRedValue(startX, startY);
+				startG = overlayLayer.getGreenValue(startX, startY);
+				startB = overlayLayer.getBlueValue(startX, startY);
+				if (!startR || !startG || !startB)
+					return;
+				if (startB == 255)
+					return;
+				var canvasWidth = map.width;
+				var canvasHeight = map.height;
+				var I = overlayLayer._context.getImageData(0, 0, canvasWidth, canvasHeight);
+				imageData = I.data;
+				var pixelStack = [[startX, startY]];
+				while (pixelStack.length) {
+					var newPos, x, y, pixelPos, reachLeft, reachRight;
+					newPos = pixelStack.pop();
+					x = newPos[0];
+					y = newPos[1];
+					pixelPos = (y * canvasWidth + x) * 4;
+					while (y-- >= 0 && matchStartColor(pixelPos)) {
+						pixelPos -= canvasWidth * 4;
+					}
+					pixelPos += canvasWidth * 4; ++y;
+					reachLeft = false;
+					reachRight = false;
+					while (y++ < canvasHeight - 1 && matchStartColor(pixelPos)) {
+						colorPixel(pixelPos);
+						if (x > 0) {
+							if (matchStartColor(pixelPos - 4)) {
+								if (!reachLeft) {
+									pixelStack.push([x - 1, y]);
+									reachLeft = true;
+								}
+							} else if (reachLeft) {
+								reachLeft = false;
+							}
+						}
+						if (x < canvasWidth - 1) {
+							if (matchStartColor(pixelPos + 4)) {
+								if (!reachRight) {
+									pixelStack.push([x + 1, y]);
+									reachRight = true;
+								}
+							} else if (reachRight) {
+								reachRight = false;
+							}
+						}
+						pixelPos += canvasWidth * 4;
+					}
+				}
+				overlayLayer._context.putImageData(I, 0, 0);
+			}
+
+			function matchStartColor(pixelPos) {
+				var r = imageData[pixelPos];
+				var g = imageData[pixelPos + 1];
+				var b = imageData[pixelPos + 2];
+				return (r != 0);
+			}
+
+			function colorPixel(pixelPos) {
+				imageData[pixelPos] = 0;
+				imageData[pixelPos + 1] = 0;
+				imageData[pixelPos + 2] = 255;
+				imageData[pixelPos + 3] = 255;
+			}
+		</script>
+	</head>
+	<body class="claro">
+		<div style="margin: 0 auto; width: 1200px;">
+			<h2 style="text-align: center">Protected Area Overlay Visualisation</h2>
+			<table>
+				<tr>
+					<td>
+					<div id="mainLoadingDiv">
+						<img id="loadingImg" src="images/loading.gif" alt="Loading image"/>
+					</div><div id="map" style="height:950px;width:950px;"></div></td>
+					<td style="vertical-align: top;padding-left: 30px"><div id="slider"></div>
+					<div style="margin-left: 50px">
+						Transparency
+					</div>
+					<div style="padding-top: 30px">
+						<input type="checkbox" checked onclick="toggleOverlay()" id="overlayVisibility">
+						Overlay layer</input>
+						<div style="padding-left: 10px">
+							<input type="radio" name="overlay" checked onchange="changeOverlay('richness')">
+							Richness</input>
+							<br/>
+							<input type="radio" name="overlay" onchange="changeOverlay('species')">
+							Species range</input>
+							<br/>
+							<input type="radio" name="overlay" onchange="changeOverlay('land')">
+							Land cover</input>
+							<br/>
+						</div>
+					</div>
+					<div style="padding-top: 10px">
+						<input type="checkbox" onclick="toggleBasemap()" id="basemapGalleryButton">
+						Basemap</input>
+						<input type="checkbox" onclick="toggleMap()" checked id="mapButton">
+						Show map</input>
+						<br/>
+						<br/>
+						<input type="button" onclick="calculateProtection()" value="Calculate protection"/>
+					</div>
+					<div id="basemapGalleryDiv" dojoType="dijit.layout.ContentPane" id="basemapGalleryDiv" style="width:370px;height:450px;visibility:hidden">
+						<div id="basemapGallery"></div>
+					</div><div id="numSpecies" style="padding-top: 10px"></div><div id="percentProtected" style="color:#4183C4;font-size:18px;padding-top: 20px"></div></td>
+				</tr>
+			</table>
+		</div>
+	</body>
+</html>
