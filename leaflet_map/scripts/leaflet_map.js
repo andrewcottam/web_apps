@@ -2,7 +2,7 @@ require({
 		async: true,
 		packages: [{
 			name: "widgets",
-			location: "/../widgets"
+			location: "/../../widgets"
 		}]
 	}, ["dijit/form/Button", "dojo/dom", "widgets/ReferenceList", "widgets/ImageryController", "widgets/ImageryTimeSlider", "widgets/PhotoViewer", "dojo/dom-construct", "dojo/io-query", "dojo/_base/window", "dojo/parser", "dojo/on", "dijit/registry", "dojo/ready", "dijit/form/CheckBox", "dijit/layout/BorderContainer", "dijit/layout/ContentPane"],
 	function(Button, dom, ReferenceList, ImageryController, ImageryTimeSlider, PhotoViewer, domConstruct, ioQuery, win, parser, on, registry, ready) {

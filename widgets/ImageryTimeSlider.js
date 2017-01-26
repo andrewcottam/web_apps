@@ -21,7 +21,7 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 		},
         postCreate: function(){
         	domClass.add(this.domNode, "imageryTimeSlider"); //give the widget a css class
-			var showImgNode = domConstruct.place("<img src='widgets/images/left.png' id='showImg' title='Click to show imagery selector'>", win.body()); //create a node for the show imagery selector button
+			var showImgNode = domConstruct.place("<img src='../widgets/images/left.png' id='showImg' title='Click to show imagery selector'>", win.body()); //create a node for the show imagery selector button
 			on(showImgNode, "click", lang.hitch(this, this.show)); //add handling of clicking on the show imagery selector button
         	on(dom.byId("sliderBar"), "click", lang.hitch(this, this.barClicked)); //add handling of clicking on the slider bar
         	on(win.body(), "keydown", lang.hitch(this, this.keyDown)); //add handling of LEFT and RIGHT arrow presses and 
@@ -200,7 +200,7 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
     		var value = (domStyle.get("ImageryTimeSliderControls","display") == "block") ? "none" : "block";
     		domStyle.set(dom.byId("ImageryTimeSliderControls"), "display", value); 		
     		var image = (domStyle.get("ImageryTimeSliderControls","display") == "block") ? "up.png" : "down.png";
-    		domAttr.set("configImg", "src", "widgets/images/" + image); 		
+    		domAttr.set("configImg", "src", "../widgets/images/" + image); 		
     	},
 		bandsChanged: function(value){
 			this.bands = value;
@@ -236,7 +236,7 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 			domClass.add(win.body(), "claro");
 			var infoDialog = new Dialog({
 		        title: "Information",
-		        href: "widgets/resources/imageControllerInfo.html",
+		        href: "../widgets/resources/imageControllerInfo.html",
 		        style: "width: 800px"
 			});
 			infoDialog.show();
