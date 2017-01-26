@@ -42,7 +42,7 @@
 <a href='https://andrewcottam.github.io/web_apps/IUCN-Web-Services/index.html' target='_blank'>index.html</a> - Lots and lots of things that probably don't work any more</br>
 #### leaflet_map
 <a href='https://andrewcottam.github.io/web_apps/leaflet_map/index.html' target='_blank'>index.html</a> - test page for leaflet</br>
-<a href='https://andrewcottam.github.io/web_apps/leaflet_map/reference.html' target='_blank'>reference.html</a> - test page for references from the ScienceDirect API
+<a href='https://andrewcottam.github.io/web_apps/leaflet_map/reference.html' target='_blank'>references.html</a> - test page for references from the ScienceDirect API
 #### species_validation_tool
 <a href='https://andrewcottam.github.io/web_apps/species_validation_tool/index.html' target='_blank'>index.html</a> - Proof-of-concept tool for validating species presence within protected areas</br>
 #### tourism_potential_africa
