@@ -1,6 +1,6 @@
 ### web_apps
 #### attractive_species_gallery 
-<a href='https://andrewcottam.github.io/web_apps/attractive_species_gallery/index.html' target='_blank'>index.html</a> - Gallery of charismatic species based on the number of images for the species from the Flickr API</br>
+<a href='http://andrewcottam.github.io/web_apps/attractive_species_gallery/index.html' target='_blank'>index.html</a> - Gallery of charismatic species based on the number of images for the species from the Flickr API</br>
 #### BirdlifeMarineIBAMapper
 <a href='https://andrewcottam.github.io/web_apps/BirdlifeMarineIBAMapper/default.html' target='_blank'>default.html</a> - Website developed for Birdlife International under contract in 2012</br>
 #### cdn
