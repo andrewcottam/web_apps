@@ -1,0 +1,8 @@
+<div class="box" data-dojo-attach-event="onmouseenter:mouseEnterPhoto,onmouseleave:mouseLeavePhoto">
+	<a href="${photo.photo_url}" target="_flickr" title="${photo.photo_title}"><img src="${photo_file_url}" style="width: ${photo.width}px;height: ${photo.height}px" data-dojo-attach-point="imageNode"></a>
+	<!-- ${original_photo_url} is the link to the full resolution image -->
+	<div class="panoramioLink" style="display:${displayTitle}">
+		<img src="widgets/images/panoramio.png" class="middle" title="Panoramio">
+		<a href="${photo.photo_url}" title="${linkTitle}" target="_flickr" class="middle">${photoDisplayTitle}</a>
+	</div>
+</div>

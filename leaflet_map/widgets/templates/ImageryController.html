@@ -1,0 +1,28 @@
+<div>
+	<div id="imageControllerTitle">Select imagery date:</div>
+	<div id="sliderContainer">
+		<div id="initialLoadingDiv"><img src="widgets/images/loading.gif"></div>
+		<div data-dojo-attach-point="noDatesMessage" id="noImageryFound">No imagery found</div>
+		<div data-dojo-attach-point="slider" id="slider"></div>
+		<div id="pauseDiv">
+			<img src="widgets/images/months_on.png" title="Show months" id="showMonthsButton"> 
+			<img src="widgets/images/pause_off.png" title="Pause imagery" id="pauseMapButton">
+		</div>
+	</div>
+	<table id="imageControllerControls">
+		<tr>
+			<td>Display using</td>
+			<td><select id="bandsSelector" data-dojo-type="dijit/form/Select" data-dojo-attach-event="onChange:bandsChanged">
+					<option value="Red,Green,Blue" selected="selected">Red,Green,Blue</option>
+					<option value="NIR,Green,Blue">NIR,Green,Blue</option>
+					<option value="SWIR2,NIR,Red">SWIR,NIR,Red</option>
+			</select></td>
+			<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Use images with &lt;</td>
+			<td><input id="cloudMaxSpinner" data-dojo-attach-point="cloudSpinner" data-dojo-type="dijit/form/NumberSpinner" data-dojo-props=" minimum: 0, maximum: 100, value: 10" style="width: 50px;" data-dojo-attach-event="onChange:cloudMaxChanged,onKeyDown:blurCloudMaxSpinner"></td>
+			<td>% cloud</td>
+			<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Use Sentinel 2 only&nbsp;&nbsp;<input id="copernicusOnlyCheckbox" data-dojo-type="dijit/form/CheckBox" data-dojo-attach-event="onChange:copernicusChanged" /></td>
+			<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Use stripy images&nbsp;&nbsp;<input id="showSLCCheckbox" data-dojo-type="dijit/form/CheckBox" data-dojo-attach-event="onChange:slcChanged" /></td>
+			<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<img src="widgets/images/info.png" id="info" title="Show info" data-dojo-attach-event="onCLick:openInfo"></td>
+		</tr>
+	</table>
+</div>

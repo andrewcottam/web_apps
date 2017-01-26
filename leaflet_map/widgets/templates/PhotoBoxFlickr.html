@@ -1,0 +1,9 @@
+<div class="flickrbox" data-dojo-attach-event="onmouseenter:mouseEnterPhoto,onmouseleave:mouseLeavePhoto">
+	<a href="${photoPageurl}" target="_flickr" title="${photo.title}"><img src="${photo_url}" style="max-width:${maxWidth}" data-dojo-attach-point="imageNode"></a>
+	<div class="panoramioLink" style="display:${displayTitle}">
+		<img src="widgets/images/flickr.png" class="middle" title="Flickr">
+		<a href="${photoPageurl}" title="${flickrLinkTitle}" target="_flickr" class="middle">${photoDisplayTitle}</a>
+		<img src="widgets/images/biopama.jpg" class="middle" title="BioPAMA" style="width: 60px;float: right">
+	</div>
+	<div class="dateTakenNode" style="display: none" data-dojo-attach-point="dateTakenNode"></div>
+</div>

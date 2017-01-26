@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>Leaflet Test Map</title>
+	<!-- STYLESHEETS -->
+	<link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
+	<link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/dojo/1.10.4/dijit/themes/claro/claro.css" />
+	<link rel="stylesheet" type="text/css" href="styles/styles.css" />
+	<link rel="stylesheet" type="text/css" href="styles/Control.Loading.css" />
+	<link rel="stylesheet" type="text/css" href="widgets/css/PhotoBox.css" />
+	<link rel="stylesheet" type="text/css" href="widgets/css/ImageryController.css" />
+	<link rel="stylesheet" type="text/css" href="widgets/css/ImageryTimeSlider.css" />
+	<!-- SCRIPT FILES -->
+	<script type="text/javascript" src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/dojo/1.10.4/dojo/dojo.js" data-dojo-config="async: true"></script>
+	<script type="text/javascript" src="scripts/L.Control.MousePosition.js"></script>
+	<script type="text/javascript" src="scripts/NonTiledLayer.js"></script>
+	<script type="text/javascript" src="scripts/NonTiledLayer.WMS.js"></script>
+	<script type="text/javascript" src="scripts/Control.Loading.js"></script>
+	<script type="text/javascript" src="scripts/leaflet_map.js"></script>
+</head>
+
+<body class="claro">
+	<table>
+		<tr>
+			<td>
+				<div id="mapid"></div>
+				<div id="controls">
+					<input type="checkbox" id="togglewaterlayer" data-dojo-type="dijit/form/CheckBox"> <label for="togglewaterlayer">Water Transitions</label> <input type="checkbox" id="toggleleafletlayer" data-dojo-type="dijit/form/CheckBox" checked> <label for="toggleleafletlayer">MapBox</label>
+					<input type="checkbox" id="togglebaselayer" data-dojo-type="dijit/form/CheckBox"> <label for="togglebaselayer">DigitalGlobe imagery</label>
+				</div> <br />
+				<br />
+				<div id="ImageryTimeSliderDiv"></div>
+			</td>
+			<td>
+				<div id="photos"></div>
+				<div data-dojo-type="ReferenceList" data-dojo-props="paname:'Kahuzi-Biega'"></div>
+			</td>
+		</tr>
+	</table>
+</body>
+
+</html>

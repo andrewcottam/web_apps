@@ -1,0 +1,39 @@
+.box, .flickrbox {
+	font-family: Arial;
+	font-size: 12px;
+	display: inline-block;
+	text-align: center;
+	margin: 6px;
+	padding: 4px 4px 3px 4px;
+	box-shadow: 3px 3px 3px #ddd;
+	-moz-box-shadow: 3px 3px 3px #ddd;
+	border: 1px solid #ddd;
+	box-sizing: content-box;
+}
+.box {
+	max-width: 240px;
+}
+.box:hover, .flickrbox:hover {
+	box-shadow: 3px 3px 3px #bbb;
+	-moz-box-shadow: 3px 3px 3px #bbb;
+	border: 1px solid #bbb;
+}
+.panoramioLink {
+	vertical-align: middle;
+	text-align: left;
+	margin: 3px;
+	text-decoration: none;
+}
+svg {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	pointer-events: none;
+	z-index:1000;
+}
+.middle {
+	vertical-align: middle;
+}
+.dateTakenNode{
+	display: none;
+}

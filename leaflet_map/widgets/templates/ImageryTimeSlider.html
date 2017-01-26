@@ -1,0 +1,101 @@
+<div>
+	<table>
+		<tr id="sliderRow">
+			<td id="slider">
+				<div>
+					<table id="sliderBarTable">
+						<tr id="sliderBar" />
+					</table>
+					<table id="sliderTicsTable">
+						<tr id="sliderTics" />
+					</table>
+					<table id="sliderLabelsTable">
+						<tr id="sliderLabels" />
+					</table>
+				</div>
+			</td>
+			<td id="sliderControls">
+				<div>
+					<img src="widgets/images/down.png" id="configImg" title="Click to change settings" data-dojo-attach-event="onclick:showSettings"><img src="widgets/images/close.png" id="closeImg" title="Click to hide" data-dojo-attach-event="onclick:hide">
+				</div>
+				<div id="yearMonth"></div>
+			</td>
+		</tr>
+	</table>
+	<div id="ImageryTimeSliderControls">
+		<table>
+			<tr>
+				<td><div>Display using</div></td>
+				<td>
+					<div>
+						<select id="bandsSelector" data-dojo-type="dijit/form/Select" data-dojo-attach-event="onChange:bandsChanged">
+							<option value="Red,Green,Blue" selected="selected">Red,Green,Blue</option>
+							<option value="NIR,Green,Blue">NIR,Green,Blue</option>
+							<option value="SWIR2,NIR,Red">SWIR,NIR,Red</option>
+						</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<td><div>Use images with &lt;</div></td>
+				<td>
+					<div>
+						<input id="cloudMaxSpinner" data-dojo-attach-point="cloudSpinner" data-dojo-type="dijit/form/NumberSpinner" data-dojo-props=" minimum: 0, maximum: 100, value: 10" style="width: 45px" data-dojo-attach-event="onChange:cloudMaxChanged,onKeyDown:blurCloudMaxSpinner">
+					</div>
+				</td>
+				<td>
+					<div>% cloud</div>
+				</td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<td><div>Filter by month</div></td>
+				<td>
+					<div>
+						<select id="monthSelector" data-dojo-type="dijit/form/Select" data-dojo-attach-event="onChange:monthChanged" data-dojo-attach-point="monthSelector">
+							<option value="None" selected="selected">None</option>
+							<option value="01" selected="selected">Jan</option>
+							<option value="02" selected="selected">Feb</option>
+							<option value="03" selected="selected">Mar</option>
+							<option value="04" selected="selected">Apr</option>
+							<option value="05" selected="selected">May</option>
+							<option value="06" selected="selected">Jun</option>
+							<option value="07" selected="selected">Jul</option>
+							<option value="08" selected="selected">Aug</option>
+							<option value="09" selected="selected">Sep</option>
+							<option value="10" selected="selected">Oct</option>
+							<option value="11" selected="selected">Nov</option>
+							<option value="12" selected="selected">Dec</option>
+						</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<td><div>Use Sentinel 2 only</div></td>
+				<td>
+					<div>
+						<input id="copernicusOnlyCheckbox" data-dojo-type="dijit/form/CheckBox" data-dojo-attach-event="onChange:copernicusChanged" />
+					</div>
+				</td>
+			</tr>
+		</table>
+		<table>
+			<tr>
+				<td><div>Use stripy images</div></td>
+				<td>
+					<div>
+						<input id="showSLCCheckbox" data-dojo-type="dijit/form/CheckBox" data-dojo-attach-event="onChange:slcChanged" />
+					</div>
+				</td>
+			</tr>
+		</table>
+		<div id="helpImage">
+			<img src="widgets/images/info.png" id="info" title="Show Help" data-dojo-attach-event="onCLick:openInfo">
+		</div>
+	</div>
+</div>

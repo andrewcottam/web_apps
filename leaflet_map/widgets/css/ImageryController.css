@@ -1,0 +1,111 @@
+#imageryController {
+	width: 900px;
+	margin-top: 20px;
+	padding: 10px;
+	border: 1px solid #eee;
+	border-radius: 2px;
+	font-size: 14px;
+	font-family: "Trebuchet MS";
+	box-sizing: content-box !important;
+}
+
+#imageryController * {
+	box-sizing: content-box !important;
+}
+
+#sliderContainer {
+	height: 53px;
+}
+
+#loading {
+	border-collapse: separate;
+	line-height: normal;
+}
+
+#initialLoadingDiv {
+	text-align: center;
+	vertical-align: middle;
+}
+
+#noImageryFound {
+	display: none;
+	text-align: center;
+}
+
+#imageControllerTitle {
+	padding-left: 6px;
+	font-size: 16px;
+}
+
+td {
+	vertical-align: middle;
+}
+
+#infoBox {
+	font-size: 0.8em;
+}
+
+.infoTable td {
+	vertical-align: top;
+	padding: 10px;
+}
+
+.leaflet-bottom {
+	z-index: 500;
+}
+
+#slider {
+	margin-top: 15px;
+	margin-bottom: 5px;
+	display: inline-block;
+}
+
+#showMonthsButton {
+	cursor: pointer;
+	margin-right: 5px;
+}
+
+#pauseDiv {
+	float: right;
+	margin-top: 14px;
+	display: none;
+}
+
+#pauseMapButton {
+	cursor: pointer;
+}
+
+.dijitRuleLabel {
+	font-size: 11px;
+}
+
+.dijitRuleMark {
+	height: 5px;
+}
+
+#tooltip {
+	position: absolute;
+	font-family: "Segoe UI";
+	font-size: 12px;
+	color: #222;
+	border: 1px solid #767676;
+	padding: 0px 4px 2px 5px;
+	border-radius: 2px;
+	background: white;
+	left: -20px;
+}
+
+#imageControllerControls {
+	padding: 15px 0px 5px 0px;
+	font-size: 14px;
+	border: none;
+	border-collapse: separate;
+}
+
+#cloudMaxSpinner {
+	width: 50px;
+}
+
+#info {
+	cursor: pointer;
+}

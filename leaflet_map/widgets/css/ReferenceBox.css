@@ -1,0 +1,12 @@
+.refBox {
+	background-color: #fbfbfb;
+	border: 1px solid #cfcfcf;
+	padding: 5px;
+	box-shadow: 3px 3px 3px #ddd;
+	-moz-box-shadow: 3px 3px 3px #ddd;
+	border-radius: 2px;
+}
+
+.refBox:hover {
+	border: 1px solid #afafaf;
+}

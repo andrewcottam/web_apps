@@ -1,0 +1,89 @@
+<html>
+<head></head>
+<body>
+	<div id="infoBox">
+		<h1>Imagery</h1>
+		<p>
+			The imagery that is shown using this tool comes from the Google Earth Engine platform which manages a rolling archive of satellite imagery from the Landsat series of sensors and the Sentinel 2 sensor (part of the <a href="http://www.esa.int/Our_Activities/Observing_the_Earth/Copernicus">Copernicus
+				programme</a>). The following table shows the metadata for the available imagery :
+		</p>
+		<table class="infoTable">
+			<tr>
+				<th>Sensor</th>
+				<th>Dates available</th>
+				<th>Resolution</th>
+			</tr>
+			<tr>
+				<td>Landsat 4</td>
+				<td>Aug 22, 1982 - Dec 14, 1993</td>
+				<td>30m</td>
+			</tr>
+			<tr>
+				<td>Landsat 5</td>
+				<td>Jan 1, 1984 - May 5, 2012</td>
+				<td>30m</td>
+			</tr>
+			<tr>
+				<td>Landsat 7</td>
+				<td>Jan 1, 1999 - May 31, 2003</td>
+				<td>30m</td>
+			</tr>
+			<tr>
+				<td></td>
+				<td>May 31, 2003 - Ongoing (stripy)</td>
+				<td>30m</td>
+			</tr>
+			<tr>
+				<td>Landsat 8</td>
+				<td>Apr 11, 2013 - Ongoing</td>
+				<td>30m</td>
+			</tr>
+			<tr>
+				<td>Sentinel 2</td>
+				<td>Jun 23, 2015 - Ongoing</td>
+				<td>10m - 30m</td>
+			</tr>
+		</table>
+		<h1>Controls</h1>
+		<table class="infoTable">
+			<tr>
+				<td>Select imagery date</td>
+				<td>The dates that are shown are the dates that are available for the current extent of the map (using the map centroid) using the filters for cloud and sensor. Click on the slider to select the month/year for the imagery. By default the latest date is used for the imagery on the map.</td>
+			</tr>
+			<tr>
+				<td>Display using</td>
+				<td>Select different bands in the satellite imagery to use for the red, green and blue parts of the image that is shown. For example, selecting Red, Green, Blue will assign the imagery bands that correspond to Red, Green and Blue to the same parts of the image and so the image will appear
+					as a natural colour image. Selecting different band combinations will emphasise certain features on the ground, e.g. vegetation. NIR is near infra-red and SWIR is short-wave infra-red.</td>
+			</tr>
+			<tr>
+				<td>Use images with &lt; x% cloud</td>
+				<td>The available imagery can be filtered by the amount of cloud that is present. Use this box to set the threshold for the maximum amount of cloud and then press ENTER. NOTE: The cloud percent statistics vary greatly in their accuracy and in some cases the cloud percent may be low but the
+					imagery may exhibit high levels of cloud and vice-versa.</td>
+			</tr>
+			<tr>
+				<td>Filter by month</td>
+				<td>The available imagery can be filtered by the month  of the year. Use this box to set the month to filter by.</td>
+			</tr>
+			<tr>
+				<td>Use Sentinel 2 only</td>
+				<td>Select this box to only show imagery from the Sentinel 2 sensor. The Red, Green and Blue bands of Sentinel 2 have a higher spatial resolution than Landsat at 10m.</td>
+			</tr>
+			<tr>
+				<td>Use stripy images</td>
+				<td>In May 2003 the Landsat 7 sensor encountered a failure of its Scan Line Corrector and this caused parts of the imagery to have strong striping. Select this box to include these scenes which exhibit strong striping.</td>
+			</tr>
+		</table>
+		<h1>Shortcut keys</h1>
+		<table class="infoTable">
+			<tr>
+				<td>Left Arrow/Right Arrow</td>
+				<td>When the slider is selected the left/right arrow keys will move the slider to the previous/next available date respectively.</td>
+			</tr>
+			<tr>
+				<td>+/- on NUM pad</td>
+				<td>Press the +/- keys on the NUM pad to increase or decrease the image contrast.</td>
+			</tr>
+		</table>
+	</div>
+</body>
+</html>

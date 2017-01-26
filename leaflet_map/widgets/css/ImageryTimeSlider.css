@@ -1,0 +1,156 @@
+.imageryTimeSlider {
+	position: absolute;
+	padding-bottom: 6px;
+	padding-left: 10px;
+	padding-right: 6px;
+	display: none;
+	z-index: 1000;
+	background-color: rgba(255, 255, 255, 0.95);
+	border: 1px solid #CFCFCF;
+	border-radius: 3px;
+}
+
+table {
+	border-spacing: 0px;
+}
+
+#sliderRow {
+	height: 54px;
+}
+
+#sliderBarTable {
+	border: 1px #D3D3D3 solid;
+}
+
+#sliderBarTable:hover {
+	border: 1px #C3C3C3 solid;
+}
+
+#sliderBar td {
+	width: 1px;
+	height: 6px;
+	padding: 0px;
+}
+
+.data { /* cells which have imagery */
+	background-color: #B3B3B3;
+	cursor: pointer;
+	cursor: hand;
+}
+
+.data:hover, .tdActive {
+	/* cells which have imagery and mouse over them*/
+	background-color: red;
+	cursor: pointer;
+	cursor: hand;
+}
+
+.nodata { /* cells which don't have imagery */
+	background-color: #EFEFEF;
+}
+
+#sliderTicsTable {
+	border-spacing: 0px;
+	margin-left: 1px;
+	/
+	/* as the slider bar has a 1px border so we need to align jan with the first td */
+	/
+}
+
+#sliderTicsTable td {
+	width: 11px;
+	height: 5px;
+	padding: 0px;
+}
+
+#sliderTicsTable .sliderTic {
+	border-left: 1px solid #D3D3D3;
+}
+
+#sliderTicsTable .sliderNoTic {
+	border-left: 1px solid white;
+}
+
+#sliderLabelsTable {
+	margin-left: -17px; /* to move the year labels to the correct place */
+}
+
+#sliderLabels td {
+	width: 12px;
+	padding: 0px;
+}
+
+.sliderLabel {
+	transform: rotate(270deg);
+	transform-origin: 19px;
+	font-size: 11px;
+	color: #555555;
+	width: 12px;
+}
+
+#configImg {
+	cursor: pointer;
+	cursor: hand;
+	position: absolute;
+	top: 2px;
+	right: 20px;
+}
+
+#closeImg {
+	cursor: pointer;
+	cursor: hand;
+	position: absolute;
+	top: 3px;
+	right: 3px;
+}
+
+#sliderControls {
+	vertical-align: bottom;
+}
+
+#yearMonth {
+	margin-bottom: 7px;
+	width: 67px;
+	margin-left: 2px;
+}
+
+#ImageryTimeSliderControls {
+	display: none;
+	margin-top: 10px;
+}
+
+#ImageryTimeSliderControls * {
+	font-size: 11px;
+}
+
+#ImageryTimeSliderControls table {
+	padding: 3px;
+}
+
+#cloudMaxSpinner {
+	width: 20px;
+}
+
+#helpImage {
+	position: absolute;
+	right: 6px;
+	bottom: 6px;
+}
+
+#showImg {
+	display: none;
+	cursor: pointer;
+	cursor: hand;
+	position: absolute;
+	z-index: 400;
+	background-color: rgba(255, 255, 255, 0.9);
+}
+
+#blockingDiv {
+	position: absolute;
+	height: 27px;
+	width: 411px;
+	z-index: 2000;
+	top: 0px;
+	left: 0px;
+}
