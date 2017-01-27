@@ -3,14 +3,14 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 		<title>Canvas Test</title>
-		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.5/js/dojo/dijit/themes/claro/claro.css">
-		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.2/js/dojo/dijit/themes/tundra/tundra.css">
+		<link rel="stylesheet" type="text/css" href="https://serverapi.arcgisonline.com/jsapi/arcgis/2.5/js/dojo/dijit/themes/claro/claro.css">
+		<link rel="stylesheet" type="text/css" href="https://serverapi.arcgisonline.com/jsapi/arcgis/2.2/js/dojo/dijit/themes/tundra/tundra.css">
 		<script type="text/javascript">
 			dojoConfig = {
 				parseOnLoad : true
 			}
 		</script>
-		<script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.5"></script>
+		<script type="text/javascript" src="https://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.5"></script>
 		<script type="text/javascript" src="classes/CanvasTestLayer.js"></script>
 		<script type="text/javascript">
 			dojo.require("esri.map");
@@ -34,7 +34,7 @@
 				dojo.connect(map, "onLoad", function() {
 					map.hideZoomSlider();
 				});
-				var basemap = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer");
+				var basemap = new esri.layers.ArcGISTiledMapServiceLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer");
 				//map.addLayer(basemap);
 				canvasTestLayer = new jrc.CanvasTestLayer({
 					operator : "source-over",

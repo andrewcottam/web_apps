@@ -8,7 +8,7 @@ require({
 	function(Button, dom, ReferenceList, ImageryController, ImageryTimeSlider, PhotoViewer, domConstruct, ioQuery, win, parser, on, registry, ready) {
 		ready(function() {
 			var queryObject = ioQuery.queryToObject(win.doc.location.search.substring(1));
-			var geeServerUrl = (document.domain === "localhost") ? "http://localhost:8080" : "http://geeImageServer.appspot.com";
+			// var geeServerUrl = (document.domain === "localhost") ? "http://localhost:8080" : "http://geeImageServer.appspot.com";
 			var geeServerUrl = "http://geeImageServer.appspot.com";
 			var digitialGlobeApiKey = "pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYSI6ImNpbmJscnhhZTBudmp0cWx3MXI5bWt0djgifQ.9DibR63tG-LY6FvjDLhCXg";
 			// var jrcLayer = L.tileLayer.wms(geeServerUrl + "/ogc", { // traditional WMS request with a default tile size of 250x250 pixels
