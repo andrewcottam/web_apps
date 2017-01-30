@@ -45,8 +45,6 @@
 <a href='https://andrewcottam.github.io/web_apps/leaflet_map/references.html' target='_blank'>references.html</a> - test page for references from the ScienceDirect API
 #### species_validation_tool
 <a href='https://andrewcottam.github.io/web_apps/species_validation_tool/index.html' target='_blank'>index.html</a> - Proof-of-concept tool for validating species presence within protected areas</br>
-#### tourism_potential_africa
-<a href='https://andrewcottam.github.io/web_apps/tourism_potential_africa/index.html' target='_blank'>index.html</a> - Shows the potential of protected areas in Africa for eco-tourism based on their species and the species charisma</br>
 #### tourism_potential_global
 <a href='https://andrewcottam.github.io/web_apps/tourism_potential_global/index.html' target='_blank'>index.html</a> - Shows the potential of protected areas globally for eco-tourism based on their species and the species charisma</br>
 #### vanilla_dojo_layout
