@@ -1,4 +1,4 @@
-define(["dojo/_base/lang", "dojo/json", "dojo/request/script", "dojo/dom-style", "dojo/date/stamp", "dojo/date/locale", "dgrid/Grid", "dojo/store/Memory", "dojo/dom", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dijit/_WidgetsInTemplateMixin", "dojo/text!species_validation_tool/templates/GBIFOccurrenceBox.html", "http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js", "dijit/layout/ContentPane", "dijit/layout/LayoutContainer"], function(lang, JSON, script, domStyle, stamp, locale, Grid, Memory, dom, declare, _WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin, template) {
+define(["dojo/_base/lang", "dojo/json", "dojo/request/script", "dojo/dom-style", "dojo/date/stamp", "dojo/date/locale", "dgrid/Grid", "dojo/store/Memory", "dojo/dom", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dijit/_WidgetsInTemplateMixin", "dojo/text!species_validation_tool/templates/GBIFOccurrenceBox.html", "https://unpkg.com/leaflet@1.0.3/dist/leaflet.js", "dijit/layout/ContentPane", "dijit/layout/LayoutContainer"], function(lang, JSON, script, domStyle, stamp, locale, Grid, Memory, dom, declare, _WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin, template) {
 	return declare("jrc/GBIFOccurrenceBox", [_WidgetBase, _TemplatedMixin], {
 		templateString : template,
 		scientificName : "No records found",
@@ -10,7 +10,7 @@ define(["dojo/_base/lang", "dojo/json", "dojo/request/script", "dojo/dom-style",
 			}
 		},
 		startup : function() {
-			this.restServerUrl = "http://dopa-services.jrc.ec.europa.eu/services/";
+			this.restServerUrl = "https://dopa-services.jrc.ec.europa.eu/services/";
 			var boundingBoxArray, llx, lly, urx, ury, ll, ur, bounds, grid, testDate;
 			boundingBoxArray = this.boundingBox.substring(this.boundingBox.indexOf("((") + 2, this.boundingBox.indexOf("))")).split(",");
 			llx = parseFloat(boundingBoxArray[0].split(" ")[0]);
@@ -25,7 +25,7 @@ define(["dojo/_base/lang", "dojo/json", "dojo/request/script", "dojo/dom-style",
 			this.map = L.map(this.mapAttachNode);
 			initialzoom = this.map.getBoundsZoom(bounds);
 			this.map.setView([initialy, initialx], initialzoom);
-			L.tileLayer('http://{s}.tiles.mapbox.com/v3/blishten.ii637man/{z}/{x}/{y}.png', {
+			L.tileLayer('https://{s}.tiles.mapbox.com/v3/blishten.ii637man/{z}/{x}/{y}.png', {
 			}).addTo(this.map);
 			script.get(this.restServerUrl + "/ibex/especies/_get_pa_geojson?wdpa_id=" + this.wdpaid, {
 				jsonp : "callback"
@@ -68,7 +68,7 @@ define(["dojo/_base/lang", "dojo/json", "dojo/request/script", "dojo/dom-style",
 						label : 'Key',
 						field : 'key',
 						renderCell : function(object, value, node, options) {
-							node.innerHTML = "<a href='http://www.gbif.org/occurrence/" + value + "' target='gbif' title='Click to view the occurrence on the GBIF website'>" + value + "</a>";
+							node.innerHTML = "<a href='https://www.gbif.org/occurrence/" + value + "' target='gbif' title='Click to view the occurrence on the GBIF website'>" + value + "</a>";
 						}
 					}, {
 						label : 'Location',

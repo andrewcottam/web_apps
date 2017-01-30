@@ -23,7 +23,7 @@ require({
 		if (!wdpa_id) {
 			alert('no wdpaid');
 		}
-		restServerUrl = "http://dopa-services.jrc.ec.europa.eu/services/ibex";
+		restServerUrl = "https://dopa-services.jrc.ec.europa.eu/services/ibex";
 		parser.parse();
 		setLanguage();
 		setTaxonGroup();
@@ -428,7 +428,7 @@ require({
 				return;
 			};
 			var speciesBox = registry.byNode(evt.currentTarget);
-			xhr("http://api.gbif.org/v1/species/match", {
+			xhr("https://api.gbif.org/v1/species/match", {
 				query : {
 					name : speciesBox.taxon
 				},
@@ -439,7 +439,7 @@ require({
 				}
 			}).then(function(response) {
 				hoverNode = evt.currentTarget;
-				script.get("http://api.gbif.org/v1/occurrence/search", {
+				script.get("https://api.gbif.org/v1/occurrence/search", {
 					query : {
 						geometry : boundingbox,
 						taxon_key : response.usageKey

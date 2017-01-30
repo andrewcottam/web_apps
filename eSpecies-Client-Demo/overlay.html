@@ -31,9 +31,9 @@
 				z-index: 1;
 			}
 		</style>
-		<link href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.1/js/dojo/dijit/themes/claro/claro.css" rel="stylesheet" type="text/css" >
-		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.1/js/dojo/dijit/themes/tundra/tundra.css">
-		<script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.7" type="text/javascript"></script>
+		<link href="https://serverapi.arcgisonline.com/jsapi/arcgis/3.1/js/dojo/dijit/themes/claro/claro.css" rel="stylesheet" type="text/css" >
+		<link rel="stylesheet" type="text/css" href="https://serverapi.arcgisonline.com/jsapi/arcgis/3.1/js/dojo/dijit/themes/tundra/tundra.css">
+		<script type="text/javascript" src="https://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.7" type="text/javascript"></script>
 		<script type="text/javascript" src="classes/ESpeciesDynamicMapServiceLayer.js"></script>
 		<script type="text/javascript" src="classes/OverlayLayer.js"></script>
 		<script type="text/javascript" src="classes/UniqueClassLayer.js"></script>
@@ -78,7 +78,7 @@
 				map = new esri.Map("map", {
 					extent : initialExtent
 				});
-				var basemap = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer");
+				var basemap = new esri.layers.ArcGISTiledMapServiceLayer("https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer");
 				map.addLayer(basemap);
 				dojo.connect(map, "onMouseMove", function(evt) {
 					var sp = evt.screenPoint;
@@ -178,7 +178,7 @@
 			function toggleMap() {
 				for (var j = 0; j < map.layerIds.length; j++) {
 					var layer = map.getLayer(map.layerIds[j]);
-					if (layer.url != "http://ehabitat-wps.jrc.ec.europa.eu") {
+					if (layer.url != "https://ehabitat-wps.jrc.ec.europa.eu") {
 						break;
 					}
 				}

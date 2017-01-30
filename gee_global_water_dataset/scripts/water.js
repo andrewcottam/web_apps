@@ -2,8 +2,8 @@
 require(["dojo/_base/window", "dojo/io-query", "dojox/charting/plot2d/StackedColumns", "dojox/charting/axis2d/Default", "dojo/dom-style", "dojo/_base/array", "dojox/charting/Chart", "dojo/_base/lang", "dojo/request/script", "dojo/date/stamp", "dijit/registry", "dojo/ready", "dojo/parser", "dojo/_base/array", "dojo/on", "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dijit/form/CheckBox", "dojox/charting/axis2d/Default", "dojox/charting/plot2d/Columns"], function(win, ioQuery, StackedColumns, Default, domStyle, array, Chart, lang, script, stamp, registry, ready, parser, array, on) {
 	ready(function() {
 		var map, mbLayer, basemap, transitionsLayer, p32occurrence, p1p2change, annualRecurrence, maxWaterExtent, seasonality, monthlyRecurrenceChart, yearlyClassificationsChart, queryObject, digitalGlobeLayer;
-		 var geeServerUrl = "http://geeImageServer.appspot.com";
-//		var geeServerUrl = "http://geeImageServer.appspot.com";
+		 var geeServerUrl = "https://geeImageServer.appspot.com";
+//		var geeServerUrl = "https://geeImageServer.appspot.com";
 		var digitialGlobeApiKey = "pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYSI6ImNpbmJscnhhZTBudmp0cWx3MXI5bWt0djgifQ.9DibR63tG-LY6FvjDLhCXg";
 		//custom extent can be specified as follows: index.html?lat=15.4818&lng=-3.7372&zoom=12
 		queryObject = ioQuery.queryToObject(win.doc.location.search.substring(1));
@@ -34,7 +34,7 @@ require(["dojo/_base/window", "dojo/io-query", "dojox/charting/plot2d/StackedCol
 			});
 		});
 		mbLayer = new L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-		    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
+		    attribution: 'Map data &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>',
 		    maxZoom: 18,
 		    id: 'blishten.pnnbdo98',
 		    accessToken: 'pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg'
@@ -42,7 +42,7 @@ require(["dojo/_base/window", "dojo/io-query", "dojox/charting/plot2d/StackedCol
 		digitalGlobeLayer = new L.tileLayer('https://{s}.tiles.mapbox.com/v4/digitalglobe.nmmhkk79/{z}/{x}/{y}.png?access_token=' + digitialGlobeApiKey, {
 		    minZoom: 1,
 		    maxZoom: 19,
-		    attribution: '(c) <a href="http://microsites.digitalglobe.com/interactive/basemap_vivid/">DigitalGlobe</a> , (c) OpenStreetMap, (c) Mapbox'
+		    attribution: '(c) <a href="https://microsites.digitalglobe.com/interactive/basemap_vivid/">DigitalGlobe</a> , (c) OpenStreetMap, (c) Mapbox'
 		});
 		transitionsLayer = createGeeServerLayer('transitionClass');
 		p32occurrence = createGeeServerLayer('p32occurrence');

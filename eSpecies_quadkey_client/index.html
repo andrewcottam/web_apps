@@ -8,15 +8,15 @@
 		on iOS devices-->
 		<meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
 		<title>eSpecies REST Services Client Demo</title>
-		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.5/js/dojo/dijit/themes/claro/claro.css">
-		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.5/js/dojo/dojox/grid/resources/Grid.css">
-		<link rel="stylesheet" type="text/css" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.5/js/dojo/dojox/grid/resources/claroGrid.css">
+		<link rel="stylesheet" type="text/css" href="https://serverapi.arcgisonline.com/jsapi/arcgis/2.5/js/dojo/dijit/themes/claro/claro.css">
+		<link rel="stylesheet" type="text/css" href="https://serverapi.arcgisonline.com/jsapi/arcgis/2.5/js/dojo/dojox/grid/resources/Grid.css">
+		<link rel="stylesheet" type="text/css" href="https://serverapi.arcgisonline.com/jsapi/arcgis/2.5/js/dojo/dojox/grid/resources/claroGrid.css">
 		<script type="text/javascript">
 			dojoConfig = {
 				parseOnLoad : true
 			}
 		</script>
-		<script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.5"></script>
+		<script type="text/javascript" src="https://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.5"></script>
 		<script type="text/javascript" src="classes/QuadkeyLayer.js"></script>
 		<script type="text/javascript" src="classes/OverlayLayer.js"></script>
 		<script type="text/javascript" src="classes/CanvasLayer.js"></script>
@@ -77,7 +77,7 @@
 					});
 					dojo.connect(dijit.byId('mapContentPane'), 'resize', mapResize);
 				});
-				backgroundLayer = new esri.layers.ArcGISTiledMapServiceLayer("http://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer");
+				backgroundLayer = new esri.layers.ArcGISTiledMapServiceLayer("https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer");
 				map.addLayer(backgroundLayer);
 				speciesLayer = new jrc.ESpeciesDynamicMapServiceLayer({
 					product : "map",
@@ -95,7 +95,7 @@
 					opacity : 0.7,
 					product : "richness"
 				});
-				var wmsLayer = new esri.layers.WMSLayer("http://ehabitat-wps.jrc.ec.europa.eu/cgi-bin/wdpa2011", {
+				var wmsLayer = new esri.layers.WMSLayer("https://ehabitat-wps.jrc.ec.europa.eu/cgi-bin/wdpa2011", {
 					resourceInfo : {
 						extent : initExtent,
 						version : "1.1.1",
@@ -201,10 +201,10 @@
 			function getSpeciesList(evt) {
 				quadkey = getQuadkeyForPoint(evt.mapPoint.x, evt.mapPoint.y, 15);
 				dojo.io.script.get({
-					url : "http://ehabitat-wps.jrc.ec.europa.eu/cgi-bin/eSpecies/quadkey/" + quadkey + "/specieslist?jsoncallback=speciesListRetrieved"
+					url : "https://ehabitat-wps.jrc.ec.europa.eu/cgi-bin/eSpecies/quadkey/" + quadkey + "/specieslist?jsoncallback=speciesListRetrieved"
 				});
 				dojo.io.script.get({
-					url : "http://ehabitat-wps.jrc.ec.europa.eu/cgi-bin/eSpecies/quadkey/" + quadkey + "/speciescount?jsoncallback=speciesCountRetrieved"
+					url : "https://ehabitat-wps.jrc.ec.europa.eu/cgi-bin/eSpecies/quadkey/" + quadkey + "/speciescount?jsoncallback=speciesCountRetrieved"
 				});
 			}
 
@@ -406,14 +406,15 @@
 					var imageParameters = new esri.layers.ImageParameters();
 					imageParameters.layerIds = [0];
 					imageParameters.layerOption = esri.layers.ImageParameters.LAYER_OPTION_SHOW;
-					var redListURL = "http://mapservices.iucnredlist.org/arcgis/rest/services/IUCN/SpeciesRange/MapServer";
+					var redListURL = "https://mapservices.iucnredlist.org/arcgis/rest/services/IUCN/SpeciesRange/MapServer";
 					if (document.domain == 'h03-dev-vm7') {
 						token = "20dmPwYAeZ2oZZaepH1RS9wgpl0VNqePsXBk4LCpCkqZ-P194VzNA3eyImI6fEH7G3GZQiT66M1YRPOT0SpqbQ..";
-						//token for HTTP referer: h03-dev-vm7 
+						//token for https referer: h03-dev-vm7 
 					} else {
 						token = "20dmPwYAeZ2oZZaepH1RS791QoLewIh_tu9swN20ZE-EkWh0LxhWwUAscbIKJ_5W-OgXYYkYwUIA5ogfpuDhDIyD25ZVP7L2LXO_Ejcdaeg.";
-						//token for HTTP referer: ehabitat-wps.jrc.ec.europa.eu
-					}					rdbLayer = new esri.layers.ArcGISDynamicMapServiceLayer(redListURL + "?token=" + token, {
+						//token for https referer: ehabitat-wps.jrc.ec.europa.eu
+					}
+					rdbLayer = new esri.layers.ArcGISDynamicMapServiceLayer(redListURL + "?token=" + token, {
 						"imageParameters" : imageParameters,
 						opacity : 0.7
 					});
@@ -447,7 +448,7 @@
 
 			function getSpeciesInfo(speciesid) {
 				dojo.io.script.get({
-					url : "http://api.iucnredlist.org/common_names/" + speciesid + ".js?callback=parseSpeciesData"
+					url : "https://api.iucnredlist.org/common_names/" + speciesid + ".js?callback=parseSpeciesData"
 				});
 			}
 

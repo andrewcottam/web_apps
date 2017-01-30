@@ -110,7 +110,7 @@
 				dojo.connect(map, "onExtentChange", extentChanged);
 
 				//ADD THE DYNAMIC LAYERS TO THE MAP
-				var basemap = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer");
+				var basemap = new esri.layers.ArcGISTiledMapServiceLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer");
 				map.addLayer(basemap);
 
 				//ADD THE TOOLBAR
@@ -127,7 +127,7 @@
 
 			function getSpatialDataSource() {
 				esri.request({
-					url : "http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer/1/query/",
+					url : "https://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer/1/query/",
 					callbackParamName : "callback",
 					content : {
 						f : "json",
@@ -180,7 +180,7 @@
 				// layerDefs[pfafstetterStartLevel] = "\"PFAF_" + (pfafstetterStartLevel + 1).toString() + "\" in (select PFAF_" + (pfafstetterStartLevel + 1).toString() + " from SpeciesDataWithPFAFs where \"ID_NO\" ='" + ID_NO + "')";
 				layerDefs[9] = "\"BasinID\" in (select BasinID from SpeciesDataWithPFAFs where \"ID_NO\" ='" + ID_NO + "')";
 				imageParameters.layerDefinitions = layerDefs;
-				watershedsLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Watersheds/MapServer?token=" + token, {
+				watershedsLayer = new esri.layers.ArcGISDynamicMapServiceLayer("https://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Watersheds/MapServer?token=" + token, {
 					"imageParameters" : imageParameters,
 					opacity : 0.7
 				});
@@ -251,7 +251,7 @@
 					wrapAround180 : true
 				});
 				//BASEMAP FOR THE OVERVIEW MAP
-				var basemap = new esri.layers.ArcGISTiledMapServiceLayer("http://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer");
+				var basemap = new esri.layers.ArcGISTiledMapServiceLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer");
 				extentMap.addLayer(basemap);
 
 				//EVENT LISTENERS FOR THE MAPS
@@ -350,7 +350,7 @@
 			//GETS THE EXTENT OF THE PASSED SPECIES USING A SOE
 			function getExtent() {
 				esri.request({
-					url : "http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer/exts/IUCNRedListSOE/GetSpeciesExtent",
+					url : "https://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer/exts/IUCNRedListSOE/GetSpeciesExtent",
 					callbackParamName : "callback",
 					content : {
 						f : "json",
@@ -396,7 +396,7 @@
 
 			function getExtentWatersheds() {
 				esri.request({
-					url : "http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer/1/query",
+					url : "https://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer/1/query",
 					callbackParamName : "callback",
 					content : {
 						where : "ID_NO='" + ID_NO + "'",
@@ -417,7 +417,7 @@
 				imageParameters.layerIds = [0];
 				//layer filter for species range data
 				imageParameters.layerOption = esri.layers.ImageParameters.LAYER_OPTION_SHOW;
-				rdbLayer = new esri.layers.ArcGISDynamicMapServiceLayer("http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer?token=" + token, {
+				rdbLayer = new esri.layers.ArcGISDynamicMapServiceLayer("https://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer?token=" + token, {
 					"imageParameters" : imageParameters,
 					opacity : 0.7
 				});
@@ -454,7 +454,7 @@
 			//GETS THE LEGEND CLASSES OF THE PASSED SPECIES USING A SOE
 			function getLegendClasses() {
 				esri.request({
-					url : "http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer/exts/IUCNRedListSOE/GetLegendClasses",
+					url : "https://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer/exts/IUCNRedListSOE/GetLegendClasses",
 					callbackParamName : "callback",
 					content : {
 						f : "json",
@@ -480,7 +480,7 @@
 			//GETS THE Source THE PASSED SPECIES USING A SOE
 			function getSource() {
 				esri.request({
-					url : "http://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer/exts/IUCNRedListSOE/GetSources",
+					url : "https://79.125.16.106/ArcGIS/rest/services/IUCN_Secure/Species_WebMercator/MapServer/exts/IUCNRedListSOE/GetSources",
 					callbackParamName : "callback",
 					content : {
 						f : "json",
@@ -550,7 +550,7 @@
 			//CALLED WHEN THE PAGE LOADS AND GETS THE SPECIES INFO
 			function getSpeciesInfo() {
 				dojo.io.script.get({
-					url : "http://api.iucnredlist.org/common_names/" + ID_NO + ".js?callback=parseSpeciesData"
+					url : "https://api.iucnredlist.org/common_names/" + ID_NO + ".js?callback=parseSpeciesData"
 				});
 			}
 
@@ -663,8 +663,8 @@
 						<li id="spFamily" class="LI"></li>
 					</ul>
 				</div>
-				<div id="species" onclick="window.open('http://www.iucnredlist.org/apps/redlist/details/' + parseInt(ID_NO) + '/0')" title="View full species page"></div>
-				<div id="commonName" onclick="window.open('http://www.iucnredlist.org/apps/redlist/details/' + parseInt(ID_NO) + '/0')" title="View full species page"></div>
+				<div id="species" onclick="window.open('https://www.iucnredlist.org/apps/redlist/details/' + parseInt(ID_NO) + '/0')" title="View full species page"></div>
+				<div id="commonName" onclick="window.open('https://www.iucnredlist.org/apps/redlist/details/' + parseInt(ID_NO) + '/0')" title="View full species page"></div>
 				<div id="spAuthority"></div>
 			</div>
 			<div id="middle">
@@ -690,21 +690,21 @@
 				</div>
 				<div id="footer">
 					<div id="termsText">
-						<div onclick="window.open('http://www.iucnredlist.org/info/terms-of-use')" class="terms" title="Click for Terms of Use">
+						<div onclick="window.open('https://www.iucnredlist.org/info/terms-of-use')" class="terms" title="Click for Terms of Use">
 							Terms of Use
 						</div>
 					</div>
 				</div>
 				<div id="logos">
 					<div class="iucnImage" style="padding-top:15px;">
-						<img src="images/iucn_logo.gif" alt="IUCN Image" title="IUCN" onclick="window.open('http://www.iucn.org/')">
+						<img src="images/iucn_logo.gif" alt="IUCN Image" title="IUCN" onclick="window.open('https://www.iucn.org/')">
 					</div>
 					<div class="iucnImage" style="padding-top:20px;">
-						<img src="images/ssc_logo.gif" alt="SSC Image" title="Species Survival Commission" onclick="window.open('http://www.iucn.org/about/work/programmes/species/about_ssc/')">
+						<img src="images/ssc_logo.gif" alt="SSC Image" title="Species Survival Commission" onclick="window.open('https://www.iucn.org/about/work/programmes/species/about_ssc/')">
 					</div>
 				</div>
 				<div class="iucnImage" style="float:right;">
-					<img src="images/iucn.png" alt="IUCN Image" title="IUCN Redlist Website" onclick="window.open('http://www.iucnredlist.org/')">
+					<img src="images/iucn.png" alt="IUCN Image" title="IUCN Redlist Website" onclick="window.open('https://www.iucnredlist.org/')">
 				</div>
 			</div>
 		</div>

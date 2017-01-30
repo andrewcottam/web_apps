@@ -25,7 +25,7 @@
 #### gee_results_analyser
 <a href='https://andrewcottam.github.io/web_apps/gee_results_analyser/index.html' target='_blank'>index.html</a> - Displays the accuracy of the validation results for the Global Surface Water Dataset</br>
 #### gee_simple_client
-<a href='https://andrewcottam.github.io/web_apps/gee_simple_client/index.html' target='_blank'>index.html</a> - Mash-up of GEE imagery, Flickr and Panoramio for protected areas</br>
+<a href='https://andrewcottam.github.io/web_apps/gee_simple_client/index.html?wdpaid=780' target='_blank'>index.html</a> - Mash-up of GEE imagery, Flickr and Panoramio for protected areas</br>
 #### gee_spectral_library_builder
 <a href='https://andrewcottam.github.io/web_apps/gee_spectral_library_builder/index.html' target='_blank'>index.html</a> - Spectral training tool for the Global Surface Water Dataset</br>
 #### gee_swdb_validation_tool
