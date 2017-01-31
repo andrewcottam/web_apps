@@ -43,6 +43,8 @@
 #### leaflet_map
 <a href='https://andrewcottam.github.io/web_apps/leaflet_map/index.html' target='_blank'>index.html</a> - test page for leaflet</br>
 <a href='https://andrewcottam.github.io/web_apps/leaflet_map/references.html' target='_blank'>references.html</a> - test page for references from the ScienceDirect API
+#### mapboxGL
+<a href='https://andrewcottam.github.io/web_apps/mapboxGL/index.html' target='_blank'>index.html</a> - test page for Mapbox GL JS</br>
 #### species_validation_tool
 <a href='https://andrewcottam.github.io/web_apps/species_validation_tool/index.html' target='_blank'>index.html</a> - Proof-of-concept tool for validating species presence within protected areas</br>
 #### tourism_potential_global
