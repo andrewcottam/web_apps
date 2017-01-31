@@ -23,6 +23,11 @@
         center: san_juan_island,
         zoom: 12,
         scene: 'scene.yaml',
+            events: {
+                click: function(selection) {
+                    console.log('Click!', selection);
+                },
+            },
       });
 
       // Move zoom control to the top right corner of the map
