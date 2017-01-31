@@ -12,7 +12,7 @@ lights:
 sources:
     osm:
         type: TopoJSON
-        url: https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson?api_key=mapzen-QF1osLn
+        url: https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson?api_key=mapzen-ngkKc5t
         max_zoom: 16
 
 layers:
@@ -36,6 +36,7 @@ layers:
             polygons:
                 order: function() { return feature.sort_rank; }
                 color: '#88bbee'
+                interactive: true
 
     roads:
         data: { source: osm }

@@ -43,12 +43,7 @@
         var map = L.map('map');
 
         var layer = Tangram.leafletLayer({
-            scene: {
-                import: 'https://mapzen.com/carto/walkabout-style/3/walkabout-style.zip',
-                global: {
-                    sdk_mapzen_api_key: 'mapzen-ngkKc5t'
-                }
-            },
+            scene: 'scene.yaml',
             events: {
                 hover: function(selection) {
                     console.log('Hover!', selection);
