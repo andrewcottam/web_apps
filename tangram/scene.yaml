@@ -32,6 +32,7 @@ layers:
                 - not: { GLG_SYM: water }
         draw:
             _alpha_polygons:
+                interactive: true
                 order: global.sdk_order_over_everything_but_text_0
                 color: |
                     function() {

@@ -1,41 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+
+<head>
     <title>San Juan Island Geology</title>
     <meta charset="utf-8">
-    <link rel="stylesheet" href="https://mapzen.com/js/mapzen.css">
-    <script src="https://mapzen.com/js/mapzen.min.js"></script>
+    <!--leaflet-->
+    <script type="text/javascript" src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+
+    <!-- style sheet for mapzen.js -->
+    <link rel="stylesheet" href="https://mapzen.com/js/mapzen.standalone.css">
+
+    <!-- latest version of stasndalone mapzen.js-->
+    <script src="https://mapzen.com/js/mapzen.standalone.js"></script>
+
+    <!-- latest minified version of standalone mapzen.js -->
+    <script src="https://mapzen.com/js/mapzen.standalone.min.js"></script>
+
     <style>
-      #map {
-        height: 100%;
-        width: 100%;
-        position: absolute;
-      }
-    html,body{margin: 0; padding: 0}
-  </style>
-  </head>
-  <body>
+        #map {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+        }
+        
+        html,
+        body {
+            margin: 0;
+            padding: 0
+        }
+    </style>
+</head>
+
+<body>
     <div id="map"></div>
     <script>
-      var san_juan_island = [48.5326, -123.0879];
+        var san_juan_island = [48.5326, -123.0879];
 
-      var map = L.Mapzen.map('map', {
-        center: san_juan_island,
-        zoom: 12,
-        scene: 'scene.yaml',
-      });
-      map.on('click',function(){
-          console.log("clicked");
-      });
+        var map = L.Mapzen.map('map', {
+            center: san_juan_island,
+            zoom: 12,
+            scene: 'scene.yaml',
+        });
 
-      // Move zoom control to the top right corner of the map
-      map.zoomControl.setPosition('topright');
+        map.on('tangramloaded', function(event) {
+            console.log(event.tangramLayer);
+            event.tangramLayer.setSelectionEvents({
+                click: function(){
+                    console.log("wibble");
+                }
+            });
+        }); // Move zoom control to the top right corner of the map
 
-      // Mapzen Search box (replace key with your own)
-      // To generate your own key, go to https://mapzen.com/developers/
-      var geocoder = L.Mapzen.geocoder('mapzen-JA21Wes');
-      geocoder.addTo(map);
+        map.zoomControl.setPosition('topright');
 
+        // Mapzen Search box (replace key with your own)
+        // To generate your own key, go to https://mapzen.com/developers/
+        var geocoder = L.Mapzen.geocoder('mapzen-JA21Wes');
+        geocoder.addTo(map);
     </script>
-  </body>
+</body>
+
 </html>
