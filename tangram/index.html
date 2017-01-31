@@ -1,65 +1,38 @@
-<!doctype html>
-<!--
-    Tangram: real-time WebGL rendering for OpenStreetMap
-
-    http://github.com/tangrams/tangram
-    http://mapzen.com
--->
-<html lang="en-us">
-
-<head>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>San Juan Island Geology</title>
     <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Simple demo – Tangram</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.0.1/dist/leaflet.css" />
-
+    <link rel="stylesheet" href="https://mapzen.com/js/mapzen.css">
+    <script src="https://mapzen.com/js/mapzen.min.js"></script>
     <style>
-        body {
-            margin: 0px;
-            border: 0px;
-            padding: 0px;
-        }
-        
-        #map {
-            height: 100%;
-            width: 100%;
-            position: absolute;
-        }
-    </style>
-</head>
-
-<body>
+      #map {
+        height: 100%;
+        width: 100%;
+        position: absolute;
+      }
+    html,body{margin: 0; padding: 0}
+  </style>
+  </head>
+  <body>
     <div id="map"></div>
-
-    <!-- leaflet -->
-    <script src="https://unpkg.com/leaflet@1.0.1/dist/leaflet.js"></script>
-
-    <!-- Main tangram library -->
-    <script src="https://mapzen.com/tangram/0.10/tangram.min.js"></script>
-
-    <!-- Demo setup -->
     <script>
-        var map = L.map('map');
+      var san_juan_island = [48.5326, -123.0879];
 
-        var layer = Tangram.leafletLayer({
-            scene: 'scene.yaml',
-            events: {
-                hover: function(selection) {
-                    console.log('Hover!', selection);
-                },
-                click: function(selection) {
-                    console.log('Click!', selection);
-                },
-            },
-            attribution: '<a href="https://mapzen.com/tangram" target="_blank">Tangram</a> | &copy; OSM contributors | <a href="https://mapzen.com/" target="_blank">Mapzen</a>'
-        });
+      var map = L.Mapzen.map('map', {
+        center: san_juan_island,
+        zoom: 12,
+        scene: 'scene.yaml',
+      });
 
-        layer.addTo(map);
+      // Move zoom control to the top right corner of the map
+      map.zoomControl.setPosition('topright');
 
-        map.setView([40.70531887544228, -74.00976419448853], 15);
+      // Mapzen Search box (replace key with your own)
+      // To generate your own key, go to https://mapzen.com/developers/
+      var geocoder = L.Mapzen.geocoder('mapzen-JA21Wes');
+      geocoder.addTo(map);
+
     </script>
-
-</body>
-
+  </body>
 </html>
