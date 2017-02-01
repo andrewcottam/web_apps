@@ -50,9 +50,9 @@
 #### vanilla_dojo_layout
 <a href='https://andrewcottam.github.io/web_apps/vanilla_dojo_layout/index.html' target='_blank'>index.html</a> - Simple vanilla Dojo layout</br>
 #### vectorTileClients
-<a href='https://andrewcottam.github.io/web_apps/vectorTileClients/mapboxGL/mapbox.html' target='_blank'>mapbox.html</a> - MapboxGL JS Client using the Mapbox Vector Tile Service</br>
-<a href='https://andrewcottam.github.io/web_apps/vectorTileClients/mapboxGL/openMapTiles.html' target='_blank'>openMapTiles.html</a> - MapboxGL JS Client using the OpenMapTiles Service</br>
-<a href='https://andrewcottam.github.io/web_apps/vectorTileClients/tangram/index.html' target='_blank'>index.html</a> - Tangram Client using the Mapzen Vector Tile Services</br>
+<a href='https://andrewcottam.github.io/web_apps/vectorTileClients/mapbox.html' target='_blank'>mapbox.html</a> - MapboxGL JS Client using the Mapbox Vector Tile Service</br>
+<a href='https://andrewcottam.github.io/web_apps/vectorTileClients/openMapTiles.html' target='_blank'>openMapTiles.html</a> - MapboxGL JS Client using the OpenMapTiles Service</br>
+<a href='https://andrewcottam.github.io/web_apps/vectorTileClients/tangram.html' target='_blank'>tangram.html</a> - Tangram Client using the Mapzen Vector Tile Services</br>
 #### widgets
 Generic Dojo widgets that are referenced and used in other web applications
 
