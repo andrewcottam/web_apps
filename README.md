@@ -43,16 +43,16 @@
 #### leaflet_map
 <a href='https://andrewcottam.github.io/web_apps/leaflet_map/index.html' target='_blank'>index.html</a> - test page for leaflet</br>
 <a href='https://andrewcottam.github.io/web_apps/leaflet_map/references.html' target='_blank'>references.html</a> - test page for references from the ScienceDirect API
-#### mapboxGL
-<a href='https://andrewcottam.github.io/web_apps/mapboxGL/index.html' target='_blank'>index.html</a> - test page for Mapbox GL JS</br>
 #### species_validation_tool
 <a href='https://andrewcottam.github.io/web_apps/species_validation_tool/index.html' target='_blank'>index.html</a> - Proof-of-concept tool for validating species presence within protected areas</br>
-#### tangram
-<a href='https://andrewcottam.github.io/web_apps/tangram/index.html' target='_blank'>index.html</a> - test page for Tangram</br>
 #### tourism_potential_global
 <a href='https://andrewcottam.github.io/web_apps/tourism_potential_global/index.html' target='_blank'>index.html</a> - Shows the potential of protected areas globally for eco-tourism based on their species and the species charisma</br>
 #### vanilla_dojo_layout
 <a href='https://andrewcottam.github.io/web_apps/vanilla_dojo_layout/index.html' target='_blank'>index.html</a> - Simple vanilla Dojo layout</br>
+#### vectorTileClients
+<a href='https://andrewcottam.github.io/web_apps/vectorTileClients/mapboxGL/mapbox.html' target='_blank'>mapbox.html</a> - MapboxGL JS Client using the Mapbox Vector Tile Service</br>
+<a href='https://andrewcottam.github.io/web_apps/vectorTileClients/mapboxGL/openMapTiles.html' target='_blank'>openMapTiles.html</a> - MapboxGL JS Client using the OpenMapTiles Service</br>
+<a href='https://andrewcottam.github.io/web_apps/vectorTileClients/tangram/index.html' target='_blank'>index.html</a> - Tangram Client using the Mapzen Vector Tile Services</br>
 #### widgets
 Generic Dojo widgets that are referenced and used in other web applications
 
