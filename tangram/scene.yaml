@@ -8,6 +8,7 @@ global:
 sources:
     osm:
         type: TopoJSON
+        # url: https://tile.mapzen.com/mapzen/vector/v1/roads/{z}/{x}/{y}.topojson?api_key=mapzen-ngkKc5t
         url: https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.topojson?api_key=mapzen-ngkKc5t
 
 layers:
