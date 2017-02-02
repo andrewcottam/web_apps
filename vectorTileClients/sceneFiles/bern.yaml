@@ -1,0 +1,84 @@
+# import: https://mapzen.com/carto/cinnabar-style/6/cinnabar-style.zip
+
+sources:
+    jrc:
+        type: MVT
+        url: https://web-apps-blishten.c9users.io/tilemaker/bern_tiles/{z}/{x}/{y}.pbf 
+    
+layers:
+    buildings:
+        data: { source: jrc }
+        draw:
+            polygons:
+                color: red
+                width: 8
+                interactive: true
+            lines:
+                interactive: true
+    earth:
+        data: { source: jrc }
+        draw:
+            polygons:
+                color: blue
+                interactive: true
+            lines:
+                interactive: true
+    landuse:
+        data: { source: jrc }
+        draw:
+            polygons:
+                color: green
+                interactive: true
+            lines:
+                interactive: true
+    places:
+        data: { source: jrc }
+        draw:
+            polygons:
+                interactive: true
+                color: yellow
+            lines:
+                interactive: true
+    pois:
+        data: { source: jrc }
+        draw:
+            polygons:
+                color: black
+                interactive: true
+            lines:
+                interactive: true
+    roads:
+        data: { source: jrc }
+        draw:
+            polygons:
+                interactive: true
+                color: red
+                width: 8
+            lines:
+                interactive: true
+                color: red
+                width: 8
+    transit:
+        data: { source: jrc }
+        draw:
+            polygons:
+                interactive: true
+                color: gray
+                width: 8
+            lines:
+                interactive: true
+    water:
+        data: { source: mapbox }
+        draw:
+            polygons:
+                order: 1
+                color: lightblue
+    boundaries:                
+        data: { source: jrc }
+        draw:
+            polygons:
+                interactive: true
+                color: grey
+            lines:
+                interactive: true
+               
