@@ -1,7 +1,8 @@
+var layer;
 require(["dojo/dom", "dojo/domReady!"],
     function(dom) {
         var map = L.map('map');
-        var layer = Tangram.leafletLayer({
+        layer = Tangram.leafletLayer({
             scene: 'sceneFiles/bern.yaml',
             events: {
                 hover: function(selection) {
@@ -14,10 +15,13 @@ require(["dojo/dom", "dojo/domReady!"],
         });
         layer.addTo(map);
         // map.setView([47, 7.5], 12); //bern
-        map.setView([-2.079, 21.36], 12); //salonga
+        // map.setView([-2.079, 21.36], 12); //salonga
+        map.setView([-1.14, 15.51], 7); //congo
     });
 
 function clicked(event) {
+    layer.scene.config.layers.protected_areas.draw.polygons.color = "blue";
+    layer.scene.updateConfig();
     if (event.feature) {
         if (event.feature.properties) {
             console.log(event.feature.properties);
