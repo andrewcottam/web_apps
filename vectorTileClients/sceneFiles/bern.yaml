@@ -3,9 +3,19 @@
 sources:
     jrc:
         type: MVT
-        url: https://storage.googleapis.com/geeimageserver.appspot.com/vectorTiles/bern_tiles_nozip/{z}/{x}/{y}.pbf 
-    
+        # url: https://storage.googleapis.com/geeimageserver.appspot.com/vectorTiles/bern_tiles_nozip/{z}/{x}/{y}.pbf 
+        url: https://web-apps-blishten.c9users.io/tilemaker/tiles/wdpa_bern/{z}/{x}/{y}.pbf 
+        
 layers:
+    wdpa:
+        data: { source: jrc }
+        draw:
+            polygons:
+                color: blue
+                width: 8
+                interactive: true
+            lines:
+                interactive: true
     buildings:
         data: { source: jrc }
         draw:

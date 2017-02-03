@@ -1,6 +1,6 @@
 [
     {
-      "origin": ["https://mapzen.com/","https://web-apps-blishten.c9users.io/"],
+      "origin": ["https://mapzen.com/","https://web-apps-blishten.c9users.io/","https://andrewcottam.github.io/"],
       "responseHeader": ["Content-Type"],
       "method": ["GET", "HEAD", "DELETE"],
       "maxAgeSeconds": 3600
