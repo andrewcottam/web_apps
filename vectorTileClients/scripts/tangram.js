@@ -3,7 +3,7 @@ require(["dojo/dom", "dojo/domReady!"],
         var mapboxToken = "pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg";
         var map = L.map('map');
         var layer = Tangram.leafletLayer({
-            scene: 'scene.yaml',
+            scene: 'sceneFiles/scene.yaml',
             events: {
                 click: function(selection) {
                     clicked(selection);

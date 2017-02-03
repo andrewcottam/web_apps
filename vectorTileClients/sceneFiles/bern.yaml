@@ -3,7 +3,7 @@
 sources:
     jrc:
         type: MVT
-        url: https://web-apps-blishten.c9users.io/tilemaker/bern_tiles/{z}/{x}/{y}.pbf 
+        url: https://storage.googleapis.com/geeimageserver.appspot.com/vectorTiles/bern_tiles_nozip/{z}/{x}/{y}.pbf 
     
 layers:
     buildings:
@@ -68,7 +68,7 @@ layers:
             lines:
                 interactive: true
     water:
-        data: { source: mapbox }
+        data: { source: jrc }
         draw:
             polygons:
                 order: 1

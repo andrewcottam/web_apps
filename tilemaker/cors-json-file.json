@@ -1,6 +1,6 @@
 [
     {
-      "origin": ["https://mapzen.com/"],
+      "origin": ["https://mapzen.com/","https://web-apps-blishten.c9users.io/"],
       "responseHeader": ["Content-Type"],
       "method": ["GET", "HEAD", "DELETE"],
       "maxAgeSeconds": 3600
