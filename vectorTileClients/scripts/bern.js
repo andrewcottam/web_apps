@@ -13,7 +13,8 @@ require(["dojo/dom", "dojo/domReady!"],
             },
         });
         layer.addTo(map);
-        map.setView([47, 7.5], 12);
+        // map.setView([47, 7.5], 12); //bern
+        map.setView([-2.079, 21.36], 12); //salonga
     });
 
 function clicked(event) {

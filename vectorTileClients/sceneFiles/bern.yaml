@@ -11,7 +11,18 @@ layers:
         data: { source: jrc }
         draw:
             polygons:
-                color: blue
+                order: 1
+                color: green
+                width: 8
+                interactive: true
+            lines:
+                interactive: true
+    protected_areas:
+        data: { source: jrc }
+        draw:
+            polygons:
+                order: 1
+                color: green
                 width: 8
                 interactive: true
             lines:
