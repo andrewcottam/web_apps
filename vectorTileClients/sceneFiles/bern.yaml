@@ -7,7 +7,7 @@ sources:
         # url: https://web-apps-blishten.c9users.io/tilemaker/tiles/wdpa_bern/{z}/{x}/{y}.pbf 
         # url: https://web-apps-blishten.c9users.io/tilemaker/tiles/wdpa_salonga/{z}/{x}/{y}.pbf 
         # url: https://web-apps-blishten.c9users.io/tilemaker/tiles/wdpa_africa/{z}/{x}/{y}.pbf 
-        url: https://web-apps-blishten.c9users.io/tilemaker/tiles/wdpa_congo/{z}/{x}/{y}.pbf 
+        url: https://python-blishten.c9users.io/tilemaker/tiles/wdpa_congo/{z}/{x}/{y}.pbf 
 layers:
     wdpa:
         data: { source: jrc }
