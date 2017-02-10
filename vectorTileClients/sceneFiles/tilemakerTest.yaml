@@ -1,107 +1,29 @@
-# import: https://mapzen.com/carto/cinnabar-style/6/cinnabar-style.zip
-
+scene:
+    background: 
+        color: white
 sources:
     jrc:
         type: MVT
-        # url: https://storage.googleapis.com/geeimageserver.appspot.com/vectorTiles/bern_tiles_nozip/{z}/{x}/{y}.pbf 
-        # url: https://python-blishten.c9users.io/tilemaker/tiles/wdpa_bern/{z}/{x}/{y}.pbf 
-        # url: https://python-blishten.c9users.io/tilemaker/tiles/wdpa_salonga/{z}/{x}/{y}.pbf 
         url: https://python-blishten.c9users.io/tilemaker/tiles/wdpa_africa/{z}/{x}/{y}.pbf 
         # url: https://python-blishten.c9users.io/tilemaker/tiles/wdpa_congo/{z}/{x}/{y}.pbf 
+    gswd:
+        type: Raster
+        url: https://storage.googleapis.com/global-surface-water/maptiles/transitions/{z}/{x}/{y}.png
+
 layers:
-    wdpa:
-        data: { source: jrc }
-        draw:
-            polygons:
-                order: 1
-                color: green
-                width: 8
-                interactive: true
-            lines:
-                interactive: true
     protected_areas:
         data: { source: jrc }
         draw:
             polygons:
-                order: 1
-                color: green
-                width: 8
+                blend: overlay
+                color: [0,1,0,0.5]
                 interactive: true
-            lines:
-                interactive: true
-    buildings:
-        data: { source: jrc }
-        draw:
-            polygons:
-                color: red
-                width: 8
-                interactive: true
-            lines:
-                interactive: true
-    earth:
-        data: { source: jrc }
-        draw:
-            polygons:
-                color: blue
-                interactive: true
-            lines:
-                interactive: true
-    landuse:
-        data: { source: jrc }
-        draw:
-            polygons:
-                color: green
-                interactive: true
-            lines:
-                interactive: true
-    places:
-        data: { source: jrc }
-        draw:
-            polygons:
-                interactive: true
-                color: yellow
-            lines:
-                interactive: true
-    pois:
-        data: { source: jrc }
-        draw:
-            polygons:
+            outline:
                 color: black
-                interactive: true
-            lines:
-                interactive: true
-    roads:
-        data: { source: jrc }
-        draw:
-            polygons:
-                interactive: true
-                color: red
-                width: 8
-            lines:
-                interactive: true
-                color: red
-                width: 8
-    transit:
-        data: { source: jrc }
-        draw:
-            polygons:
-                interactive: true
-                color: gray
-                width: 8
-            lines:
-                interactive: true
+                width: 1px
+                style: lines
     water:
-        data: { source: jrc }
+        data: { source: gswd }
         draw:
-            polygons:
-                order: 1
-                color: lightblue
-    boundaries:                
-        data: { source: jrc }
-        draw:
-            polygons:
-                interactive: true
-                color: grey
-            lines:
-                interactive: true
-               
+            raster:
+                order: 0 # draw on bottom                

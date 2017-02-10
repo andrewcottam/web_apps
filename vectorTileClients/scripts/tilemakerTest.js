@@ -28,11 +28,12 @@ function clicked(event) {
         }
     }
 }
+
 function hovered(event) {
     if (event.feature) {
         if (event.feature.properties) {
             console.log(event.feature.properties);
-            
+
         }
     }
 }
