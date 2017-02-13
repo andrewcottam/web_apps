@@ -1,0 +1,8 @@
+[
+    {
+      "origin": ["https://global-surface-water.appspot.com/","https://mapzen.com/","https://web-apps-blishten.c9users.io/","https://andrewcottam.github.io/"],
+      "responseHeader": ["Content-Type"],
+      "method": ["GET", "HEAD"],
+      "maxAgeSeconds": 3600
+    }
+]

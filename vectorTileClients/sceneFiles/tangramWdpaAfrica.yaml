@@ -1,0 +1,46 @@
+scene:
+    background: 
+        color: white
+sources:
+    jrc:
+        type: MVT
+        url: https://python-blishten.c9users.io/tilemaker/tiles/wdpa_africa/{z}/{x}/{y}.pbf
+        generate_label_centroids: true
+    gswd:
+        type: Raster
+        url: https://storage.googleapis.com/global-surface-water/maptiles/transitions/{z}/{x}/{y}.png
+styles:
+    grayscale:
+        base: raster
+        shaders:
+            blocks:
+                filter: |
+                    float luma = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+                    color.rgb = vec3(luma);
+styles:
+    pa:
+        base: polygons
+        blend: overlay
+layers:
+    protected_areas:
+        data: { source: jrc }
+        draw:
+            polygons:
+                style: pa
+                color: [0.388, 0.580, 0.271, 0.40]
+                blend: inlay
+            lines:
+                color: [0.157, 0.235, 0.110, 0.40]
+                width: 1px
+        pa_labels:
+            draw:
+                text:
+                    text_source: NAME
+                    font:
+                        fill: black
+                        size: 12px
+    # water:
+    #         data: { source: gswd }
+    #         draw:
+    #             raster:
+    #                 order: 0 # draw on bottom
