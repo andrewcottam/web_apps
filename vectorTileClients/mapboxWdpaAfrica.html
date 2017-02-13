@@ -62,7 +62,15 @@
         });
 
         map.addControl(new mapboxgl.NavigationControl());
-        // map.showTileBoundaries = true;
+        map.showTileBoundaries = true;
+        map.on('click', function(e) {
+            var features = map.queryRenderedFeatures(e.point, {
+                layers: ['pas']
+            });
+            if (features.length) {
+                console.log(features[0].properties);
+            }
+        });
     </script>
 
 </body>
