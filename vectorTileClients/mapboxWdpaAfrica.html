@@ -47,11 +47,19 @@
                 "type": "fill",
                 "source": "osm",
                 "source-layer": "protected_areas",
-                "filter": ["==", "DESIG", "Ramsar Site, Wetland of International Importance"],
                 "paint": {
                     "fill-color": "rgba(99,148,69, 0.4)",
                     "fill-outline-color": "rgba(87,131,61, 0.4)"
                 }
+            }, {
+                "id": "pa_labels",
+                "type": "symbol",
+                "source": "osm",
+                "source-layer": "protected_areas",
+                "minzoom": 7,
+                "layout": {
+                    "text-field": "{NAME}",
+                },
             }]
         };
         mapboxgl.accessToken = 'pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg'; //this is my access token
@@ -70,6 +78,7 @@
             });
             if (features.length) {
                 console.log(features[0].properties);
+                map.setFilter("pas", ["==", "DESIG", features[0].properties.DESIG]);
             }
         });
     </script>
