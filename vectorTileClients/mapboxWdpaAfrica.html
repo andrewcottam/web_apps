@@ -51,6 +51,14 @@
                     "fill-color": "rgba(99,148,69, 0.4)",
                     "fill-outline-color": "rgba(87,131,61, 0.4)"
                 }
+            }, {
+                "id": "pa_labels",
+                "type": "symbol",
+                "source": "osm",
+                "source-layer": "protected_areas",
+                "layout": {
+                    "text-field": "{NAME}",
+                },
             }]
         };
         mapboxgl.accessToken = 'pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg'; //this is my access token
