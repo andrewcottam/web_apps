@@ -21,7 +21,7 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 			}
 		},
         postCreate: function(){
-        	domClass.add(this.domNode, "imageryTimeSlider"); //give the widget a css class
+        	domClass.add(this.domNode, "imageryTimeSlider claro"); //give the widget a css class
 			var showImgNode = domConstruct.place("<img src='../widgets/images/left.png' id='showImg' title='Click to show imagery selector'>", win.body()); //create a node for the show imagery selector button
 			on(showImgNode, "click", lang.hitch(this, this.show)); //add handling of clicking on the show imagery selector button
         	on(dom.byId("sliderBar"), "click", lang.hitch(this, this.barClicked)); //add handling of clicking on the slider bar
