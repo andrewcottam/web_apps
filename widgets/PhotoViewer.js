@@ -91,33 +91,35 @@ define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "do
 			//initialise the array of photo boxes
 			this.photoBoxes = [];
 			//iterate through the photos and create a photobox for each one
-			for (var i = 0; i < this.photos.length; i++) {
-				var photoBox;
-				switch(this.photos[i].provider) {
-			    case "panoramio":
-					photoBox = new PhotoBoxPanoramio({
-						photo : this.photos[i]
-					});
-			        break;
-			    case "flickr":
-					photoBox = new PhotoBoxFlickr({
-						photo : this.photos[i], 
-						photoSize : this.photoViewer.photoSize
-					});
-			        break;
-			    default:
-			        console.debug("Other provider not currently supported");
+			if (this.photos){
+				for (var i = 0; i < this.photos.length; i++) {
+					var photoBox;
+					switch(this.photos[i].provider) {
+				    case "panoramio":
+						photoBox = new PhotoBoxPanoramio({
+							photo : this.photos[i]
+						});
+				        break;
+				    case "flickr":
+						photoBox = new PhotoBoxFlickr({
+							photo : this.photos[i], 
+							photoSize : this.photoViewer.photoSize
+						});
+				        break;
+				    default:
+				        console.debug("Other provider not currently supported");
+					}
+					on(photoBox, "mouseEnterPhoto", lang.hitch(this.photoViewer, function(e){ //event to catch when the mouse enters the photo
+						this.drawLocation(e);
+						this.activeBox = e.target;
+						this.startScrollPos = this.domNode.parentElement.scrollTop;
+					}));
+					on(photoBox, "mouseLeavePhoto", lang.hitch(this.photoViewer, function(e){ //event to catch when the mouse enters the photo
+						this.hidelocation();
+						this.activeBox = null;
+					}));
+					this.photoBoxes.push(photoBox);
 				}
-				on(photoBox, "mouseEnterPhoto", lang.hitch(this.photoViewer, function(e){ //event to catch when the mouse enters the photo
-					this.drawLocation(e);
-					this.activeBox = e.target;
-					this.startScrollPos = this.domNode.parentElement.scrollTop;
-				}));
-				on(photoBox, "mouseLeavePhoto", lang.hitch(this.photoViewer, function(e){ //event to catch when the mouse enters the photo
-					this.hidelocation();
-					this.activeBox = null;
-				}));
-				this.photoBoxes.push(photoBox);
 			}
 			//when all the providers have returned data
 			if (this.photoViewer.domNode){
