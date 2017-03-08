@@ -19,7 +19,6 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 					on.pausable(this.leafletMap, "moveend", lang.hitch(this, this.mapBoundsChanged));
 				}
 			}
-			this.domNode = domConstruct.place("<div id='ImageryTimeSliderDiv'></div>", win.body()); //create a dom node where we will put this wid
 		},
         postCreate: function(){
         	domClass.add(this.domNode, "imageryTimeSlider"); //give the widget a css class
@@ -119,6 +118,7 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
         		}
         		domStyle.set(this.domNode, "top", mapGeom.y + mapGeom.h - this.height - 5 + "px"); //5 pixels up from the bottom
         		this.enableSlider();
+        		domConstruct.place(this.domNode, win.body()); //place this widget at the top level in case it is nested in the page (e.g. in Drupal panels)
         	}
 		},
 		getAllYearMonths: function(){
