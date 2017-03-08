@@ -12,12 +12,14 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 		stretch: 1,
         includeslc: 0,  //set to 1 to also include Landsat 7 imagery with SLC-offset data
 		layers: "all",
+		hideToEdge: false,
 		postMixInProperties : function() {
 			if (this.leafletMap!==undefined){
 				if (this.leafletMap.getBounds()!==undefined){
 					on.pausable(this.leafletMap, "moveend", lang.hitch(this, this.mapBoundsChanged));
-				};
-			};
+				}
+			}
+			this.domNode = domConstruct.place("<div id='ImageryTimeSliderDiv'></div>", win.body()); //create a dom node where we will put this wid
 		},
         postCreate: function(){
         	domClass.add(this.domNode, "imageryTimeSlider"); //give the widget a css class
@@ -31,7 +33,7 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 			this.mapBounds = this.leafletMap.getBounds();
 			if (domStyle.get("showImg", "display")=="none"){ //only request dates if this imagery selector is currently visible
 				this.requestDates();
-			};
+			}
 		},
 		requestDates: function(){
 			this.disableSlider();
@@ -51,7 +53,7 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 				}else{
 					this.unfilteredYearMonths = response.records;
 					this.yearMonthsSet();
-				};
+				}
 			}),function(error){
 				console.log(error);
 			});    				
@@ -74,7 +76,7 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 			html.set(dom.byId("yearMonth"), this.formatYearMonth(yearMonth)); //show the date
 			if (this.activeDiv){ //programmatically set the active node
 				domClass.replace(this.activeDiv, "data", "tdActive"); //reset the css to data for the last active div
-			};
+			}
 			this.activeDiv = dom.byId(yearMonth);
 			domClass.replace(this.activeDiv, "tdActive", "data"); //set the css to active td
 		},
@@ -93,7 +95,7 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 					domConstruct.place("<td id='" + item + "' title='" + this.formatYearMonth(item) + "' class='data'>", "sliderBar"); //imagery present
 				}else{
 					domConstruct.place("<td class='nodata'>", "sliderBar"); //no imagery
-				};
+				}
 				if (item.slice(-2)=="01"){ //year tics and labels
 					var year = item.slice(0,4);
 					var hasData = array.some(this.yearMonths, function(item){return item.slice(0,4) == year;});
@@ -104,8 +106,8 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 				    }else{
 				    	domConstruct.place("<td class='sliderNoTic'></td>", "sliderTics");
 				    	domConstruct.place("<td></td>", "sliderLabels");
-				    };
-				};
+				    }
+				}
 			}));
         	if (this.leafletMap){ //position the slider
         		domStyle.set(this.domNode, "display", "block");
@@ -117,7 +119,7 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
         		}
         		domStyle.set(this.domNode, "top", mapGeom.y + mapGeom.h - this.height - 5 + "px"); //5 pixels up from the bottom
         		this.enableSlider();
-        	};
+        	}
 		},
 		getAllYearMonths: function(){
 			var years = [];
@@ -126,13 +128,13 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 			var currentMonth = currentDate.getMonth() + 1;
 		    for (var y = 1984; y <= currentYear; y++) {
 		    	years.push(y);
-		    };
+		    }
 		    //get all the year months
 		    var yearMonths = [];
 		    array.forEach(years, function(year){
 			    for (var m = 1; m <= 12; m++) {
 			    	yearMonths.push(year + "-" + ("0" + m).slice(-2));
-			    };
+			    }
 		    });
 		    //get the current month
 		    return yearMonths.slice(0, (12-currentMonth)*(-1));
@@ -140,7 +142,7 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 		barClicked: function(evt){ // set the imagery label to indicate the month and year, set the active div and request the imagery
 			if (evt.target.id){ //if we have a year month
 				this.setDate(evt.target.id);
-			};
+			}
 		},
 		requestImagery: function(yearMonth){
 			this.disableSlider();
@@ -166,7 +168,7 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 		removeImageryLayer: function(){
    			if (this.geeImageLayer){
 				this.leafletMap.removeLayer(this.geeImageLayer);
-			};
+			}
 		},
 		formatYearMonth:function(yearMonth){//gets the formatted year month from a yearMonth, e.g. 2004-06 -> June 2004
     		var yearPart = Number(yearMonth.substring(0,4));
@@ -181,12 +183,12 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 				case (keys.RIGHT_ARROW) :
 					if (index < this.yearMonths.length-1){
 						this.setDate(this.yearMonths[index+1]);
-					};
+					}
 					break;
 				case (keys.LEFT_ARROW):
 					if (index > 0){
 						this.setDate(this.yearMonths[index-1]);
-					};
+					}
 					break;
     			case (keys.NUMPAD_PLUS) :
     				this.stretchImage(true);
@@ -194,7 +196,7 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
     			case (keys.NUMPAD_MINUS) :
     				this.stretchImage(false);
     				break;
-        		};
+        		}
     	},
     	showSettings: function(evt){
     		var value = (domStyle.get("ImageryTimeSliderControls","display") == "block") ? "none" : "block";
@@ -219,7 +221,7 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 			case (keys.ENTER) :
 				focusUtil.curNode.blur();
 				break;
-    		};
+    		}
 		},
 		copernicusChanged: function(value){
 			this.layers = (value) ? "COPERNICUS/S2" : "all";
@@ -243,15 +245,19 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 		},
 		hide: function(){
 			domStyle.set(this.domNode, "display", "none");
-			var mapGeom = domGeom.position(this.leafletMap.getContainer()); //get the position of the dom for the leaflet map
-			//show the open image
-			domStyle.set("showImg", "display", "block");
-			domStyle.set("showImg", "left", mapGeom.x + mapGeom.w - 16 + "px");
-			domStyle.set("showImg", "top", mapGeom.y + mapGeom.h - 66 + "px");
+			this.removeImageryLayer();
+			if (this.hideToEdge){ //show the show arrow at the right of the leaflet map
+				var mapGeom = domGeom.position(this.leafletMap.getContainer()); //get the position of the dom for the leaflet map
+				//show the open image
+				domStyle.set("showImg", "display", "block");
+				domStyle.set("showImg", "left", mapGeom.x + mapGeom.w - 16 + "px");
+				domStyle.set("showImg", "top", mapGeom.y + mapGeom.h - 66 + "px");
+			}
 		},
 		show: function(){
 			domStyle.set("showImg", "display", "none");
 			domStyle.set(this.domNode, "display", "block");
+			this.mapBoundsChanged(); //this will make the call to get the dates
 		},
 		disableSlider: function(){
 			array.forEach(registry.findWidgets(this.domNode), function(widget){

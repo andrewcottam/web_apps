@@ -4,8 +4,8 @@ require({
 			name: "widgets",
 			location: "/../../widgets"
 		}]
-	}, ["dijit/form/Button", "dojo/dom", "widgets/ReferenceList", "widgets/ImageryController", "widgets/ImageryTimeSlider", "widgets/PhotoViewer", "dojo/dom-construct", "dojo/io-query", "dojo/_base/window", "dojo/parser", "dojo/on", "dijit/registry", "dojo/ready", "dijit/form/CheckBox", "dijit/layout/BorderContainer", "dijit/layout/ContentPane"],
-	function(Button, dom, ReferenceList, ImageryController, ImageryTimeSlider, PhotoViewer, domConstruct, ioQuery, win, parser, on, registry, ready) {
+	}, ["dijit/form/Button", "dojo/dom", "widgets/ReferenceList", "widgets/ImageryTimeSlider", "widgets/PhotoViewer", "dojo/dom-construct", "dojo/io-query", "dojo/_base/window", "dojo/parser", "dojo/on", "dijit/registry", "dojo/ready", "dijit/form/CheckBox", "dijit/layout/BorderContainer", "dijit/layout/ContentPane"],
+	function(Button, dom, ReferenceList, ImageryTimeSlider, PhotoViewer, domConstruct, ioQuery, win, parser, on, registry, ready) {
 		ready(function() {
 			var queryObject = ioQuery.queryToObject(win.doc.location.search.substring(1));
 			// var geeServerUrl = (document.domain === "localhost") ? "http://localhost:8080" : "http://geeImageServer.appspot.com";
@@ -78,7 +78,8 @@ require({
 				}, "photos"); //tags are an array, e.g. tags: ["biopama"], text is a string, e.g. text: "landscape"
 				photoViewer.startup();
 				var imageryTimeSlider = new ImageryTimeSlider({
-					leafletMap: map
+					leafletMap: map,
+					hideToEdge: true
 				}, "ImageryTimeSliderDiv");
 				imageryTimeSlider.startup();
 			});
