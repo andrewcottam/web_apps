@@ -4,7 +4,7 @@
 	padding-left: 10px;
 	padding-right: 6px;
 	display: none;
-	z-index: 1000;
+	z-index: 950;
 	background-color: rgba(255, 255, 255, 0.95);
 	border: 1px solid #CFCFCF;
 	border-radius: 3px;
@@ -185,4 +185,18 @@
 	z-index: 2000;
 	top: 0px;
 	left: 0px;
+}
+
+#infoBox {
+	font-family: "Trebuchet MS";
+	font-size: 0.8em;
+}
+
+#infoBox h1 {
+	font-size: 2em;
+	margin: 10px 0px 10px 0px;
+}
+
+#infoBox td {
+	text-align: left;
 }
