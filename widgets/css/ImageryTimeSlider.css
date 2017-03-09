@@ -3,12 +3,14 @@
 	padding-bottom: 6px;
 	padding-left: 10px;
 	padding-right: 6px;
-	display: none;
 	z-index: 950;
 	background-color: rgba(255, 255, 255, 0.95);
 	border: 1px solid #CFCFCF;
 	border-radius: 3px;
 	box-sizing: content-box !important;
+	min-width: 482px; /* default size*/
+	min-height: 54px; /* default size*/
+	
 }
 
 .dijit {
