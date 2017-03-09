@@ -6,6 +6,7 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 	function(registry, domAttr, _WidgetsInTemplateMixin, Dialog, focusUtil, win, keys, html, date, locale, dom, domStyle, domGeom, domClass, array, domConstruct, script, lang, on, declare, _WidgetBase, _TemplatedMixin, template) {
     return declare("ImageryTimeSlider", [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin], {
         templateString: template,
+        baseClass: "imageryTimeSlider",
 		geeServerUrl: "https://geeImageServer.appspot.com",
         cloudMax: 10,
 		bands: "Red,Green,Blue",
@@ -21,7 +22,7 @@ define(["dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dij
 			}
 		},
         postCreate: function(){
-        	domClass.add(this.domNode, "imageryTimeSlider claro"); //give the widget a css class
+        	domClass.add(win.body(), "claro"); //give the widget the claro class in case its not in the body
 			var showImgNode = domConstruct.place("<img src='../widgets/images/left.png' id='showImg' title='Click to show imagery selector'>", win.body()); //create a node for the show imagery selector button
 			on(showImgNode, "click", lang.hitch(this, this.show)); //add handling of clicking on the show imagery selector button
         	on(dom.byId("sliderBar"), "click", lang.hitch(this, this.barClicked)); //add handling of clicking on the slider bar

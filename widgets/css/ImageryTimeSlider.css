@@ -8,18 +8,44 @@
 	background-color: rgba(255, 255, 255, 0.95);
 	border: 1px solid #CFCFCF;
 	border-radius: 3px;
+	box-sizing: content-box !important;
 }
 
-table {
+.dijit {
+	box-sizing: content-box;
+}
+
+.dijitArrowButtonInner {
+	box-sizing: content-box;
+}
+
+.imageryTimeSlider table {
 	border-spacing: 0px;
+	border-collapse: separate;
+	width: auto;
+}
+
+.noBorder {
+	border: none;
+}
+
+.imageryTimeSlider tr {
+	text-align: left;
+	line-height: normal;
+}
+
+.imageryTimeSlider td {
+	padding: 1px;
 }
 
 #sliderRow {
 	height: 54px;
+	text-align: left;
 }
 
 #sliderBarTable {
 	border: 1px #D3D3D3 solid;
+	padding: 0px;
 }
 
 #sliderBarTable:hover {
@@ -32,29 +58,31 @@ table {
 	padding: 0px;
 }
 
-.data { /* cells which have imagery */
-	background-color: #B3B3B3;
+.data {
+	/* cells which have imagery */
+	background-color: #EFEFEF;
 	cursor: pointer;
 	cursor: hand;
 }
 
-.data:hover, .tdActive {
+.data:hover,
+.tdActive {
 	/* cells which have imagery and mouse over them*/
 	background-color: red;
 	cursor: pointer;
 	cursor: hand;
 }
 
-.nodata { /* cells which don't have imagery */
-	background-color: #EFEFEF;
+.nodata {
+	/* cells which don't have imagery */
+	background-color: #B3B3B3;
 }
 
 #sliderTicsTable {
 	border-spacing: 0px;
 	margin-left: 1px;
-	/
+	padding: 0px;
 	/* as the slider bar has a 1px border so we need to align jan with the first td */
-	/
 }
 
 #sliderTicsTable td {
@@ -65,14 +93,18 @@ table {
 
 #sliderTicsTable .sliderTic {
 	border-left: 1px solid #D3D3D3;
+	box-sizing: content-box;
 }
 
 #sliderTicsTable .sliderNoTic {
 	border-left: 1px solid white;
+	box-sizing: content-box;
 }
 
 #sliderLabelsTable {
-	margin-left: -17px; /* to move the year labels to the correct place */
+	margin-left: -17px;
+	padding: 0px;
+	/* to move the year labels to the correct place */
 }
 
 #sliderLabels td {
