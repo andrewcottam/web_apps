@@ -41,9 +41,18 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 			},
 			mapBoundsChanged: function() { //refetch the images
 				this.mapBounds = this.leafletMap.getBounds();
-				if (domStyle.get("showImg", "display") == "none") { //only request dates if this imagery selector is currently visible
-					this.requestDates();
+				var requestDates = true;
+				if (this.previousBounds) {
+					if (this.previousBounds.contains(this.mapBounds)) { //if we are zooming withinin the current bounds we dont need to get the imagery dates again
+						requestDates = false;
+					}
 				}
+				if (requestDates) {
+					if (domStyle.get("showImg", "display") == "none") { //only request dates if this imagery selector is currently visible
+						this.requestDates();
+					}
+				}
+				this.previousBounds = this.mapBounds;
 			},
 			requestDates: function() {
 				this.disableSlider();
@@ -81,7 +90,11 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 					});
 				}
 				this.createSlider();
-				this.setDate(this.yearMonths[this.yearMonths.length - 1]); //get the most recent image
+				if (this.yearMonths.indexOf(this.yearMonth)>-1){
+					this.setDate(this.yearMonth); //get the same year/month that is already mapped
+				}else{
+					this.setDate(this.yearMonths[this.yearMonths.length - 1]); //get the most recent image
+				}
 			},
 			setDate: function(yearMonth) {
 				this.yearMonth = yearMonth;
