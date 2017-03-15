@@ -2,7 +2,7 @@
 //UI widget that is used as a tool to show satellite imagery coming from Google Earth Engine. It has the following options:
 //  showAllYears - set to true to show tics and labels for all years even those without imagery 
 
-define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dijit/Dialog", "dijit/focus", "dojo/_base/window", "dojo/keys", "dojo/html", "dojo/date", "dojo/date/locale", "dojo/dom", "dojo/dom-style", "dojo/dom-geometry", "dojo/dom-class", "dojo/_base/array", "dojo/dom-construct", "dojo/request/script", "dojo/_base/lang", "dojo/on", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!./templates/ImageryTimeSlider.html", "dijit/form/Select", "dijit/form/NumberSpinner", "dijit/form/CheckBox", "../widgets/scripts/NonTiledLayer.js", "../widgets/scripts/NonTiledLayer.WMS.js", "../widgets/scripts/Control.Loading.js", "../widgets/scripts/L.Control.MousePosition.js"],
+define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dijit/Dialog", "dijit/focus", "dojo/_base/window", "dojo/keys", "dojo/html", "dojo/date", "dojo/date/locale", "dojo/dom", "dojo/dom-style", "dojo/dom-geometry", "dojo/dom-class", "dojo/_base/array", "dojo/dom-construct", "dojo/request/script", "dojo/_base/lang", "dojo/on", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!./templates/ImageryTimeSlider.html", "dijit/form/Select", "dijit/form/NumberSpinner", "dijit/form/CheckBox", "../widgets/scripts/NonTiledLayer.js", "../widgets/scripts/NonTiledLayer.WMS.js", "../widgets/scripts/Control.Loading.js", "../widgets/scripts/L.Control.MousePosition.js", "../widgets/scripts/geeImageLayer.js"],
 	function(Evented, registry, domAttr, _WidgetsInTemplateMixin, Dialog, focusUtil, win, keys, html, date, locale, dom, domStyle, domGeom, domClass, array, domConstruct, script, lang, on, declare, _WidgetBase, _TemplatedMixin, template) {
 		return declare("ImageryTimeSlider", [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin, Evented], {
 			templateString: template,
@@ -153,7 +153,6 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 			requestImagery: function(yearMonth) {
 				html.set(dom.byId("yearMonth"), "Loading image..");
 				this.disableSlider();
-				this.removeImageryLayer();
 				var yearPart = Number(yearMonth.substring(0, 4));
 				var monthPart = Number(yearMonth.slice(-2));
 				var startDate = new Date(yearPart, monthPart - 1, 1);
@@ -165,25 +164,23 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 					selector: "date",
 					datePattern: "yyyy-MM-dd"
 				});
-				this.geeImageLayer = L.nonTiledLayer.wms(this.geeServerUrl + "/ogc", {
+				var wmsParams = {
 					layers: this.layers,
-					format: 'image/png',
 					startDate: startDateF,
 					endDate: endDateF,
 					cloudmax: this.cloudMax,
 					bands: this.bands,
 					stretch: this.stretch,
 					includeslc: this.includeslc,
-				});
-				this.leafletMap.addLayer(this.geeImageLayer);
-				on(this.geeImageLayer, "load", lang.hitch(this, function(response) {
-					this.enableSlider(); //enable the slider when the image has loaded
-				}));
-			},
-			removeImageryLayer: function() {
-				if (this.geeImageLayer) {
-					this.leafletMap.removeLayer(this.geeImageLayer);
-					delete this.geeImageLayer;
+				};
+				if (!this.geeImageLayer) { //add the layer if it is not already present
+					this.geeImageLayer = new geeImageLayer(this.geeServerUrl + "/ogc", wmsParams);
+					on(this.geeImageLayer, "load", lang.hitch(this, function(response) {
+						this.enableSlider(); //enable the slider when the image has loaded
+					}));
+					this.leafletMap.addLayer(this.geeImageLayer);
+				}else{
+					this.geeImageLayer.setParams(wmsParams);
 				}
 			},
 			formatYearMonth: function(yearMonth) { //gets the formatted year month from a yearMonth, e.g. 2004-06 -> June 2004
@@ -264,7 +261,6 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 			},
 			hide: function() {
 				domStyle.set(this.domNode, "display", "none");
-				this.removeImageryLayer();
 				if (this.hideToEdge) { //show the show arrow at the right of the leaflet map
 					var mapGeom = domGeom.position(this.leafletMap.getContainer()); //get the position of the dom for the leaflet map
 					//show the open image
