@@ -6,9 +6,9 @@
 	z-index: 950;
 	background-color: rgba(255, 255, 255, 0.95);
 	border: 1px solid #CFCFCF;
-	border-radius: 3px;
+	border-radius: 4px;
 	box-sizing: content-box !important;
-	min-width: 482px; /* default size*/
+	min-width: 510px; /* default size*/
 	min-height: 54px; /* default size*/
 	
 }
@@ -144,8 +144,8 @@
 
 #yearMonth {
 	margin-bottom: 7px;
-	width: 67px;
 	margin-left: 2px;
+	font-size: 13px;
 }
 
 #ImageryTimeSliderControls {

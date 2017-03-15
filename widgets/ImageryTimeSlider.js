@@ -2,7 +2,7 @@
 //UI widget that is used as a tool to show satellite imagery coming from Google Earth Engine. It has the following options:
 //  showAllYears - set to true to show tics and labels for all years even those without imagery 
 
-define(["dojo/Evented","dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dijit/Dialog", "dijit/focus", "dojo/_base/window", "dojo/keys", "dojo/html", "dojo/date", "dojo/date/locale", "dojo/dom", "dojo/dom-style", "dojo/dom-geometry", "dojo/dom-class", "dojo/_base/array", "dojo/dom-construct", "dojo/request/script", "dojo/_base/lang", "dojo/on", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!./templates/ImageryTimeSlider.html", "dijit/form/Select", "dijit/form/NumberSpinner", "dijit/form/CheckBox"],
+define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dijit/Dialog", "dijit/focus", "dojo/_base/window", "dojo/keys", "dojo/html", "dojo/date", "dojo/date/locale", "dojo/dom", "dojo/dom-style", "dojo/dom-geometry", "dojo/dom-class", "dojo/_base/array", "dojo/dom-construct", "dojo/request/script", "dojo/_base/lang", "dojo/on", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!./templates/ImageryTimeSlider.html", "dijit/form/Select", "dijit/form/NumberSpinner", "dijit/form/CheckBox", "../widgets/scripts/NonTiledLayer.js", "../widgets/scripts/NonTiledLayer.WMS.js", "../widgets/scripts/Control.Loading.js", "../widgets/scripts/L.Control.MousePosition.js"],
 	function(Evented, registry, domAttr, _WidgetsInTemplateMixin, Dialog, focusUtil, win, keys, html, date, locale, dom, domStyle, domGeom, domClass, array, domConstruct, script, lang, on, declare, _WidgetBase, _TemplatedMixin, template) {
 		return declare("ImageryTimeSlider", [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin, Evented], {
 			templateString: template,
@@ -47,7 +47,7 @@ define(["dojo/Evented","dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTempl
 			},
 			requestDates: function() {
 				this.disableSlider();
-				html.set(dom.byId("yearMonth"),"Loading..");
+				html.set(dom.byId("yearMonth"), "Loading dates..");
 				var params = {
 					srs: "EPSG:4326",
 					bbox: this.mapBounds.getWest() + "," + this.mapBounds.getSouth() + "," + this.mapBounds.getEast() + "," + this.mapBounds.getNorth(),
@@ -66,7 +66,6 @@ define(["dojo/Evented","dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTempl
 						this.unfilteredYearMonths = response.records;
 						this.yearMonthsSet();
 					}
-					this.enableSlider();
 				}), function(error) {
 					console.log(error);
 				});
@@ -152,7 +151,7 @@ define(["dojo/Evented","dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTempl
 				}
 			},
 			requestImagery: function(yearMonth) {
-				html.set(dom.byId("yearMonth"),"Loading..");
+				html.set(dom.byId("yearMonth"), "Loading image..");
 				this.disableSlider();
 				this.removeImageryLayer();
 				var yearPart = Number(yearMonth.substring(0, 4));
@@ -177,11 +176,14 @@ define(["dojo/Evented","dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTempl
 					includeslc: this.includeslc,
 				});
 				this.leafletMap.addLayer(this.geeImageLayer);
-				on(this.geeImageLayer, "load", lang.hitch(this, this.enableSlider)); //enable the slider when the image has loaded
+				on(this.geeImageLayer, "load", lang.hitch(this, function(response) {
+					this.enableSlider(); //enable the slider when the image has loaded
+				}));
 			},
 			removeImageryLayer: function() {
 				if (this.geeImageLayer) {
 					this.leafletMap.removeLayer(this.geeImageLayer);
+					delete this.geeImageLayer;
 				}
 			},
 			formatYearMonth: function(yearMonth) { //gets the formatted year month from a yearMonth, e.g. 2004-06 -> June 2004
@@ -281,9 +283,10 @@ define(["dojo/Evented","dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTempl
 				array.forEach(registry.findWidgets(this.domNode), function(widget) {
 					widget.set("disabled", true);
 				});
-				domStyle.set("slider", "opacity", "0.5");
-				domConstruct.place("<div id='blockingDiv'></div", "slider");
-				//			domStyle.set(this.domNode, "cursor", "wait");
+				domStyle.set("slider", "opacity", "0.3");
+				if (!dom.byId('blockingDiv')) {
+					domConstruct.place("<div id='blockingDiv'></div", "slider");
+				}
 			},
 			enableSlider: function() {
 				array.forEach(registry.findWidgets(this.domNode), function(widget) {
