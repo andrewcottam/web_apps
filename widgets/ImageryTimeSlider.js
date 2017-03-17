@@ -100,11 +100,10 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 				this.yearMonth = yearMonth;
 				this.requestImagery(yearMonth); //request the image
 				html.set(dom.byId("yearMonth"), this.formatYearMonth(yearMonth)); //show the date
-				if (this.activeDiv) { //programmatically set the active node
-					domClass.replace(this.activeDiv, "data", "tdActive"); //reset the css to data for the last active div
-				}
+				this.activeDiv && domClass.replace(this.activeDiv, "data", "tdActive"); //reset the css to data for the last active div
 				this.activeDiv = dom.byId(yearMonth);
 				domClass.replace(this.activeDiv, "tdActive", "data"); //set the css to active td
+				focusUtil.curNode && focusUtil.curNode.blur(); //take the focus off the map otherwise any keyboard events target the map
 			},
 			noDatesReturned: function() {
 				//not implemented
