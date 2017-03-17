@@ -280,6 +280,9 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 					domStyle.set("showImg", "left", mapGeom.x + mapGeom.w - 16 + "px");
 					domStyle.set("showImg", "top", mapGeom.y + mapGeom.h - 66 + "px");
 					this.leafletMap.removeLayer(this.geeImageLayer); //remove the layer from the map
+				}else{
+					this.leafletMap.removeLayer(this.geeImageLayer); //remove the layer from the map
+					delete this.geeImageLayer;
 				}
 				this.emit("hideImageryTimeSlider");
 			},
