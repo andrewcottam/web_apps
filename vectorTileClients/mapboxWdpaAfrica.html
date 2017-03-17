@@ -28,7 +28,7 @@
             "sources": {
                 "osm": {
                     "type": "vector",
-                    "tiles": ["https://python-blishten.c9users.io/tilemaker/tiles/wdpa_africa/{z}/{x}/{y}.pbf "], //my africa wdpa vector tiles
+                    "tiles": ["https://vector-tiles-blishten.c9users.io/tiles/wdpa_africa/{z}/{x}/{y}.pbf "], //my africa wdpa vector tiles
                 }
             },
             "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
@@ -58,7 +58,7 @@
         });
 
         map.addControl(new mapboxgl.NavigationControl());
-        map.showTileBoundaries = true;
+        // map.showTileBoundaries = true;
         map.on('click', function(e) {
             var features = map.queryRenderedFeatures(e.point, {
                 layers: ['pas']
