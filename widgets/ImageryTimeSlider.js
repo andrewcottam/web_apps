@@ -279,12 +279,14 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 					domStyle.set("showImg", "display", "block");
 					domStyle.set("showImg", "left", mapGeom.x + mapGeom.w - 16 + "px");
 					domStyle.set("showImg", "top", mapGeom.y + mapGeom.h - 66 + "px");
+					this.leafletMap.removeLayer(this.geeImageLayer); //remove the layer from the map
 				}
 				this.emit("hideImageryTimeSlider");
 			},
 			show: function() {
 				domStyle.set("showImg", "display", "none");
 				domStyle.set(this.domNode, "display", "block");
+				this.geeImageLayer && this.leafletMap.addLayer(this.geeImageLayer); //add the layer if it is currently hidden
 				this.mapBoundsChanged(); //this will make the call to get the dates
 			},
 			disableSlider: function() {
