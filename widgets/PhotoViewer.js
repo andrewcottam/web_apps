@@ -33,7 +33,7 @@ define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "do
 				}));
 				//default values
 				this.showLocatorLine = true; //set to true to show a line to the location on a map
-				this.photoSize = "thumbnail"; //see below for valid values
+				this.photoSize = args.photoSize ? args.photoSize : "thumbnail"; //see below for valid values
 			}
 			//events
 		},
@@ -215,7 +215,7 @@ define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "do
 
 
 //photoSize values:
-//medium 				 		500 maximum dimension
+//medium 				 		500 maximum dimension - no longer available for some reason 27/3/17
 //small							240 maximum dimension
 //thumbnail						100 maximum dimension
 //square						60 x 60

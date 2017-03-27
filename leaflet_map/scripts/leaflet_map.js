@@ -74,7 +74,7 @@ require({
 					providers: ["flickr"],
 					tags: ["biopama"],
 					text: "outdoor",
-					photoSize: "thumbnail"
+					photoSize: "thumbnail", //small
 				}, "photos"); //tags are an array, e.g. tags: ["biopama"], text is a string, e.g. text: "landscape"
 				photoViewer.startup();
 				var imageryTimeSlider = new ImageryTimeSlider({
