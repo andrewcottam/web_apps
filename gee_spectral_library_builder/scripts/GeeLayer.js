@@ -3,7 +3,7 @@
 define(["dojo/request", "dojo/io-query", "dojo/Stateful", "dojo/dom-style", "dojo/on", "dojo/dom-construct", "dojo/_base/array", "dojo/_base/declare", "esri/layers/DynamicMapServiceLayer", "dojo/_base/lang", "dojo/request/script"], function(request, ioQuery, Stateful, domStyle, on, domConstruct, array, declare, DynamicMapServiceLayer, lang, script) {
 	return declare("jrc/GeeLayer", [Stateful, DynamicMapServiceLayer], {
 		constructor : function(url, options) {
-			this.geeServerUrl = (document.domain === "127.0.0.1") ? "http://locahost:8080" : "http://geeimageserver.appspot.com";
+			this.geeServerUrl = (document.domain === "127.0.0.1") ? "http://locahost:8080" : "https://geeimageserver.appspot.com";
 			this.loaded = true;
 			this.onLoad(this);
 			this.bands = options.bands;
