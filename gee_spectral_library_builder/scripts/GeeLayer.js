@@ -6,7 +6,7 @@ define(["dojo/request", "dojo/io-query", "dojo/Stateful", "dojo/dom-style", "doj
 			this.geeServerUrl = (document.domain === "127.0.0.1") ? "http://locahost:8080" : "https://geeimageserver.appspot.com";
 			this.loaded = true;
 			this.onLoad(this);
-			this.bands = options.bands;
+			lang.mixin(this, options);
 		},
 		sceneid : "",
 		_sceneidSetter : function(value) {
@@ -95,13 +95,13 @@ define(["dojo/request", "dojo/io-query", "dojo/Stateful", "dojo/dom-style", "doj
 				width : width,
 				height : height,
 				bbox : extent.xmin + "," + extent.ymin + "," + extent.xmax + "," + extent.ymax,
+				redBand : this.redBand,
+				greenBand : this.greenBand,
+				blueBand : this.blueBand,
 			};
 			if (this.detectExpression){
 				lang.mixin(params, {detectExpression : this.detectExpression});
-			};
-			if (this.bands){
-				lang.mixin(params, {bands : this.bands});
-			};
+			}
 			paramsQuery = ioQuery.objectToQuery(params);
 			if (this.previousParamsQuery) {
 				if (paramsQuery === this.previousParamsQuery) {

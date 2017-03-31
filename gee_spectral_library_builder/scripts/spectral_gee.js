@@ -10,7 +10,7 @@ require({
 		}]
 }, ["esri/geometry/webMercatorUtils", "esri/symbols/TextSymbol", "esri/symbols/Font", "esri/geometry/Polyline", "esri/geometry/screenUtils", "dojo/_base/event", "esri/toolbars/edit", "esri/geometry/Polygon", "jrc/wmsFilterLayer", "dojo/io-query", "dojo/request/xhr", "jrc/poly2tri", "dijit/Toolbar", "dojo/request", "dojo/mouse", "dojo/dom-class", "dijit/focus", "jrc/LegendCheckBox", "jrc/EnterTextDialog", "jrc/LoadTextDialog", "jrc/CanvasLayer", "dojo/topic", "dojo/dom-geometry", "dojo/keys", "esri/SpatialReference", "esri/symbols/SimpleFillSymbol", "esri/dijit/Geocoder", "dgrid/Grid", "esri/domUtils", "dojo/json", "dojo/aspect", "jrc/LoginBox", "dojo/_base/declare", "esri/InfoTemplate", "dojo/Deferred", "dojo/dom-attr", "jrc/LegendBox", "esri/layers/GraphicsLayer", "esri/geometry/Geometry", "dojo/_base/array", "dojo/_base/window", "dojo/request/script", "dojo/_base/lang", "dojo/ready", "dojo/dom-style", "dojo/date/locale", "dojo/date/stamp", "dojo/_base/Color", "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/symbols/SimpleMarkerSymbol", "esri/geometry/Point", "esri/geometry/webMercatorUtils", "esri/map", "esri/geometry/Extent", "dojo/dom", "dijit/registry", "dojo/query", "dojo/on", "dojo/parser", "dojo/dom-construct", "jrc/PanoramioBox", "jrc/WebServiceAPIs/PanoramioAPI", "jrc/WebServiceAPIs/FlickrAPI", "jrc/FlickrBox", "jrc/GeeLayer", "dijit/form/Select", "dijit/form/CheckBox", "dijit/form/Button", "dijit/form/TextBox", "dijit/layout/BorderContainer", "dijit/form/RadioButton", "dijit/form/HorizontalSlider", "dijit/layout/StackContainer", "dijit/layout/StackController", "dijit/Menu", "dijit/CheckedMenuItem", "dijit/layout/ContentPane", "dijit/form/DropDownButton", "dijit/ToolbarSeparator", "dijit/form/ToggleButton", "dijit/TooltipDialog"], function(webMercatorUtils, TextSymbol, Font, Polyline, screenUtils, event, Edit, Polygon, wmsFilterLayer, ioQuery, xhr, poly2tri, Toolbar, request, mouse, domClass, focusUtil, LegendCheckBox, EnterTextDialog, LoadTextDialog, CanvasLayer, topic, domGeom, keys, SpatialReference, SimpleFillSymbol, Geocoder, Grid, domUtils, json, aspect, LoginBox, declare, InfoTemplate, Deferred, domAttr, LegendBox, GraphicsLayer, Geometry, array, win, script, lang, ready, domStyle, locale, stamp, Color, SimpleLineSymbol, Graphic, SimpleMarkerSymbol, Point, utils, Map, Extent, dom, registry, query, on, parser, domConstruct, PanoramioBox, PanoramioAPI, FlickrAPI, FlickrBox, GeeLayer, Select, CheckBox, Button, TextBox) {
 	ready(function() {
-		var geeServerUrl, geeImageServerUrl, axisMinx, axisMiny, currentAlgorithm = {}, points = [], algorithms = [], draftSites = [], legendClasses = [], siteData = [], LAYER_NAME = "lrmexternal:_gee_spectral_data", WMS_ENDPOINT = "http://lrm-maps.jrc.ec.europa.eu/geoserver/lrmexternal/wms?", WFS_ENDPOINT = "http://lrm-maps.jrc.ec.europa.eu/geoserver/lrmexternal/ows?", path_row = "", xAxis = 'value', yAxis = 'hue', xscale = 1, yscale = 360, xOffset = 0, yOffset = 0, IDENTIFY_RADIUS = 3, layersLoading = 0, canvasLayer, rgbLayer, hsvLayer, detectionLayer, siteLayer, draftsiteLayer, mapQueryLayer, axesLayer, triangulationLayer, queryLayer, algorithmLayer, spectralLayer, spectralMap, xAxisTitleGraphic, yAxisTitleGraphic, queryObject, currentTabId, currentUsername, loadTextDialog, previousExtent, scenePropertiesGrid, currentsceneid, currentscenedate, loadingOverlay, loginhandler, loggedIn, initExtent, map, panoramioapi, flickrapi, restServerUrl, chart, showCursorValues = true, showAxes = true, textColor = new Color([64, 64, 64]);
+		var geeServerUrl, geeImageServerUrl, axisMinx, axisMiny, currentAlgorithm = {}, points = [], algorithms = [], draftSites = [], legendClasses = [], siteData = [], LAYER_NAME = "gee_workspace:_gee_spectral_data", WMS_ENDPOINT = "https://db-server-blishten.c9users.io:8081/geoserver/gee_workspace/wms?", WFS_ENDPOINT = "https://db-server-blishten.c9users.io:8081/geoserver/gee_workspace/ows?", path_row = "", xAxis = 'value', yAxis = 'hue', xscale = 1, yscale = 360, xOffset = 0, yOffset = 0, IDENTIFY_RADIUS = 3, layersLoading = 0, canvasLayer, rgbLayer, hsvLayer, detectionLayer, siteLayer, draftsiteLayer, mapQueryLayer, axesLayer, triangulationLayer, queryLayer, algorithmLayer, spectralLayer, spectralMap, xAxisTitleGraphic, yAxisTitleGraphic, queryObject, currentTabId, currentUsername, loadTextDialog, previousExtent, scenePropertiesGrid, currentsceneid, currentscenedate, loadingOverlay, loginhandler, loggedIn, initExtent, map, panoramioapi, flickrapi, restServerUrl, chart, showCursorValues = true, showAxes = true, textColor = new Color([64, 64, 64]);
 		var querySymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CROSS, 40, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([255, 0, 0, 1]), 1), new Color([255, 0, 0, 1]));
 		var initialSpectralMapExtent = new Extent({
 			"xmin" : 0,
@@ -191,7 +191,6 @@ require({
 			});
 			rgbLayer = new GeeLayer('rgbLayer', {
 				visible : false,
-				bands : "Red,Green,Blue", 
 			});
 			registry.byId("red").on("change", function(value) {
 				console.log('red change');
@@ -221,7 +220,9 @@ require({
 			});
 			hsvLayer = new GeeLayer('hsvLayer', {
 				visible : false,
-				bands : "SWIR2,NIR,Red", 
+				redBand: "SWIR2",
+				greenBand: "NIR",
+				blueBand: "Red",
 			});
 			detectionLayer = new GeeLayer('waterLayer', {
 				detectExpression : currentAlgorithm.expression,
