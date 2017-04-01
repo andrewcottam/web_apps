@@ -1,4 +1,4 @@
-define(["dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!/gee_spectral_library_builder/templates/PanoramioBox.html", "dojo/Evented"], function(declare, _WidgetBase, _TemplatedMixin, template, Evented) {
+define(["dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!/../templates/PanoramioBox.html", "dojo/Evented"], function(declare, _WidgetBase, _TemplatedMixin, template, Evented) {
 	return declare([_WidgetBase, _TemplatedMixin, Evented], {
 		templateString : template,
 		photoDisplayTitle : String,
