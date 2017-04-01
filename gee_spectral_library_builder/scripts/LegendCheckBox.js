@@ -1,4 +1,4 @@
-define(["dojo/dom-style", "dojox/gfx", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dijit/_WidgetsInTemplateMixin", "dojo/text!/gee_spectral_library_builder/templates/LegendCheckBox.html"], function(domStyle, gfx, declare, _WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin, template) {
+define(["dojo/dom-style", "dojox/gfx", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dijit/_WidgetsInTemplateMixin", "dojo/text!/../templates/LegendCheckBox.html"], function(domStyle, gfx, declare, _WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin, template) {
 	return declare([_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin], {
 		templateString : template,
 		postCreate : function() {
