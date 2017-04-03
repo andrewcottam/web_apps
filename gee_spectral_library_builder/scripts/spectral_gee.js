@@ -3,6 +3,7 @@ require({
 	async : true,
 	paths:{
 		scriptsPath: location.href + "/../scripts",
+		templates: location.href + "/../templates",
 	}
 }, ["esri/geometry/webMercatorUtils", "esri/symbols/TextSymbol", "esri/symbols/Font", "esri/geometry/Polyline", "esri/geometry/screenUtils", "dojo/_base/event", "esri/toolbars/edit", "esri/geometry/Polygon", "scriptsPath/wmsFilterLayer", "dojo/io-query", "dojo/request/xhr", "scriptsPath/poly2tri", "dijit/Toolbar", "dojo/request", "dojo/mouse", "dojo/dom-class", "dijit/focus", "scriptsPath/LegendCheckBox", "scriptsPath/EnterTextDialog", "scriptsPath/LoadTextDialog", "scriptsPath/CanvasLayer", "dojo/topic", "dojo/dom-geometry", "dojo/keys", "esri/SpatialReference", "esri/symbols/SimpleFillSymbol", "esri/dijit/Geocoder", "dgrid/Grid", "esri/domUtils", "dojo/json", "dojo/aspect", "scriptsPath/LoginBox", "dojo/_base/declare", "esri/InfoTemplate", "dojo/Deferred", "dojo/dom-attr", "scriptsPath/LegendBox", "esri/layers/GraphicsLayer", "esri/geometry/Geometry", "dojo/_base/array", "dojo/_base/window", "dojo/request/script", "dojo/_base/lang", "dojo/ready", "dojo/dom-style", "dojo/date/locale", "dojo/date/stamp", "dojo/_base/Color", "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/symbols/SimpleMarkerSymbol", "esri/geometry/Point", "esri/geometry/webMercatorUtils", "esri/map", "esri/geometry/Extent", "dojo/dom", "dijit/registry", "dojo/query", "dojo/on", "dojo/parser", "dojo/dom-construct", "scriptsPath/PanoramioBox", "scriptsPath/WebServiceAPIs/PanoramioAPI", "scriptsPath/WebServiceAPIs/FlickrAPI", "scriptsPath/FlickrBox", "scriptsPath/GeeLayer", "dijit/form/Select", "dijit/form/CheckBox", "dijit/form/Button", "dijit/form/TextBox", "dijit/layout/BorderContainer", "dijit/form/RadioButton", "dijit/form/HorizontalSlider", "dijit/layout/StackContainer", "dijit/layout/StackController", "dijit/Menu", "dijit/CheckedMenuItem", "dijit/layout/ContentPane", "dijit/form/DropDownButton", "dijit/ToolbarSeparator", "dijit/form/ToggleButton", "dijit/TooltipDialog"], function(webMercatorUtils, TextSymbol, Font, Polyline, screenUtils, event, Edit, Polygon, wmsFilterLayer, ioQuery, xhr, poly2tri, Toolbar, request, mouse, domClass, focusUtil, LegendCheckBox, EnterTextDialog, LoadTextDialog, CanvasLayer, topic, domGeom, keys, SpatialReference, SimpleFillSymbol, Geocoder, Grid, domUtils, json, aspect, LoginBox, declare, InfoTemplate, Deferred, domAttr, LegendBox, GraphicsLayer, Geometry, array, win, script, lang, ready, domStyle, locale, stamp, Color, SimpleLineSymbol, Graphic, SimpleMarkerSymbol, Point, utils, Map, Extent, dom, registry, query, on, parser, domConstruct, PanoramioBox, PanoramioAPI, FlickrAPI, FlickrBox, GeeLayer, Select, CheckBox, Button, TextBox) {
 	ready(function() {
@@ -28,7 +29,7 @@ require({
 		loadingOverlay = new LoadingOverlay();
 		queryObject = ioQuery.queryToObject(win.doc.location.search.substring(1));
 		restServerUrl = "https://db-server-blishten.c9users.io/cgi-bin/services.py/google-earth-engine";
-		geeServerUrl = "http://dopa-services.jrc.ec.europa.eu/gee";
+		geeServerUrl = "https://db-server-blishten.c9users.io/cgi-bin/gee.py/";
 		geeImageServerUrl = "https://geeImageServer.appspot.com";
 		// ||(document.domain === "127.0.0.1")
 		// need a copy of the current points otherwise changes to the
@@ -289,6 +290,7 @@ require({
 
 		function extentChange(event) {
 			console.log("extentChange (x=" + map.extent.getCenter().x + " y=" + map.extent.getCenter().y + ")");
+			if ((event.delta) && (event.delta.x === 0) && (event.delta.y === 0) && !event.levelChange) {return} //not a real extent change but just a mouse click - Chrome being oversensitive
 			getImages();
 			getSitesForExtent();
 			if ((event.delta === null) || ((event.delta.x === 0) && (event.delta.y === 0))) {
@@ -674,7 +676,6 @@ require({
 				} else {
 					if (response.records[0].delete_gee_validation_record === 't') {
 						removeGraphic(oid);
-						removeChartMarker(oid);
 					} else {
 						removeGraphic(oid);
 						// a draft site
@@ -730,7 +731,7 @@ require({
 			console.log("rest_createDraftSites >>");
 			domStyle.set(win.body(), "cursor", "wait");
 			var deferred;
-			deferred = script.get(geeServerUrl + "/createValidationSites", {
+			deferred = script.get(geeServerUrl + "createValidationSites", {
 				query : {
 					username : currentUsername,
 					sceneid : currentsceneid,
@@ -1921,7 +1922,6 @@ require({
 					var selectedGraphic = map.infoWindow.features[0];
 					if (selectedGraphic.attributes.hasOwnProperty("oid")) {
 						rest_deleteSite(selectedGraphic.attributes.oid);
-						removeChartMarker(selectedGraphic.attributes.oid);
 					} else {
 						deleteDraftSite(selectedGraphic);
 					}
