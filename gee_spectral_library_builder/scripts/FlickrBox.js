@@ -1,4 +1,4 @@
-define(["dojo/dom-style", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!/../templates/FlickrBox.html", "dojo/Evented", "esri/arcgis/utils", "dojo/_base/lang"], function(domStyle, declare, _WidgetBase, _TemplatedMixin, template, Evented, arcgisUtils, lang) {
+define(["dojo/dom-style", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!templates/FlickrBox.html", "dojo/Evented", "esri/arcgis/utils", "dojo/_base/lang"], function(domStyle, declare, _WidgetBase, _TemplatedMixin, template, Evented, arcgisUtils, lang) {
 	return declare([_WidgetBase, _TemplatedMixin, Evented], {
 		templateString : template,
 		photoDisplayTitle : String,

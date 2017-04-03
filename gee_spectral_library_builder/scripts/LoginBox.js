@@ -1,4 +1,4 @@
-define(["dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dijit/Dialog", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!/../templates/LoginBox.html"], function(domAttr, _WidgetsInTemplateMixin, Dialog, declare, _WidgetBase, _TemplatedMixin, template) {
+define(["dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dijit/Dialog", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!templates/LoginBox.html"], function(domAttr, _WidgetsInTemplateMixin, Dialog, declare, _WidgetBase, _TemplatedMixin, template) {
 	return declare(Dialog, {
 		title : "Login",
 		constructor : function() {

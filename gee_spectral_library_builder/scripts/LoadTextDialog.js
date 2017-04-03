@@ -1,4 +1,4 @@
-define(["dojo/dom-style", "dojo/Evented", "dojo/keys", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dijit/_WidgetsInTemplateMixin", "dojo/text!/../templates/LoadTextDialog.html"], function(domStyle, Evented, keys, declare, _WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin, template) {
+define(["dojo/dom-style", "dojo/Evented", "dojo/keys", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dijit/_WidgetsInTemplateMixin", "dojo/text!templates/LoadTextDialog.html"], function(domStyle, Evented, keys, declare, _WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin, template) {
 	return declare([_WidgetBase, _TemplatedMixin, Evented], {
 		templateString : template,
 		_keypress : function(event) {
