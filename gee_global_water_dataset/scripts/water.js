@@ -39,7 +39,7 @@ function(win, ioQuery, StackedColumns, Default, domStyle, Chart, lang, script, s
 		    id: 'blishten.pnnbdo98',
 		    accessToken: 'pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg'
 		});
-		digitalGlobeLayer = new L.tileLayer('https://{s}.tiles.mapbox.com/v4/digitalglobe.nmmhkk79/{z}/{x}/{y}.png?access_token=' + digitialGlobeApiKey, {
+		digitalGlobeLayer = new L.tileLayer('https://{s}.tiles.mapbox.com/v4/digitalglobe.nal0g75k/{z}/{x}/{y}.png?access_token=' + digitialGlobeApiKey, {
 		    minZoom: 1,
 		    maxZoom: 19,
 		    attribution: '(c) <a href="https://microsites.digitalglobe.com/interactive/basemap_vivid/">DigitalGlobe</a> , (c) OpenStreetMap, (c) Mapbox'
