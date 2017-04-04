@@ -1,9 +1,9 @@
 		/*jslint plusplus: true */
-require(["dojo/_base/window", "dojo/io-query", "dojox/charting/plot2d/StackedColumns", "dojox/charting/axis2d/Default", "dojo/dom-style", "dojo/_base/array", "dojox/charting/Chart", "dojo/_base/lang", "dojo/request/script", "dojo/date/stamp", "dijit/registry", "dojo/ready", "dojo/parser", "dojo/_base/array", "dojo/on", "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dijit/form/CheckBox", "dojox/charting/axis2d/Default", "dojox/charting/plot2d/Columns"], function(win, ioQuery, StackedColumns, Default, domStyle, array, Chart, lang, script, stamp, registry, ready, parser, array, on) {
+require(["dojo/_base/window", "dojo/io-query", "dojox/charting/plot2d/StackedColumns", "dojox/charting/axis2d/Default", "dojo/dom-style", "dojox/charting/Chart", "dojo/_base/lang", "dojo/request/script", "dojo/date/stamp", "dijit/registry", "dojo/ready", "dojo/parser", "dojo/_base/array", "dojo/on", "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dijit/form/CheckBox", "dojox/charting/axis2d/Default", "dojox/charting/plot2d/Columns"], 
+function(win, ioQuery, StackedColumns, Default, domStyle, Chart, lang, script, stamp, registry, ready, parser, array, on) {
 	ready(function() {
-		var map, mbLayer, basemap, transitionsLayer, p32occurrence, p1p2change, annualRecurrence, maxWaterExtent, seasonality, monthlyRecurrenceChart, yearlyClassificationsChart, queryObject, digitalGlobeLayer;
-		 var geeServerUrl = "https://geeImageServer.appspot.com";
-//		var geeServerUrl = "https://geeImageServer.appspot.com";
+		var map, mbLayer, transitionsLayer, p32occurrence, p1p2change, annualRecurrence, maxWaterExtent, seasonality, monthlyRecurrenceChart, yearlyClassificationsChart, queryObject, digitalGlobeLayer;
+		var geeServerUrl = "https://geeImageServer.appspot.com";
 		var digitialGlobeApiKey = "pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYSI6ImNpbmJscnhhZTBudmp0cWx3MXI5bWt0djgifQ.9DibR63tG-LY6FvjDLhCXg";
 		//custom extent can be specified as follows: index.html?lat=15.4818&lng=-3.7372&zoom=12
 		queryObject = ioQuery.queryToObject(win.doc.location.search.substring(1));
@@ -44,12 +44,12 @@ require(["dojo/_base/window", "dojo/io-query", "dojox/charting/plot2d/StackedCol
 		    maxZoom: 19,
 		    attribution: '(c) <a href="https://microsites.digitalglobe.com/interactive/basemap_vivid/">DigitalGlobe</a> , (c) OpenStreetMap, (c) Mapbox'
 		});
-		transitionsLayer = createGeeServerLayer('transitionClass');
-		p32occurrence = createGeeServerLayer('p32occurrence');
-		p1p2change = createGeeServerLayer('p1p2change');
-		annualRecurrence = createGeeServerLayer('annualRecurrence');
-		maxWaterExtent = createGeeServerLayer('maxWaterExtent');
-		seasonality = createGeeServerLayer('seasonality');
+		transitionsLayer = new L.tileLayer("https://storage.googleapis.com/global-surface-water/maptiles/transitions/{z}/{x}/{y}.png", { format: "image/png", maxZoom: 13, errorTileUrl : "https://storage.googleapis.com/global-surface-water/downloads_ancillary/blank.png", attribution: "2016 EC JRC/Google" });	
+		p32occurrence = new L.tileLayer("https://storage.googleapis.com/global-surface-water/maptiles/occurrence/{z}/{x}/{y}.png", { format: "image/png", maxZoom: 13, errorTileUrl : "https://storage.googleapis.com/global-surface-water/downloads_ancillary/blank.png", attribution: "2016 EC JRC/Google" });	
+		p1p2change = new L.tileLayer("https://storage.googleapis.com/global-surface-water/maptiles/change/{z}/{x}/{y}.png", { format: "image/png", maxZoom: 13, errorTileUrl : "https://storage.googleapis.com/global-surface-water/downloads_ancillary/blank.png", attribution: "2016 EC JRC/Google" });	
+		annualRecurrence = new L.tileLayer("https://storage.googleapis.com/global-surface-water/maptiles/recurrence/{z}/{x}/{y}.png", { format: "image/png", maxZoom: 13, errorTileUrl : "https://storage.googleapis.com/global-surface-water/downloads_ancillary/blank.png", attribution: "2016 EC JRC/Google" });	
+		maxWaterExtent = new L.tileLayer("https://storage.googleapis.com/global-surface-water/maptiles/extent/{z}/{x}/{y}.png", { format: "image/png", maxZoom: 13, errorTileUrl : "https://storage.googleapis.com/global-surface-water/downloads_ancillary/blank.png", attribution: "2016 EC JRC/Google" });		
+		seasonality = new L.tileLayer("https://storage.googleapis.com/global-surface-water/maptiles/seasonality/{z}/{x}/{y}.png", { format: "image/png", maxZoom: 13, errorTileUrl : "https://storage.googleapis.com/global-surface-water/downloads_ancillary/blank.png", attribution: "2016 EC JRC/Google" });	
 		map = L.map('map',{
 			layers: [transitionsLayer],
 		    center: [16.02, -3.64],
