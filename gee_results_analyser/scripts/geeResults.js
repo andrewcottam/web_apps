@@ -6,8 +6,8 @@ require({
 		location : "//andrewcottam.github.io/web_apps/cdn/scripts/"
 	}]
 }, ["dojo/text!/gee_results_analyser/templates/infoWindow.html", "esri/InfoTemplate", "esri/domUtils", "jrc/wmsFilterLayer", "dijit/registry", "dojo/parser", "dojo/_base/lang", "dijit/form/HorizontalSlider", "esri/dijit/BasemapToggle", "esri/graphicsUtils", "dojo/dom-style", "dojo/dom-construct", "dojox/charting/themes/ThreeD", "dojox/charting/Chart", "dojo/io-query", "dgrid/Grid", "dojo/request/script", "dojo/Deferred", "dojo/dom", "dojo/dom-construct", "dojo/dom-attr", "dojo/keys", "dojox/gfx", "esri/geometry/Point", "esri/symbols/SimpleLineSymbol", "dojo/_base/Color", "esri/symbols/SimpleMarkerSymbol", "esri/graphic", "esri/layers/GraphicsLayer", "dojo/_base/array", "esri/geometry/screenUtils", "esri/geometry/Polygon", "dojo/request/xhr", "esri/geometry/webMercatorUtils", "dojo/on", "esri/SpatialReference", "esri/geometry/Extent", "esri/layers/WMSLayerInfo", "esri/layers/WMSLayer", "esri/map", "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dojo/domReady!", "dojox/charting/plot2d/Lines", "dojox/charting/axis2d/Default"], function(infoWindow, InfoTemplate, domUtils, wmsFilterLayer, registry, parser, lang, HorizontalSlider, BasemapToggle, graphicsUtils, domStyle, domConstruct, blue, Chart, ioQuery, Grid, script, Deferred, dom, domConstruct, domAttr, keys, gfx, Point, SimpleLineSymbol, Color, SimpleMarkerSymbol, Graphic, GraphicsLayer, array, screenUtils, Polygon, xhr, webMercatorUtils, on, SpatialReference, Extent, WMSLayerInfo, WMSLayer, Map, BorderContainer, ContentPane) {
-	var WMS_ENDPOINT = "http://lrm-maps.jrc.ec.europa.eu/geoserver/lrmexternal/wms?";
-	var WFS_ENDPOINT = "http://lrm-maps.jrc.ec.europa.eu/geoserver/lrmexternal/ows";
+	var WMS_ENDPOINT = "https://db-server-blishten.c9users.io:8081/geoserver/gee_workspace/wms?";
+	var WFS_ENDPOINT = "https://db-server-blishten.c9users.io:8081/geoserver/gee_workspace/ows?";
 	var LAYER_NAME = "lrmexternal:gee_validation_results";
 	var IDENTIFY_RADIUS = 3;
 	var LASSO_SURFACE_ID = "lassoSurface";
@@ -32,8 +32,8 @@ require({
 			cqlFilter.predicted_class = value;
 			refreshWMSLayer();
 		});
-		restServerUrl = (document.domain !== "andrewcottam.github.io") ? "http://dopa-services.jrc.it/services/gee" : "http://dopa-services.jrc.ec.europa.eu/services/gee";
-		geeServerUrl = (document.domain !== "andrewcottam.github.io") ? "http://geeimageserver.appspot.com/ogc?" : "http://geeimageserver.appspot.com/ogc?";
+		restServerUrl = "https://db-server-blishten.c9users.io/cgi-bin/services.py/google-earth-engine";
+		geeServerUrl = "https://geeimageserver.appspot.com/ogc?";
 		map = new Map("mapDiv", {
 			zoom : 3,
 			center : [0, 25],

@@ -32,7 +32,6 @@
 <a href='https://andrewcottam.github.io/web_apps/gee_swdb_validation_tool/index.html' target='_blank'>index.html</a> - Validation tool for the omission in the Global Surface Water Dataset</br>
 #### gee_tools
 <a href='https://andrewcottam.github.io/web_apps/gee_tools/index.html' target='_blank'>index.html</a>Start page for the tools used in the Global Surface Water Project</br>
-<a href='https://andrewcottam.github.io/web_apps/gee_tools/roadless.html' target='_blank'>roadless.html</a>Validation tool for the roadless areas project (Christelle Vancutsem)</br>
 #### gee_water_validation_tool
 <a href='https://andrewcottam.github.io/web_apps/gee_water_validation_tool/index.html' target='_blank'>index.html</a> - Validation tool for the commission in the Global Surface Water Dataset</br>
 #### IUCN-Red-List-Mapper
