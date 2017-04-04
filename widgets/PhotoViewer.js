@@ -2,6 +2,7 @@ define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "do
 	return declare([_WidgetBase, _TemplatedMixin], {
 		templateString: template,
 		text: "",
+		autoUpdate: true, //set to false to have to manually load images
         _setTextAttr: function(value){
         	this.text = value;
 			this.getImages();
@@ -42,10 +43,10 @@ define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "do
 				var viewport = dojowindow.getBox();
 				this.surface = gfx.createSurface(query("body")[0], viewport.w, viewport.h);
 			}
-			if (this.leafletMap!==undefined){
-				if (this.leafletMap.getBounds()!==undefined){
+			if (this.map!==undefined){
+				if (this.map.getBounds()!==undefined){
 					this.mapBoundsChanged(); //this will get the images from the providers
-					on(this.leafletMap,"moveend", lang.hitch(this, function(e){
+					on(this.map,"moveend", lang.hitch(this, function(e){
 						this.mapBoundsChanged();//when the map is moved or zoomed refetch the images
 					}));
 				}
@@ -67,10 +68,13 @@ define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "do
 			}
 		},
 		mapBoundsChanged: function(){ //refetch the images
-			this.mapBounds = this.leafletMap.getBounds();
+			this.mapBounds = this.map.getBounds();
 			this.getImages();
 		},
-		getImages: function(){
+		getImages: function() {
+			if ((this.autoUpdate) && (this.mapBounds)) this.requestImages();
+		},
+		requestImages: function(){
 			this.providersLoaded = 0;
 			if (this.domNode){
 				//domStyle.set(this.domNode.parentElement, "overflow", "hidden");
@@ -137,12 +141,12 @@ define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "do
 			}
 		},
 		drawLocation: function(evt){
-			if (this.leafletMap!==undefined){ //if we have a valid leaflet map
+			if (this.map!==undefined){ //if we have a valid leaflet map
 				if(evt.target.mouseAbove||evt.target.mouseAbove==undefined){ //with the flickr provider the lat/long data come from an asynchronous call and so by the time the results get back the mouse may be over another element so we only want to show the location if the mouse is still above the photo box
 					var markerRadius = (this.showLocatorLine) ? 1 : 7; //set the radius of the marker that will be added - if no line is needed then set a large marker 
 					var markerLatLng = this.getMarkerActualPosition(L.latLng(evt.latitude, evt.longitude), markerRadius); //get the lat long of the actual position of the marker given its radius 
 					this.markerLayer = L.circleMarker(markerLatLng,{radius: markerRadius, color: "#fff", weight: 2, fill: true, fillColor: "#0069B6", fillOpacity: 1});
-					this.leafletMap.addLayer(this.markerLayer); //add the marker to the map
+					this.map.addLayer(this.markerLayer); //add the marker to the map
 					domStyle.set(this.markerLayer.getElement(), "fill", "#0069B6"); 
 					if (this.showLocatorLine){
 						var markerDomNode = this.markerLayer.getElement(); //get the DOM node of the marker on the map
@@ -190,9 +194,9 @@ define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "do
 			return returnValue;
 		},
 		hidelocation: function(){
-			if (this.leafletMap!==undefined){
+			if (this.map!==undefined){
 				if (this.markerLayer!==undefined){
-					this.leafletMap.removeLayer(this.markerLayer); //remove the marker from the map
+					this.map.removeLayer(this.markerLayer); //remove the marker from the map
 					if (this.showLocatorLine){
 						this.surface.clear(); //clear the line
 					}
@@ -200,9 +204,9 @@ define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "do
 			}
 		},
 		getMarkerActualPosition : function(latLng, radius){ //markers with large radii are not shown at the latLong but are offset so this function puts them in the right position
-			var point = this.leafletMap.latLngToContainerPoint(latLng);
+			var point = this.map.latLngToContainerPoint(latLng);
 			var newPoint = L.point([point.x - (radius/2), point.y - (radius/2)]);
-			var newLatLng = this.leafletMap.containerPointToLatLng(newPoint);				
+			var newLatLng = this.map.containerPointToLatLng(newPoint);				
 			return newLatLng;
 		},
 		changePhotoSize : function(size){
