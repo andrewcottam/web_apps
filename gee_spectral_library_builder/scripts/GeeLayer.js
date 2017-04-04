@@ -98,6 +98,8 @@ define(["dojo/request", "dojo/io-query", "dojo/Stateful", "dojo/dom-style", "doj
 				redBand : this.redBand,
 				greenBand : this.greenBand,
 				blueBand : this.blueBand,
+				min: this.min,
+				max: this.max,
 			};
 			if (this.detectExpression){
 				lang.mixin(params, {detectExpression : this.detectExpression});
