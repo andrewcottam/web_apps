@@ -10,6 +10,7 @@ define(["dojo/_base/declare", "esri/arcgis/utils", "dojo/Evented", "dojo/_base/l
 					method : 'flickr.photos.search',
 					api_key : '6d3e521646cdd1391a6dee32d8e54d62',
 					bbox : minx + ',' + miny + ',' + maxx + ',' + maxy,
+					text: 'outdoor',
 					format : 'json',
 					per_page : this.per_page
 				},

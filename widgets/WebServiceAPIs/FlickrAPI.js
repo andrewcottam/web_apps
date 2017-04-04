@@ -54,7 +54,11 @@ define(["dojo/promise/all", "dojo/_base/array", "dojo/_base/declare", "dojo/requ
 			//when both calls have completed, merge the photo arrays together
 			all(promises).then(lang.hitch(this, function(results) {
 				if (this.textPhotos) {
-					this.photos = this.tagPhotos.concat(this.textPhotos);
+					if (this.tagPhotos){
+						this.photos = this.tagPhotos.concat(this.textPhotos);
+					}else{
+						this.photos = this.textPhotos;
+					}
 				}
 				array.forEach(this.photos, function(photo) {
 					lang.mixin(photo, {

@@ -4,10 +4,11 @@ require({
 	paths:{
 		scriptsPath: location.href + "/../scripts",
 		templates: location.href + "/../templates",
+		widgetsPath: location.href + "/../../widgets",
 	}
-}, ["esri/geometry/webMercatorUtils", "esri/symbols/TextSymbol", "esri/symbols/Font", "esri/geometry/Polyline", "esri/geometry/screenUtils", "dojo/_base/event", "esri/toolbars/edit", "esri/geometry/Polygon", "scriptsPath/wmsFilterLayer", "dojo/io-query", "dojo/request/xhr", "scriptsPath/poly2tri", "dijit/Toolbar", "dojo/request", "dojo/mouse", "dojo/dom-class", "dijit/focus", "scriptsPath/LegendCheckBox", "scriptsPath/EnterTextDialog", "scriptsPath/LoadTextDialog", "scriptsPath/CanvasLayer", "dojo/topic", "dojo/dom-geometry", "dojo/keys", "esri/SpatialReference", "esri/symbols/SimpleFillSymbol", "esri/dijit/Geocoder", "dgrid/Grid", "esri/domUtils", "dojo/json", "dojo/aspect", "scriptsPath/LoginBox", "dojo/_base/declare", "esri/InfoTemplate", "dojo/Deferred", "dojo/dom-attr", "scriptsPath/LegendBox", "esri/layers/GraphicsLayer", "esri/geometry/Geometry", "dojo/_base/array", "dojo/_base/window", "dojo/request/script", "dojo/_base/lang", "dojo/ready", "dojo/dom-style", "dojo/date/locale", "dojo/date/stamp", "dojo/_base/Color", "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/symbols/SimpleMarkerSymbol", "esri/geometry/Point", "esri/geometry/webMercatorUtils", "esri/map", "esri/geometry/Extent", "dojo/dom", "dijit/registry", "dojo/query", "dojo/on", "dojo/parser", "dojo/dom-construct", "scriptsPath/PanoramioBox", "scriptsPath/WebServiceAPIs/PanoramioAPI", "scriptsPath/WebServiceAPIs/FlickrAPI", "scriptsPath/FlickrBox", "scriptsPath/GeeLayer", "dijit/form/Select", "dijit/form/CheckBox", "dijit/form/Button", "dijit/form/TextBox", "dijit/layout/BorderContainer", "dijit/form/RadioButton", "dijit/form/HorizontalSlider", "dijit/layout/StackContainer", "dijit/layout/StackController", "dijit/Menu", "dijit/CheckedMenuItem", "dijit/layout/ContentPane", "dijit/form/DropDownButton", "dijit/ToolbarSeparator", "dijit/form/ToggleButton", "dijit/TooltipDialog"], function(webMercatorUtils, TextSymbol, Font, Polyline, screenUtils, event, Edit, Polygon, wmsFilterLayer, ioQuery, xhr, poly2tri, Toolbar, request, mouse, domClass, focusUtil, LegendCheckBox, EnterTextDialog, LoadTextDialog, CanvasLayer, topic, domGeom, keys, SpatialReference, SimpleFillSymbol, Geocoder, Grid, domUtils, json, aspect, LoginBox, declare, InfoTemplate, Deferred, domAttr, LegendBox, GraphicsLayer, Geometry, array, win, script, lang, ready, domStyle, locale, stamp, Color, SimpleLineSymbol, Graphic, SimpleMarkerSymbol, Point, utils, Map, Extent, dom, registry, query, on, parser, domConstruct, PanoramioBox, PanoramioAPI, FlickrAPI, FlickrBox, GeeLayer, Select, CheckBox, Button, TextBox) {
+}, ["esri/symbols/TextSymbol", "esri/symbols/Font", "esri/geometry/Polyline", "esri/geometry/screenUtils", "dojo/_base/event", "esri/toolbars/edit", "esri/geometry/Polygon", "scriptsPath/wmsFilterLayer", "dojo/io-query", "dojo/request/xhr", "scriptsPath/poly2tri", "dijit/Toolbar", "dojo/request", "dojo/mouse", "dojo/dom-class", "dijit/focus", "scriptsPath/LegendCheckBox", "scriptsPath/EnterTextDialog", "scriptsPath/LoadTextDialog", "scriptsPath/CanvasLayer", "dojo/topic", "dojo/dom-geometry", "dojo/keys", "esri/SpatialReference", "esri/symbols/SimpleFillSymbol", "esri/dijit/Geocoder", "dgrid/Grid", "esri/domUtils", "dojo/json", "dojo/aspect", "scriptsPath/LoginBox", "dojo/_base/declare", "esri/InfoTemplate", "dojo/Deferred", "dojo/dom-attr", "scriptsPath/LegendBox", "esri/layers/GraphicsLayer", "esri/geometry/Geometry", "dojo/_base/array", "dojo/_base/window", "dojo/request/script", "dojo/_base/lang", "dojo/ready", "dojo/dom-style", "dojo/date/locale", "dojo/date/stamp", "dojo/_base/Color", "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/symbols/SimpleMarkerSymbol", "esri/geometry/Point", "esri/geometry/webMercatorUtils", "esri/map", "esri/geometry/Extent", "dojo/dom", "dijit/registry", "dojo/query", "dojo/on", "dojo/parser", "dojo/dom-construct",  "scriptsPath/GeeLayer", "dijit/form/Select", "dijit/form/CheckBox", "dijit/form/Button", "dijit/form/TextBox", "widgetsPath/PhotoViewer", "dijit/layout/BorderContainer", "dijit/form/RadioButton", "dijit/form/HorizontalSlider", "dijit/layout/StackContainer", "dijit/layout/StackController", "dijit/Menu", "dijit/CheckedMenuItem", "dijit/layout/ContentPane", "dijit/form/DropDownButton", "dijit/ToolbarSeparator", "dijit/form/ToggleButton", "dijit/TooltipDialog"], function(TextSymbol, Font, Polyline, screenUtils, event, Edit, Polygon, wmsFilterLayer, ioQuery, xhr, poly2tri, Toolbar, request, mouse, domClass, focusUtil, LegendCheckBox, EnterTextDialog, LoadTextDialog, CanvasLayer, topic, domGeom, keys, SpatialReference, SimpleFillSymbol, Geocoder, Grid, domUtils, json, aspect, LoginBox, declare, InfoTemplate, Deferred, domAttr, LegendBox, GraphicsLayer, Geometry, array, win, script, lang, ready, domStyle, locale, stamp, Color, SimpleLineSymbol, Graphic, SimpleMarkerSymbol, Point, utils, Map, Extent, dom, registry, query, on, parser, domConstruct, GeeLayer, Select, CheckBox, Button, TextBox, PhotoViewer) {
 	ready(function() {
-		var geeServerUrl, geeImageServerUrl, axisMinx, axisMiny, currentAlgorithm = {}, points = [], algorithms = [], draftSites = [], legendClasses = [], siteData = [], LAYER_NAME = "gee_workspace:_gee_spectral_data", WMS_ENDPOINT = "https://db-server-blishten.c9users.io:8081/geoserver/gee_workspace/wms?", WFS_ENDPOINT = "https://db-server-blishten.c9users.io:8081/geoserver/gee_workspace/ows?", path_row = "", xAxis = 'value', yAxis = 'hue', xscale = 1, yscale = 360, xOffset = 0, yOffset = 0, IDENTIFY_RADIUS = 3, layersLoading = 0, canvasLayer, rgbLayer, hsvLayer, detectionLayer, siteLayer, draftsiteLayer, mapQueryLayer, axesLayer, triangulationLayer, queryLayer, algorithmLayer, spectralLayer, spectralMap, xAxisTitleGraphic, yAxisTitleGraphic, queryObject, currentTabId, currentUsername, loadTextDialog, previousExtent, scenePropertiesGrid, currentsceneid, currentscenedate, loadingOverlay, loginhandler, loggedIn, initExtent, map, panoramioapi, flickrapi, restServerUrl, chart, showCursorValues = true, showAxes = true, textColor = new Color([64, 64, 64]);
+		var geeServerUrl, geeImageServerUrl, axisMinx, axisMiny, currentAlgorithm = {}, points = [], algorithms = [], draftSites = [], legendClasses = [], siteData = [], LAYER_NAME = "gee_workspace:_gee_spectral_data", WMS_ENDPOINT = "https://db-server-blishten.c9users.io:8081/geoserver/gee_workspace/wms?", WFS_ENDPOINT = "https://db-server-blishten.c9users.io:8081/geoserver/gee_workspace/ows?", path_row = "", xAxis = 'value', yAxis = 'hue', xscale = 1, yscale = 360, xOffset = 0, yOffset = 0, IDENTIFY_RADIUS = 3, layersLoading = 0, canvasLayer, rgbLayer, hsvLayer, detectionLayer, siteLayer, draftsiteLayer, mapQueryLayer, axesLayer, triangulationLayer, queryLayer, algorithmLayer, spectralLayer, spectralMap, xAxisTitleGraphic, yAxisTitleGraphic, queryObject, currentTabId, currentUsername, loadTextDialog, previousExtent, scenePropertiesGrid, currentsceneid, currentscenedate, loadingOverlay, loginhandler, loggedIn, initExtent, map, restServerUrl, chart, showCursorValues = true, showAxes = true, textColor = new Color([64, 64, 64]), photoViewer;
 		var querySymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CROSS, 40, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([255, 0, 0, 1]), 1), new Color([255, 0, 0, 1]));
 		var initialSpectralMapExtent = new Extent({
 			"xmin" : 0,
@@ -133,10 +134,12 @@ require({
 					clearSpectralQuery();
 				}
 				switch (currentTabId) {
-				case "panoramioPane":
-				case "flickrPane":
-					getImages();
+				case "flickrPane2":
+					photoViewer.requestImages();
+					photoViewer.autoUpdate = true;
 					break;
+				default:
+					photoViewer.autoUpdate = false;
 				}
 			});
 			rest_getGlc2000().then(function(response) {// get
@@ -145,12 +148,15 @@ require({
 			});
 			createSpectralMap();
 			createScenePropertiesGrid();
+			photoViewer = new PhotoViewer({
+				map: map,
+				providers: ["flickr"],
+				text: "outdoor",
+				photoSize: "thumbnail", //small
+				autoUpdate: false,
+			}, "flickrImages2"); 
+			photoViewer.startup();
 		});
-		panoramioapi = new PanoramioAPI(30);
-		flickrapi = new FlickrAPI(30);
-		on(panoramioapi, "imagesLoaded", panoramioImagesLoaded);
-		on(flickrapi, "imagesLoaded", flickrImagesLoaded);
-		on(flickrapi, "imageInfoLoaded", flickrImageInfoLoaded);
 		query("input[name='basemapLayer']").on("click", updateBasemap);
 		initExtent = new Extent(-517344.4386681639, 1662324.7040100119, -443964.8915144937, 1740596.2209739268, new SpatialReference({
 			wkid : 102100
@@ -291,7 +297,6 @@ require({
 		function extentChange(event) {
 			console.log("extentChange (x=" + map.extent.getCenter().x + " y=" + map.extent.getCenter().y + ")");
 			if ((event.delta) && (event.delta.x === 0) && (event.delta.y === 0) && !event.levelChange) {return} //not a real extent change but just a mouse click - Chrome being oversensitive
-			getImages();
 			getSitesForExtent();
 			if ((event.delta === null) || ((event.delta.x === 0) && (event.delta.y === 0))) {
 				getScenesForCentroid();
@@ -1993,105 +1998,6 @@ require({
 		}
 
 		// END OF MAP EVENTS
-		// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		// FLICKR AND PANORAMIO FUNCTIONS
-		// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-		function getImages() {
-			console.log("getImages");
-			var ll, ur;
-			ll = utils.xyToLngLat(map.extent.xmin, map.extent.ymin);
-			ur = utils.xyToLngLat(map.extent.xmax, map.extent.ymax);
-			if (currentTabId === "panoramioPane") {
-				deleteImages("panoramioImages");
-				panoramioapi.getImagesForBBox(ll[0], ll[1], ur[0], ur[1], "small");
-			}
-			if (currentTabId === "flickrPane") {
-				deleteImages("flickrImages");
-				flickrapi.getImagesForBBox(ll[0], ll[1], ur[0], ur[1]);
-			}
-		}
-
-		function deleteImages(container) {
-			console.log("deleteImages");
-			var i, existingWidgets;
-			existingWidgets = registry.findWidgets(dom.byId(container));
-			for ( i = 0; i < existingWidgets.length; i++) {
-				existingWidgets[i].destroy();
-			}
-		}
-
-		function panoramioImagesLoaded() {
-			console.log("panoramioImagesLoaded");
-			var panoramioBox;
-			deleteImages("panoramioImages");
-			domConstruct.empty("panoramioImages");
-			if (panoramioapi.photos.length === 0) {
-				domConstruct.place("<div>No images available</div>", "panoramioImages");
-			}
-			for ( i = 0; i < panoramioapi.photos.length; i++) {
-				panoramioBox = new PanoramioBox({
-					"photo" : panoramioapi.photos[i]
-				});
-				on(panoramioBox, "mouseEnterPhoto", showPhotoLocation);
-				on(panoramioBox, "mouseLeavePhoto", hidePhotoLocation);
-				panoramioBox.startup();
-				domConstruct.place(panoramioBox.domNode, "panoramioImages");
-			}
-		}
-
-		function flickrImagesLoaded() {
-			console.log("flickrImagesLoaded");
-			var flickrBox;
-			deleteImages("flickrImages");
-			domConstruct.empty("flickrImages");
-			if (flickrapi.photos.length === 0) {
-				domConstruct.place("<div>No images available</div>", "flickrImages");
-			}
-			for ( i = 0; i < flickrapi.photos.length; i++) {
-				photo = flickrapi.photos[i];
-				flickrapi.getPhotoInfo(photo.id);
-				flickrBox = new FlickrBox({
-					"photo" : photo,
-					"id" : photo.id
-				});
-				on(flickrBox, "mouseEnterPhoto", showPhotoLocation);
-				on(flickrBox, "mouseLeavePhoto", hidePhotoLocation);
-				flickrBox.startup();
-				domConstruct.place(flickrBox.domNode, "flickrImages");
-			}
-		}
-
-		function flickrImageInfoLoaded(event) {
-			console.log("flickrImageInfoLoaded");
-			var dateTaken, select, flickrBox;
-			flickrBox = registry.byId(event.info.id);
-			dateTaken = event.info.dates.taken;
-			flickrBox.set("dateTaken", dateTaken);
-			select = registry.byId("sceneSelect");
-			if (flickrBox.get("dateTaken") === currentscenedate.substring(0, 10)) {
-				alert('Photos from your date!!!');
-			}
-		}
-
-		function showPhotoLocation(evt) {
-			console.log("showPhotoLocation");
-			var photolocation, simpleMarkerSymbol, graphic, color;
-			photolocation = utils.geographicToWebMercator(new Point(evt.longitude, evt.latitude));
-			color = (evt.type === "Flickr") ? new Color([255, 0, 150, 1]) : new Color([0, 0, 255, 1]);
-			simpleMarkerSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, 18, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([255, 255, 255, 1]), 2), color);
-			graphic = new Graphic(photolocation, simpleMarkerSymbol);
-			map.graphics.clear();
-			map.graphics.add(graphic);
-		}
-
-		function hidePhotoLocation() {
-			console.log("hidePhotoLocation");
-			map.graphics.clear();
-		}
-
-		// END OF FLICKR AND PANORAMIO FUNCTIONS
 		// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		function populateScenePropertiesGrid(sceneProperties) {

@@ -24,7 +24,7 @@
 	margin: 3px;
 	text-decoration: none;
 }
-svg {
+body > svg {
 	position: absolute;
 	top: 0px;
 	left: 0px;

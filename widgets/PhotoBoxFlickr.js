@@ -1,4 +1,4 @@
-define(["dojo/_base/array", "dojo/on", "widgets/WebServiceAPIs/FlickrAPI", "dojo/dom-style", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!./templates/PhotoBoxFlickr.html", "dojo/Evented", "dojo/_base/lang"], function(array, on, FlickrAPI, domStyle, declare, _WidgetBase, _TemplatedMixin, template, Evented, lang) {
+define(["dojo/_base/array", "dojo/on", "widgetsPath/WebServiceAPIs/FlickrAPI", "dojo/dom-style", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!./templates/PhotoBoxFlickr.html", "dojo/Evented", "dojo/_base/lang"], function(array, on, FlickrAPI, domStyle, declare, _WidgetBase, _TemplatedMixin, template, Evented, lang) {
 	return declare([_WidgetBase, _TemplatedMixin, Evented], {
 		templateString : template,
 		photoDisplayTitle : String,

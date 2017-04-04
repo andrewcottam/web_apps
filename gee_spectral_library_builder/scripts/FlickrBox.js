@@ -26,8 +26,8 @@ define(["dojo/dom-style", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_Tem
 			this.photoDisplayTitle = value;
 		},
 		postMixInProperties : function() {
-			this.photo_url = "http://farm" + this.photo.farm + ".staticflickr.com/" + this.photo.server + "/" + this.photo.id + "_" + this.photo.secret + "_q.jpg";
-			this.photoPageurl = "http://www.flickr.com/photos/" + this.photo.owner + "/" + this.photo.id;
+			this.photo_url = "https://farm" + this.photo.farm + ".staticflickr.com/" + this.photo.server + "/" + this.photo.id + "_" + this.photo.secret + "_q.jpg";
+			this.photoPageurl = "https://www.flickr.com/photos/" + this.photo.owner + "/" + this.photo.id;
 			this.set("photoDisplayTitle", this.photo.title);
 		},
 		mouseEnterPhoto : function(evt) {
