@@ -1,6 +1,7 @@
 //widgets/ImageryTimeSlider.js
 //UI widget that is used as a tool to show satellite imagery coming from Google Earth Engine. It has the following options:
 //  showAllYears - set to true to show tics and labels for all years even those without imagery 
+//  hideToEdge - to hide the widget to the edge of the leaflet map
 
 define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dijit/Dialog", "dijit/focus", "dojo/_base/window", "dojo/keys", "dojo/html", "dojo/date", "dojo/date/locale", "dojo/dom", "dojo/dom-style", "dojo/dom-geometry", "dojo/dom-class", "dojo/_base/array", "dojo/dom-construct", "dojo/request/script", "dojo/_base/lang", "dojo/on", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!./templates/ImageryTimeSlider.html", "dijit/form/Select", "dijit/form/NumberSpinner", "dijit/form/CheckBox", "../widgets/scripts/NonTiledLayer.js", "../widgets/scripts/NonTiledLayer.WMS.js", "../widgets/scripts/Control.Loading.js", "../widgets/scripts/L.Control.MousePosition.js", "../widgets/scripts/geeImageLayer.js"],
 	function(Evented, registry, domAttr, _WidgetsInTemplateMixin, Dialog, focusUtil, win, keys, html, date, locale, dom, domStyle, domGeom, domClass, array, domConstruct, script, lang, on, declare, _WidgetBase, _TemplatedMixin, template) {
@@ -36,6 +37,16 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 					}
 					domStyle.set(this.domNode, "top", mapGeom.y + mapGeom.h - this.height - 5 + "px"); //5 pixels up from the bottom
 					domConstruct.place(this.domNode, win.body()); //place this widget at the top level in case it is nested in the page (e.g. in Drupal panels)
+					on(this.domNode, "mousedown",function(){
+						console.log("mousedown");
+					})
+					on(win.body(), "mousemove", lang.hitch(this, function(evt){
+						if (evt.buttons==1){
+							domStyle.set(this.domNode, "left", domStyle.get(this.domNode, "left") + evt.movementX + "px");
+							domStyle.set(this.domNode, "top", domStyle.get(this.domNode, "top") + evt.movementY + "px");
+							evt.preventDefault();
+						}
+					}));
 				}
 				this.show(); //this will make the initial call to get the imagery dates
 			},
