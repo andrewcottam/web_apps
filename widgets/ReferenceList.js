@@ -1,7 +1,7 @@
 //widgets/ReferencesList.js
 //UI widget that is used as a tool to show scientific references that match the passed protected area name coming from the Elsevier API (https://dev.elsevier.com/index.html). It has the following options:
 
-define(["dijit/registry", "dojo/_base/lang", "dojo/_base/array", "dojo/request/xhr", "dojo/dom-construct", "widgetsPath/ReferenceBox", "dojo/_base/declare","dojo/parser", "dojo/ready", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!./templates/ReferenceList.html" ],
+define(["dijit/registry", "dojo/_base/lang", "dojo/_base/array", "dojo/request/xhr", "dojo/dom-construct", "./ReferenceBox", "dojo/_base/declare","dojo/parser", "dojo/ready", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!./templates/ReferenceList.html" ],
 	function(registry, lang, array, xhr, domConstruct, ReferenceBox, declare, parser, ready, _WidgetBase, _TemplatedMixin, template) {
 	declare("ReferenceList", [_WidgetBase, _TemplatedMixin ], {
 				templateString : template,
