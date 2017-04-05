@@ -1,6 +1,12 @@
-		/*jslint plusplus: true */
-require(["dojo/_base/window", "dojo/io-query", "dojox/charting/plot2d/StackedColumns", "dojox/charting/axis2d/Default", "dojo/dom-style", "dojox/charting/Chart", "dojo/_base/lang", "dojo/request/script", "dojo/date/stamp", "dijit/registry", "dojo/ready", "dojo/parser", "dojo/_base/array", "dojo/on", "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dijit/form/CheckBox", "dojox/charting/axis2d/Default", "dojox/charting/plot2d/Columns"], 
-function(win, ioQuery, StackedColumns, Default, domStyle, Chart, lang, script, stamp, registry, ready, parser, array, on) {
+require({
+	async : true,
+	paths:{
+		scriptsPath: location.href + "/../scripts",
+		templates: location.href + "/../templates",
+		widgetsPath: location.href + "/../../widgets"
+	}
+	}, ["widgetsPath/ImageryTimeSlider", "dojo/_base/window", "dojo/io-query", "dojox/charting/plot2d/StackedColumns", "dojox/charting/axis2d/Default", "dojo/dom-style", "dojox/charting/Chart", "dojo/_base/lang", "dojo/request/script", "dojo/date/stamp", "dijit/registry", "dojo/ready", "dojo/parser", "dojo/_base/array", "dojo/on", "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dijit/form/CheckBox", "dojox/charting/axis2d/Default", "dojox/charting/plot2d/Columns"], 
+function(ImageryTimeSlider, win, ioQuery, StackedColumns, Default, domStyle, Chart, lang, script, stamp, registry, ready, parser, array, on) {
 	ready(function() {
 		var map, mbLayer, transitionsLayer, p32occurrence, p1p2change, annualRecurrence, maxWaterExtent, seasonality, monthlyRecurrenceChart, yearlyClassificationsChart, queryObject, digitalGlobeLayer;
 		var geeServerUrl = "https://geeImageServer.appspot.com";
@@ -69,6 +75,11 @@ function(win, ioQuery, StackedColumns, Default, domStyle, Chart, lang, script, s
 				getMonthlyRecurrence(e.latlng);
 				getYearlyClassifications(e.latlng);
 			});
+			var imageryTimeSlider = new ImageryTimeSlider({
+				leafletMap: map,
+				hideToEdge: true
+			}, "ImageryTimeSliderDiv");
+			imageryTimeSlider.startup();
 		});
 		function createGeeServerLayer(layerName){
 			var layer = L.nonTiledLayer.wms(geeServerUrl + "/ogc", {
