@@ -1,11 +1,9 @@
 require({
 	async : true,
 	paths:{
-		scriptsPath: location.href + "/../scripts",
-		templates: location.href + "/../templates",
-		widgetsPath: "/../../widgets"
+		widgetsPackage: "/../../widgets",
 	}
-	}, ["dijit/form/Button", "dojo/dom", "widgetsPath/ReferenceList", "widgetsPath/ImageryTimeSlider", "widgetsPath/PhotoViewer", "dojo/dom-construct", "dojo/io-query", "dojo/_base/window", "dojo/parser", "dojo/on", "dijit/registry", "dojo/ready", "dijit/form/CheckBox", "dijit/layout/BorderContainer", "dijit/layout/ContentPane"],
+	}, ["dijit/form/Button", "dojo/dom", "widgetsPackage/ReferenceList", "widgetsPackage/ImageryTimeSlider", "widgetsPackage/PhotoViewer", "dojo/dom-construct", "dojo/io-query", "dojo/_base/window", "dojo/parser", "dojo/on", "dijit/registry", "dojo/ready", "dijit/form/CheckBox", "dijit/layout/BorderContainer", "dijit/layout/ContentPane"],
 	function(Button, dom, ReferenceList, ImageryTimeSlider, PhotoViewer, domConstruct, ioQuery, win, parser, on, registry, ready) {
 		ready(function() {
 			var queryObject = ioQuery.queryToObject(win.doc.location.search.substring(1));

@@ -1,4 +1,4 @@
-define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "dojo/query", "dojo/dom-style", "dojo/dom-construct", "./PhotoBoxFlickr", "dijit/registry", "dojo/on", "WebServiceAPIs/PanoramioAPI", "WebServiceAPIs/MapSightsAPI", "./WebServiceAPIs/FlickrAPI", "dojo/_base/lang", "dojo/dom", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!./templates/PhotoViewer.html"], function(array, domGeom, gfx, dojowindow, query, domStyle, domConstruct, PhotoBoxFlickr, registry, on, PanoramioAPI, MapSightsAPI, FlickrAPI, lang, dom, declare, _WidgetBase, _TemplatedMixin, template) {
+define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "dojo/query", "dojo/dom-style", "dojo/dom-construct", "./PhotoBoxFlickr", "dijit/registry", "dojo/on", "./WebServiceAPIs/FlickrAPI", "dojo/_base/lang", "dojo/dom", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!./templates/PhotoViewer.html"], function(array, domGeom, gfx, dojowindow, query, domStyle, domConstruct, PhotoBoxFlickr, registry, on, FlickrAPI, lang, dom, declare, _WidgetBase, _TemplatedMixin, template) {
 	return declare([_WidgetBase, _TemplatedMixin], {
 		templateString: template,
 		text: "",
@@ -12,10 +12,6 @@ define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "do
 			if (args.providers.length>0){
 				array.forEach(args.providers, lang.hitch(this, function(providerString){
 					switch(providerString) {
-				    case "mapsights":
-						var mapsightsapi = new MapSightsAPI(this);
-						this.providerObjs.push(mapsightsapi);
-				        break;
 				    case "flickr":
 						var flickrapi = new FlickrAPI(this);
 						this.providerObjs.push(flickrapi);
