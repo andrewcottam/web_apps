@@ -2,7 +2,7 @@ require({
 	async : true,
 	baseUrl: "/", //we have to specify this otherwise it will use https://ajax.googleapis.com/ajax/libs/dojo/ as the baseUrl
 	packages: [
-		{name: "widgetsPath", location: "../../widgets"} //i.e. up 2 levels
+		{name: "widgetsPath", location: "../../widgets"} //i.e. up 2 levels from index.html 
 	]
 	}, ["widgetsPath/ImageryTimeSlider", "dojo/_base/window", "dojo/io-query", "dojox/charting/plot2d/StackedColumns", "dojox/charting/axis2d/Default", "dojo/dom-style", "dojox/charting/Chart", "dojo/_base/lang", "dojo/request/script", "dojo/date/stamp", "dijit/registry", "dojo/ready", "dojo/parser", "dojo/_base/array", "dojo/on", "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dijit/form/CheckBox", "dojox/charting/axis2d/Default", "dojox/charting/plot2d/Columns"], 
 function(ImageryTimeSlider, win, ioQuery, StackedColumns, Default, domStyle, Chart, lang, script, stamp, registry, ready, parser, array, on) {
