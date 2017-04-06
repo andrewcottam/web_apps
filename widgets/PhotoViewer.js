@@ -1,4 +1,4 @@
-define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "dojo/query", "dojo/dom-style", "dojo/dom-construct", "./PhotoBoxPanoramio", "./PhotoBoxFlickr", "dijit/registry", "dojo/on", "WebServiceAPIs/PanoramioAPI", "WebServiceAPIs/MapSightsAPI", "./WebServiceAPIs/FlickrAPI", "dojo/_base/lang", "dojo/dom", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!./templates/PhotoViewer.html"], function(array, domGeom, gfx, dojowindow, query, domStyle, domConstruct, PhotoBoxPanoramio, PhotoBoxFlickr, registry, on, PanoramioAPI, MapSightsAPI, FlickrAPI, lang, dom, declare, _WidgetBase, _TemplatedMixin, template) {
+define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "dojo/query", "dojo/dom-style", "dojo/dom-construct", "./PhotoBoxFlickr", "dijit/registry", "dojo/on", "WebServiceAPIs/PanoramioAPI", "WebServiceAPIs/MapSightsAPI", "./WebServiceAPIs/FlickrAPI", "dojo/_base/lang", "dojo/dom", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!./templates/PhotoViewer.html"], function(array, domGeom, gfx, dojowindow, query, domStyle, domConstruct, PhotoBoxFlickr, registry, on, PanoramioAPI, MapSightsAPI, FlickrAPI, lang, dom, declare, _WidgetBase, _TemplatedMixin, template) {
 	return declare([_WidgetBase, _TemplatedMixin], {
 		templateString: template,
 		text: "",
@@ -12,10 +12,6 @@ define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "do
 			if (args.providers.length>0){
 				array.forEach(args.providers, lang.hitch(this, function(providerString){
 					switch(providerString) {
-				    case "panoramio":
-						var panoramioapi = new PanoramioAPI(this);
-						this.providerObjs.push(panoramioapi);
-				        break;
 				    case "mapsights":
 						var mapsightsapi = new MapSightsAPI(this);
 						this.providerObjs.push(mapsightsapi);
@@ -99,11 +95,6 @@ define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "do
 				for (var i = 0; i < this.photos.length; i++) {
 					var photoBox;
 					switch(this.photos[i].provider) {
-				    case "panoramio":
-						photoBox = new PhotoBoxPanoramio({
-							photo : this.photos[i]
-						});
-				        break;
 				    case "flickr":
 						photoBox = new PhotoBoxFlickr({
 							photo : this.photos[i], 
