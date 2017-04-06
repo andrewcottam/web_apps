@@ -42,6 +42,7 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 					})
 					on(win.body(), "mousemove", lang.hitch(this, function(evt){
 						if (evt.buttons==1){
+							console.debug("dragging");
 							domStyle.set(this.domNode, "left", domStyle.get(this.domNode, "left") + evt.movementX + "px");
 							domStyle.set(this.domNode, "top", domStyle.get(this.domNode, "top") + evt.movementY + "px");
 							evt.preventDefault();
