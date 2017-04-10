@@ -59,7 +59,8 @@ function(ImageryTimeSlider, win, ioQuery, StackedColumns, Default, domStyle, Cha
 			layers: [transitionsLayer],
 		    center: [16.02, -3.64],
 		    zoom: 12,
-		    loadingControl: true
+		    loadingControl: true,
+		    fullscreenControl: true,
 		});
 		map.whenReady(function mapLoaded (e) {
 			createMonthlyRecurrenceChart();

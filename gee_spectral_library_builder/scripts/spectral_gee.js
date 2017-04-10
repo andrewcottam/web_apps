@@ -429,7 +429,7 @@ require({
 				// scene from
 				// the query url
 				changeScene(queryObject.sceneid);
-				registry.byId("toggleRGB").set("checked", "true");
+				registry.byId("toggleHSV").set("checked", "true");
 			}
 		}
 

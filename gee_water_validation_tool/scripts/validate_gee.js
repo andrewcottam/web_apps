@@ -1,8 +1,8 @@
 /*jslint plusplus: true */
-require(["dojo/dom-class", "esri/SpatialReference", "esri/geometry/Point", "esri/map", "dojo/dom-attr", "dojo/_base/lang", "dojo/Deferred", "dojo/keys", "dojo/topic", "dojo/_base/array", "dojo/dom-style", "dojo/dom", "dojo/_base/lang", "dojox/gfx", "dojo/io-query", "dojo/dom-style", "dijit/registry", "dojo/on", "dojo/request/script", "dojo/ready", "dijit/form/Button"], function(domClass, SpatialReference, Point, Map, domAttr, lang, Deferred, keys, topic, array, domStyle, dom, lang, gfx, ioQuery, domstyle, registry, on, script, ready, Button) {
+require(["dojo/dom-class", "esri/SpatialReference", "esri/geometry/Point", "esri/map", "dojo/dom-attr", "dojo/_base/lang", "dojo/Deferred", "dojo/keys", "dojo/topic", "dojo/_base/array", "dojo/dom-style", "dojo/dom", "dojox/gfx", "dojo/io-query", "dojo/dom-style", "dijit/registry", "dojo/on", "dojo/request/script", "dojo/ready", "dijit/form/Button"], function(domClass, SpatialReference, Point, Map, domAttr, lang, Deferred, keys, topic, array, domStyle, dom, gfx, ioQuery, domstyle, registry, on, script, ready, Button) {
 	ready(function() {
 		//bounding box size aligns the size of the GEE image with an ESRI tile scale 14
-		var geeServerUrl, restServerUrl, position = -1, sites, imageSize = 400, bboxSize = 1910.925707126968, bufferSize = 10, urlsToGet, nextSiteRetrieved = true, map, imagerymap, validationClasses;
+		var geeServerUrl, restServerUrl, position = -1, sites, imageSize = 400, bboxSize = 1910.925707126968, bufferSize = 10, urlsToGet, nextSiteRetrieved = true, map, imagerymap, validationClasses, site;
 		map = new Map("mapDiv", {
 			center : [-56.049, 38.485],
 			zoom : 3,
@@ -13,8 +13,8 @@ require(["dojo/dom-class", "esri/SpatialReference", "esri/geometry/Point", "esri
 			zoom : 14,
 			basemap : "satellite"
 		});
-		restServerUrl = (document.domain === "ehabitat-wps.jrc.it") ? "http://dopa-services.jrc.it/services/gee" : "http://dopa-services.jrc.ec.europa.eu/services/gee";
-		geeServerUrl = "http://geeImageServer.appspot.com";
+		restServerUrl = "https://db-server-blishten.c9users.io/cgi-bin/services.py/google-earth-engine";
+		geeServerUrl = "https://geeImageServer.appspot.com";
 		getValidationClasses();
 		topic.subscribe("urlsPopulated", urlsPopulated);
 		on(document, "keydown", keydown);
@@ -74,7 +74,6 @@ require(["dojo/dom-class", "esri/SpatialReference", "esri/geometry/Point", "esri
 		}
 
 		function getSiteImageUrl(site, rgb) {
-			var removeEdges = (site.sensor.name ==="L8") ? 0 : -6000;
 			var bbStr = (site.x - bboxSize) + "," + (site.y - bboxSize) + "," + (site.x + bboxSize) + "," + (site.y + bboxSize);
 			var params = {
 				service : "WMS",
@@ -88,20 +87,20 @@ require(["dojo/dom-class", "esri/SpatialReference", "esri/geometry/Point", "esri
 				width : imageSize,
 				height : imageSize,
 				bbox : bbStr,
+				bands: "SWIR2,NIR,Red"
 			};
-			var paramsQuery = ioQuery.objectToQuery(params);
+			if (rgb) delete params.bands; // bands are red,green,blue by default on the server
 			script.get(geeServerUrl + "/ogc", {
 				query : params,
 				jsonp : "callback"
 			}).then(lang.hitch(site, function(response) {
 				if (response.url.search("Google Earth Engine Services Error") != -1) {
-					console.log("An error was raised by Google Earth Engine for site: " + site.oid + ". " + response.url);
 					var deleteIndex;
 				    array.forEach(sites, function(item, index){ //get the index of the site that failed to get an imageUrl 
 				    	if (item.oid == site.oid) {
 				    		deleteIndex = index;
 				    		return true;
-				    	};
+				    	}
 				    });
 				    sites.splice(deleteIndex,1); //delete the site from the sites array
 				    bufferSize = bufferSize - 1; //decrement the bufferSize otherwise we will never move to the first image
@@ -119,9 +118,7 @@ require(["dojo/dom-class", "esri/SpatialReference", "esri/geometry/Point", "esri
 				if (urlsToGet === 0) {
 					topic.publish("urlsPopulated");
 				}
-			}),function(error){
-				console.log(error);
-			});
+			}));
 		}
 
 		function urlsPopulated() {
@@ -131,7 +128,7 @@ require(["dojo/dom-class", "esri/SpatialReference", "esri/geometry/Point", "esri
 		}
 
 		function moveImage(relativePos) {
-			var siteImage, display;
+			var display;
 			if (position === 0 && relativePos === -1) {
 				return;
 			}
@@ -160,15 +157,15 @@ require(["dojo/dom-class", "esri/SpatialReference", "esri/geometry/Point", "esri
 				}
 				setLandCoverClass(site);
 				display = (site.hasOwnProperty("validated_class")) ? "block" : "none";
-				dom.byId("sensor").innerHTML = site.sensor;
+				// dom.byId("sensor").innerHTML = site.sensor;
 				domStyle.set("tickImage", {
 					display : display
 				});
 			} else {//no more images in the queue - get some more
 				dom.byId("predictedClass").innerHTML = "images loading..";
 				populateSiteData(bufferSize);
-			};
-		};
+			}
+		}
 
 		function keydown(event) {
 			switch (event.keyCode) {
@@ -189,7 +186,7 @@ require(["dojo/dom-class", "esri/SpatialReference", "esri/geometry/Point", "esri
 				case (keys.SPACE):
 					changeClass();
 					break;
-			};
+			}
 		}
 
 		function validateCurrentImage() {
@@ -199,21 +196,22 @@ require(["dojo/dom-class", "esri/SpatialReference", "esri/geometry/Point", "esri
 			lang.mixin(sites[position], {
 				"validated_class" : validated_class
 			});
-			deferred = script.get(restServerUrl + "/especies/_set_gee_site_validated", {
-				query : {
-					oid : sites[position].oid,
-					actualclass : sites[position].validated_class,
-					username : 'andrew'
-				},
-				jsonp : "callback"
-			});
-			deferred.then(function(response) {
-				var result = response.records[0]._set_gee_site_validated;
-				if (result) {
-					getValidatedSiteCount();
-				}
-			});
-			return deferred;
+			// commented out on 7/4/17 as we dont want to actually post any data to the database
+			// deferred = script.get(restServerUrl + "/especies/_set_gee_site_validated", {
+			// 	query : {
+			// 		oid : sites[position].oid,
+			// 		actualclass : sites[position].validated_class,
+			// 		username : 'andrew'
+			// 	},
+			// 	jsonp : "callback"
+			// });
+			// deferred.then(function(response) {
+			// 	var result = response.records[0]._set_gee_site_validated;
+			// 	if (result) {
+			// 		getValidatedSiteCount();
+			// 	}
+			// });
+			// return deferred;
 		}
 
 		function setLandCoverClass(site) {
@@ -228,19 +226,19 @@ require(["dojo/dom-class", "esri/SpatialReference", "esri/geometry/Point", "esri
 			setClassText(validated_class);
 		}
 
-		function getValidatedSiteCount() {
-			var deferred;
-			deferred = script.get(restServerUrl + "/especies/_get_gee_validated_site_count?format=json", {
-				jsonp : "callback"
-			});
-			deferred.then(function(response) {
-				dom.byId("validatedCount").innerHTML = response.records[0]._get_gee_validated_site_count + " validated";
-			});
-			return deferred;
-		}
+		// commented out on 7/4/17 - no longer posting results to the database
+		// function getValidatedSiteCount() {
+		// 	var deferred;
+		// 	deferred = script.get(restServerUrl + "/especies/_get_gee_validated_site_count?format=json", {
+		// 		jsonp : "callback"
+		// 	});
+		// 	deferred.then(function(response) {
+		// 		dom.byId("validatedCount").innerHTML = response.records[0]._get_gee_validated_site_count + " validated";
+		// 	});
+		// 	return deferred;
+		// }
 
 		function setClassText(classText) {
-			var classStr, color, textcolor = "white";
 			var validationClass = getMatchingValidationClass(classText);
 			domClass.remove("predictedClass");
 			domClass.add("predictedClass", validationClass.css_class);
@@ -253,13 +251,14 @@ require(["dojo/dom-class", "esri/SpatialReference", "esri/geometry/Point", "esri
 		}
 
 		function getMatchingValidationClass(classText) {
+			var matchingClasses;
 			var reg = new RegExp(/^\d+$/);
 			if (reg.test(classText)) {
-				var matchingClasses = validationClasses.filter(function(obj) {
+				matchingClasses = validationClasses.filter(function(obj) {
 					return obj.class_id === Number(classText);
 				});
 			} else {
-				var matchingClasses = validationClasses.filter(function(obj) {
+				matchingClasses = validationClasses.filter(function(obj) {
 					return obj.label === classText;
 				});
 			}
@@ -276,7 +275,7 @@ require(["dojo/dom-class", "esri/SpatialReference", "esri/geometry/Point", "esri
 		}
 
 		function openDirect() {
-			window.open("http://andrewcottam.github.io/gee_spectral_library_builder/index.html?x=" + sites[position].x + "&y=" + sites[position].y + "&level=14&sceneid=" + sites[position].sceneid + "&bands=6,4,3");
+			window.open("https://web-apps-blishten.c9users.io/gee_spectral_library_builder/index.html?x=" + sites[position].x + "&y=" + sites[position].y + "&level=14&sceneid=" + sites[position].sceneid + "&bands=6,4,3", "_test");
 		}
 
 	});
