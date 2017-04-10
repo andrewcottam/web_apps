@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href=" //ajax.googleapis.com/ajax/libs/dojo/1.10.4/dijit/themes/tundra/tundra.css">
+    <script src="//ajax.googleapis.com/ajax/libs/dojo/1.10.4/dojo/dojo.js" data-dojo-config="async: true"></script>
+    <link rel="stylesheet" href="styles/styles.css">
+    <script src="scripts/gee_cart_tools.js"></script>
+    <script src="https://apis.google.com/js/platform.js" async defer></script> <!-- Google Sign-In for Websites Library-->
+    <script src="https://apis.google.com/js/api.js"></script> <!-- Google API Javascript Client Library-->
+</head>
+
+<body class="tundra">
+    <div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="design:'sidebar', gutters:true, liveSplitters:true" id="borderContainer">
+        <div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="splitter:true, region:'leading'" style="width: 40%">
+            <div id="cartTreeAsR"></div>
+        </div>
+        <div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="splitter:true, region:'center'">
+            Hi, I'm center pane
+        </div>
+    </div>
+</body>
+
+</html>
