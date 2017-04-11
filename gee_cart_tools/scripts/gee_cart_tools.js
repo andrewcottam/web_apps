@@ -10,7 +10,8 @@ require({
         var geeImageServerUrl = "https://geeImageServer.appspot.com",
             columnNames = [], //simple array of column names in the fusion table
             classColumnName, //name of the column in the fusion table which has the class value
-            scatterChart; //the chart widget
+            scatterChart, //the chart widget
+            cartObj; //the cart classification as an object
         ready(function() {
             parser.parse().then(function() {
                 var client = new GoogleApiClient();
@@ -163,7 +164,10 @@ require({
                             fill: fillColor,
                         });
                     });
-                    plot.render();
+                    // if (cartObj) {
+                    //     chartCartObj();
+                    // }
+                    scatterChart.render();
                 }
 
                 function getRecordsByClass(records) {
@@ -194,23 +198,12 @@ require({
                 jsonp: "callback"
             }).then(function(response) {
                 var cart = (response) && (response.records);
-                createCartTree(cart);
+                cartObj = cartStringToObject(cart.tree);
             });
 
-            function createCartTree(cart) {
-                var cartObj = cartStringToObject(cart.tree);
-                var chart1 = new Chart("scatter");
-                chart1.addPlot("default", {
+            function chartCartObj() {
+                scatterChart.addPlot("default", {
                     type: Lines
-                });
-                chart1.addAxis("x", {
-                    min: 0,
-                    max: 1
-                });
-                chart1.addAxis("y", {
-                    vertical: true,
-                    min: 0,
-                    max: 200
                 });
                 array.forEach(cartObj, function(item, i) {
                     console.log(item.text);
@@ -234,8 +227,8 @@ require({
                                 y: item.splitAt,
                             }]);
                         }
-                        chart1.addSeries("node" + item.id, points[0]);
-                        chart1.render();
+                        scatterChart.addSeries("node" + item.id, points[0]);
+                        // scatterChart.render();
                     }
                 });
             }
