@@ -155,6 +155,7 @@ require({
                             records: records
                         }];
                     }
+                    //add each series to the chart
                     array.forEach(series, function(s) {
                         var fillColor = s._class == "0" ? "red" : "blue";
                         plot.addSeries("Class_" + s._class, s.records, {
@@ -170,6 +171,7 @@ require({
                     scatterChart.render();
                 }
 
+                // separates the records into separate arrays by their class id 
                 function getRecordsByClass(records) {
                     //first get the unique class values
                     var uniqueClasses = [];
@@ -194,13 +196,17 @@ require({
                 }
             });
 
+            //request to get the cart classification tree
             script.get(geeImageServerUrl + "/getCartTree", {
                 jsonp: "callback"
             }).then(function(response) {
                 var cart = (response) && (response.records);
+                //convert the cart string from R format to a javascript object
                 cartObj = cartStringToObject(cart.tree);
             });
 
+            //plots the cart object onto a chart
+            // TODO Nowhere near finished
             function chartCartObj() {
                 scatterChart.addPlot("default", {
                     type: Lines
@@ -208,8 +214,9 @@ require({
                 array.forEach(cartObj, function(item, i) {
                     console.log(item.text);
                     var points = [];
+                    // dont plot if it is the root node or if the axis is in >2D dimensions
                     if (item.split !== "root" && item.axisName !== "area_new_always_water") {
-                        if (item.axisName === "ratio_new_to_permanent") {
+                        if (item.axisName === "ratio_new_to_permanent") { //i.e. x-axis
                             points.push([{
                                 x: item.splitAt,
                                 y: 0
@@ -233,20 +240,22 @@ require({
                 });
             }
 
+            // converts the explain string from Google Earth Engine R format into a Javascript object
             function cartStringToObject(cartString) {
                 cartString = cartString.replace("1) root", " 1) root"); //hack to get the first node in which doesnt have a space before it
-                var re = /( \d+\))/g;
+                var re = /( \d+\))/g; //regex to split the string at nodes
                 var nodeObjects = [];
-                var nodes = cartString.split(re).slice(1);
+                var nodes = cartString.split(re).slice(1); //get all but the first node
                 //iterate through the nodes and parse them to a javascript object
                 array.forEach(nodes.slice(0, (nodes.length / 2) - 1), function(item, i) {
                     var nodeid = nodes[(i * 2)].substr(1, (nodes[(i * 2)].length) - 2);
                     var nodeContent = nodes[(i * 2) + 1].trim().replace(/\( /, "(").replace(/ \)/, ")").split(" ");
                     var axisName, splitAt, operator;
+                    //split the content into its constituent parts
                     if (nodeContent[0] !== "root") {
                         var splitParams = nodeContent[0].split(/[<>]/);
                         axisName = splitParams[0];
-                        if (splitParams[1].substr(0, 1) === "=") {
+                        if (splitParams[1].substr(0, 1) === "=") { //it is either <= or >
                             splitAt = splitParams[1].substr(1);
                             operator = "<=";
                         }
@@ -255,7 +264,7 @@ require({
                             operator = ">";
                         }
                     }
-                    else {
+                    else { //root node - set nulls
                         axisName = null;
                         splitAt = null;
                         operator = null;
@@ -270,9 +279,9 @@ require({
                         cost: nodeContent[2],
                         yval: nodeContent[3],
                         impurity: nodeContent[4],
-                        text: nodes[(i * 2) + 1],
+                        text: nodes[(i * 2) + 1], //full text of the node
                     };
-                    if (nodeContent.length === 6) {
+                    if (nodeContent.length === 6) { //some nodes have an * which indicates a leaf node
                         lang.mixin(nodeContentObj, {
                             leaf: true
                         });
@@ -284,10 +293,11 @@ require({
                     }
                     nodeObjects.push(nodeContentObj);
                 });
-                nodeObjects = nodeObjects.sort(compare);
+                nodeObjects = nodeObjects.sort(compare); //sort the nodes by nodeid
                 return nodeObjects;
             }
 
+            //function to sort the nodes 
             function compare(a, b) {
                 if (a.id < b.id)
                     return -1;
