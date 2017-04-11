@@ -24,9 +24,14 @@ require({
                 html.set(dom.byId("cartTreeAsR"), cart.tree);
                 var client = new GoogleApiClient();
                 client.authorise('537433629273-q2f0on91cnsuuckkmtl0pbk24mkg6e3m.apps.googleusercontent.com', 'https://www.googleapis.com/auth/fusiontables https://www.googleapis.com/auth/fusiontables.readonly');
-                client.request('/fusiontables/v2/tables/14hPdnqjG33cm1bF6fdkGRrgt1Sh1fpzXauO2NZ-5').then(function(response) {
+                // client.request('/fusiontables/v2/tables/14hPdnqjG33cm1bF6fdkGRrgt1Sh1fpzXauO2NZ-5').then(function(response) {
+                //     console.log(response);
+                // });
+                client.request('fusiontables/v2/tables', {
+                    maxResults: 100,
+                }).then(function(response) {
                     console.log(response);
-                });
+                })
             }
         });
     });
