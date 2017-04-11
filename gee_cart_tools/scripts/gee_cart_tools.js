@@ -7,7 +7,8 @@ require({
         ]
     }, ["dojo/_base/array", "dojox/charting/StoreSeries", "dojox/charting/Chart", "dojox/charting/axis2d/Default", "dojox/charting/plot2d/Scatter", "dojox/charting/themes/Julie", "dijit/form/Button", "dijit/registry", "dojo/_base/array", "dijit/form/Select", "dojo/store/Memory", "widgetsPath/googleApiClient", "dojo/dom", "dojo/html", "dojo/request/script", "dojo/parser", "dojo/ready", "dijit/layout/ContentPane", "dijit/layout/BorderContainer"],
     function(array, StoreSeries, Chart, Default, Scatter, Julie, Button, registry, array, Select, Memory, GoogleApiClient, dom, html, script, parser, ready) {
-        var geeImageServerUrl = "https://geeImageServer.appspot.com";
+        var geeImageServerUrl = "https://geeImageServer.appspot.com",
+            scatterChart;
         ready(function() {
             parser.parse().then(function() {
                 var client = new GoogleApiClient();
@@ -92,20 +93,25 @@ require({
                     client.request('fusiontables/v2/query', {
                         sql: 'select ' + xColumnName + ',' + yColumnName + ' from ' + tableid,
                     }).then(function(response) {
-                        var records = [];
-                        array.forEach(response.result.rows, function(item) {
-                            records.push({
-                                x: item[0],
-                                y: item[1],
-                            });
-                        });
-                        populateChart(records);
+                        populateChart(response);
                     });
                 }
 
-                function populateChart(records) {
-                    var c = new Chart("scatter");
-                    c.addPlot("default", {
+                function populateChart(response) {
+                    var records = [];
+                    var xAxisName = response.result.columns[0];
+                    var yAxisName = response.result.columns[1];
+                    array.forEach(response.result.rows, function(item) {
+                        records.push({
+                            x: item[0],
+                            y: item[1],
+                        });
+                    });
+                    if (scatterChart) { //we need to destroy the chart as the axes will have changed
+                        scatterChart.destroy();
+                    }
+                    scatterChart = new Chart("scatter");
+                    scatterChart.addPlot("default", {
                             type: Scatter
                         })
                         .addAxis("x")
