@@ -8,7 +8,9 @@ require({
     }, ["dojo/_base/array", "dojox/charting/StoreSeries", "dojox/charting/Chart", "dojox/charting/axis2d/Default", "dojox/charting/plot2d/Scatter", "dojox/charting/themes/Julie", "dijit/form/Button", "dijit/registry", "dojo/_base/array", "dijit/form/Select", "dojo/store/Memory", "widgetsPath/googleApiClient", "dojo/dom", "dojo/html", "dojo/request/script", "dojo/parser", "dojo/ready", "dijit/layout/ContentPane", "dijit/layout/BorderContainer"],
     function(array, StoreSeries, Chart, Default, Scatter, Julie, Button, registry, array, Select, Memory, GoogleApiClient, dom, html, script, parser, ready) {
         var geeImageServerUrl = "https://geeImageServer.appspot.com",
-            scatterChart;
+            columnNames = [], //simple array of column names in the fusion table
+            classColumnName, //name of the column in the fusion table which has the class value
+            scatterChart; //the chart widget
         ready(function() {
             parser.parse().then(function() {
                 var client = new GoogleApiClient();
@@ -44,7 +46,10 @@ require({
                 function getColumnNames(response) {
                     if (response.result.columns) {
                         var filteredColumnNames = array.filter(response.result.columns, function(item) {
-                            return item.name != "geometry";
+                            if (item.name != "geometry") {
+                                columnNames.push(item.name); //add to the simple column names array
+                            }
+                            return item.name != "geometry"; //return the column object if it is not named 'geometry'
                         });
                         var columnNamesStore = new Memory({
                             idProperty: "name",
@@ -87,40 +92,102 @@ require({
                 }
 
                 function getData() {
-                    var xColumnName = registry.byId("xColumnName").value;
-                    var yColumnName = registry.byId("yColumnName").value;
-                    var tableid = registry.byId("fusionTables").value;
+                    var xColumnName = registry.byId("xColumnName").value; //get the name of the x column from the select box
+                    var yColumnName = registry.byId("yColumnName").value; //get the name of the y column from the select box
+                    classColumnName = (array.indexOf(columnNames, "class") >= 0) ? "class" : null; // get the name of the class column if there is one
+                    var tableid = registry.byId("fusionTables").value; // get the fusion table id
+                    var sql = classColumnName ? 'select ' + xColumnName + ',' + yColumnName + ',class from ' + tableid : 'select ' + xColumnName + ',' + yColumnName + ' from ' + tableid;
                     client.request('fusiontables/v2/query', {
-                        sql: 'select ' + xColumnName + ',' + yColumnName + ' from ' + tableid,
+                        sql: sql,
                     }).then(function(response) {
-                        populateChart(response);
+                        drawChart(response);
                     });
                 }
 
-                function populateChart(response) {
-                    var records = [];
-                    var xAxisName = response.result.columns[0];
-                    var yAxisName = response.result.columns[1];
+                function drawChart(response) {
+                    var records = [],
+                        series;
                     array.forEach(response.result.rows, function(item) {
-                        records.push({
-                            x: item[0],
-                            y: item[1],
-                        });
+                        if (item.length == 2) {
+                            records.push({
+                                x: item[0],
+                                y: item[1],
+                            })
+                        }
+                        else {
+                            records.push({
+                                x: item[0],
+                                y: item[1],
+                                _class: item[2],
+                            })
+                        }
                     });
                     if (scatterChart) { //we need to destroy the chart as the axes will have changed
                         scatterChart.destroy();
                     }
+                    //create the new chart
                     scatterChart = new Chart("scatter");
-                    scatterChart.addPlot("default", {
+                    var plot = scatterChart.addPlot("default", {
                             type: Scatter
+                        }).addAxis("x", {
+                            fixLower: "major",
+                            fixUpper: "major",
+                            title: response.result.columns[0],
+                            titleOrientation: "away",
                         })
-                        .addAxis("x")
-                        .addAxis("y")
-                        .setTheme(Julie)
-                        .addSeries("Points", records)
-                        .render();
+                        .addAxis("y", {
+                            vertical: true,
+                            fixLower: "major",
+                            fixUpper: "major",
+                            min: 0,
+                            title: response.result.columns[1],
+                        })
+                        .setTheme(Julie);
+                    // if we have a class column in the fusion table data then we need to split the data into series - one series for each class
+                    if (classColumnName) {
+                        series = getRecordsByClass(records);
+                    }
+                    else {
+                        // only one class
+                        series = [{
+                            _class: "1",
+                            records: records
+                        }];
+                    }
+                    array.forEach(series, function(s) {
+                        var fillColor = s._class == "0" ? "red" : "blue";
+                        plot.addSeries("Class_" + s._class, s.records, {
+                            stroke: {
+                                color: fillColor
+                            },
+                            fill: fillColor,
+                        });
+                    });
+                    plot.render();
                 }
 
+                function getRecordsByClass(records) {
+                    //first get the unique class values
+                    var uniqueClasses = [];
+                    array.filter(records, function(item) {
+                        if (uniqueClasses.indexOf(item._class) === -1) {
+                            uniqueClasses.push(item._class);
+                        }
+                    });
+                    var recordsByClass = [];
+                    array.forEach(uniqueClasses, function(_class) {
+                        var filtered = array.filter(records, function(item) {
+                            if (item._class === _class) {
+                                return true;
+                            }
+                        });
+                        recordsByClass.push({
+                            _class: _class,
+                            records: filtered
+                        });
+                    });
+                    return recordsByClass;
+                }
             });
 
             script.get(geeImageServerUrl + "/getCartTree", {
