@@ -5,8 +5,8 @@ require({
                 location: "/../../widgets"
             } //i.e. up 2 levels from index.html 
         ]
-    }, ["dojo/_base/array", "dojox/charting/StoreSeries", "dojox/charting/Chart", "dojox/charting/axis2d/Default", "dojox/charting/plot2d/Scatter", "dojox/charting/themes/Julie", "dijit/form/Button", "dijit/registry", "dojo/_base/array", "dijit/form/Select", "dojo/store/Memory", "widgetsPath/googleApiClient", "dojo/dom", "dojo/html", "dojo/request/script", "dojo/parser", "dojo/ready", "dijit/layout/ContentPane", "dijit/layout/BorderContainer"],
-    function(array, StoreSeries, Chart, Default, Scatter, Julie, Button, registry, array, Select, Memory, GoogleApiClient, dom, html, script, parser, ready) {
+    }, ["dojox/charting/plot2d/Lines", "dojo/_base/lang", "dojo/_base/array", "dojox/charting/StoreSeries", "dojox/charting/Chart", "dojox/charting/axis2d/Default", "dojox/charting/plot2d/Scatter", "dojox/charting/themes/Julie", "dijit/form/Button", "dijit/registry", "dijit/form/Select", "dojo/store/Memory", "widgetsPath/googleApiClient", "dojo/dom", "dojo/html", "dojo/request/script", "dojo/parser", "dojo/ready", "dijit/layout/ContentPane", "dijit/layout/BorderContainer"],
+    function(Lines, lang, array, StoreSeries, Chart, Default, Scatter, Julie, Button, registry, Select, Memory, GoogleApiClient, dom, html, script, parser, ready) {
         var geeImageServerUrl = "https://geeImageServer.appspot.com",
             columnNames = [], //simple array of column names in the fusion table
             classColumnName, //name of the column in the fusion table which has the class value
@@ -198,7 +198,109 @@ require({
             });
 
             function createCartTree(cart) {
-                html.set(dom.byId("cartTreeAsR"), cart.tree);
+                var cartObj = cartStringToObject(cart.tree);
+                var chart1 = new Chart("scatter");
+                chart1.addPlot("default", {
+                    type: Lines
+                });
+                chart1.addAxis("x", {
+                    min: 0,
+                    max: 1
+                });
+                chart1.addAxis("y", {
+                    vertical: true,
+                    min: 0,
+                    max: 200
+                });
+                array.forEach(cartObj, function(item, i) {
+                    console.log(item.text);
+                    var points = [];
+                    if (item.split !== "root" && item.axisName !== "area_new_always_water") {
+                        if (item.axisName === "ratio_new_to_permanent") {
+                            points.push([{
+                                x: item.splitAt,
+                                y: 0
+                            }, {
+                                x: item.splitAt,
+                                y: 200
+                            }]);
+                        }
+                        else {
+                            points.push([{
+                                x: 0,
+                                y: item.splitAt,
+                            }, {
+                                x: 1,
+                                y: item.splitAt,
+                            }]);
+                        }
+                        chart1.addSeries("node" + item.id, points[0]);
+                        chart1.render();
+                    }
+                });
+            }
+
+            function cartStringToObject(cartString) {
+                cartString = cartString.replace("1) root", " 1) root"); //hack to get the first node in which doesnt have a space before it
+                var re = /( \d+\))/g;
+                var nodeObjects = [];
+                var nodes = cartString.split(re).slice(1);
+                //iterate through the nodes and parse them to a javascript object
+                array.forEach(nodes.slice(0, (nodes.length / 2) - 1), function(item, i) {
+                    var nodeid = nodes[(i * 2)].substr(1, (nodes[(i * 2)].length) - 2);
+                    var nodeContent = nodes[(i * 2) + 1].trim().replace(/\( /, "(").replace(/ \)/, ")").split(" ");
+                    var axisName, splitAt, operator;
+                    if (nodeContent[0] !== "root") {
+                        var splitParams = nodeContent[0].split(/[<>]/);
+                        axisName = splitParams[0];
+                        if (splitParams[1].substr(0, 1) === "=") {
+                            splitAt = splitParams[1].substr(1);
+                            operator = "<=";
+                        }
+                        else {
+                            splitAt = splitParams[1];
+                            operator = ">";
+                        }
+                    }
+                    else {
+                        axisName = null;
+                        splitAt = null;
+                        operator = null;
+                    }
+                    var nodeContentObj = {
+                        id: Number(nodeid),
+                        operator: operator,
+                        axisName: axisName,
+                        splitAt: splitAt,
+                        split: nodeContent[0],
+                        n: nodeContent[1],
+                        cost: nodeContent[2],
+                        yval: nodeContent[3],
+                        impurity: nodeContent[4],
+                        text: nodes[(i * 2) + 1],
+                    };
+                    if (nodeContent.length === 6) {
+                        lang.mixin(nodeContentObj, {
+                            leaf: true
+                        });
+                    }
+                    else {
+                        lang.mixin(nodeContentObj, {
+                            leaf: false
+                        });
+                    }
+                    nodeObjects.push(nodeContentObj);
+                });
+                nodeObjects = nodeObjects.sort(compare);
+                return nodeObjects;
+            }
+
+            function compare(a, b) {
+                if (a.id < b.id)
+                    return -1;
+                if (a.id > b.id)
+                    return 1;
+                return 0;
             }
         });
     });
