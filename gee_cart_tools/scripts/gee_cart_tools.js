@@ -5,8 +5,8 @@ require({
                 location: "/../../widgets"
             } //i.e. up 2 levels from index.html 
         ]
-    }, ["widgetsPath/googleApiClient", "dojo/dom", "dojo/html", "dojo/request/script", "dojo/parser", "dojo/ready", "dijit/layout/ContentPane", "dijit/layout/BorderContainer"],
-    function(GoogleApiClient, dom, html, script, parser, ready) {
+    }, ["dijit/form/Select", "dojo/store/Memory", "widgetsPath/googleApiClient", "dojo/dom", "dojo/html", "dojo/request/script", "dojo/parser", "dojo/ready", "dijit/layout/ContentPane", "dijit/layout/BorderContainer"],
+    function(Select, Memory, GoogleApiClient, dom, html, script, parser, ready) {
         var geeImageServerUrl = "https://geeImageServer.appspot.com";
         ready(function() {
             parser.parse().then(function() {
@@ -30,7 +30,24 @@ require({
                 client.request('fusiontables/v2/tables', {
                     maxResults: 100,
                 }).then(function(response) {
-                    console.log(response);
+                    // create store instance referencing data from states.json
+                    var fusionTablesStore = new Memory({
+                        idProperty: "tableId",
+                        data: response.result.items
+                    });
+                    // create Select widget, populating its options from the store
+                    var select = new Select({
+                        name: "fusionTablesStore",
+                        store: fusionTablesStore,
+                        style: "width: 200px;",
+                        labelAttr: "name",
+                        maxHeight: -1, // tells _HasDropDown to fit menu within viewport
+                        onChange: function(value) {
+                            document.getElementById("value").innerHTML = value;
+                            document.getElementById("displayedValue").innerHTML = this.get("displayedValue");
+                        }
+                    }, "fusionTablesStore");
+                    select.startup();
                 })
             }
         });
