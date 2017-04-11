@@ -5,8 +5,8 @@ require({
                 location: "/../../widgets"
             } //i.e. up 2 levels from index.html 
         ]
-    }, ["dijit/form/Button", "dijit/registry", "dojo/_base/array", "dijit/form/Select", "dojo/store/Memory", "widgetsPath/googleApiClient", "dojo/dom", "dojo/html", "dojo/request/script", "dojo/parser", "dojo/ready", "dijit/layout/ContentPane", "dijit/layout/BorderContainer"],
-    function(Button, registry, array, Select, Memory, GoogleApiClient, dom, html, script, parser, ready) {
+    }, ["dojo/_base/array", "dojox/charting/StoreSeries", "dojox/charting/Chart", "dojox/charting/axis2d/Default", "dojox/charting/plot2d/Scatter", "dojox/charting/themes/Julie", "dijit/form/Button", "dijit/registry", "dojo/_base/array", "dijit/form/Select", "dojo/store/Memory", "widgetsPath/googleApiClient", "dojo/dom", "dojo/html", "dojo/request/script", "dojo/parser", "dojo/ready", "dijit/layout/ContentPane", "dijit/layout/BorderContainer"],
+    function(array, StoreSeries, Chart, Default, Scatter, Julie, Button, registry, array, Select, Memory, GoogleApiClient, dom, html, script, parser, ready) {
         var geeImageServerUrl = "https://geeImageServer.appspot.com";
         ready(function() {
             parser.parse().then(function() {
@@ -92,13 +92,29 @@ require({
                     client.request('fusiontables/v2/query', {
                         sql: 'select ' + xColumnName + ',' + yColumnName + ' from ' + tableid,
                     }).then(function(response) {
-                        populateChart(response);
+                        var records = [];
+                        array.forEach(response.result.rows, function(item) {
+                            records.push({
+                                x: item[0],
+                                y: item[1],
+                            });
+                        });
+                        populateChart(records);
                     });
                 }
 
-                function populateChart(response) {
-                    console.log(response.result.rows);
+                function populateChart(records) {
+                    var c = new Chart("scatter");
+                    c.addPlot("default", {
+                            type: Scatter
+                        })
+                        .addAxis("x")
+                        .addAxis("y")
+                        .setTheme(Julie)
+                        .addSeries("Points", records)
+                        .render();
                 }
+
             });
 
             script.get(geeImageServerUrl + "/getCartTree", {
