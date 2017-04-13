@@ -9,9 +9,9 @@ require({
 }, ["dojo/_base/array", "dojo/_base/window", "dojo/io-query", "dojo/ready", "jrc/SimpleSpeciesBox", "dojo/_base/lang", "dojo/dom-construct", "dojo/dom", "dojo/on", "dojo/parser", "dijit/registry", "dojo/request/script", "dojo/_base/array", "dojo/query", "dijit/form/Select", "dijit/form/CheckBox", "dijit/form/Button", "dijit/form/RadioButton"], function(array, win, ioQuery, ready, SimpleSpeciesBox, lang, domConstruct, dom, on, parser, registry, script, arrayUtil, query) {
 	ready(function() {
 		parser.parse();
-		var taxongroup, language, servicesDomain, queryObject;
+		var taxongroup, language, restServerUrl, queryObject;
 		queryObject = ioQuery.queryToObject(win.doc.location.search.substring(1));
-		servicesDomain = "http://dopa-services.jrc.ec.europa.eu/services/h05ibex/especies/";
+		restServerUrl = "https://db-server-blishten.c9users.io/cgi-bin/services.py/google-earth-engine";
 		setLanguage();
 		setTaxonGroup();
 		on(registry.byId("selectLanguage"), "change", function(value) {
@@ -27,7 +27,7 @@ require({
 
 		function setLanguage() {
 			language = (queryObject.language === undefined) ? "english" : queryObject.language;
-			script.get(servicesDomain + "_get_commonname_languages", {
+			script.get(restServerUrl + "/especies/_get_commonname_languages", {
 				query : {
 					format : 'array',
 					includemetadata : false
@@ -62,7 +62,7 @@ require({
 			query("input:checked").forEach(function(node) {
 				statuses.push(node.value);
 			});
-			script.get(servicesDomain + "_get_species_charisma", {
+			script.get(restServerUrl + "/especies/_get_species_charisma", {
 				query : {
 					taxongroup : taxongroup,
 					rlstatus : statuses.join(),
