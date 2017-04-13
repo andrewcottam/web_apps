@@ -36,8 +36,8 @@ define(["dojo/dom-construct", "dojo/dom-style", "dojo/request/script", "dojo/_ba
 			this.flickrPromise.then(lang.hitch(this, function(response) {
 				if (response.photos.photo.length > 0) {
 					var f = response.photos.photo[0];
-					this.set("flickrImgUrl", "http://farm" + f["farm"] + ".staticflickr.com/" + f["server"] + "/" + f["id"] + "_" + f["secret"] + "_q.jpg");
-					this.set("flickrLink", "http://www.flickr.com/photos/" + f["owner"] + "/" + f["id"]);
+					this.set("flickrImgUrl", "https://farm" + f["farm"] + ".staticflickr.com/" + f["server"] + "/" + f["id"] + "_" + f["secret"] + "_q.jpg");
+					this.set("flickrLink", "https://www.flickr.com/photos/" + f["owner"] + "/" + f["id"]);
 				} else {
 					if (response.photos.total === null) {
 						console.log("The Flickr Image Search API is currently down");
@@ -50,7 +50,7 @@ define(["dojo/dom-construct", "dojo/dom-style", "dojo/request/script", "dojo/_ba
 				this.emit("imageRetrieved", this);
 			}), lang.hitch(this, function(err) {
 				this.imageLoaded = false;
-				this.set("flickrImgUrl", "http://ehabitat-wps.jrc.ec.europa.eu/eSpecies/images/caution.png");
+				this.set("flickrImgUrl", "images/caution.png");
 				this.flickrLinkNode.title = "Timeout error getting image from Flickr";
 				console.log("Timeout getting Flickr image for species " + this.taxon);
 			}));

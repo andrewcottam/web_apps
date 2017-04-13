@@ -92,6 +92,7 @@ body {
 	font-size: 14px;
 	height: 17px;
 	font-variant: small-caps;
+	white-space: nowrap;
 }
 .binomial {
 	font-style: italic;
