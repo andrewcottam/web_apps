@@ -90,7 +90,7 @@ require(["dojo/on", "esri/map", "esri/graphic", "esri/symbols/SimpleMarkerSymbol
 		console.log('events registered');
 	});
 	var map;
-	var restServerUrl = (document.domain === "ehabitat-wps.jrc.it") ? "http://dopa-services.jrc.it/services/ibex" : "http://dopa-services.jrc.ec.europa.eu/services/ibex";
+	var restServerUrl = "https://db-server-blishten.c9users.io/cgi-bin/services.py/google-earth-engine";
 	var sitesGrid;
 	var speciesGrid;
 	var currentRow;
