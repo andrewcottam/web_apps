@@ -1,0 +1,98 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dojo/dojo/resources/dojo.css">
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dgrid/css/dgrid.css">
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dgrid/css/skins/claro.css">
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dojo/dijit/themes/claro/claro.css">
+		<link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/esri/css/esri.css">
+		<title>Protected Areas Tourism Potential Help</title>
+		<style type="text/css">
+			html, body {
+				height: 100%;
+				width: 80%;
+				margin: 10px;
+				padding: 0;
+				font-family: Lucida Sans, Lucida Grande, Arial;
+				font-size: 12px;
+				color: #333;
+				overflow: hidden;
+			}
+			h1 {
+				margin-top: 0.5em;
+				display: inline;
+			}
+			h2 {
+				margin-top: 0px;
+				padding: 5px;
+				background-color: #f0f0f0;
+				font-weight: normal;
+			}
+			table {
+				margin: 10px;
+				padding: 10px;
+			}
+			td {
+				margin: 10px;
+				padding: 10px;
+			}
+			th {
+				font-weight: bold;
+				margin: 10px;
+				padding: 10px;
+			}
+		</style>
+	</head>
+	<body class="claro">
+		<h1>Protected Areas Tourism Potential Help</h1>
+		<br/>
+		<br/>
+		<h2>Ranked protected areas</h2>
+		<p>
+			This grid shows the ranked protected areas that are shown in order according to the column that is clicked. The columns show various ranks for tourism potential that are based on the
+			intersection between the IUCN Red list of Threatened Species and the World Database of Protected Areas (WDPA). A number of indicators also use the <a href='http://andrewcottam.github.io/charismatic_species_gallery/' target='_blank'>image count</a> which is
+			the total number of images for the species in the Flickr API when searching on the scientific name (in February 2012) . The following indicators have been computed to assess the tourism potential:
+		</p>
+		<table class="table" >
+			<tr>
+				<th>Column</th><th>Indicator</th>
+			</tr>
+			<tr>
+				<td>total</td><td>Rank for the sum of the SAI values for all species except those with the Red List Status of Least Concern (LC). Because this indicator uses the raw SAI values, greater weight is given to those protected areas that have charismatic species like the big cats.</td>
+			</tr>
+			<tr>
+				<td>ln</td><td>Rank for the sum of the natural log SAI values for all species except those with the Red List Status of Least Concern (LC). This indicator uses the natural log of the SAI values so there is much less variation in charisma values between species, so overall protected areas are weighted more on the total number of charismatic species.</td>
+			</tr>
+			<tr>
+				<td>sqr</td><td>Rank for the sum of the square root of the SAI values for all species except those with the Red List Status of Least Concern (LC). This indicator uses the square root of the SAI values so there is less variation in the charisma values between species but not as much as the natural log. Therefore protected areas are weighted equally on charisma and on the total number of species.</td>
+			</tr>
+			<tr>
+				<td>avg</td><td>Rank for the average SAI value for the protected area. This indicator does not represent total charisma but the average charisma for all species.</td>
+			</tr>
+			<tr>
+				<td>rich</td><td>Rank for the total number of species that occur in the protected area irrespective of charisma. This indicator does not use SAI values and it includes all species including those that are of Least Concern.</td>
+			</tr>
+			<tr>
+				<td>status</td><td>Rank for the sum of categorised Red List statuses according to the following categories: LC=1,NT=2,VU=3,EN=4,CR=5</td>
+			</tr>
+			<tr>
+				<td>score</td><td>Rank for the sum of the categorised SAI values according to the following categories: &lt;1=1, &gt;1 and &lt;10=2, &gt;10 and &lt;100=3, &gt;100 and &lt;1000=4, &gt;1000 and &lt;10000=5, &gt;10000=6</td>
+			</tr>
+			</tr>
+		</table>
+		<ul>
+			<li>
+				To sort on a particular indicator - click the column header
+			<li>
+				To see a list of species for the protected area - click on the protected area or move the mouse over an icon on the map
+			<li>
+				To show more than 10 ranked protected areas - enter a new value in the text box and click refresh
+		</ul>
+		<h2>Species</h2>
+
+		<p>
+			This grid shows a list of species that occur in the protected area according to the intersection between the Red List and the WDPA. Species can be filtered according to their Red List Status or the taxonomic group. Images can also be returned for species.
+		</p>
+	</body>
+</html>
