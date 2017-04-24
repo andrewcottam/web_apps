@@ -23,7 +23,7 @@ require({
 		if (!wdpa_id) {
 			alert('no wdpaid');
 		}
-		restServerUrl = "https://dopa-services.jrc.ec.europa.eu/services/ibex";
+		restServerUrl = "https://db-server-blishten.c9users.io/cgi-bin/services.py/google-earth-engine";
 		parser.parse();
 		setLanguage();
 		setTaxonGroup();
