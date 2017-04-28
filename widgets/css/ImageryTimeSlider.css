@@ -8,13 +8,18 @@
 	border: 1px solid #CFCFCF;
 	border-radius: 4px;
 	box-sizing: content-box !important;
-	min-width: 510px; /* default size*/
-	min-height: 54px; /* default size*/
-	
+	min-width: 510px;
+	/* default size*/
+	min-height: 54px;
+	/* default size*/
 }
 
 .dijit {
 	box-sizing: content-box;
+}
+
+.dijitPopup { /* when in full screen mode the browser sets the z-index to 2147483647 and it cannot be overridden so this makes sure that the popups are still visible*/
+	z-index: 2147483647!important;
 }
 
 .dijitArrowButtonInner {
@@ -176,7 +181,7 @@
 	cursor: pointer;
 	cursor: hand;
 	position: absolute;
-	z-index: 400;
+	z-index: 2147483647!important;
 	background-color: rgba(255, 255, 255, 0.9);
 }
 
@@ -184,7 +189,7 @@
 	position: absolute;
 	height: 27px;
 	width: 411px;
-	z-index: 2000;
+	z-index: 2147483647!important;
 	top: 0px;
 	left: 0px;
 }

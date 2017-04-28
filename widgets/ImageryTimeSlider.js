@@ -37,11 +37,11 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 					}
 					domStyle.set(this.domNode, "top", mapGeom.y + mapGeom.h - this.height - 5 + "px"); //5 pixels up from the bottom
 					domConstruct.place(this.domNode, win.body()); //place this widget at the top level in case it is nested in the page (e.g. in Drupal panels)
-					on(this.domNode, "mousedown",function(){
+					on(this.domNode, "mousedown", function() {
 						console.log("mousedown");
 					})
-					on(win.body(), "mousemove", lang.hitch(this, function(evt){
-						if (evt.buttons==1){
+					on(win.body(), "mousemove", lang.hitch(this, function(evt) {
+						if (evt.buttons == 1) {
 							console.debug("dragging");
 							domStyle.set(this.domNode, "left", domStyle.get(this.domNode, "left") + evt.movementX + "px");
 							domStyle.set(this.domNode, "top", domStyle.get(this.domNode, "top") + evt.movementY + "px");
@@ -102,9 +102,10 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 					});
 				}
 				this.createSlider();
-				if (this.yearMonths.indexOf(this.yearMonth)>-1){
+				if (this.yearMonths.indexOf(this.yearMonth) > -1) {
 					this.setDate(this.yearMonth); //get the same year/month that is already mapped
-				}else{
+				}
+				else {
 					this.setDate(this.yearMonths[this.yearMonths.length - 1]); //get the most recent image
 				}
 			},
@@ -203,7 +204,8 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 						this.enableSlider(); //enable the slider when the image has loaded
 					}));
 					this.leafletMap.addLayer(this.geeImageLayer);
-				}else{
+				}
+				else {
 					this.geeImageLayer.setParams(wmsParams);
 				}
 			},
@@ -292,7 +294,8 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 					domStyle.set("showImg", "left", mapGeom.x + mapGeom.w - 16 + "px");
 					domStyle.set("showImg", "top", mapGeom.y + mapGeom.h - 66 + "px");
 					this.leafletMap.removeLayer(this.geeImageLayer); //remove the layer from the map
-				}else{
+				}
+				else {
 					this.leafletMap.removeLayer(this.geeImageLayer); //remove the layer from the map
 					delete this.geeImageLayer;
 				}
