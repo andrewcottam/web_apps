@@ -21,6 +21,9 @@
 .dijitPopup { /* when in full screen mode the browser sets the z-index to 2147483647 and it cannot be overridden so this makes sure that the popups are still visible*/
 	z-index: 2147483647!important;
 }
+.dijitDialog { /* when in full screen mode the browser sets the z-index to 2147483647 and it cannot be overridden so this makes sure that the popups are still visible*/
+	z-index: 2147483647!important;
+}
 
 .dijitArrowButtonInner {
 	box-sizing: content-box;
