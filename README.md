@@ -20,20 +20,10 @@
 <a href='https://andrewcottam.github.io/web_apps/eSpecies_quadkey_client/index.html' target='_blank'>index.html</a> - Demo of using quadkeys in the client</br>
 #### esri_map
 <a href='https://andrewcottam.github.io/web_apps/esri_map/index.html' target='_blank'>index.html</a> - Simple vanilla ESRI map</br>
-#### gee_global_water_dataset
-<a href='https://andrewcottam.github.io/web_apps/gee_global_water_dataset/index.html' target='_blank'>index.html</a> - Delivery of the Global Surface Water Dataset from Google Earth Engine</br>
-#### gee_results_analyser
-<a href='https://andrewcottam.github.io/web_apps/gee_results_analyser/index.html' target='_blank'>index.html</a> - Displays the accuracy of the validation results for the Global Surface Water Dataset</br>
 #### gee_simple_client
 <a href='https://andrewcottam.github.io/web_apps/gee_simple_client/index.html?wdpaid=780' target='_blank'>index.html</a> - Mash-up of GEE imagery, Flickr and Panoramio for protected areas</br>
-#### gee_spectral_library_builder
-<a href='https://andrewcottam.github.io/web_apps/gee_spectral_library_builder/index.html' target='_blank'>index.html</a> - Spectral training tool for the Global Surface Water Dataset</br>
-#### gee_swdb_validation_tool
-<a href='https://andrewcottam.github.io/web_apps/gee_swdb_validation_tool/index.html' target='_blank'>index.html</a> - Validation tool for the omission in the Global Surface Water Dataset</br>
 #### gee_tools
 <a href='https://andrewcottam.github.io/web_apps/gee_tools/index.html' target='_blank'>index.html</a>Start page for the tools used in the Global Surface Water Project</br>
-#### gee_water_validation_tool
-<a href='https://andrewcottam.github.io/web_apps/gee_water_validation_tool/index.html' target='_blank'>index.html</a> - Validation tool for the commission in the Global Surface Water Dataset</br>
 #### IUCN-Red-List-Mapper
 <a href='https://andrewcottam.github.io/web_apps/IUCN-Red-List-Mapper/index.html' target='_blank'>index.html</a> - Something really funky</br>
 #### IUCN-Web-Services
