@@ -83,26 +83,21 @@ dojo.declare("jrc.CanvasLayer", esri.layers.Layer, {
 	_drawRasterData : function() {
 		this.onUpdateStart();
 		var params = {
+			service: "WMS",
 			request : "GetMap",
-			transparent : true,
-			format : "image/png",
-			bgcolor : "ffffff",
 			version : "1.1.1",
-			layers : "0,1",
-			styles : "default,default",
-			exceptions : "application/vnd.ogc.se_xml",
-			bbox : this._map.extent.xmin + "," + this._map.extent.ymin + "," + this._map.extent.xmax + "," + this._map.extent.ymax,
-			srs : "EPSG:" + this._map.extent.spatialReference.wkid,
+			format : "image/png",
+			transparent : false,
+			layers : "all",
+			srs : "EPSG:3857",
 			width : this._map.width,
 			height : this._map.height,
-			product : this.product,
-			typeid : this.typeid,
-			objid : this.objid
+			bbox : this._map.extent.xmin + "," + this._map.extent.ymin + "," + this._map.extent.xmax + "," + this._map.extent.ymax,
 		};
 		this._img = new Image();
 		var instance = this;
 		dojo.io.script.get({
-			url : "http://ehabitat-wps.jrc.ec.europa.eu/cgi-bin/eSpecies/WMSServer?" + dojo.objectToQuery(params),
+			url : "https://geeimageserver.appspot.com/ogc?" + dojo.objectToQuery(params),
 			callbackParamName : "jsoncallback",
 			load : function(response) {
 				instance._img.src = response.url;
