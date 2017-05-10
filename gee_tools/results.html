@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html >
+	<head>
+		<link rel="stylesheet" href="https://js.arcgis.com/3.10/js/dojo/dijit/themes/claro/claro.css">
+		<link rel="stylesheet" href="https://js.arcgis.com/3.10/js/esri/css/esri.css">
+		<link rel="stylesheet" href="styles/slate.css">
+		<link rel="stylesheet" href="styles/geeResults.css">
+		<script src="https://js.arcgis.com/3.10/"></script>
+		<script src="scripts/geeResults.js"></script>
+		<script>
+			(function(i, s, o, g, r, a, m) {
+				i['GoogleAnalyticsObject'] = r;
+				i[r] = i[r] ||
+				function() {
+					(i[r].q = i[r].q || []).push(arguments)
+				}, i[r].l = 1 * new Date();
+				a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+				a.async = 1;
+				a.src = g;
+				m.parentNode.insertBefore(a, m)
+			})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+			ga('create', 'UA-63309294-1', 'auto');
+			ga('send', 'pageview');
+
+		</script>
+	</head>
+	<body class="claro">
+		<div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="design:'headline'" id="borderContainer">
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'top'" id="topCP">
+				Google Earth Engine Results Analyser
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'left'" id="leftCP"></div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'center'" id="centerCP">
+				<div id='mapCanvas'>
+					<div id='mapDiv'>
+						<div id='BasemapToggle'></div><div id='slider'></div>
+					</div><img src='images/loading.gif' id='mapLoadingImg'>
+				</div>
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'right',splitter:true" id="rightCP">
+				<div class="control">
+					<div class="label">
+						Predicted class
+					</div>
+					<select id="predictedClass" data-dojo-type="dijit/form/Select">
+						<option value="-1">All</option>
+						<option value="0">Not water</option>
+						<option value="3" selected="selected">Water</option>
+					</select>
+				</div>
+				<div class="control">
+					<div class="label">
+						Validated class
+					</div>
+					<select id="actualClass" data-dojo-type="dijit/form/Select">
+						<option value="-1" selected="selected">All</option>
+						<option value="0">Not water</option>
+						<option value="1">No data</option>
+						<option value="2">Cloud</option>
+						<option value="3">Water</option>
+						<option value="5">Ice/Snow</option>
+						<option value="6">Shadow</option>
+						<option value="8">Bare Rock</option>
+						<option value="9">Flooded Vegetation</option>
+					</select>
+				</div>
+				<div class="control">
+					<div class="label">
+						Applied masks
+					</div>
+					<select id="appliedMasks" data-dojo-type="dijit/form/Select">
+						<option value="1" selected="selected">None</option>
+						<option value="2">Slope</option>
+						<option value="3">Slope, NDVI</option>
+						<option value="4">Slope, NDVI, Temperature</option>
+						<option value="5">Slope, NDVI, Temperature, Bare Rock</option>
+					</select>
+				</div>
+				<div id='confusionMatrixGrid2' class='slate'></div>
+				<div id='confusionMatrixGrid' class='slate'></div>
+				<div id='chartHolder'><img src='images/loading.gif' id='loading2'>
+					<div id='spectralChart'></div>
+				</div>
+			</div>
+			<div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'bottom'" id="bottomCP">
+				Header content (bottom)
+			</div>
+		</div>
+	</body>
+</html>

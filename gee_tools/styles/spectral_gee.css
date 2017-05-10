@@ -1,0 +1,481 @@
+html,
+body {
+	height: 100%;
+	width: 100%;
+	margin: 0;
+	font-size: 12px;
+	color: #333;
+	overflow: hidden;
+}
+
+.pageOverlay {
+	top: 0;
+	left: 0;
+	position: absolute;
+	height: 100%;
+	width: 100%;
+	z-index: 1001;
+	display: block;
+}
+
+.floatBox {
+	position: absolute;
+	z-index: 10;
+	width: 280px;
+	padding: 10px;
+	border: 1px solid #ddd;
+	background-color: #ffffff;
+	opacity: 0.99;
+}
+
+#loadingOverlay {
+	background: #fff url('//ajax.googleapis.com/ajax/libs/dojo/1.9.1/dijit/themes/claro/images/loadingAnimation.gif') no-repeat 10px 23px;
+}
+
+.loadingMessage {
+	padding: 25px 40px;
+	color: #999;
+}
+
+#sceneSelect {
+	width: 230px;
+}
+
+#loading {
+	display: none;
+	vertical-align: middle;
+	padding-top: 30px;
+}
+
+#chartLoadingImg {
+	position: absolute;
+	top: 250px;
+	left: 230px;
+}
+
+h1 {
+	margin-top: 0.5em;
+	display: inline;
+}
+
+#userDiv {
+	font-size: 16px;
+	float: right;
+}
+
+#loginLink {
+	cursor: pointer;
+	color: blue;
+	padding: 10px;
+	background-color: #fefefe;
+}
+
+#loginLink:hover,
+#loginLink.hover {
+	text-decoration: underline;
+}
+
+#title {
+	font-size: 22px;
+	float: left;
+}
+
+#container {
+	height: 100%;
+}
+
+#mapDiv {
+	width: 60%;
+}
+
+.controlBoxes {
+	display: inline-block;
+	vertical-align: top;
+	margin-right: 18px;
+}
+
+#controlsDiv {
+	padding: 25px;
+	background-color: #f0f0f0;
+}
+
+.uiheader {
+	font-size: 17px;
+	padding-bottom: 5px;
+}
+
+#siteTools {
+	/*position: absolute;
+	 bottom: 15px;*/
+	margin-top: 8px;
+}
+
+.minmaxTextBox {
+	width: 53px;
+}
+
+.basemapRadio {
+	display: block;
+}
+
+.box,
+.flickrBox {
+	display: inline-block;
+	text-align: center;
+	margin: 6px;
+	padding: 4px 4px 3px 4px;
+	box-shadow: 3px 3px 3px #ddd;
+	-moz-box-shadow: 3px 3px 3px #ddd;
+	border: 1px solid #ddd;
+}
+
+.box {
+	width: 240px;
+}
+
+.box:hover,
+.flickrBox:hover {
+	box-shadow: 3px 3px 3px #bbb;
+	-moz-box-shadow: 3px 3px 3px #bbb;
+	border: 1px solid #bbb;
+}
+
+.panoramioLink {
+	vertical-align: middle;
+	text-align: left;
+	margin: 3px;
+	text-decoration: none;
+}
+
+.middle {
+	display: inline-block;
+	vertical-align: middle;
+}
+
+#slider {
+	display: inline-block;
+	width: 60px;
+}
+
+.dateTakenNode {
+	background-color: #E6E6FA;
+	font-size: x-small;
+	padding: 3px;
+}
+
+.dgrid {
+	font-size: smaller;
+}
+
+.dgrid-cell {
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.dgrid-row {
+	height: 17px;
+}
+
+.dgrid-column-key {
+	width: 70px;
+}
+
+.dgrid-column-propertyKey {
+	width: 200px;
+}
+
+#collectionSelect {
+	width: 160px;
+}
+
+.paddingDiv {
+	padding: 3px;
+	vertical-align: middle;
+}
+
+.fixedWidth1 {
+	width: 70px;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.fixedWidth2 {
+	width: 50px;
+	display: inline-block;
+	vertical-align: middle;
+}
+
+#scenePropertiesGridContainer {
+	height: 99%;
+}
+
+#tabContainer .dijitTabPane {
+	padding: 20px;
+}
+
+span {
+	vertical-align: middle;
+}
+
+#red {
+	width: 50px;
+}
+
+#green {
+	width: 50px;
+}
+
+#blue {
+	width: 50px;
+}
+
+label {
+	vertical-align: bottom;
+}
+
+#geolocator {
+	position: absolute;
+	z-index: 2;
+}
+
+.simpleGeocoder .esriGeocoder {
+	border: 1px solid #b5bcc7;
+	border-radius: 0px;
+	height: 19px;
+}
+
+.simpleGeocoder .esriGeocoderContainer {
+	width: 300px;
+}
+
+.simpleGeocoder .esriGeocoder .esriGeocoderSearch {
+	margin-left: 2px;
+}
+
+.simpleGeocoder .esriGeocoderIcon {
+	margin: 2px;
+}
+
+.simpleGeocoder .esriGeocoder input {
+	padding-top: 2px;
+	width: 125px;
+}
+
+.simpleGeocoder .esriGeocoder .esriGeocoderReset {
+	margin: 2px 2px;
+}
+
+.simpleGeocoder .esriGeocoderResults {
+	border: 1px solid #b5bcc7;
+	margin-top: -5px;
+}
+
+.simpleGeocoder .esriGeocoderResult {
+	padding: 1px;
+	font-family: Arial;
+}
+
+#axisBandsContainer {
+	display: inline-block;
+	padding: 10px;
+	vertical-align: top;
+	width: 40%;
+}
+
+#showControlsContainer {
+	display: inline-block;
+	padding: 10px;
+	vertical-align: top;
+	width: 40%;
+}
+
+#xAxisSelect {
+	width: 50px;
+}
+
+#yAxisSelect {
+	width: 50px;
+}
+
+#algorithmsContainer {
+	margin-top: 20px;
+}
+
+#algorithmButtonContainer {
+	margin-top: 6px;
+	vertical-align: top;
+	padding-top: 5px;
+	width: 100%;
+	display: inline-block;
+}
+
+.algorithmButton {
+	width: 50px;
+}
+
+#algorithmTools1 {
+	display: inline-block;
+}
+
+#algorithmTools2 {
+	display: inline-block;
+}
+
+#algorithmTools2 .dijitButtonNode {
+	padding: 0px;
+}
+
+#algorithmName {
+	width: 150px;
+}
+
+#spectralTabContainer {
+	padding-top: 12px;
+	width: 400px;
+}
+
+#detectionColour {
+	width: 60px;
+}
+
+#fullscreendiv {
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 100%;
+	background: white;
+}
+
+#classTogglers {
+	padding-bottom: 10px;
+}
+
+#toolbarContainer {
+	position: absolute;
+	top: 0px;
+	right: 20px;
+	padding: 10px;
+}
+
+#info {
+	height: 12px;
+	padding: 4px;
+	border: 1px solid #808080;
+	background-color: #ffffee;
+	opacity: 0.99;
+	display: none;
+	border-radius: 1px;
+}
+
+.jrcChartIcons {
+	background-image: url('../images/jrcChartIcons.png');
+	background-repeat: no-repeat;
+	width: 18px;
+	height: 18px;
+	text-align: center;
+}
+
+.jrcChartIconsPaste {
+	background-position: -90px;
+}
+
+.jrcChartIconsSave {
+	background-position: -72px;
+}
+
+.jrcChartIconsFullScreen {
+	background-position: -792px;
+}
+
+.jrcChartIconsErase {
+	background-position: -774px;
+}
+
+.jrcChartIconsNormalScreen {
+	background-position: -828px;
+}
+
+.jrcChartIconsZoomToFullExtent {
+	background-position: -270px;
+}
+
+.jrcChartIconsDelete {
+	background-position: -107px;
+}
+
+.jrcChartIconsLockPoints {
+	background-position: -863px;
+}
+
+.jrcChartIconsUnLockPoints {
+	background-position: -844px;
+}
+
+.jrcChartIconsFinishPolygon {
+	background-position: -882px;
+}
+
+.jrcChartIconsZoomOut {
+	background-position: -895px;
+}
+
+.jrcChartIconsToggleAlgorithmVisible {
+	background-position: 0px;
+}
+
+.jrcChartIconsToggleAlgorithmHidden {
+	background-position: -144px;
+}
+
+.jrcChartIconsToggleSitesVisible {
+	background-position: -162px;
+}
+
+.jrcChartIconsToggleSitesHidden {
+	background-position: -180px;
+}
+
+.jrcChartIconsToggleTriangulationVisible {
+	background-position: -198px;
+}
+
+.jrcChartIconsToggleTriangulationHidden {
+	background-position: -216px;
+}
+
+.jrcChartIconsToggleXYValuesVisible {
+	background-position: -234px;
+}
+
+.jrcChartIconsToggleXYValuesHidden {
+	background-position: -252px;
+}
+
+.jrcChartIconsToggleAxisVisible {
+	background-position: -288px;
+}
+
+.jrcChartIconsToggleAxisHidden {
+	background-position: -306px;
+}
+
+.jrcChartIconsCreateNewAlgorithm {
+	background-position: -594px;
+}
+
+.jrcChartIconsSaveAlgorithm {
+	background-position: -18px;
+}
+
+.jrcChartIconsDeleteAlgorithm {
+	background-position: -108px;
+}
+
+.jrcChartIconsRun {
+	background-position: -914px;
+}
+
+.jrcChartIconsRunDisabled {
+	background-position: -933px;
+}

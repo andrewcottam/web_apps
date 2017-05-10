@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Feng et al. Water Dataset validation tool</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+		<link rel="stylesheet" href="https://js.arcgis.com/3.9/js/dojo/dijit/themes/tundra/tundra.css">
+		<link rel="stylesheet" href="https://js.arcgis.com/3.9/js/esri/css/esri.css">
+		<link rel="stylesheet" href="styles/swdb_validate_gee.css">
+		<script src="https://js.arcgis.com/3.9/"></script>
+		<script src="scripts/water_omission.js"></script>
+		<script>
+			(function(i, s, o, g, r, a, m) {
+				i['GoogleAnalyticsObject'] = r;
+				i[r] = i[r] ||
+				function() {
+					(i[r].q = i[r].q || []).push(arguments)
+				}, i[r].l = 1 * new Date();
+				a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+				a.async = 1;
+				a.src = g;
+				m.parentNode.insertBefore(a, m)
+			})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+			ga('create', 'UA-63309294-1', 'auto');
+			ga('send', 'pageview');
+
+		</script>
+	</head>
+	<body class="tundra">
+		<div id="title">
+			<div style="width:400px;display: inline-block">
+				Feng et al. Water Dataset validation tool
+			</div>
+			<div id="validatedCount" style="width:400px;display: inline-block;text-align: right"></div>
+		</div>
+		<div>
+			<div class="mapPane">
+				<div id="image2">
+					<div id="mapDiv"></div>
+				</div>
+			</div>
+			<div class="mapPane">
+				<div id="image"><img id="geimage"><img src="images/loading.gif" id="loading">
+				</div>
+				<div class="bottom">
+					<div id="predictedClass">
+						images loading..
+					</div>
+					<img src="images/tick.png" title="Validated" id="tickImage"/>
+				</div>
+			</div>
+			<div class="mapPane">
+				<div id="image3">
+					<div id="mapDiv2"></div>
+				</div>
+			</div>
+		</div>
+		<div id="sitePane">
+			<div>
+				<div id="sensor"></div>
+				<ul>
+					<li>
+						Right/Left keys to move to the Next/Previous image
+					</li>
+					<li>
+						Space bar to change the land cover class
+					</li>
+					<li>
+						Up arrow to open site in mapper
+					</li>
+					<li>
+						<div id="sensorBandInfo"></div>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+	</body>
+</html>

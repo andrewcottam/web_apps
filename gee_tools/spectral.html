@@ -1,0 +1,351 @@
+<html>
+
+<head>
+	<title>Spectral Library Building Tool for Google Earth Engine</title>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=7,IE=9">
+	<meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+	<link rel="stylesheet" href="https://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dojo/dojo/resources/dojo.css">
+	<link rel="stylesheet" href="https://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dgrid/css/skins/claro.css">
+	<link rel="stylesheet" href="https://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/dojo/dijit/themes/claro/claro.css">
+	<link rel="stylesheet" href="https://serverapi.arcgisonline.com/jsapi/arcgis/3.4/js/esri/css/esri.css">
+	<link rel="stylesheet" href="styles/spectral_gee.css">
+	<link rel="stylesheet" type="text/css" href="../widgets/css/PhotoBox.css" />
+	<link rel="stylesheet" type="text/css" href="../widgets/css/ImageryController.css" />
+	<script src="https://js.arcgis.com/3.9/"></script>
+	<script src="scripts/spectral_gee.js"></script>
+	<script>
+		(function(i, s, o, g, r, a, m) {
+			i['GoogleAnalyticsObject'] = r;
+			i[r] = i[r] ||
+				function() {
+					(i[r].q = i[r].q || []).push(arguments)
+				}, i[r].l = 1 * new Date();
+			a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+			a.async = 1;
+			a.src = g;
+			m.parentNode.insertBefore(a, m)
+		})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+		ga('create', 'UA-63309294-1', 'auto');
+		ga('send', 'pageview');
+	</script>
+</head>
+
+<body class="claro">
+	<div id="loadingOverlay" class="loadingOverlay pageOverlay">
+		<div class="loadingMessage">
+			Loading...
+		</div>
+	</div>
+	<div id="container" data-dojo-type="dijit/layout/BorderContainer" design="headline" gutters="false" liveSplitters="true">
+		<div data-dojo-type="dijit/layout/ContentPane" region="top">
+			<div id="title" name="title">
+				Spectral Library Building Tool for Google Earth Engine
+			</div>
+			<div id="userDiv">
+				<a id="loginLink" title="Click here to login">Login</a>
+			</div>
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" region="left" id="mapDiv" data-dojo-props="splitter:true"></div>
+		<div data-dojo-type="dijit/layout/ContentPane" region="center">
+			<div data-dojo-type="dijit/layout/BorderContainer" design="headline" gutters="false">
+				<div data-dojo-type="dijit/layout/ContentPane" region="top" id="controlsDiv">
+					<div>
+						<div class="controlBoxes">
+							<div class="uiheader">
+								Available scenes:
+							</div>
+							<div>
+								<div class="paddingDiv">
+									<div class="fixedWidth1">
+										Collection:
+									</div>
+									<select id="collectionSelect" data-dojo-type="dijit/form/Select">
+											<option value="LANDSAT/LT5_L1T_TOA">LANDSAT/LT5_L1T_TOA</option>
+											<option value="LANDSAT/L7_L1T_TOA">LANDSAT/L7_L1T_TOA</option>
+											<option value="LANDSAT/LC8_L1T_TOA" selected="selected">LANDSAT/LC8_L1T_TOA</option>
+											<option value="COPERNICUS/S2">COPERNICUS/S2</option>											
+										</select>
+								</div>
+								<div class="paddingDiv">
+									<div class="fixedWidth2">
+										Scene:
+									</div>
+									<div class="middle" style="width:16px"><img src="images/loading.gif" id="scenesLoadingImg" />
+									</div>
+									<select id="sceneSelect" data-dojo-type="dijit/form/Select"></select>
+								</div>
+							</div>
+						</div>
+						<div class="controlBoxes">
+							<div class="uiheader">
+								Display:
+							</div>
+							<div>
+								<div class="paddingDiv">
+									<span>Red:</span>
+									<select id="red" data-dojo-type="dijit/form/Select">
+											<option value="band1">band1</option>
+											<option value="band2">band2</option>
+											<option value="band3">band3</option>
+											<option value="band4" selected="selected">band4</option>
+											<option value="band5">band5</option>
+											<option value="band6">band6</option>
+											<option value="band7">band7</option>
+											<option value="band8">band8</option>
+											<option value="band9">band9</option>
+											<option value="band10">band10</option>
+											<option value="band11">band11</option>
+										</select><span> Green:</span>
+									<select id="green" data-dojo-type="dijit/form/Select">
+											<option value="band1">band1</option>
+											<option value="band2">band2</option>
+											<option value="band3" selected="selected">band3</option>
+											<option value="band4">band4</option>
+											<option value="band5">band5</option>
+											<option value="band6">band6</option>
+											<option value="band7">band7</option>
+											<option value="band8">band8</option>
+											<option value="band9">band9</option>
+											<option value="band10">band10</option>
+											<option value="band11">band11</option>
+										</select><span> Blue:</span>
+									<select id="blue" data-dojo-type="dijit/form/Select">
+											<option value="band1">band1</option>
+											<option value="band2" selected="selected">band2</option>
+											<option value="band3">band3</option>
+											<option value="band4">band4</option>
+											<option value="band5">band5</option>
+											<option value="band6">band6</option>
+											<option value="band7">band7</option>
+											<option value="band8">band8</option>
+											<option value="band9">band9</option>
+											<option value="band10">band10</option>
+											<option value="band11">band11</option>
+										</select>
+								</div>
+								<div class="paddingDiv">
+									<span style="padding-right: 4px">Min:</span>
+									<input type="text" name="minval" data-dojo-type="dijit/form/TextBox" id="minval" class="minmaxTextBox" style="width:48px" />
+									<span style="padding-right: 13px">Max:</span>
+									<input type="text" name="maxval" data-dojo-type="dijit/form/TextBox" id="maxval" class="minmaxTextBox" style="width:48px" />
+									<button id="updateButton" data-dojo-type="dijit/form/Button" type="button" style="padding-left:30px">
+											Go
+										</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div style="margin-top:20px">
+						<div class="controlBoxes">
+							<div class="uiheader" style="width:145px">
+								Layers:
+							</div>
+							<input type="checkbox" id="toggleWater" data-dojo-type="dijit/form/CheckBox">
+							<label for="toggleWater">Detection layer</label>
+							<br/>
+							<input type="checkbox" id="toggleRGB" data-dojo-type="dijit/form/CheckBox">
+							<label for="toggleRGB">RGB layer</label>
+							<br/>
+							<input type="checkbox" id="toggleHSV" data-dojo-type="dijit/form/CheckBox">
+							<label for="toggleHSV">HSV layer</label>
+							<br/>
+							<input type="checkbox" id="toggleSites" data-dojo-type="dijit/form/CheckBox" checked>
+							<label for="toggleSites">Sites layer</label>
+						</div>
+						<div class="controlBoxes" style="width:145px">
+							<div class="uiheader">
+								Basemap:
+							</div>
+							<div class="basemapRadio">
+								<input type="radio" data-dojo-type="dijit/form/RadioButton" name="basemapLayer" value="streets" id="streetsRadio" />
+								<label for="streetsRadio">Streets</label>
+							</div>
+							<div class="basemapRadio">
+								<input type="radio" data-dojo-type="dijit/form/RadioButton" name="basemapLayer" value="topo" id="topoRadio" checked/>
+								<label for="topoRadio">Topo</label>
+							</div>
+							<div class="basemapRadio">
+								<input type="radio" data-dojo-type="dijit/form/RadioButton" name="basemapLayer" value="satellite" id="imageryRadio" />
+								<label for="imageryRadio">Imagery</label>
+							</div>
+							<div class="basemapRadio">
+								<input type="radio" data-dojo-type="dijit/form/RadioButton" name="basemapLayer" value="gray" id="grayRadio" />
+								<label for="grayRadio">Gray</label>
+							</div>
+						</div>
+						<div class="controlBoxes">
+							<div class="uiheader">
+								Search location:
+							</div>
+							<div id="geolocator"></div>
+							<div id="loading">
+								<span id="loadingMessage"></span><img src="images/loading.gif" />
+							</div>
+						</div>
+					</div>
+				</div>
+				<div data-dojo-type="dijit/layout/ContentPane" region="left" style="width: 0px;padding:0px"></div>
+				<div data-dojo-type="dijit/layout/ContentPane" region="center">
+					<div data-dojo-type="dijit/layout/TabContainer" id="tabContainer">
+						<div data-dojo-type="dijit/layout/ContentPane" title="Land cover classes" id="landcoverclassesPane">
+							<div id="landcoverclasses"></div>
+							<div id="siteTools">
+								<button data-dojo-type="dijit/form/Button" type="button" id="deleteSites" disabled="disabled" title="Click to delete draft training sites">
+										Delete sites
+									</button>
+								<button data-dojo-type="dijit/form/Button" type="button" id="createSites" disabled="disabled" title="Click to submit draft training sites">
+										Create sites
+									</button>
+							</div>
+						</div>
+						<div data-dojo-type="dijit/layout/ContentPane" title="Spectral information" id="spectralPane">
+							<div id="spectralChartToolbarContainer">
+								<div id="spectralChartToolbar" data-dojo-type="dijit/Toolbar">
+									<div id="fullScreenButton" data-dojo-type="dijit/form/Button" data-dojo-props="iconClass:'jrcChartIcons jrcChartIconsFullScreen', showLabel:false">
+										Full screen
+									</div>
+									<div id="fullExtentButton" data-dojo-type="dijit/form/Button" data-dojo-props="iconClass:'jrcChartIcons jrcChartIconsZoomToFullExtent', showLabel:false">
+										Zoom to full extent
+									</div>
+									<div id="toggleAxesButton" data-dojo-type="dijit/form/ToggleButton" data-dojo-props="iconClass:'jrcChartIcons jrcChartIconsToggleAxisHidden', showLabel:false,checked:true">
+										Show chart axes
+									</div>
+									<div id="toggleAlgorithmButton" data-dojo-type="dijit/form/ToggleButton" data-dojo-props="iconClass:'jrcChartIcons jrcChartIconsToggleAlgorithmVisible', showLabel:false, checked:true">
+										Hide the algorithm line
+									</div>
+									<div id="toggleTrainingSitesButton" data-dojo-type="dijit/form/ToggleButton" data-dojo-props="iconClass:'jrcChartIcons jrcChartIconsToggleSitesVisible', showLabel:false, checked:true">
+										Hide the training sites
+									</div>
+									<div id="toggleTriangulationButton" data-dojo-type="dijit/form/ToggleButton" data-dojo-props="iconClass:'jrcChartIcons jrcChartIconsToggleTriangulationHidden', showLabel:false">
+										Show the algorithm triangulation
+									</div>
+									<div id="toggleCursorXYValuesButton" data-dojo-type="dijit/form/ToggleButton" data-dojo-props="iconClass:'jrcChartIcons jrcChartIconsToggleXYValuesVisible', showLabel:false, checked:true">
+										Hide the cursor xy values
+									</div>
+									<span data-dojo-type="dijit/ToolbarSeparator"></span>
+									<span>X</span>
+									<select id="xAxisSelect" data-dojo-type="dijit/form/Select">
+											<option value="band1">band1</option>
+											<option value="band2">band2</option>
+											<option value="band3">band3</option>
+											<option value="band4">band4</option>
+											<option value="band5">band5</option>
+											<option value="band6">band6</option>
+											<option value="band7">band7</option>
+											<option value="band8">band8</option>
+											<option value="band9">band9</option>
+											<option value="band10">band10</option>
+											<option value="band11">band11</option>
+											<option value="hue">hue</option>
+											<option value="saturation">saturation</option>
+											<option value="value" selected="selected">value</option>
+											<option value="ndvi">ndvi</option>
+											<option value="ndwi">ndwi</option>
+										</select>
+									<span>Y</span>
+									<select id="yAxisSelect" data-dojo-type="dijit/form/Select">
+											<option value="band1">band1</option>
+											<option value="band2">band2</option>
+											<option value="band3">band3</option>
+											<option value="band4">band4</option>
+											<option value="band5">band5</option>
+											<option value="band6">band6</option>
+											<option value="band7">band7</option>
+											<option value="band8">band8</option>
+											<option value="band9">band9</option>
+											<option value="band10">band10</option>
+											<option value="band11">band11</option>
+											<option value="hue" selected="selected">hue</option>
+											<option value="saturation">saturation</option>
+											<option value="value">value</option>
+											<option value="ndvi">ndvi</option>
+											<option value="ndwi">ndwi</option>
+										</select>
+									<div data-dojo-type="dijit/form/DropDownButton" id="classesDropDown">
+										<span>Classes</span>
+										<div data-dojo-type="dijit/TooltipDialog">
+											<div data-dojo-type="dijit/layout/ContentPane">
+												<div id="toggleAllClassesContainer">
+													<input type="checkbox" id="toggleAllClasses" data-dojo-type="dijit/form/CheckBox" style="vertical-align: middle">
+													<label for="toggleAllClasses" style="vertical-align: middle">Check/uncheck all</label>
+													<button id="updateChartButton" data-dojo-type="dijit/form/Button" type="button" style="vertical-align: middle">
+															Refresh
+														</button>
+													<button id="closeButton" data-dojo-type="dijit/form/Button" type="button" style="vertical-align: middle">
+															Close
+														</button>
+													<div id="classTogglers"></div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<div id="algorithmToolbar" data-dojo-type="dijit/Toolbar">
+									<div id="createNewAlgorithmButton" data-dojo-type="dijit/form/Button" data-dojo-props="iconClass:'jrcChartIcons jrcChartIconsCreateNewAlgorithm', showLabel:false">
+										Create a new algorithm
+									</div>
+									<div id="saveAlgorithmButton" data-dojo-type="dijit/form/Button" data-dojo-props="iconClass:'jrcChartIcons jrcChartIconsSaveAlgorithm', showLabel:false">
+										Save the current algorithm
+									</div>
+									<div id="deleteAlgorithmButton" data-dojo-type="dijit/form/Button" data-dojo-props="iconClass:'jrcChartIcons jrcChartIconsDeleteAlgorithm', showLabel:false">
+										Delete the current algorithm
+									</div>
+									<div id="saveAlgorithmToFile" data-dojo-type="dijit/form/Button" data-dojo-props="iconClass:'jrcChartIcons jrcChartIconsSave', showLabel:false">
+										Save the current algorithm to a text file
+									</div>
+									<div id="openAlgorithm" data-dojo-type="dijit/form/Button" data-dojo-props="iconClass:'jrcChartIcons jrcChartIconsPaste', showLabel:false">
+										Create a new algorithm by pasting the text from a saved file
+									</div>
+									<select id="algorithmList" data-dojo-type="dijit/form/Select">
+											Detection algorithm
+										</select>
+									<div id="runAlgorithm" data-dojo-type="dijit/form/Button" data-dojo-props="iconClass:'jrcChartIcons jrcChartIconsRun', showLabel:false">
+										Run the algorithm
+									</div>
+								</div>
+								<div id="selectToolbar" data-dojo-type="dijit/Toolbar" style="display: none">
+									<select id="testAlgorithmSelect" data-dojo-type="dijit/form/Select"></select>
+									<div id="testAlgorithm" data-dojo-type="dijit/form/ToggleButton" data-dojo-props="iconClass:'jrcChartIcons jrcChartIconsRun', showLabel:false,checked:false">
+										Select the training sites
+									</div>
+								</div>
+							</div>
+							<div id="spectralChart">
+								<span id="info" style="position:absolute; left:15px; bottom:5px; color:#000; z-index:50;"></span>
+							</div>
+							<img src="images/loading.gif" id="chartLoadingImg" />
+							<div data-dojo-type="dijit/layout/TabContainer" id="spectralTabContainer" data-dojo-props="doLayout:false">
+								<div data-dojo-type="dijit/layout/ContentPane" title="Options">
+									<div class="uiheader" style="margin-top: 15px;">
+										Detection symbology:
+									</div>
+									<div id="algorithmPaletteContainer">
+										<select id="detectionColour" data-dojo-type="dijit/form/Select">
+												<option value="none">None</option>
+												<option value="#FF0000">Red</option>
+												<option value="#00FF00">Green</option>
+												<option value="#0000FF" selected="selected">Blue</option>
+											</select>
+										<input type="checkbox" id="toggleChangeLayer" data-dojo-type="dijit/form/CheckBox" checked>
+										<label for="toggleChangeLayer">Show change</label>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div data-dojo-type="dijit/layout/ContentPane" title="Scene Properties" id="scenePropertiesPane">
+							<div id="scenePropertiesGridContainer"></div>
+						</div>
+						<div data-dojo-type="dijit/layout/ContentPane" title="Images" id="flickrPane2">
+							<div id="flickrImages2"></div>
+						</div>
+					</div>
+				</div>
+				<div data-dojo-type="dijit/layout/ContentPane" region="bottom"></div>
+			</div>
+		</div>
+		<div data-dojo-type="dijit/layout/ContentPane" region="bottom"></div>
+</body>
+
+</html>

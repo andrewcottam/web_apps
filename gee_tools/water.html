@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+	<title>Joint Research Centre Global Water Dataset</title>
+	<link rel="stylesheet" type="text/css" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
+	<link rel="stylesheet" type="text/css" href="https://ajax.googleapis.com/ajax/libs/dojo/1.10.4/dijit/themes/claro/claro.css" />
+	<link rel="stylesheet" type="text/css" href="../widgets/css/ImageryTimeSlider.css" />
+	<link rel="stylesheet" type="text/css" href="styles/water.css" />
+	<link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css' rel='stylesheet' />
+	<!-- SCRIPT FILES -->
+	<script type="text/javascript" src="https://unpkg.com/leaflet@1.0.3/dist/leaflet.js"></script>
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/dojo/1.10.4/dojo/dojo.js" data-dojo-config="async: true"></script>
+	<script type="text/javascript" src="scripts/NonTiledLayer.js"></script>
+	<script type="text/javascript" src="scripts/NonTiledLayer.WMS.js"></script>
+	<script type="text/javascript" src="scripts/Control.Loading.js"></script>
+	<script type="text/javascript" src="scripts/water.js"></script>
+	<script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+	<script>
+		(function(i, s, o, g, r, a, m) {
+			i['GoogleAnalyticsObject'] = r;
+			i[r] = i[r] ||
+				function() {
+					(i[r].q = i[r].q || []).push(arguments)
+				}, i[r].l = 1 * new Date();
+			a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+			a.async = 1;
+			a.src = g;
+			m.parentNode.insertBefore(a, m)
+		})(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+		ga('create', 'UA-63309294-1', 'auto');
+		ga('send', 'pageview');
+	</script>
+</head>
+
+<body class="claro">
+	<div id="mainWindow" data-dojo-type="dijit.layout.BorderContainer" data-dojo-type="design:'headline', gutters:false" style="width:100%; height:100%;">
+		<div id="header" data-dojo-type="dijit.layout.ContentPane" class="roundedCorners" data-dojo-props="region:'top'">
+			Joint Research Centre Global Water Dataset
+		</div>
+		<div id="map" data-dojo-type="dijit.layout.ContentPane" class="roundedCorners" data-dojo-props="region:'center'"></div>
+		<div id="ImageryTimeSliderDiv"></div>
+		<div data-dojo-type="dijit.layout.ContentPane" id="rightPane" class="roundedCorners" data-dojo-props="region:'right', splitter:true">
+			<div>
+				<input type="checkbox" id="toggleMBbasemap" data-dojo-type="dijit/form/CheckBox">
+				<label for="toggleMBbasemap">MapBox</label>
+			</div>
+			<div>
+				<input type="checkbox" id="toggleDGbasemap" data-dojo-type="dijit/form/CheckBox">
+				<label for="toggleDGbasemap">DigitalGlobe</label>
+			</div>
+			<div>
+				<input type="checkbox" id="toggleTransitions" data-dojo-type="dijit/form/CheckBox" checked>
+				<label for="toggleTransitions">Transitions</label>
+			</div>
+			<div>
+				<input type="checkbox" id="togglep32occurrence" data-dojo-type="dijit/form/CheckBox">
+				<label for="togglep32occurrence">Occurrence</label>
+			</div>
+			<div>
+				<input type="checkbox" id="togglep1p2change" data-dojo-type="dijit/form/CheckBox">
+				<label for="togglep1p2change">Occurrence Change Intensity</label>
+			</div>
+			<div>
+				<input type="checkbox" id="toggleannualRecurrence" data-dojo-type="dijit/form/CheckBox">
+				<label for="toggleannualRecurrence">Annual recurrence</label>
+			</div>
+			<div>
+				<input type="checkbox" id="togglemaxWaterExtent" data-dojo-type="dijit/form/CheckBox">
+				<label for="togglemaxWaterExtent">Maximum water extent</label>
+			</div>
+			<div>
+				<input type="checkbox" id="toggleseasonality" data-dojo-type="dijit/form/CheckBox">
+				<label for="toggleseasonality">Seasonality</label>
+			</div>
+			<div class="chartHolder"><img src="images/loading.gif" class="loadingIcon" id="loading1">
+				<div id="monthlyRecurrenceChart" class="chart"></div>
+			</div>
+			<div class="chartHolder"><img src="images/loading.gif" class="loadingIcon" id="loading2">
+				<div id="yearlyClassificationsChart" class="chart2"></div>
+			</div>
+		</div>
+		<div id="footer" class="roundedCorners" data-dojo-type="dijit.layout.ContentPane" data-dojo-props="region:'bottom'">
+			footer
+		</div>
+	</div>
+</body>
+
+</html>
