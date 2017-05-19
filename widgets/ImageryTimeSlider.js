@@ -40,7 +40,7 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 					on(this.domNode, "mousedown", function() {
 						console.log("mousedown");
 					})
-					on(win.body(), "mousemove", lang.hitch(this, function(evt) {
+					on(this.domNode, "mousemove", lang.hitch(this, function(evt) {
 						if (evt.buttons == 1) {
 							console.debug("dragging");
 							domStyle.set(this.domNode, "left", domStyle.get(this.domNode, "left") + evt.movementX + "px");
