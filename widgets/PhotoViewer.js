@@ -1,3 +1,5 @@
+/*global dojox */
+/*global L */
 define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "dojo/query", "dojo/dom-style", "dojo/dom-construct", "./PhotoBoxFlickr", "dijit/registry", "dojo/on", "./WebServiceAPIs/FlickrAPI", "dojo/_base/lang", "dojo/dom", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!./templates/PhotoViewer.html"], function(array, domGeom, gfx, dojowindow, query, domStyle, domConstruct, PhotoBoxFlickr, registry, on, FlickrAPI, lang, dom, declare, _WidgetBase, _TemplatedMixin, template) {
 	return declare([_WidgetBase, _TemplatedMixin], {
 		templateString: template,
@@ -132,7 +134,7 @@ define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "do
 				if(evt.target.mouseAbove||evt.target.mouseAbove==undefined){ //with the flickr provider the lat/long data come from an asynchronous call and so by the time the results get back the mouse may be over another element so we only want to show the location if the mouse is still above the photo box
 					var markerRadius = (this.showLocatorLine) ? 1 : 7; //set the radius of the marker that will be added - if no line is needed then set a large marker 
 					var markerLatLng = this.getMarkerActualPosition(L.latLng(evt.latitude, evt.longitude), markerRadius); //get the lat long of the actual position of the marker given its radius 
-					this.markerLayer = L.circleMarker(markerLatLng,{radius: markerRadius, color: "#fff", weight: 2, fill: true, fillColor: "#0069B6", fillOpacity: 1});
+					this.markerLayer = L.circleMarker(markerLatLng,{radius: markerRadius, color: "#fff", weight: 2, fill: true, fillColor: "#0069B6", fillOpacity: 1, renderer: L.svg()});
 					this.map.addLayer(this.markerLayer); //add the marker to the map
 					domStyle.set(this.markerLayer.getElement(), "fill", "#0069B6"); 
 					if (this.showLocatorLine){
