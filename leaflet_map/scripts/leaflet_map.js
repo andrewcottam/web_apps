@@ -22,7 +22,8 @@ require({
 				center: [16.02, -3.64],
 				//		    center: [1, 34],
 				zoom: 10,
-				loadingControl: true
+				loadingControl: true,
+				fullscreenControl: true,
 			});
 			map.whenReady(function mapLoaded(e) {
 				if (queryObject.lat !== undefined) {
