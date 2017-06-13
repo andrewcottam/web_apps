@@ -1,9 +1,10 @@
 define(["dojo/promise/all", "dojo/_base/array", "dojo/_base/declare", "dojo/request/script", "dojo/Evented", "dojo/_base/lang"], function(all, array, declare, script, Evented, lang) {
 	return declare([Evented], {
-		constructor: function(photoViewer) {
+		constructor: function(photoViewer, accuracy) {
 			this.photoViewer = photoViewer;
 			this.per_page = 30;
 			this.provider = "flickr";
+			this.accuracy = accuracy; //user-specified accuracy for the flickr api - this relates to the location accuracy which is 1 by default (meaning world) - see https://www.flickr.com/services/api/flickr.photos.search.html
 		},
 		// there is no size parameter in the flickr call
 		getImagesForBBox: function(minx, miny, maxx, maxy) {
@@ -13,7 +14,7 @@ define(["dojo/promise/all", "dojo/_base/array", "dojo/_base/declare", "dojo/requ
 				bbox: minx + ',' + miny + ',' + maxx + ',' + maxy,
 				format: 'json',
 				per_page: this.per_page,
-				accuracy: 1
+				accuracy: this.accuracy,
 			};
 			var promises = [];
 			//make a call to get the photos with tags if required

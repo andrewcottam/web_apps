@@ -15,7 +15,8 @@ define(["dojo/_base/array", "dojo/dom-geometry", "dojox/gfx", "dojo/window", "do
 				array.forEach(args.providers, lang.hitch(this, function(providerString){
 					switch(providerString) {
 				    case "flickr":
-						var flickrapi = new FlickrAPI(this);
+				    	var accuracy = args.accuracy ? parseInt(args.accuracy) : 1; //user-specified accuracy for the flickr api - this relates to the location accuracy which is 1 by default
+						var flickrapi = new FlickrAPI(this, accuracy);
 						this.providerObjs.push(flickrapi);
 				        break;
 				    default:

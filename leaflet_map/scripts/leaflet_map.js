@@ -75,6 +75,7 @@ require({
 					tags: ["biopama"],
 					text: "outdoor",
 					photoSize: "thumbnail", //small
+					accuracy: 4,
 				}, "photos"); //tags are an array, e.g. tags: ["biopama"], text is a string, e.g. text: "landscape"
 				photoViewer.startup();
 				var imageryTimeSlider = new ImageryTimeSlider({
