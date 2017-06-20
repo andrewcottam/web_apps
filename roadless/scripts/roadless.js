@@ -2,7 +2,7 @@
 require(["dojo/date/locale", "dijit/focus", "dojo/parser", "dijit/form/RadioButton", "dojo/dom-class", "dojo/dom-attr", "dojo/_base/lang", "dojo/Deferred", "dojo/keys", "dojo/topic", "dojo/_base/array", "dojo/dom-style", "dojo/dom", "dojo/_base/lang", "dojox/gfx", "dojo/io-query", "dojo/dom-style", "dijit/registry", "dojo/on", "dojo/request/script", "dojo/ready", "dijit/form/Button", "dijit/Dialog", "dijit/form/TextBox"], function(locale, focusUtil, parser, RadioButton, domClass, domAttr, lang, Deferred, keys, topic, array, domStyle, dom, lang, gfx, ioQuery, domstyle, registry, on, script, ready, Button, Dialog, TextBox) {
 	ready(function() {
 		var OSM_DEFAULT_SCALE = 5;
-		var START_POINT = L.latLng([4,113]); //as lat,lng
+		var START_POINT = L.latLng([9.437,-64.754]); //as lat,lng
 		var SQUARE_WIDTH = 90; //width of the validation square in metres
 		var position = -1, sites, imageSize = 400, bboxSize = 1910.925707126968, bufferSize = 10, urlsToGet, nextSiteRetrieved = true, validationClasses, default_class = "Green", currentValidation, stretch = 1;
 		var digitialGlobeApiKey = "pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYSI6ImNpbmJscnhhZTBudmp0cWx3MXI5bWt0djgifQ.9DibR63tG-LY6FvjDLhCXg";
