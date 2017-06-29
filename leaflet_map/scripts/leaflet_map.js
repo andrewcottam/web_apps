@@ -19,9 +19,9 @@ require({
 			});
 			var map = L.map('mapid', {
 				layers: [osmlayer],
-				center: [16.02, -3.64],
+				center: [16.02, -3.54],
 				//		    center: [1, 34],
-				zoom: 10,
+				zoom: 11,
 				loadingControl: true,
 				fullscreenControl: true,
 			});
