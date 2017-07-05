@@ -15,6 +15,7 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 			includeslc: 0, //set to 1 to also include Landsat 7 imagery with SLC-offset data
 			layers: "all",
 			hideToEdge: false,
+			provider: "sentinelHub", 
 			postMixInProperties: function() {
 				if (this.leafletMap !== undefined) {
 					if (this.leafletMap.getBounds() !== undefined) {
@@ -39,7 +40,7 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 					domConstruct.place(this.domNode, win.body()); //place this widget at the top level in case it is nested in the page (e.g. in Drupal panels)
 					on(this.domNode, "mousedown", function() {
 						console.log("mousedown");
-					})
+					});
 					on(this.domNode, "mousemove", lang.hitch(this, function(evt) {
 						if (evt.buttons == 1) {
 							console.debug("dragging");
@@ -69,6 +70,15 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 			requestDates: function() {
 				this.disableSlider();
 				html.set(dom.byId("yearMonth"), "Loading dates..");
+				switch (this.provider) {
+					case "sentinelHub":
+						break;
+					case "geeImagerServer":
+						this.requestDates_geeImageServer();
+						break;
+				}
+			},
+			requestDates_geeImageServer: function(){
 				var params = {
 					srs: "EPSG:4326",
 					bbox: this.mapBounds.getWest() + "," + this.mapBounds.getSouth() + "," + this.mapBounds.getEast() + "," + this.mapBounds.getNorth(),
