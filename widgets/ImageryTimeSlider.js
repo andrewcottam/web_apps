@@ -3,19 +3,27 @@
 //  showAllYears - set to true to show tics and labels for all years even those without imagery 
 //  hideToEdge - to hide the widget to the edge of the leaflet map
 
-define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dijit/Dialog", "dijit/focus", "dojo/_base/window", "dojo/keys", "dojo/html", "dojo/date", "dojo/date/locale", "dojo/dom", "dojo/dom-style", "dojo/dom-geometry", "dojo/dom-class", "dojo/_base/array", "dojo/dom-construct", "dojo/request/script", "dojo/_base/lang", "dojo/on", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!./templates/ImageryTimeSlider.html", "dijit/form/Select", "dijit/form/NumberSpinner", "dijit/form/CheckBox", "../widgets/scripts/NonTiledLayer.js", "../widgets/scripts/NonTiledLayer.WMS.js", "../widgets/scripts/Control.Loading.js", "../widgets/scripts/L.Control.MousePosition.js", "../widgets/scripts/geeImageLayer.js"],
-	function(Evented, registry, domAttr, _WidgetsInTemplateMixin, Dialog, focusUtil, win, keys, html, date, locale, dom, domStyle, domGeom, domClass, array, domConstruct, script, lang, on, declare, _WidgetBase, _TemplatedMixin, template) {
+define(["dojo/request/xhr", "dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemplateMixin", "dijit/Dialog", "dijit/focus", "dojo/_base/window", "dojo/keys", "dojo/html", "dojo/date", "dojo/date/locale", "dojo/dom", "dojo/dom-style", "dojo/dom-geometry", "dojo/dom-class", "dojo/_base/array", "dojo/dom-construct", "dojo/request/script", "dojo/_base/lang", "dojo/on", "dojo/_base/declare", "dijit/_WidgetBase", "dijit/_TemplatedMixin", "dojo/text!./templates/ImageryTimeSlider.html", "dijit/form/Select", "dijit/form/NumberSpinner", "dijit/form/CheckBox", "../widgets/scripts/NonTiledLayer.js", "../widgets/scripts/NonTiledLayer.WMS.js", "../widgets/scripts/Control.Loading.js", "../widgets/scripts/L.Control.MousePosition.js", "../widgets/scripts/geeImageLayer.js"],
+	function(xhr, Evented, registry, domAttr, _WidgetsInTemplateMixin, Dialog, focusUtil, win, keys, html, date, locale, dom, domStyle, domGeom, domClass, array, domConstruct, script, lang, on, declare, _WidgetBase, _TemplatedMixin, template) {
 		return declare("ImageryTimeSlider", [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin, Evented], {
 			templateString: template,
 			baseClass: "imageryTimeSlider",
 			geeServerUrl: "https://geeImageServer.appspot.com",
+			sentinelHubUrlWFS: "https://services.sentinel-hub.com/v1/wfs/363b9a1a-de1b-4009-b1d2-ba935bea739e?",
+			sentinelHubUrlWMS: "https://services.sentinel-hub.com/v1/wms/363b9a1a-de1b-4009-b1d2-ba935bea739e?showLogo=false",
 			cloudMax: 10,
 			bands: "Red,Green,Blue",
 			stretch: 1,
 			includeslc: 0, //set to 1 to also include Landsat 7 imagery with SLC-offset data
 			layers: "all",
 			hideToEdge: false,
-			provider: "sentinelHub", 
+			provider: "sentinelHub",
+			unfilteredYearMonths: null,
+			_setUnfilteredYearMonthsAttr: function(value) {
+				this._set("unfilteredYearMonths", value);
+				// console.info(value);
+				this.yearMonthsSet();
+			},
 			postMixInProperties: function() {
 				if (this.leafletMap !== undefined) {
 					if (this.leafletMap.getBounds() !== undefined) {
@@ -56,7 +64,7 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 				this.mapBounds = this.leafletMap.getBounds();
 				var requestDates = true;
 				if (this.previousBounds) {
-					if (this.previousBounds.contains(this.mapBounds)) { //if we are zooming withinin the current bounds we dont need to get the imagery dates again
+					if (this.previousBounds.contains(this.mapBounds)&&(this.provider=="geeImagerServer")) { //if we are zooming within the current bounds we dont need to get the imagery dates again for the geeImageServer
 						requestDates = false;
 					}
 				}
@@ -72,13 +80,14 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 				html.set(dom.byId("yearMonth"), "Loading dates..");
 				switch (this.provider) {
 					case "sentinelHub":
+						this.requestDates_sentinelHub();
 						break;
 					case "geeImagerServer":
 						this.requestDates_geeImageServer();
 						break;
 				}
 			},
-			requestDates_geeImageServer: function(){
+			requestDates_geeImageServer: function() {
 				var params = {
 					srs: "EPSG:4326",
 					bbox: this.mapBounds.getWest() + "," + this.mapBounds.getSouth() + "," + this.mapBounds.getEast() + "," + this.mapBounds.getNorth(),
@@ -94,11 +103,45 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 						this.noDatesReturned();
 					}
 					else {
-						this.unfilteredYearMonths = response.records;
-						this.yearMonthsSet();
+						this.set("unfilteredYearMonths", response.records);
 					}
 				}), function(error) {
 					console.log(error);
+				});
+			},
+			requestDates_sentinelHub: function() {
+				var params = {
+					request: "GetFeature",
+					srsname: "EPSG:4326",
+					bbox: this.mapBounds.getSouth() + "," + this.mapBounds.getWest() + "," + this.mapBounds.getNorth() + "," + this.mapBounds.getEast(),
+					time: "1984-01-01/2020-01-01", //TODO hard-coded with 2020 for now
+					typenames: "TILE",
+					maxcc: this.cloudMax,
+					outputformat: "application/json",
+				};
+				xhr(this.sentinelHubUrlWFS, {
+					query: params,
+					handleAs: "json",
+					sync: true,
+					headers: {
+						"X-Requested-With": null
+					},
+				}).then(lang.hitch(this, function(response) {
+					var yearMonths = [];
+					if (response.features.length > 0) {
+						array.forEach(response.features, function(feature) {
+							var yearMonth = feature.properties.date.substr(0, 7); //"2017-01"
+							if (yearMonths.indexOf(yearMonth) == -1) {
+								yearMonths.push(yearMonth);
+							}
+						});
+						this.set("unfilteredYearMonths", yearMonths.reverse());
+					}
+					else {
+						this.noDatesReturned();
+					}
+				}), function(err) {
+					alert("Unable to get data from WFS");
 				});
 			},
 			yearMonthsSet: function() { //the yearMonths may need filtering by month
@@ -186,6 +229,7 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 				}
 			},
 			requestImagery: function(yearMonth) {
+				var wmsParams;
 				html.set(dom.byId("yearMonth"), "Loading image..");
 				this.disableSlider();
 				var yearPart = Number(yearMonth.substring(0, 4));
@@ -199,6 +243,36 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 					selector: "date",
 					datePattern: "yyyy-MM-dd"
 				});
+				switch (this.provider) {
+					case "sentinelHub":
+						wmsParams = this.getParams_sentinelHub(startDateF, endDateF);
+						if (!this.imageLayer) {
+							this.imageLayer = L.tileLayer.wms(this.sentinelHubUrlWMS, wmsParams);
+							this.addLayer(this.imageLayer);
+						}
+						else {
+							this.imageLayer.setParams(wmsParams);
+						}
+						break;
+					case "geeImagerServer":
+						wmsParams = this.getParams_geeImageServer(startDateF, endDateF);
+						if (!this.imageLayer) { //add the layer if it is not already present
+							this.imageLayer = new geeImageLayer(this.geeServerUrl + "/ogc", wmsParams);
+							this.addLayer(this.imageLayer);
+						}
+						else {
+							this.imageLayer.setParams(wmsParams);
+						}
+						break;
+				}
+			},
+			addLayer: function(layer) {
+				on(layer, "load", lang.hitch(this, function(response) {
+					this.enableSlider(); //enable the slider when the image has loaded
+				}));
+				this.leafletMap.addLayer(layer);
+			},
+			getParams_geeImageServer: function(startDateF, endDateF) {
 				var wmsParams = {
 					layers: this.layers,
 					startDate: startDateF,
@@ -208,16 +282,23 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 					stretch: this.stretch,
 					includeslc: this.includeslc,
 				};
-				if (!this.geeImageLayer) { //add the layer if it is not already present
-					this.geeImageLayer = new geeImageLayer(this.geeServerUrl + "/ogc", wmsParams);
-					on(this.geeImageLayer, "load", lang.hitch(this, function(response) {
-						this.enableSlider(); //enable the slider when the image has loaded
-					}));
-					this.leafletMap.addLayer(this.geeImageLayer);
-				}
-				else {
-					this.geeImageLayer.setParams(wmsParams);
-				}
+				return wmsParams;
+			},
+			getParams_sentinelHub: function(startDateF, endDateF) {
+				var wmsParams = {
+					attribution: '&copy; <a href="http://www.sentinel-hub.com/" target="_blank">Sentinel Hub</a>',
+					layers: 'TRUE_COLOR,OUTLINE,DATE',
+					time: startDateF + "/" + endDateF + "/P1D",
+					tileSize: 512,
+					atmFilter: 'ATMCOR',
+					gain: this.stretch,
+					priority: 'leastCC',
+					maxcc: this.cloudMax,
+					preview: 0, //dont use pyramids
+					// preview: 2, //use pre-generated pyramides when zoomed out
+					bgcolor: "#cccccc",
+				};
+				return wmsParams;
 			},
 			formatYearMonth: function(yearMonth) { //gets the formatted year month from a yearMonth, e.g. 2004-06 -> June 2004
 				var yearPart = Number(yearMonth.substring(0, 4));
@@ -303,18 +384,18 @@ define(["dojo/Evented", "dijit/registry", "dojo/dom-attr", "dijit/_WidgetsInTemp
 					domStyle.set("showImg", "display", "block");
 					domStyle.set("showImg", "left", mapGeom.x + mapGeom.w - 16 + "px");
 					domStyle.set("showImg", "top", mapGeom.y + mapGeom.h - 66 + "px");
-					this.leafletMap.removeLayer(this.geeImageLayer); //remove the layer from the map
+					this.leafletMap.removeLayer(this.imageLayer); //remove the layer from the map
 				}
 				else {
-					this.leafletMap.removeLayer(this.geeImageLayer); //remove the layer from the map
-					delete this.geeImageLayer;
+					this.leafletMap.removeLayer(this.imageLayer); //remove the layer from the map
+					delete this.imageLayer;
 				}
 				this.emit("hideImageryTimeSlider");
 			},
 			show: function() {
 				domStyle.set("showImg", "display", "none");
 				domStyle.set(this.domNode, "display", "block");
-				this.geeImageLayer && this.leafletMap.addLayer(this.geeImageLayer); //add the layer if it is currently hidden
+				this.imageLayer && this.leafletMap.addLayer(this.imageLayer); //add the layer if it is currently hidden
 				this.mapBoundsChanged(); //this will make the call to get the dates
 			},
 			disableSlider: function() {

@@ -80,7 +80,8 @@ require({
 				photoViewer.startup();
 				var imageryTimeSlider = new ImageryTimeSlider({
 					leafletMap: map,
-					provider: "geeImagerServer",
+					// provider: "geeImagerServer",
+					provider: "sentinelHub",
 					hideToEdge: true
 				}, "ImageryTimeSliderDiv");
 				imageryTimeSlider.startup();
