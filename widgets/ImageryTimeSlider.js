@@ -239,7 +239,7 @@ define(["dojo/request/xhr", "dojo/Evented", "dijit/registry", "dojo/dom-attr", "
 					selector: "date",
 					datePattern: "yyyy-MM-dd"
 				}); //in JavaScript, counting of months starts at 0
-				var endDateF = locale.format(date.add(startDate, "month", 1), {
+				var endDateF = locale.format(date.add(startDate,"day",date.getDaysInMonth(startDate)-1), {
 					selector: "date",
 					datePattern: "yyyy-MM-dd"
 				});
@@ -292,9 +292,11 @@ define(["dojo/request/xhr", "dojo/Evented", "dijit/registry", "dojo/dom-attr", "
 					tileSize: 512,
 					atmFilter: 'ATMCOR',
 					gain: this.stretch,
-					priority: 'leastCC',
+					priority: 'mostRecent',
+					// priority: 'leastCC',
 					maxcc: this.cloudMax,
-					preview: 0, //dont use pyramids
+					transparent: 1,
+					preview: 0, //don't use pyramids
 					// preview: 2, //use pre-generated pyramides when zoomed out
 					bgcolor: "#cccccc",
 				};
