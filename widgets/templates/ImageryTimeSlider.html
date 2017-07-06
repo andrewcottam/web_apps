@@ -23,7 +23,7 @@
 		</tr>
 	</table>
 	<div id="ImageryTimeSliderControls">
-		<table class="noBorder">
+		<table class="noBorder geeProvider">
 			<tr>
 				<td><div>Display using</div></td>
 				<td>
@@ -37,7 +37,7 @@
 				</td>
 			</tr>
 		</table>
-		<table class="noBorder">
+		<table class="noBorder geeProvider sentinelProvider">
 			<tr>
 				<td><div>Use images with &lt;</div></td>
 				<td>
@@ -50,7 +50,7 @@
 				</td>
 			</tr>
 		</table>
-		<table class="noBorder">
+		<table class="noBorder geeProvider sentinelProvider">
 			<tr>
 				<td><div>Filter by month</div></td>
 				<td>
@@ -74,7 +74,39 @@
 				</td>
 			</tr>
 		</table>
-		<table class="noBorder">
+		<table class="noBorder sentinelProvider">
+			<tr>
+				<td><div>Image sorting</div></td>
+				<td>
+					<div>
+						<select id="prioritySelector" data-dojo-type="dijit/form/Select" data-dojo-attach-event="onChange:priorityChanged">
+							<option value="mostRecent" selected="selected">Most recent on top</option>
+							<option value="leastRecent">Least recent on top</option>
+							<option value="leastCC">Least cloudy on top</option>
+							<!--<option value="leastTimeDifference">Least time difference between images</option>-->
+							<!--<option value="maximumViewingElevation">Maximum viewing elevation</option>--> <!--LOOKS LIKE THESE PARAMETERS ARE NO LONGER SUPPORTED-->
+						</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+		<table class="noBorder sentinelProvider">
+			<tr>
+				<td><div>Show resampled imagery</div></td>
+				<td>
+					<div>
+						<select id="previewSelector" data-dojo-type="dijit/form/Select" data-dojo-attach-event="onChange:previewChanged">
+							<option value="0" selected="selected">None</option>
+							<option value="1">From 200m/pixel to 1500m/pixel</option>
+							<option value="2">From 200m/pixel to global</option>
+							<!--<option value="leastTimeDifference">Least time difference between images</option>-->
+							<!--<option value="maximumViewingElevation">Maximum viewing elevation</option>--> <!--LOOKS LIKE THESE PARAMETERS ARE NO LONGER SUPPORTED-->
+						</select>
+					</div>
+				</td>
+			</tr>
+		</table>
+		<table class="noBorder geeProvider">
 			<tr>
 				<td><div>Use Sentinel 2 only</div></td>
 				<td>
@@ -84,7 +116,7 @@
 				</td>
 			</tr>
 		</table>
-		<table class="noBorder">
+		<table class="noBorder geeProvider">
 			<tr>
 				<td><div>Include stripy images</div></td>
 				<td>
@@ -93,6 +125,56 @@
 					</div>
 				</td>
 			</tr>
+		</table>
+		<table class="noBorder sentinelProvider">
+			<tr>
+				<td><div>Show image outlines</div></td>
+				<td>
+					<div>
+						<input id="showOutlinesCheckbox" data-dojo-type="dijit/form/CheckBox" data-dojo-attach-event="onChange:outlinesChanged" />
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td><div>Show image dates</div></td>
+				<td>
+					<div>
+						<input id="showDatesCheckbox" data-dojo-type="dijit/form/CheckBox" data-dojo-attach-event="onChange:datesChanged" />
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td><div>Show image IDs</div></td>
+				<td>
+					<div>
+						<input id="showIdsCheckbox" data-dojo-type="dijit/form/CheckBox" data-dojo-attach-event="onChange:idsChanged" />
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td><div>Fill areas with valid data</div></td>
+				<td>
+					<div>
+						<input id="fillCheckbox" data-dojo-type="dijit/form/CheckBox" data-dojo-attach-event="onChange:fillChanged" />
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td><div>Replace cloudy parts of image</div></td>
+				<td>
+					<div>
+						<input id="replaceCloudsCheckbox" data-dojo-type="dijit/form/CheckBox" data-dojo-attach-event="onChange:cloudCorrectionChanged" />
+					</div>
+				</td>
+			</tr>
+			<!--<tr>-->
+			<!--	<td><div>Draws the areas which are covered with clouds</div></td>-->
+			<!--	<td>-->
+			<!--		<div>-->
+			<!--			<input id="cloudsCheckbox" data-dojo-type="dijit/form/CheckBox" data-dojo-attach-event="onChange:cloudsChanged" />-->
+			<!--		</div>-->
+			<!--	</td>-->
+			<!--</tr>--> <!--LOOKS LIKE THE CLOUDS PARAMETER IS NO LONGER SUPPORTED ON SENTINEL-HUB
 		</table>
 		<div id="helpImage">
 			<img src="../widgets/images/info.png" id="info" title="Show Help" data-dojo-attach-event="onCLick:openInfo">

@@ -19,9 +19,10 @@ require({
 			});
 			var map = L.map('mapid', {
 				layers: [osmlayer],
-				center: [16.02, -3.54],
-				//		    center: [1, 34],
-				zoom: 11,
+				// center: [16.02, -3.54],//used for ages
+				center: [16.5887,-14.8975], // Podor Senegal - seasonal flooding
+				// center: [11.5265,-9.3102], // Siguiri Gold Mine in Guinea
+				zoom: 12,
 				loadingControl: true,
 				fullscreenControl: true,
 			});

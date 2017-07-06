@@ -22,7 +22,7 @@ define(["dojo/promise/all", "dojo/_base/array", "dojo/_base/declare", "dojo/requ
 				lang.mixin(params, {
 					tags: this.photoViewer.tags.join(),
 				});
-				console.log("Flickr request for: " + params.tags);
+				// console.log("Flickr request for: " + params.tags);
 				var promise1 = this.restRequest(params);
 				promise1.then(lang.hitch(this, function(response) {
 					this.tagPhotos = response.photos.photo;
@@ -40,7 +40,7 @@ define(["dojo/promise/all", "dojo/_base/array", "dojo/_base/declare", "dojo/requ
 				lang.mixin(params, {
 					text: this.photoViewer.text,
 				});
-				console.log("Flickr request for: " + params.text);
+				// console.log("Flickr request for: " + params.text);
 				var promise2 = this.restRequest(params);
 				promise2.then(lang.hitch(this, function(response) {
 					this.textPhotos = response.photos.photo;

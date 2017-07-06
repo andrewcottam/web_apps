@@ -127,7 +127,7 @@ function(Extent, Graphic, Color, SimpleLineSymbol, SimpleMarkerSymbol, GraphicsL
 					//domStyle.set(this.photoViewer.domNode.parentElement, "overflow", "auto");
 					this.photoViewer.providersLoaded = 0;
 					array.forEach(this.photoViewer.providerObjs, lang.hitch(this.photoViewer, function(providerObj) { //add the photoBoxes to the DOM
-						console.debug("Adding photos for " + providerObj.provider);
+						// console.debug("Adding photos for " + providerObj.provider);
 						array.forEach(providerObj.photoBoxes, lang.hitch(this, function(photoBox) {
 							photoBox.startup();
 							domConstruct.place(photoBox.domNode, this.domNode); //add the photo box to the photoviewer
