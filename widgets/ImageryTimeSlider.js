@@ -17,7 +17,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 			includeslc: 0, //set to 1 to also include Landsat 7 imagery with SLC-offset data
 			layers: "all",
 			hideToEdge: false,
-			provider: "sentinelProvider",
+			provider: "sentinelProvider", //default value
 			priority: "leastCC", //default value
 			preview: 0, //default value is to not show resampled imagery
 			unfilteredYearMonths: null,

@@ -58,7 +58,7 @@ require({
 			//		    transparent: true
 			//		});
 			L.control.scale().addTo(map);
-			L.control.mousePosition().addTo(map);
+			// L.control.mousePosition().addTo(map);
 			parser.parse().then(function() {
 				on(registry.byId("togglewaterlayer"), "change", function(value) {
 					(value) ? map.addLayer(transitions): map.removeLayer(transitions);
