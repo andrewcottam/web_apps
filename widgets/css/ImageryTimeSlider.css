@@ -3,7 +3,7 @@
 	padding-bottom: 6px;
 	padding-left: 10px;
 	padding-right: 6px;
-	z-index: 2147483647;
+	/*z-index: 2147483647;*/
 	background-color: rgba(255, 255, 255, 0.95);
 	border: 1px solid #CFCFCF;
 	border-radius: 4px;
@@ -191,7 +191,7 @@
 	cursor: pointer;
 	cursor: hand;
 	position: absolute;
-	z-index: 2147483647!important;
+	/*z-index: 2147483647!important;*/
 	background-color: rgba(255, 255, 255, 0.9);
 }
 

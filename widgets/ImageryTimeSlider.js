@@ -47,15 +47,28 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 						this.height = domGeom.position(this.domNode).h;
 					}
 					domStyle.set(this.domNode, "top", mapGeom.y + mapGeom.h - this.height - 50 + "px"); //5 pixels up from the bottom
-					on(this.domNode, "mousedown", function() {
-						console.log("mousedown");
-					});
-					on(this.domNode, "mousemove", lang.hitch(this, function(evt) {
-						if (evt.buttons == 1) {
-							console.debug("dragging");
-							domStyle.set(this.domNode, "left", domStyle.get(this.domNode, "left") + evt.movementX + "px");
-							domStyle.set(this.domNode, "top", domStyle.get(this.domNode, "top") + evt.movementY + "px");
-							evt.preventDefault();
+					on(this.domNode, "mousedown", lang.hitch(this, function() {
+						this.leafletMap.dragging.disable();
+						this.leafletMap.options.dragging = false;
+					}));
+					on(this.domNode, "mouseup", lang.hitch(this, function() {
+						this.leafletMap.dragging.enable();
+						this.leafletMap.options.dragging = true;
+					}));
+					on(this.domNode, "click", lang.hitch(this, function() {
+						this.leafletMap.dragging.enable();
+						this.leafletMap.options.dragging = true;
+					}));
+					on(this.leafletMap, "mousemove", lang.hitch(this, function(evt) {
+						if (!this.leafletMap.options.dragging) {
+							domStyle.set(this.domNode, "left", domStyle.get(this.domNode, "left") + evt.originalEvent.movementX + "px");
+							domStyle.set(this.domNode, "top", domStyle.get(this.domNode, "top") + evt.originalEvent.movementY + "px");
+						}
+						else { //dont move the slider with a map pan event
+							if (evt.originalEvent.buttons == 1) {
+								domStyle.set(this.domNode, "left", domStyle.get(this.domNode, "left") - evt.originalEvent.movementX + "px");
+								domStyle.set(this.domNode, "top", domStyle.get(this.domNode, "top") - evt.originalEvent.movementY + "px");
+							}
 						}
 					}));
 				}
@@ -64,18 +77,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 			},
 			mapBoundsChanged: function() { //refetch the images
 				this.mapBounds = this.leafletMap.getBounds();
-				var requestDates = true;
-				if (this.previousBounds) {
-					if (this.previousBounds.contains(this.mapBounds) && (this.provider == "geeImagerServer")) { //if we are zooming within the current bounds we dont need to get the imagery dates again for the geeImageServer
-						requestDates = false;
-					}
-				}
-				if (requestDates) {
-					if (domStyle.get("showImg", "display") == "none") { //only request dates if this imagery selector is currently visible
-						this.requestDates();
-					}
-				}
-				this.previousBounds = this.mapBounds;
+				this.requestDates();
 			},
 			showControls: function() {
 				//selects the controls for the appropriate provider and makes them visible
@@ -120,7 +122,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 				});
 			},
 			requestDates_sentinelHub: function() {
-				var bbox = this.leafletMap.getZoom() > 11 ? (this.mapBounds.getSouth() + "," + this.mapBounds.getWest() + "," + this.mapBounds.getNorth() + "," + this.mapBounds.getEast()) : (this.leafletMap.getCenter().lat-0.1).toString() + "," +  (this.leafletMap.getCenter().lng-0.1).toString() + "," + (this.leafletMap.getCenter().lat+0.1).toString() + "," +  (this.leafletMap.getCenter().lng+0.1).toString();
+				var bbox = this.leafletMap.getZoom() > 11 ? (this.mapBounds.getSouth() + "," + this.mapBounds.getWest() + "," + this.mapBounds.getNorth() + "," + this.mapBounds.getEast()) : (this.leafletMap.getCenter().lat - 0.1).toString() + "," + (this.leafletMap.getCenter().lng - 0.1).toString() + "," + (this.leafletMap.getCenter().lat + 0.1).toString() + "," + (this.leafletMap.getCenter().lng + 0.1).toString();
 				var params = {
 					request: "GetFeature",
 					srsname: "EPSG:4326",
@@ -448,7 +450,6 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 				this.emit("hideImageryTimeSlider");
 			},
 			show: function() {
-				domStyle.set("showImg", "display", "none");
 				domStyle.set(this.domNode, "display", "block");
 				this.imageLayer && this.leafletMap.addLayer(this.imageLayer); //add the layer if it is currently hidden
 				this.mapBoundsChanged(); //this will make the call to get the dates
