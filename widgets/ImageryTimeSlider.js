@@ -40,13 +40,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 				on(win.body(), "keydown", lang.hitch(this, this.keyDown)); //add handling of LEFT and RIGHT arrow presses and 
 				if (this.leafletMap) { //position the slider
 					domConstruct.place(this.domNode, this.containerPane); //place this widget into the imageryTimeSliderContainer pane
-					var mapGeom = domGeom.position(this.leafletMap.getContainer()); //get the position of the dom for the leaflet map
-					var thisGeom = domGeom.position(this.domNode); //get the position of this widgets dom
-					domStyle.set(this.domNode, "left", mapGeom.x + ((mapGeom.w - thisGeom.w) / 2) + "px"); //put it in the middle of the map
-					if (!this.height) {
-						this.height = domGeom.position(this.domNode).h;
-					}
-					domStyle.set(this.domNode, "top", mapGeom.y + mapGeom.h - this.height - 50 + "px"); //5 pixels up from the bottom
+					this.positionSlider(true, 20);
 					on(this.domNode, "mousedown", lang.hitch(this, function() {
 						this.leafletMap.dragging.disable();
 						this.leafletMap.options.dragging = false;
@@ -74,6 +68,19 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 				}
 				this.showControls(); //show the controls depending on the provider - i.e. either Sentinel-Hub or geeImageServer
 				this.show(); //this will make the initial call to get the imagery dates
+			},
+			positionSlider: function(centre, pixelsFromBottom) {
+				var mapGeom = domGeom.position(this.leafletMap.getContainer()); //get the position of the dom for the leaflet map
+				var thisGeom = domGeom.position(this.domNode); //get the position of this widgets dom
+				if (centre){
+					domStyle.set(this.domNode, "left", ((mapGeom.w - thisGeom.w) / 2) + "px"); //put it in the middle of the map	
+				}
+				if (!this.height) {
+					this.height = domGeom.position(this.domNode).h;
+				}else{
+					this.height = thisGeom.h;
+				}
+				domStyle.set(this.domNode, "top", mapGeom.h - this.height - pixelsFromBottom + "px"); //5 pixels up from the bottom
 			},
 			mapBoundsChanged: function() { //refetch the images
 				this.mapBounds = this.leafletMap.getBounds();
@@ -361,6 +368,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 				domStyle.set(dom.byId("ImageryTimeSliderControls"), "display", value);
 				var image = (domStyle.get("ImageryTimeSliderControls", "display") == "block") ? "up.png" : "down.png";
 				domAttr.set("configImg", "src", "../widgets/images/" + image);
+				this.positionSlider(false, 20);
 			},
 			bandsChanged: function(value) {
 				this.bands = value;
@@ -425,7 +433,6 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 				this.requestImagery(this.yearMonth);
 			},
 			openInfo: function() {
-				domClass.add(win.body(), "claro");
 				var infoDialog = new Dialog({
 					title: "Information",
 					href: "../widgets/resources/imageControllerInfo.html",
