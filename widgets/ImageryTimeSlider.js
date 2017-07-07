@@ -30,24 +30,23 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 				if (this.leafletMap !== undefined) {
 					if (this.leafletMap.getBounds() !== undefined) {
 						on.pausable(this.leafletMap, "moveend", lang.hitch(this, this.mapBoundsChanged));
+						this.containerPane = this.leafletMap.createPane("imageryTimeSliderContainer");
 					}
 				}
 			},
 			postCreate: function() {
 				domClass.add(win.body(), "claro"); //give the widget the claro class in case its not in the body
-				var showImgNode = domConstruct.place("<img src='../widgets/images/left.png' id='showImg' title='Click to show imagery selector'>", win.body()); //create a node for the show imagery selector button
-				on(showImgNode, "click", lang.hitch(this, this.show)); //add handling of clicking on the show imagery selector button
 				on(dom.byId("sliderBar"), "click", lang.hitch(this, this.barClicked)); //add handling of clicking on the slider bar
 				on(win.body(), "keydown", lang.hitch(this, this.keyDown)); //add handling of LEFT and RIGHT arrow presses and 
 				if (this.leafletMap) { //position the slider
+					domConstruct.place(this.domNode, this.containerPane); //place this widget into the imageryTimeSliderContainer pane
 					var mapGeom = domGeom.position(this.leafletMap.getContainer()); //get the position of the dom for the leaflet map
 					var thisGeom = domGeom.position(this.domNode); //get the position of this widgets dom
 					domStyle.set(this.domNode, "left", mapGeom.x + ((mapGeom.w - thisGeom.w) / 2) + "px"); //put it in the middle of the map
 					if (!this.height) {
 						this.height = domGeom.position(this.domNode).h;
 					}
-					domStyle.set(this.domNode, "top", mapGeom.y + mapGeom.h - this.height - 5 + "px"); //5 pixels up from the bottom
-					domConstruct.place(this.domNode, win.body()); //place this widget at the top level in case it is nested in the page (e.g. in Drupal panels)
+					domStyle.set(this.domNode, "top", mapGeom.y + mapGeom.h - this.height - 50 + "px"); //5 pixels up from the bottom
 					on(this.domNode, "mousedown", function() {
 						console.log("mousedown");
 					});
@@ -60,7 +59,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 						}
 					}));
 				}
-				this.showControls(); //show the controls depending on the provider
+				this.showControls(); //show the controls depending on the provider - i.e. either Sentinel-Hub or geeImageServer
 				this.show(); //this will make the initial call to get the imagery dates
 			},
 			mapBoundsChanged: function() { //refetch the images
