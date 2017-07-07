@@ -1,8 +1,8 @@
 require({
-	async : true,
-	paths:{
-		widgetsPackage: "/../../widgets",
-	}
+		async : true,
+		paths:{
+			widgetsPackage: "/../../widgets",
+		}
 	}, ["dijit/form/Button", "dojo/dom", "widgetsPackage/ReferenceList", "widgetsPackage/ImageryTimeSlider", "widgetsPackage/PhotoViewer", "dojo/dom-construct", "dojo/io-query", "dojo/_base/window", "dojo/parser", "dojo/on", "dijit/registry", "dojo/ready", "dijit/form/CheckBox", "dijit/layout/BorderContainer", "dijit/layout/ContentPane"],
 	function(Button, dom, ReferenceList, ImageryTimeSlider, PhotoViewer, domConstruct, ioQuery, win, parser, on, registry, ready) {
 		ready(function() {
