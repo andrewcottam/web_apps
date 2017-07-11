@@ -16,6 +16,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 			stretch: 1,
 			includeslc: 0, //set to 1 to also include Landsat 7 imagery with SLC-offset data
 			layers: "all",
+			paneID: "imageryTimeSliderContainer",
 			hideToEdge: false,
 			provider: "sentinelProvider", //default value
 			priority: "leastCC", //default value
@@ -30,7 +31,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 				if (this.leafletMap !== undefined) {
 					if (this.leafletMap.getBounds() !== undefined) {
 						on.pausable(this.leafletMap, "moveend", lang.hitch(this, this.mapBoundsChanged));
-						this.containerPane = this.leafletMap.createPane("imageryTimeSliderContainer");
+						this.containerPane = this.leafletMap.createPane(this.paneID);
 					}
 				}
 			},
@@ -40,7 +41,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 				on(win.body(), "keydown", lang.hitch(this, this.keyDown)); //add handling of LEFT and RIGHT arrow presses and 
 				if (this.leafletMap) { //position the slider
 					domConstruct.place(this.domNode, this.containerPane); //place this widget into the imageryTimeSliderContainer pane
-					this.positionSlider(true, 20);
+					this.positionSlider(true, 20,false);
 					on(this.domNode, "mousedown", lang.hitch(this, function() {
 						this.leafletMap.dragging.disable();
 						this.leafletMap.options.dragging = false;
@@ -52,6 +53,11 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 					on(this.domNode, "click", lang.hitch(this, function() {
 						this.leafletMap.dragging.enable();
 						this.leafletMap.options.dragging = true;
+					}));
+					on(this.leafletMap, "fullscreenchange", lang.hitch(this, function() {
+						if (!this.leafletMap.isFullscreen()) {
+							this.positionSlider(true, 20,true);
+						}
 					}));
 					on(this.leafletMap, "mousemove", lang.hitch(this, function(evt) {
 						if (!this.leafletMap.options.dragging) {
@@ -69,18 +75,18 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 				this.showControls(); //show the controls depending on the provider - i.e. either Sentinel-Hub or geeImageServer
 				this.show(); //this will make the initial call to get the imagery dates
 			},
-			positionSlider: function(centre, pixelsFromBottom) {
-				var mapGeom = domGeom.position(this.leafletMap.getContainer()); //get the position of the dom for the leaflet map
-				var thisGeom = domGeom.position(this.domNode); //get the position of this widgets dom
-				if (centre){
+			positionSlider: function(centre, pixelsFromBottom,reset) {
+				var mapGeom = domGeom.position(this.leafletMap.getContainer()); //get the position and size of the element for the leaflet map
+				var thisGeom = domGeom.position(this.domNode); //get the position of this widgets element
+				var containerGeom = domGeom.position(this.domNode.parentNode); //get the position of this widgets parent element - all positions are relative to this element
+				if (centre) {
 					domStyle.set(this.domNode, "left", ((mapGeom.w - thisGeom.w) / 2) + "px"); //put it in the middle of the map	
 				}
-				if (!this.height) {
-					this.height = domGeom.position(this.domNode).h;
-				}else{
-					this.height = thisGeom.h;
+				//if the slider will be off the bottom of the map or if it hasn't been initialised, then move it
+				if (((domStyle.get(this.domNode, "top") + (containerGeom.y - mapGeom.y) + thisGeom.h) > mapGeom.h) || (domStyle.get(this.domNode, "top") == 0)||(reset)) {
+					var top = mapGeom.h - (containerGeom.y - mapGeom.y) - thisGeom.h - pixelsFromBottom;
+					domStyle.set(this.domNode, "top", top + "px");
 				}
-				domStyle.set(this.domNode, "top", mapGeom.h - this.height - pixelsFromBottom + "px"); //5 pixels up from the bottom
 			},
 			mapBoundsChanged: function() { //refetch the images
 				this.mapBounds = this.leafletMap.getBounds();
@@ -150,7 +156,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 					var yearMonths = [];
 					if (response.features.length > 0) {
 						if (response.features.length == 100) { //maximum number of features returned by WFS so we may not have all the dates
-							console.log("More than 100 features returned in the WFS call for " + params);
+							console.log("More than 100 features returned in the WFS call for this region");
 						}
 						array.forEach(response.features, function(feature) {
 							var yearMonth = feature.properties.date.substr(0, 7); //"2017-01"
@@ -368,7 +374,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 				domStyle.set(dom.byId("ImageryTimeSliderControls"), "display", value);
 				var image = (domStyle.get("ImageryTimeSliderControls", "display") == "block") ? "up.png" : "down.png";
 				domAttr.set("configImg", "src", "../widgets/images/" + image);
-				this.positionSlider(false, 20);
+				this.positionSlider(false, 20, false);
 			},
 			bandsChanged: function(value) {
 				this.bands = value;
