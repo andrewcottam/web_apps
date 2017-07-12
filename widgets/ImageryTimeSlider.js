@@ -18,6 +18,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 			layers: "all",
 			paneID: "imageryTimeSliderContainer",
 			hideToEdge: false,
+			atmCorrection: "ATMCOR", //default value
 			provider: "sentinelProvider", //default value
 			priority: "leastCC", //default value
 			preview: 0, //default value is to not show resampled imagery
@@ -333,7 +334,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 					cloudCorrection: cloudCorrection,
 					time: startDateF + "/" + endDateF + "/P1D",
 					tileSize: 512,
-					atmFilter: 'ATMCOR',
+					atmFilter: this.atmCorrection,
 					gain: this.stretch,
 					priority: this.priority,
 					maxcc: this.cloudMax,
@@ -411,6 +412,10 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 			},
 			monthChanged: function(value) {
 				this.yearMonthsSet();
+			},
+			atmcChanged: function(value) {
+				this.atmCorrection = value;
+				this.requestImagery(this.yearMonth);
 			},
 			outlinesChanged: function(value) {
 				this.showOutlines = value;
