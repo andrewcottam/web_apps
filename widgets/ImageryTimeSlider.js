@@ -18,7 +18,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 			layers: "all",
 			paneID: "imageryTimeSliderContainer",
 			hideToEdge: false,
-			atmCorrection: "ATMCOR", //default value
+			atmCorrection: "DOS1", //default value
 			provider: "sentinelProvider", //default value
 			priority: "leastCC", //default value
 			preview: 0, //default value is to not show resampled imagery
