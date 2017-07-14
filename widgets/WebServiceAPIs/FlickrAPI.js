@@ -25,12 +25,17 @@ define(["dojo/promise/all", "dojo/_base/array", "dojo/_base/declare", "dojo/requ
 				// console.log("Flickr request for: " + params.tags);
 				var promise1 = this.restRequest(params);
 				promise1.then(lang.hitch(this, function(response) {
-					this.tagPhotos = response.photos.photo;
-					array.forEach(this.tagPhotos, function(photo) {
-						lang.mixin(photo, {
-							displayTagLogo: "block"
+					if (response.stat == 'fail') {
+						this.restError(response);
+					}
+					else {
+						this.tagPhotos = response.photos.photo;
+						array.forEach(this.tagPhotos, function(photo) {
+							lang.mixin(photo, {
+								displayTagLogo: "block"
+							});
 						});
-					});
+					}
 				}));
 				promises.push(promise1);
 			}
@@ -43,21 +48,27 @@ define(["dojo/promise/all", "dojo/_base/array", "dojo/_base/declare", "dojo/requ
 				// console.log("Flickr request for: " + params.text);
 				var promise2 = this.restRequest(params);
 				promise2.then(lang.hitch(this, function(response) {
-					this.textPhotos = response.photos.photo;
-					array.forEach(this.textPhotos, function(photo) {
-						lang.mixin(photo, {
-							displayTagLogo: "none"
+					if (response.stat == 'fail') {
+						this.restError(response);
+					}
+					else {
+						this.textPhotos = response.photos.photo;
+						array.forEach(this.textPhotos, function(photo) {
+							lang.mixin(photo, {
+								displayTagLogo: "none"
+							});
 						});
-					});
+					}
 				}));
 				promises.push(promise2);
 			}
 			//when both calls have completed, merge the photo arrays together
 			all(promises).then(lang.hitch(this, function(results) {
 				if (this.textPhotos) {
-					if (this.tagPhotos){
+					if (this.tagPhotos) {
 						this.photos = this.tagPhotos.concat(this.textPhotos);
-					}else{
+					}
+					else {
 						this.photos = this.textPhotos;
 					}
 				}
@@ -68,6 +79,9 @@ define(["dojo/promise/all", "dojo/_base/array", "dojo/_base/declare", "dojo/requ
 				});
 				this.emit("imagesLoaded");
 			}));
+		},
+		restError: function(response) {
+			alert(response.message);
 		},
 		restRequest: function(params) {
 			return script.get("https://api.flickr.com/services/rest/", {
