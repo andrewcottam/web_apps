@@ -361,7 +361,9 @@ require({
 					for (var prop in evt.layer.properties) {
 						if (omitProps.indexOf(prop) == -1) {
 							if (evt.layer.properties[prop]) {
-								text += "<div>" + evt.layer.properties[prop].substr(0, 1).toUpperCase() + evt.layer.properties[prop].substr(1) + "</div>";
+								if (typeof(evt.layer.properties[prop]) == "string") {
+									text += "<div>" + evt.layer.properties[prop].substr(0, 1).toUpperCase() + evt.layer.properties[prop].substr(1) + "</div>";
+								}
 							}
 						}
 					}
