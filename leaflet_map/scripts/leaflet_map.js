@@ -3,11 +3,9 @@ require({
 		paths: {
 			widgetsPackage: "/../../widgets",
 		}
-	}, ["dojo/dom-style", "dojo/html", "dojo/dom-construct", "dojo/_base/array", "dojo/_base/lang", "dijit/form/Button", "dojo/dom", "widgetsPackage/ReferenceList", "widgetsPackage/ImageryTimeSlider", "widgetsPackage/PhotoViewer", "dojo/dom-construct", "dojo/io-query", "dojo/_base/window", "dojo/parser", "dojo/on", "dijit/registry", "dojo/ready", "dijit/form/CheckBox", "dijit/layout/BorderContainer", "dijit/layout/ContentPane"],
-	function(domStyle, html, domConstruct, array, lang, Button, dom, ReferenceList, ImageryTimeSlider, PhotoViewer, domConstruct, ioQuery, win, parser, on, registry, ready) {
+	}, ["widgetsPackage/scripts/vectorTileLayer", "dojo/dom-style", "dojo/html", "dojo/_base/array", "dojo/_base/lang", "dijit/form/Button", "dojo/dom", "widgetsPackage/ReferenceList", "widgetsPackage/ImageryTimeSlider", "widgetsPackage/PhotoViewer", "dojo/dom-construct", "dojo/io-query", "dojo/_base/window", "dojo/parser", "dojo/on", "dijit/registry", "dojo/ready", "dijit/form/CheckBox", "dijit/layout/BorderContainer", "dijit/layout/ContentPane"],
+	function(vectorTileLayer, domStyle, html, array, lang, Button, dom, ReferenceList, ImageryTimeSlider, PhotoViewer, domConstruct, ioQuery, win, parser, on, registry, ready) {
 		ready(function() {
-			var CALLOUT_CIRCLE_RADIUS = 7;
-			var CALLOUT_LINE_LENGTH = 50;
 			var FILL_OPACITY = 0.2;
 			var OPACITY = 0.4;
 			// var FILL_OPACITY = 0;
@@ -308,69 +306,7 @@ require({
 					hideToEdge: true
 				}, "ImageryTimeSliderDiv");
 				imageryTimeSlider.startup();
-				var vectorGridLayer = L.vectorGrid.protobuf(vectorTilesUrl, openmaptilesVectorTileOptions).addTo(map);
-				vectorGridLayer.popup = domConstruct.create("div", {
-					id: "popup"
-				}, win.body());
-				vectorGridLayer.continuous = true;
-				on(vectorGridLayer, "mouseover", lang.hitch(this, function(evt) {
-					if (vectorGridLayer.continuous) {
-						showPopup(evt);
-					}
-					else {
-
-					}
-				}));
-
-				function showPopup(evt) {
-					//show the callout
-					vectorGridLayer.currentId = evt.layer.properties.id;
-					// vectorGridLayer.setFeatureStyle(evt.layer.properties.class, {
-					// 	stroke: "#ffffff",
-					// 		fill: "#ffffff",
-					// });
-					//add the circle
-					if (vectorGridLayer.circle) {
-						vectorGridLayer.circle.remove();
-						vectorGridLayer.polyline.remove();
-					}
-					vectorGridLayer.circle = L.circleMarker(evt.latlng, {
-						radius: CALLOUT_CIRCLE_RADIUS,
-						color: "white",
-						weight: 1,
-						fillOpacity: 0,
-					});
-					var p1 = evt.containerPoint;
-					var linePoints = [
-						[p1.x - CALLOUT_CIRCLE_RADIUS, p1.y],
-						[p1.x - CALLOUT_CIRCLE_RADIUS - CALLOUT_LINE_LENGTH, p1.y],
-						[p1.x - CALLOUT_CIRCLE_RADIUS - CALLOUT_LINE_LENGTH, p1.y - CALLOUT_LINE_LENGTH]
-					];
-					var latlngs = [];
-					array.forEach(linePoints, function(point) {
-						latlngs.push(map.containerPointToLatLng(point));
-					});
-					vectorGridLayer.circle.addTo(map);
-					vectorGridLayer.polyline = L.polyline(latlngs, {
-						color: 'white',
-						weight: 1,
-					}).addTo(map);
-					//show the properties
-					var text = "";
-					var omitProps = ["sort_rank", "kind_detail", "id:right", "id:left", "source", "min_zoom", "id", "osm_relation", "area", "tier", "boundary"];
-					for (var prop in evt.layer.properties) {
-						if (omitProps.indexOf(prop) == -1) {
-							if (evt.layer.properties[prop]) {
-								if (typeof(evt.layer.properties[prop]) == "string") {
-									text += "<div>" + evt.layer.properties[prop].substr(0, 1).toUpperCase() + evt.layer.properties[prop].substr(1) + "</div>";
-								}
-							}
-						}
-					}
-					html.set(dom.byId("popup"), text);
-					domStyle.set(dom.byId("popup"), "left", (evt.originalEvent.clientX - CALLOUT_CIRCLE_RADIUS - CALLOUT_LINE_LENGTH - (domStyle.get(dom.byId("popup"), "width") / 2) - 20) + "px"); //20 for padding
-					domStyle.set(dom.byId("popup"), "top", (evt.originalEvent.clientY - CALLOUT_LINE_LENGTH - domStyle.get(dom.byId("popup"), "height") - 22) + "px"); //20 for padding
-				}
+				var vectorGridLayer = L.vectorTileLayer(vectorTilesUrl, openmaptilesVectorTileOptions).addTo(map);
 			}));
 		});
 	});
