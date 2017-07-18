@@ -238,6 +238,8 @@ require({
 					}, queryObject.zoom);
 				}
 			});
+			L.control.scale().addTo(map);
+			// L.control.mousePosition().addTo(map);
 			var digitalGlobeLayer = new L.tileLayer('https://{s}.tiles.mapbox.com/v4/digitalglobe.nal0g75k/{z}/{x}/{y}.png?access_token=' + digitialGlobeApiKey, {
 				minZoom: 1,
 				maxZoom: 19,
@@ -260,7 +262,7 @@ require({
 				attribution: '<a href="https://openmaptiles.org/">&copy; esri</a>, <a href="http://www.openstreetmap.org/copyright">&copy; OpenStreetMap</a> contributors',
 				vectorTileLayerStyles: vectorTileStyling,
 				subdomains: '0123',
-				maxZoom: 14,
+				maxZoom: 16,
 				getFeatureId: function(f) {
 					return f.properties.class;
 				}
@@ -277,8 +279,6 @@ require({
 			//            styles: 'pais_class_1990',
 			//		    transparent: true
 			//		});
-			L.control.scale().addTo(map);
-			L.control.mousePosition().addTo(map);
 			parser.parse().then(lang.hitch(this, function() {
 				on(registry.byId("togglewaterlayer"), "change", function(value) {
 					(value) ? map.addLayer(transitions): map.removeLayer(transitions);
