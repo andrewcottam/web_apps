@@ -65,24 +65,22 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
         }).addTo(this._map);
         //show the properties in the popup
         var text = "";
-        var attribute = "";
         var omitProps = ["sort_rank", "kind_detail", "id:right", "id:left", "source", "min_zoom", "id", "osm_relation", "area", "tier", "boundary"]; //exclude the following properties from appearing - these are Mapzen specific
-        for (var prop in evt.layer.properties) {
-            if (omitProps.indexOf(prop) == -1) {
-                if (evt.layer.properties[prop]) {
-                    if (typeof(evt.layer.properties[prop]) == "string") {
+        for (var prop in evt.layer.properties) { //iterate through the properties of the OSM feature and populate the popup box with the values
+            if (omitProps.indexOf(prop) == -1) { //omit certain system properties
+                if (evt.layer.properties[prop]) { //check there is a value
+                    if (typeof(evt.layer.properties[prop]) == "string") { //check the value is a string
                         var _class;
+                        var value = evt.layer.properties[prop]; //get the value
                         if (prop == "kind") {
                             _class = " class='kind'";
-                            attribute = evt.layer.properties[prop];
                         }
                         else {
                             _class = "";
-                            attribute = (evt.layer.properties[prop].substr(0, 1).toUpperCase() + evt.layer.properties[prop].substr(1)).replace("_", " "); //Sentence case
+                            value = value.substr(0, 1).toUpperCase() + value.substr(1); //Sentence case
                         }
-                        // 
-                        attribute = attribute.replace("_", " ");
-                        text += "<div" + _class + ">" + attribute + "</div>";
+                        value = value.replace("_", " ");
+                        text += "<div" + _class + ">" + value + "</div>"; //write the html text with the new value in
                     }
                 }
             }
