@@ -1,0 +1,15 @@
+.popup {
+	padding: 5px 10px 5px 10px;
+	background-color: rgba(255, 255, 255, 0.9);
+	border: 1px solid rgba(255, 255, 255, 0.9);
+	font-size: 16px;
+	color: rgba(25,25,25,0.9);
+	display: inline-block;
+	white-space: nowrap;
+	position: absolute;
+	z-index: 5000000000;
+	/*to cope with full screen mode*/
+}
+.kind{
+	font-variant: small-caps;
+}
