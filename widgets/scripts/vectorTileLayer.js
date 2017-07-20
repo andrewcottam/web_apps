@@ -65,6 +65,7 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
         }).addTo(this._map);
         //show the properties in the popup
         var text = "";
+        var values = [];
         var omitProps = ["sort_rank", "kind_detail", "id:right", "id:left", "source", "min_zoom", "id", "osm_relation", "area", "tier", "boundary"]; //exclude the following properties from appearing - these are Mapzen specific
         for (var prop in evt.layer.properties) { //iterate through the properties of the OSM feature and populate the popup box with the values
             if (omitProps.indexOf(prop) == -1) { //omit certain system properties
@@ -72,15 +73,18 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
                     if (typeof(evt.layer.properties[prop]) == "string") { //check the value is a string
                         var _class;
                         var value = evt.layer.properties[prop]; //get the value
-                        if (prop == "kind") {
-                            _class = " class='kind'";
+                        if (values.indexOf(value) == -1) { //if the value doesnt already exist
+                            values.push(value); //add it to the list
+                            value = value.replace("_", " ");
+                            if (prop == "kind") {
+                                _class = " class='kind'";
+                            }
+                            else {
+                                _class = " class='attr'";
+                                value = value.substr(0, 1).toUpperCase() + value.substr(1); //Sentence case
+                            }
+                            text += "<div" + _class + ">" + value + "</div>"; //write the html text with the new value in
                         }
-                        else {
-                            _class = "";
-                            value = value.substr(0, 1).toUpperCase() + value.substr(1); //Sentence case
-                        }
-                        value = value.replace("_", " ");
-                        text += "<div" + _class + ">" + value + "</div>"; //write the html text with the new value in
                     }
                 }
             }
