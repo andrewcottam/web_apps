@@ -6,7 +6,6 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
     },
     defaultOptions: {
         continuous: true,
-        callOut: false,
     },
     initialize: function(url, tileoptions, options) {
         L.VectorGrid.Protobuf.prototype.initialize.call(this, url, tileoptions);
@@ -40,20 +39,28 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
         }
         this._map.popup = L.DomUtil.create("div", "popup"); //create the popup
         this._map.getPanes().overlayPane.appendChild(this._map.popup); //append it to the overlay pane
+        //get the properties for the popup
+        var text = this.getPopupText(evt);
+        this._map.popup.innerHTML = text; //set the html of the popup
+        var popupWidth = Number(L.DomUtil.getStyle(this._map.popup, "width").replace("px", "")) + Number(L.DomUtil.getStyle(this._map.popup, "padding-left").replace("px", "")) + Number(L.DomUtil.getStyle(this._map.popup, "padding-right").replace("px", ""));
+        var popupHeight = Number(L.DomUtil.getStyle(this._map.popup, "height").replace("px", "")) + Number(L.DomUtil.getStyle(this._map.popup, "padding-top").replace("px", "")) + Number(L.DomUtil.getStyle(this._map.popup, "padding-bottom").replace("px", ""));
+        var xSign = ((L.VectorTileLayer.CALLOUT_CIRCLE_RADIUS + L.VectorTileLayer.CALLOUT_LINE_LENGTH + popupWidth) > evt.layerPoint.x) ? 1 : -1;
+        var x = (xSign == 1) ? (evt.layerPoint.x + L.VectorTileLayer.CALLOUT_CIRCLE_RADIUS + L.VectorTileLayer.CALLOUT_LINE_LENGTH) : (evt.layerPoint.x - L.VectorTileLayer.CALLOUT_CIRCLE_RADIUS - L.VectorTileLayer.CALLOUT_LINE_LENGTH - popupWidth);
+        var y = (evt.layerPoint.y - popupHeight / 2);
+        L.DomUtil.setPosition(this._map.popup, L.point(x, y)); //position of the popup
+        //create the circle
         this._map.popup.circle = L.circleMarker(evt.latlng, {
             radius: L.VectorTileLayer.CALLOUT_CIRCLE_RADIUS,
             color: "white",
             weight: 1.5,
             fillOpacity: 0,
         });
+        //create the line
         var p1 = evt.containerPoint;
         var linePoints = [
-            [p1.x - L.VectorTileLayer.CALLOUT_CIRCLE_RADIUS, p1.y],
-            [p1.x - L.VectorTileLayer.CALLOUT_CIRCLE_RADIUS - L.VectorTileLayer.CALLOUT_LINE_LENGTH, p1.y]
+            [p1.x + (xSign * (L.VectorTileLayer.CALLOUT_CIRCLE_RADIUS)), p1.y],
+            [p1.x + (xSign * (L.VectorTileLayer.CALLOUT_CIRCLE_RADIUS + L.VectorTileLayer.CALLOUT_LINE_LENGTH)), p1.y]
         ];
-        if (this.options.callOut) {
-            linePoints.push([p1.x - L.VectorTileLayer.CALLOUT_CIRCLE_RADIUS - L.VectorTileLayer.CALLOUT_LINE_LENGTH, p1.y - L.VectorTileLayer.CALLOUT_LINE_LENGTH]);
-        }
         var latlngs = [];
         for (const point of linePoints) {
             latlngs.push(this._map.containerPointToLatLng(point));
@@ -63,7 +70,14 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
             color: 'white',
             weight: 1.5,
         }).addTo(this._map);
-        //show the properties in the popup
+    },
+    removePopup: function(evt) {
+        var map = (this instanceof L.Map) ? this : this._map;
+        L.DomUtil.remove(map.popup);
+        map.popup.circle.remove();
+        map.popup.polyline.remove();
+    },
+    getPopupText: function(evt) {
         var text = "";
         var values = [];
         var omitProps = ["sort_rank", "kind_detail", "id:right", "id:left", "source", "min_zoom", "id", "osm_relation", "area", "tier", "boundary"]; //exclude the following properties from appearing - these are Mapzen specific
@@ -89,20 +103,7 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
                 }
             }
         }
-        this._map.popup.innerHTML = text; //set the html of the popup
-        var popupWidth = Number(L.DomUtil.getStyle(this._map.popup, "width").replace("px", "")) + Number(L.DomUtil.getStyle(this._map.popup, "padding-left").replace("px", "")) + Number(L.DomUtil.getStyle(this._map.popup, "padding-right").replace("px", ""));
-        var popupHeight = Number(L.DomUtil.getStyle(this._map.popup, "height").replace("px", "")) + Number(L.DomUtil.getStyle(this._map.popup, "padding-top").replace("px", "")) + Number(L.DomUtil.getStyle(this._map.popup, "padding-bottom").replace("px", ""));
-        var widthOffset = (this.options.callOut) ? popupWidth / 2 : popupWidth;
-        var heightOffset = (this.options.callOut) ? (popupHeight + L.VectorTileLayer.CALLOUT_LINE_LENGTH) : popupHeight / 2;
-        var x = evt.layerPoint.x - L.VectorTileLayer.CALLOUT_CIRCLE_RADIUS - L.VectorTileLayer.CALLOUT_LINE_LENGTH - widthOffset; //get the x position of the popup
-        var y = evt.layerPoint.y - heightOffset; //get the y position of the popup
-        L.DomUtil.setPosition(this._map.popup, L.point(x, y)); //position of the popup
-    },
-    removePopup: function(evt) {
-        var map = (this instanceof L.Map) ? this : this._map;
-        L.DomUtil.remove(map.popup);
-        map.popup.circle.remove();
-        map.popup.polyline.remove();
+        return text;
     },
 });
 L.vectorTileLayer = function(url, tileoptions, options) {
