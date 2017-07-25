@@ -267,6 +267,26 @@ require({
 					return f.properties.class;
 				}
 			};
+
+			//our own wdpa vector tiles
+			var wdpaUrl = "https://vector-tiles-blishten.c9users.io/tiles/wdpa_africa/{z}/{x}/{y}.pbf";
+			var wdpaStyle = {
+				protected_areas: {
+					fill: true,
+					weight: 1,
+					fillColor: "rgba(99,148,69, 0.9)",
+					color: "rgba(87,131,61, 0.9)",
+				}
+			};
+			var wdpaTileOptions = {
+				rendererFactory: L.svg.tile,
+				interactive: true,
+				attribution: 'UNEP-WCMC WDPA',
+				vectorTileLayerStyles: wdpaStyle,
+				getFeatureId: function(f) {
+					return f.properties.WDPAID;
+				}
+			};
 			//normal WMS layers from lrm-maps - reprojected on the fly from 4326 to 3857
 			//		var africa_boundaries = L.tileLayer.wms("http://lrm-maps.jrc.ec.europa.eu/geoserver/acp/wms?", {
 			//		    layers: 'acp:acp-africa-countries',
@@ -307,6 +327,7 @@ require({
 				}, "ImageryTimeSliderDiv");
 				imageryTimeSlider.startup();
 				var vectorGridLayer = L.vectorTileLayer(vectorTilesUrl, openmaptilesVectorTileOptions).addTo(map);
+				var wdpaLayer = L.vectorGrid.protobuf(wdpaUrl, wdpaTileOptions).addTo(map);
 			}));
 		});
 	});

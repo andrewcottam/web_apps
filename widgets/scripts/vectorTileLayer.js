@@ -54,7 +54,7 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
             color: "white",
             weight: 1.5,
             fillOpacity: 0,
-        });
+        }).addTo(this._map);
         //create the line
         var p1 = evt.containerPoint;
         var linePoints = [
@@ -65,7 +65,6 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
         for (const point of linePoints) {
             latlngs.push(this._map.containerPointToLatLng(point));
         }
-        this._map.popup.circle.addTo(this._map);
         this._map.popup.polyline = L.polyline(latlngs, {
             color: 'white',
             weight: 1.5,
