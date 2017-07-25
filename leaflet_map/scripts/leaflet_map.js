@@ -283,22 +283,12 @@ require({
 				interactive: true,
 				attribution: 'UNEP-WCMC WDPA',
 				vectorTileLayerStyles: wdpaStyle,
+				subdomains: '0123',
+				maxZoom: 16,
 				getFeatureId: function(f) {
 					return f.properties.WDPAID;
 				}
 			};
-			//normal WMS layers from lrm-maps - reprojected on the fly from 4326 to 3857
-			//		var africa_boundaries = L.tileLayer.wms("http://lrm-maps.jrc.ec.europa.eu/geoserver/acp/wms?", {
-			//		    layers: 'acp:acp-africa-countries',
-			//		    format: 'image/png',
-			//		    transparent: true
-			//		});
-			//		var pais = L.tileLayer.wms("http://lrm-maps.jrc.ec.europa.eu/geoserver/pais/wms?", {
-			//		    layers: 'pais:validated_segments',
-			//		    format: 'image/png',
-			//            styles: 'pais_class_1990',
-			//		    transparent: true
-			//		});
 			parser.parse().then(lang.hitch(this, function() {
 				on(registry.byId("togglewaterlayer"), "change", function(value) {
 					(value) ? map.addLayer(transitions): map.removeLayer(transitions);
@@ -327,7 +317,7 @@ require({
 				}, "ImageryTimeSliderDiv");
 				imageryTimeSlider.startup();
 				var vectorGridLayer = L.vectorTileLayer(vectorTilesUrl, openmaptilesVectorTileOptions).addTo(map);
-				var wdpaLayer = L.vectorGrid.protobuf(wdpaUrl, wdpaTileOptions).addTo(map);
+				var wdpaLayer = L.vectorTileLayer(wdpaUrl, wdpaTileOptions).addTo(map);
 			}));
 		});
 	});
