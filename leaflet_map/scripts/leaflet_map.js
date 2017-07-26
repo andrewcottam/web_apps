@@ -317,7 +317,9 @@ require({
 				}, "ImageryTimeSliderDiv");
 				imageryTimeSlider.startup();
 				var vectorGridLayer = L.vectorTileLayer(vectorTilesUrl, openmaptilesVectorTileOptions).addTo(map);
-				var wdpaLayer = L.vectorTileLayer(wdpaUrl, wdpaTileOptions).addTo(map);
+				var wdpaLayer = L.vectorTileLayer(wdpaUrl, wdpaTileOptions, {
+					"kind": "Protected area"
+				}).addTo(map);
 			}));
 		});
 	});

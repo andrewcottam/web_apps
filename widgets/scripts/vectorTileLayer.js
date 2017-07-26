@@ -78,32 +78,66 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
     },
     getPopupText: function(evt) {
         var text = "";
-        var values = [];
-        var omitProps = ["sort_rank", "kind_detail", "id:right", "id:left", "source", "min_zoom", "id", "osm_relation", "area", "tier", "boundary"]; //exclude the following properties from appearing - these are Mapzen specific
-        for (var prop in evt.layer.properties) { //iterate through the properties of the OSM feature and populate the popup box with the values
+        var properties = [];
+        var propertyNames = [];
+        var omitProps = ["sort_rank", "kind_detail", "id:right", "id:left", "source", "min_zoom", "id", "osm_relation", "area", "tier", "boundary", "ISO3"]; //exclude the following properties from appearing - these are Mapzen specific
+        //add the kind property if it has been passed in as an option in the constructor
+        if (this.options.hasOwnProperty("kind")) {
+            evt.layer.properties.kind = this.options.kind;
+        }
+        for (var prop in evt.layer.properties) { //iterate through the properties of the OSM feature and populate the properties that are valid and that we want to show
             if (omitProps.indexOf(prop) == -1) { //omit certain system properties
                 if (evt.layer.properties[prop]) { //check there is a value
                     if (typeof(evt.layer.properties[prop]) == "string") { //check the value is a string
-                        var _class;
-                        var value = evt.layer.properties[prop]; //get the value
-                        if (values.indexOf(value) == -1) { //if the value doesnt already exist
-                            values.push(value); //add it to the list
-                            value = value.replace("_", " ");
-                            if (prop == "kind") {
-                                _class = " class='kind'";
-                            }
-                            else {
-                                _class = " class='attr'";
-                                value = value.substr(0, 1).toUpperCase() + value.substr(1); //Sentence case
-                            }
-                            text += "<div" + _class + ">" + value + "</div>"; //write the html text with the new value in
+                        if (Object.values(properties).indexOf(evt.layer.properties[prop]) == -1) { //check that we havent already got the value
+                            properties[prop] = evt.layer.properties[prop];
+                            propertyNames.push(prop);
                         }
                     }
                 }
             }
         }
+        //order the property names
+        this.moveElementToStart(propertyNames, "NAME");
+        this.moveElementToStart(propertyNames, "name");
+        this.moveElementToStart(propertyNames, "kind");
+        for (let prop of propertyNames) { //iterate through the properties that we want to show and build the html for the popup
+            var _class = " class='attr'";
+            var value = properties[prop]; //get the value
+            value = value.replace("_", " "); //replace any underscores
+            switch (prop) {
+                case "kind":
+                    _class = " class='kind'";
+                    break;
+                case "NAME":
+                case "name":
+                    _class = " class='name'";
+                    break;
+                case "DESIG":
+                    value = "Designation: " + value;
+                    break;
+                case "IUCN_CAT":
+                    value = "IUCN Category: " + value;
+                    break;
+                case "STATUS":
+                    value = "Status: " + value;
+                    break;
+                default:
+                    value = value.substr(0, 1).toUpperCase() + value.substr(1); //Sentence case
+                    break;
+            }
+            text += "<div" + _class + ">" + value + "</div>"; //write the html text with the new value in
+        }
         return text;
     },
+    moveElementToStart: function(array, propertyName) {
+        var pos = array.indexOf(propertyName);
+        if (pos) {
+            array.unshift(array[pos]);
+            array.splice(pos + 1, 1);
+        }
+        return array;
+    }
 });
 L.vectorTileLayer = function(url, tileoptions, options) {
     return new L.VectorTileLayer(url, tileoptions, options);
