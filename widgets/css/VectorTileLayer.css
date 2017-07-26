@@ -17,3 +17,16 @@
 .attr {
 	font-size: 12px;
 }
+
+
+/*THE FOLLOWING DECLARATIONS ARE HACKS TO SUPPORT HAVING MORE THAN ONE VECTOR TILE LAYER IN A MAP
+Normally in the L.VectorGrid.Protobuf class SVG elements which have the 'pointer-events: auto' set at the element level which blocks any events triggering in the layers beneath (as the SVG elements are 256x256 in size)
+If you set it to none in the SVG but visible in the PATH element then it works*/
+
+svg {
+	pointer-events: none !important;
+}
+
+path {
+	pointer-events: visible !important;
+}
