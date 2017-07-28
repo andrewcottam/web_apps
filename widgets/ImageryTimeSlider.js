@@ -172,7 +172,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 						this.noDatesReturned();
 					}
 				}), function(err) {
-					console.log("Unable to get data from WFS");
+					console.log("Unable to get data from WFS: " + err);
 				});
 			},
 			yearMonthsSet: function() { //the yearMonths may need filtering by month

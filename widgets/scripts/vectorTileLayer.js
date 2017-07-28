@@ -30,16 +30,12 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
     },
     showPopup: function(evt) {
         //show the callout
-        // this.setFeatureStyle(evt.layer.properties.class, {
-        // 	stroke: "#ffffff",
-        // 		fill: "#ffffff",
-        // });
         if (this._map.popup) {
             this.removePopup(evt);
         }
         this._map.popup = L.DomUtil.create("div", "popup"); //create the popup
         this._map.getPanes().overlayPane.appendChild(this._map.popup); //append it to the overlay pane
-        //get the properties for the popup
+        //get the text for the popup
         var text = this.getPopupText(evt);
         this._map.popup.innerHTML = text; //set the html of the popup
         var popupWidth = Number(L.DomUtil.getStyle(this._map.popup, "width").replace("px", "")) + Number(L.DomUtil.getStyle(this._map.popup, "padding-left").replace("px", "")) + Number(L.DomUtil.getStyle(this._map.popup, "padding-right").replace("px", ""));

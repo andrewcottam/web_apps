@@ -3,8 +3,8 @@ require({
 		paths: {
 			widgetsPackage: "/../../widgets",
 		}
-	}, ["widgetsPackage/scripts/vectorTileLayer", "dojo/dom-style", "dojo/html", "dojo/_base/array", "dojo/_base/lang", "dijit/form/Button", "dojo/dom", "widgetsPackage/ReferenceList", "widgetsPackage/ImageryTimeSlider", "widgetsPackage/PhotoViewer", "dojo/dom-construct", "dojo/io-query", "dojo/_base/window", "dojo/parser", "dojo/on", "dijit/registry", "dojo/ready", "dijit/form/CheckBox", "dijit/layout/BorderContainer", "dijit/layout/ContentPane"],
-	function(vectorTileLayer, domStyle, html, array, lang, Button, dom, ReferenceList, ImageryTimeSlider, PhotoViewer, domConstruct, ioQuery, win, parser, on, registry, ready) {
+	}, ["widgetsPackage/scripts/vectorTileLayer", "dojo/dom-style", "dojo/html", "dojo/_base/array", "dojo/_base/lang", "dijit/form/Button", "dojo/dom", "widgetsPackage/ReferenceList", "widgetsPackage/ImageryTimeSlider", "widgetsPackage/PhotoViewer", "dojo/dom-construct", "dojo/io-query", "dojo/_base/window",  "dojo/on", "dijit/registry", "dojo/ready", "dijit/form/CheckBox", "dijit/layout/BorderContainer", "dijit/layout/ContentPane"],
+	function(vectorTileLayer, domStyle, html, array, lang, Button, dom, ReferenceList, ImageryTimeSlider, PhotoViewer, domConstruct, ioQuery, win, on, registry, ready) {
 		ready(function() {
 			var FILL_OPACITY = 0.2;
 			var OPACITY = 0.4;
@@ -269,7 +269,8 @@ require({
 			};
 
 			//our own wdpa vector tiles
-			var wdpaUrl = "https://vector-tiles-blishten.c9users.io/tiles/wdpa_africa/{z}/{x}/{y}.pbf";
+			// var wdpaUrl = "https://vector-tiles-blishten.c9users.io/tiles/wdpa_africa/{z}/{x}/{y}.pbf"; //from cloud9
+			var wdpaUrl = "https://storage.googleapis.com/geeimageserver.appspot.com/vectorTiles/wdpa_africa/{z}/{x}/{y}.pbf"; //from google cloud storage
 			var wdpaStyle = {
 				protected_areas: {
 					fill: true,
@@ -289,7 +290,6 @@ require({
 					return f.properties.WDPAID;
 				}
 			};
-			parser.parse().then(lang.hitch(this, function() {
 				on(registry.byId("togglewaterlayer"), "change", function(value) {
 					(value) ? map.addLayer(transitions): map.removeLayer(transitions);
 				});
@@ -320,7 +320,6 @@ require({
 				var wdpaLayer = L.vectorTileLayer(wdpaUrl, wdpaTileOptions, {
 					"kind": "Protected area"
 				}).addTo(map);
-			}));
 		});
 	});
 
