@@ -1,4 +1,14 @@
 /*global L*/
+L.Control.providerSwitcher = L.Control.extend({
+    onAdd: function(map) {
+        map.providerSwitcher = L.DomUtil.create('div');
+        map.providerSwitcher.innerHTML = "<div><div><input type='radio' name='provider' checked>openmaps.org</input></div><div><input type='radio' name='provider'>MapBox</input></div><div><input type='radio' name='provider'>MapZen</input></div></div>";
+        return map.providerSwitcher;
+    },
+    onRemove: function(map) {
+        // Nothing to do here
+    }
+});
 L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
     statics: {
         CALLOUT_CIRCLE_RADIUS: 7,
@@ -6,6 +16,7 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
     },
     defaultOptions: {
         continuous: true,
+        showProviderSwitcher: false,
     },
     initialize: function(url, tileoptions, options) {
         L.VectorGrid.Protobuf.prototype.initialize.call(this, url, tileoptions);
@@ -14,6 +25,11 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
     },
     onAdd: function(map) {
         L.VectorGrid.Protobuf.prototype.onAdd.call(this, map);
+        //add a provider switcher if specified in the constructor
+        if (this.options.showProviderSwitcher) {
+            this.providerSwitcher = new L.Control.providerSwitcher();
+            this.providerSwitcher.addTo(map);
+        }
         //event to capture the mouse over on this layer
         map.on("movestart", this.removePopup);
         this.on("mouseover", function(evt) {

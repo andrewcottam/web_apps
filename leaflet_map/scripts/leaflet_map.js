@@ -270,7 +270,7 @@ require({
 
 			//our own wdpa vector tiles
 			// var wdpaUrl = "https://vector-tiles-blishten.c9users.io/tiles/wdpa_africa/{z}/{x}/{y}.pbf"; //from cloud9
-			var wdpaUrl = "https://storage.googleapis.com/geeimageserver.appspot.com/vectorTiles/wdpa_africa/{z}/{x}/{y}.pbf"; //from google cloud storage
+			var wdpaUrl = "https://storage.googleapis.com/geeimageserver.appspot.com/wdpa_africa/{z}/{x}/{y}.pbf"; //from google cloud storage
 			var wdpaStyle = {
 				protected_areas: {
 					fill: true,
@@ -309,13 +309,13 @@ require({
 					accuracy: 4,
 				}, "photos"); //tags are an array, e.g. tags: ["biopama"], text is a string, e.g. text: "landscape"
 				photoViewer.startup();
-				var imageryTimeSlider = new ImageryTimeSlider({
-					leafletMap: map,
-					// provider: "geeImagerServer",
-					provider: "sentinelHub",
-					hideToEdge: true
-				}, "ImageryTimeSliderDiv");
-				imageryTimeSlider.startup();
+				// var imageryTimeSlider = new ImageryTimeSlider({
+				// 	leafletMap: map,
+				// 	// provider: "geeImagerServer",
+				// 	provider: "sentinelHub",
+				// 	hideToEdge: true
+				// }, "ImageryTimeSliderDiv");
+				// imageryTimeSlider.startup();
 				var vectorGridLayer = L.vectorTileLayer(vectorTilesUrl, openmaptilesVectorTileOptions).addTo(map);
 				var wdpaLayer = L.vectorTileLayer(wdpaUrl, wdpaTileOptions, {
 					"kind": "Protected area"
