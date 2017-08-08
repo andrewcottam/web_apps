@@ -1,14 +1,4 @@
 /*global L*/
-L.Control.providerSwitcher = L.Control.extend({
-    onAdd: function(map) {
-        map.providerSwitcher = L.DomUtil.create('div');
-        map.providerSwitcher.innerHTML = "<div><div><input type='radio' name='provider' checked>openmaps.org</input></div><div><input type='radio' name='provider'>MapBox</input></div><div><input type='radio' name='provider'>MapZen</input></div></div>";
-        return map.providerSwitcher;
-    },
-    onRemove: function(map) {
-        // Nothing to do here
-    }
-});
 L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
     statics: {
         CALLOUT_CIRCLE_RADIUS: 7,
@@ -16,7 +6,6 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
     },
     defaultOptions: {
         continuous: true,
-        showProviderSwitcher: false,
     },
     initialize: function(url, tileoptions, options) {
         L.VectorGrid.Protobuf.prototype.initialize.call(this, url, tileoptions);
@@ -25,11 +14,6 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
     },
     onAdd: function(map) {
         L.VectorGrid.Protobuf.prototype.onAdd.call(this, map);
-        //add a provider switcher if specified in the constructor
-        if (this.options.showProviderSwitcher) {
-            this.providerSwitcher = new L.Control.providerSwitcher();
-            this.providerSwitcher.addTo(map);
-        }
         //event to capture the mouse over on this layer
         map.on("movestart", this.removePopup);
         this.on("mouseover", function(evt) {
@@ -40,9 +24,28 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
                 //TODO implement timed popups 
             }
         });
+        var el = this.getContainer();
+        var id;
+        switch (this._url) {
+            case "https://free-{s}.tilehosting.com/data/v3/{z}/{x}/{y}.pbf.pict?key=UmmATPUongHdDmIicgs7":
+                id = "openmapsLayer";
+                break;
+            case "https://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v7/{z}/{x}/{y}.mvt?access_token=pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg":
+                id = "mapboxLayer";
+                break;
+            case "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt?api_key=vector-tiles-VyYjZGS":
+                id = "mapzenLayer";
+                break;
+            case "https://basemaps.arcgis.com/v1/arcgis/rest/services/World_Basemap/VectorTileServer/tile/{z}/{x}/{y}.pbf":
+                id = "esriLayer";
+                break;
+            default:
+                id = "customVectorTileLayer";
+        }
+        L.DomUtil.addClass(el, id);
     },
     onRemove: function(map) {
-
+        L.VectorGrid.Protobuf.prototype.onRemove.call(this, map);
     },
     showPopup: function(evt) {
         //show the callout
