@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>BioPAMA Conservation Planning Tools</title>
+    <!--STYLESHEETS-->
+    <link rel="stylesheet" type="text/css" href="leaflet/leaflet.css" />
+    <link rel="stylesheet" type="text/css" href="styles/leaflet.fullscreen.css" />
+    <link rel="stylesheet" type="text/css" href="../widgets/css/VectorTileLayer.css" />
+    <!--SCRIPT FILES-->
+    <script type="text/javascript" src="dojo/dojo.js" data-dojo-config="async:true"></script>
+    <!--INLINE SCRIPT-->
+    <script>
+        /*global L*/
+        require(["scripts/mainUI"], function(MainUI) {
+            var mainUI = new MainUI();
+            mainUI.createMap(16.5887, -14.8975, 12);
+            //global surface water dataset
+            // var options = {
+            //     format: "image/png",
+            //     maxZoom: 13,
+            //     errorTileUrl: "https://storage.googleapis.com/global-surface-water/downloads_ancillary/blank.png",
+            //     attribution: "<a href='https://global-surface-water.appspot.com/'>© 2016 EC JRC/Google</a>"
+            // };
+            // mainUI.addTileLayer("https://storage.googleapis.com/global-surface-water/maptiles/transitions/{z}/{x}/{y}.png", options);
+            var FILL_OPACITY = 0.2;
+            var OPACITY = 0.4;
+            var vectorTileStyling = {
+                water: {
+                    fill: true,
+                    weight: 1,
+                    fillColor: '#06cccc',
+                    color: '#06cccc',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY,
+                },
+                boundaries: function(properties, zoom) {
+                    var style;
+                    switch (properties.kind_detail) {
+                        case 8:
+                            style = {
+                                weight: 100,
+                                fillColor: 'pink',
+                                color: 'pink',
+                                fillOpacity: FILL_OPACITY,
+                                opacity: OPACITY
+                            };
+                            break;
+                        default:
+                            style = {
+                                weight: 1,
+                                fillColor: 'pink',
+                                color: 'pink',
+                                fillOpacity: FILL_OPACITY,
+                                opacity: OPACITY
+                            };
+                            break;
+                    }
+                    return style;
+                },
+                waterway: {
+                    weight: 1,
+                    fillColor: '#2375e0',
+                    color: '#2375e0',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY
+                },
+                landcover: {
+                    fill: true,
+                    weight: 1,
+                    fillColor: '#53e033',
+                    color: '#53e033',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY,
+                },
+                landuse: {
+                    fill: true,
+                    weight: 1,
+                    fillColor: '#e5b404',
+                    color: '#e5b404',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY
+                },
+                park: {
+                    fill: true,
+                    weight: 1,
+                    fillColor: '#84ea5b',
+                    color: '#84ea5b',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY
+                },
+                boundary: {
+                    weight: 1,
+                    fillColor: '#c545d3',
+                    color: '#c545d3',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY
+                },
+                aeroway: {
+                    weight: 1,
+                    fillColor: '#51aeb5',
+                    color: '#51aeb5',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY
+                },
+                roads: function(properties, zoom) {
+                    var style;
+                    switch (properties.kind) {
+                        case "major_road":
+                            style = {
+                                weight: 1,
+                                fillColor: '#f2b648',
+                                color: '#f2b648',
+                                fillOpacity: FILL_OPACITY,
+                                opacity: OPACITY,
+                            };
+                            break;
+                        default:
+                            style = {
+                                weight: 1,
+                                fillColor: '#f2b648',
+                                color: '#f2b648',
+                                fillOpacity: FILL_OPACITY,
+                                opacity: OPACITY,
+                            };
+                            break;
+                    }
+                    return style;
+                },
+                tunnel: { // mapbox only
+                    weight: 0.5,
+                    fillColor: '#f2b648',
+                    color: '#f2b648',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY,
+                    // 					dashArray: [4, 4]
+                },
+                bridge: { // mapbox only
+                    weight: 0.5,
+                    fillColor: '#f2b648',
+                    color: '#f2b648',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY,
+                    // 					dashArray: [4, 4]
+                },
+                transportation: { // openmaptiles only
+                    weight: 0.5,
+                    fillColor: '#f2b648',
+                    color: '#f2b648',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY,
+                    // 					dashArray: [4, 4]
+                },
+                transit: { // mapzen only
+                    weight: 0.5,
+                    fillColor: '#f2b648',
+                    color: '#f2b648',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY,
+                    // 					dashArray: [4, 4]
+                },
+                building: {
+                    fill: true,
+                    weight: 1,
+                    fillColor: '#2b2b2b',
+                    color: '#2b2b2b',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY
+                },
+                water_name: {
+                    weight: 1,
+                    fillColor: '#022c5b',
+                    color: '#022c5b',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY
+                },
+                transportation_name: {
+                    weight: 1,
+                    fillColor: '#bc6b38',
+                    color: '#bc6b38',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY
+                },
+                place: {
+                    weight: 1,
+                    fillColor: '#f20e93',
+                    color: '#f20e93',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY
+                },
+                housenumber: {
+                    weight: 1,
+                    fillColor: '#ef4c8b',
+                    color: '#ef4c8b',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY
+                },
+                poi: {
+                    weight: 1,
+                    fillColor: '#3bb50a',
+                    color: '#3bb50a',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY
+                },
+                earth: [], //added by ac on 14/7/17 so that mouse over events can occur under this layer - this turns it off
+
+                // Do not symbolize some stuff for mapbox
+                country_label: [],
+                marine_label: [],
+                state_label: [],
+                place_label: [],
+                waterway_label: [],
+                poi_label: [],
+                road_label: [],
+                housenum_label: [],
+
+
+                // Do not symbolize some stuff for openmaptiles
+                country_name: [],
+                marine_name: [],
+                state_name: [],
+                place_name: [],
+                waterway_name: [],
+                poi_name: [],
+                road_name: [],
+                housenum_name: [],
+            };
+			var vectorTilesUrl = "https://free-{s}.tilehosting.com/data/v3/{z}/{x}/{y}.pbf.pict?key=UmmATPUongHdDmIicgs7"; //openmaps.org
+			var vectorTilesUrl = "https://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v7/{z}/{x}/{y}.mvt?access_token=pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg"; //mapbox
+			var vectorTilesUrl = "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt?api_key=vector-tiles-VyYjZGS"; //mapzen
+			// var vectorTilesUrl = "https://basemaps.arcgis.com/v1/arcgis/rest/services/World_Basemap/VectorTileServer/tile/{z}/{x}/{y}.pbf"; //esri
+            var openmaptilesVectorTileOptions = {
+                rendererFactory: L.svg.tile,
+                interactive: true,
+                attribution: '<a href="https://openmaptiles.org/">&copy; esri</a>, <a href="http://www.openstreetmap.org/copyright">&copy; OpenStreetMap</a> contributors',
+                vectorTileLayerStyles: vectorTileStyling,
+                subdomains: '0123',
+                maxZoom: 16,
+                getFeatureId: function(f) {
+                    return f.properties.class;
+                }
+            };
+            L.vectorTileLayer(vectorTilesUrl, openmaptilesVectorTileOptions).addTo(mainUI.map);
+            var wdpaStyle = {
+                protected_areas: {
+                    fill: true,
+                    weight: 1,
+                    fillColor: "rgba(99,148,69, 0.9)",
+                    color: "rgba(87,131,61, 0.9)",
+                }
+            };
+            var wdpaTileOptions = {
+                rendererFactory: L.svg.tile,
+                interactive: true,
+                attribution: 'UNEP-WCMC WDPA',
+                vectorTileLayerStyles: wdpaStyle,
+                subdomains: '0123',
+                maxZoom: 16,
+                getFeatureId: function(f) {
+                    return f.properties.WDPAID;
+                }
+            };
+// 			var wdpaUrl = "https://vector-tiles-blishten.c9users.io/tiles/wdpa_africa/{z}/{x}/{y}.pbf"; //from cloud9
+			var wdpaUrl = "https://storage.googleapis.com/geeimageserver.appspot.com/wdpa_africa/{z}/{x}/{y}.pbf"; //from google cloud storage
+            L.vectorTileLayer(wdpaUrl, wdpaTileOptions, {
+                "kind": "Protected area"
+            }).addTo(mainUI.map);
+
+        });
+    </script>
+</head>
+
+<body>
+    <div id="map" style="height:600px;background:white"></div>
+</body>
+
+</html>
