@@ -2,7 +2,8 @@
 /*global vectorTileStyling*/
 require(["styles/vectorTileDefault.js", "scripts/sequentialLoader!./leaflet/leaflet.js", "scripts/sequentialLoader!./leaflet/Leaflet.fullscreen.js", "scripts/sequentialLoader!./leaflet/Leaflet.VectorGrid.bundled.min.js", "scripts/sequentialLoader!../widgets/scripts/vectorTileLayer.js"], function() {
     var vectorTileOptions = {
-        rendererFactory: L.svg.tile,
+        // rendererFactory: L.svg.tile,
+        rendererFactory: L.canvas.tile,
         interactive: true,
         attribution: '<a href="https://openmaptiles.org/"></a><a href="http://www.openstreetmap.org/copyright">&copy; OpenStreetMap</a>',
         vectorTileLayerStyles: vectorTileStyling,
@@ -42,6 +43,7 @@ require(["styles/vectorTileDefault.js", "scripts/sequentialLoader!./leaflet/leaf
         zoom: 12,
         layers: [openmapsLayer, wdpaLayer]
     });
+    L.control.scale().addTo(map);
     //objects to pass to the layers control
     var osmLayers = {
         "openmaps.org": openmapsLayer,

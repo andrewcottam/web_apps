@@ -12,6 +12,9 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
         L.Util.setOptions(this, this.defaultOptions);
         L.Util.setOptions(this, options);
     },
+    _getVectorTilePromise: function(coords){
+        return L.VectorGrid.Protobuf.prototype._getVectorTilePromise.call(this, coords);
+    },
     onAdd: function(map) {
         L.VectorGrid.Protobuf.prototype.onAdd.call(this, map);
         //event to capture the mouse over on this layer
