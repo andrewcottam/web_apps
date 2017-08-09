@@ -56,6 +56,31 @@ var vectorTileStyling = {
         fillOpacity: FILL_OPACITY,
         opacity: OPACITY
     },
+    // landuse_overlay: function(properties, zoom) { //mapbox
+    //     var style;
+    //     switch (properties.class) {
+    //         case "wetland":
+    //             style = {
+    //                 fill: true,
+    //                 weight: 1,
+    //                 fillColor: '#06cccc',
+    //                 color: '#06cccc',
+    //                 fillOpacity: FILL_OPACITY,
+    //                 opacity: OPACITY,
+    //             };
+    //             break;
+    //         default:
+    //             break;
+    //     }
+    // },
+    landuse_overlay: {
+        fill: true,
+        weight: 1,
+        fillColor: '#06cccc',
+        color: '#06cccc',
+        fillOpacity: FILL_OPACITY,
+        opacity: OPACITY,
+    },
     park: {
         fill: true,
         weight: 1,
@@ -101,6 +126,37 @@ var vectorTileStyling = {
                 break;
         }
         return style;
+    },
+    road: function(properties, zoom) { //mapbox
+        var style;
+        switch (properties.kind) {
+            case "major_road":
+                style = {
+                    weight: 1,
+                    fillColor: '#f2b648',
+                    color: '#f2b648',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY,
+                };
+                break;
+            default:
+                style = {
+                    weight: 1,
+                    fillColor: '#f2b648',
+                    color: '#f2b648',
+                    fillOpacity: FILL_OPACITY,
+                    opacity: OPACITY,
+                };
+                break;
+        }
+        return style;
+    },
+    primary: { //mapbox
+        weight: 1,
+        fillColor: '#f2b648',
+        color: '#f2b648',
+        fillOpacity: FILL_OPACITY,
+        opacity: OPACITY,
     },
     tunnel: { // mapbox only
         weight: 0.5,

@@ -1,23 +1,24 @@
 /*global L*/
 /*global vectorTileStyling*/
-require(["styles/vectorTileDefault.js", "scripts/sequentialLoader!./leaflet/leaflet.js", "scripts/sequentialLoader!./leaflet/Leaflet.fullscreen.js", "scripts/sequentialLoader!./leaflet/Leaflet.VectorGrid.bundled.min.js", "scripts/sequentialLoader!../widgets/scripts/vectorTileLayer.js"], function() {
+require(["styles/vectorTileDefault.js", "scripts/sequentialLoader!./leaflet/leaflet.js", "scripts/sequentialLoader!./leaflet/Leaflet.fullscreen.js", "scripts/sequentialLoader!./leaflet/Leaflet.VectorGrid.bundled.min.js", "scripts/sequentialLoader!../widgets/scripts/vectorTileLayer.js", "scripts/sequentialLoader!../widgets/scripts/L.Control.MousePosition.js"], function() {
     var vectorTileOptions = {
-        // rendererFactory: L.svg.tile,
-        rendererFactory: L.canvas.tile,
+        rendererFactory: L.svg.tile,
+        // rendererFactory: L.canvas.tile,
         interactive: true,
         attribution: '<a href="https://openmaptiles.org/"></a><a href="http://www.openstreetmap.org/copyright">&copy; OpenStreetMap</a>',
         vectorTileLayerStyles: vectorTileStyling,
         subdomains: '0123', //necessary for openmaps.org
-        maxZoom: 16,
+        maxNativeZoom: 14,
+        maxZoom: 19,
         getFeatureId: function(f) {
             return f.properties.class;
         }
     };
     //create the osm vector tile layers
-    var openmapsLayer = L.vectorTileLayer("https://free-{s}.tilehosting.com/data/v3/{z}/{x}/{y}.pbf.pict?key=UmmATPUongHdDmIicgs7", vectorTileOptions); //openmaps.org
-    var mapboxLayer = L.vectorTileLayer("https://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v7/{z}/{x}/{y}.mvt?access_token=pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg", vectorTileOptions); //mapbox
-    var mapzenLayer = L.vectorTileLayer("https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt?api_key=vector-tiles-VyYjZGS", vectorTileOptions); //mapzen
-    var esriLayer = L.vectorTileLayer("https://basemaps.arcgis.com/v1/arcgis/rest/services/World_Basemap/VectorTileServer/tile/{z}/{x}/{y}.pbf", vectorTileOptions); //esri
+    var openmapsLayer = L.vectorTileLayer("https://free-{s}.tilehosting.com/data/v3/{z}/{x}/{y}.pbf.pict?key=UmmATPUongHdDmIicgs7", vectorTileOptions, { debug: true }); //openmaps.org
+    var mapboxLayer = L.vectorTileLayer("https://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v7/{z}/{x}/{y}.mvt?access_token=pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg", vectorTileOptions, { debug: true }); //mapbox
+    var mapzenLayer = L.vectorTileLayer("https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt?api_key=vector-tiles-VyYjZGS", vectorTileOptions, { debug: true }); //mapzen
+    var esriLayer = L.vectorTileLayer("https://basemaps.arcgis.com/v1/arcgis/rest/services/World_Basemap/VectorTileServer/tile/{z}/{x}/{y}.pbf", vectorTileOptions, { debug: true }); //esri
     //create the wdpa vector tile layer
     var wdpaLayer = L.vectorTileLayer("https://storage.googleapis.com/geeimageserver.appspot.com/wdpa_africa/{z}/{x}/{y}.pbf", {
         rendererFactory: L.svg.tile,
@@ -41,9 +42,10 @@ require(["styles/vectorTileDefault.js", "scripts/sequentialLoader!./leaflet/leaf
     var map = L.map('map', {
         center: [16.5887, -14.8975],
         zoom: 12,
-        layers: [openmapsLayer, wdpaLayer]
+        layers: [openmapsLayer]
     });
     L.control.scale().addTo(map);
+    L.control.mousePosition().addTo(map);
     //objects to pass to the layers control
     var osmLayers = {
         "openmaps.org": openmapsLayer,
