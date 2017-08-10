@@ -1,12 +1,14 @@
 .popup {
 	padding: 5px 10px 6px 10px;
-	background-color: rgba(255, 255, 255, 0.8);
+	background-color: rgba(255, 255, 255, 1);
 	font-size: 16px;
 	color: rgba(25, 25, 25, 0.9);
 	display: inline-block;
 	white-space: nowrap;
 	position: absolute;
 	z-index: 5000000000;
+	border: 0.5px solid #aaaaaa;
+	min-width: 100px;
 	/*to cope with full screen mode*/
 }
 
@@ -28,5 +30,16 @@ svg {
 }
 
 path {
-	pointer-events: visible !important;
+	pointer-events: visiblePainted !important;
+}
+
+/*to highlight path features as you hover over them*/
+
+path:hover {
+	stroke-opacity: 1;
+	fill-opacity: 0.25;
+}
+
+.disableMouseEvents {
+	pointer-events: none !important;
 }

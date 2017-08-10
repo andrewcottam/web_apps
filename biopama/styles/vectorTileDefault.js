@@ -9,6 +9,14 @@ var vectorTileStyling = {
         fillOpacity: FILL_OPACITY,
         opacity: OPACITY,
     },
+    protected_areas: {
+        fill: true,
+        weight: 1,
+        fillColor: "#639445",
+        color: "#639445",
+        fillOpacity: FILL_OPACITY,
+        opacity: OPACITY
+    },
     boundaries: function(properties, zoom) {
         var style;
         switch (properties.kind_detail) {

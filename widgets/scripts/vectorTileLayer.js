@@ -15,9 +15,8 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
     },
     onAdd: function(map) {
         L.VectorGrid.Protobuf.prototype.onAdd.call(this, map);
-        //event to capture the mouse over on this layer
-        map.on("movestart", this.removePopup);
-        this.on("mouseover", function(evt) {
+        //mouse events
+        this.on("mousemove", function(evt) {
             if (this.options.continuous) {
                 this.showPopup(evt);
             }
@@ -25,9 +24,8 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
                 //TODO implement timed popups 
             }
         });
-        this.on("mouseout", function(evt) {
-            this.removePopup();
-        });
+        this.on("mouseout", this.removePopup);
+        this.on("click", this.handleClick);
         //get the metrics for the vector tile provider when loaded - only in debug mode
         if (this.options.debug) {
             this.on("load", this.populateLayerMetrics);
@@ -60,10 +58,11 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
     },
     showPopup: function(evt) {
         var text = "";
-        //show the callout
+        //remove the existing popup
         if (this._map.popup) {
             this.removePopup(evt);
         }
+        //show the callout
         this._map.popup = L.DomUtil.create("div", "popup"); //create the popup
         this._map.getPanes().overlayPane.appendChild(this._map.popup); //append it to the overlay pane
         if (this.options.debug) {
@@ -73,11 +72,15 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
                 text += "<td>" + prop + "</td><td>" + evt.layer.properties[prop] + "</td></tr>"; //write the html text with the new value in
             }
             this._map.popup.innerHTML = text + "</table>";
+            // evt.layer._path.style = "fill-opacity:1";
         }
         else {
             //get the text for the popup
             text = this.getPopupText(evt);
             this._map.popup.innerHTML = text; //set the html of the popup
+            //style the border of the popup
+            this._map.popup.style = "border:0.5px solid " + evt.layer.options.fillColor;
+            //position the popup
             var popupWidth = Number(L.DomUtil.getStyle(this._map.popup, "width").replace("px", "")) + Number(L.DomUtil.getStyle(this._map.popup, "padding-left").replace("px", "")) + Number(L.DomUtil.getStyle(this._map.popup, "padding-right").replace("px", ""));
             var popupHeight = Number(L.DomUtil.getStyle(this._map.popup, "height").replace("px", "")) + Number(L.DomUtil.getStyle(this._map.popup, "padding-top").replace("px", "")) + Number(L.DomUtil.getStyle(this._map.popup, "padding-bottom").replace("px", ""));
             var xSign = ((L.VectorTileLayer.CALLOUT_CIRCLE_RADIUS + L.VectorTileLayer.CALLOUT_LINE_LENGTH + popupWidth) > evt.layerPoint.x) ? 1 : -1;
@@ -87,34 +90,43 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
             //create the circle
             this._map.popup.circle = L.circleMarker(evt.latlng, {
                 radius: L.VectorTileLayer.CALLOUT_CIRCLE_RADIUS,
-                color: "white",
-                weight: 1.5,
+                color: evt.layer.options.fillColor,
+                weight: .5,
                 fillOpacity: 0,
             }).addTo(this._map);
             //create the line
-            var p1 = evt.containerPoint;
-            var linePoints = [
-                [p1.x + (xSign * (L.VectorTileLayer.CALLOUT_CIRCLE_RADIUS)), p1.y],
-                [p1.x + (xSign * (L.VectorTileLayer.CALLOUT_CIRCLE_RADIUS + L.VectorTileLayer.CALLOUT_LINE_LENGTH)), p1.y]
-            ];
-            var latlngs = [];
-            for (const point of linePoints) {
-                latlngs.push(this._map.containerPointToLatLng(point));
-            }
+            var latlngs = this.getLine(evt.containerPoint, xSign);
             this._map.popup.polyline = L.polyline(latlngs, {
-                color: 'white',
-                weight: 1.5,
+                color: evt.layer.options.fillColor,
+                weight: .5,
             }).addTo(this._map);
+            //disable mouse events for the popup otherwise it will cause the mouseout event to keep firing if it gets in the way
+            L.DomUtil.addClass(this._map.popup, "disableMouseEvents");
+            L.DomUtil.addClass(this._map.popup.circle.getElement(), "disableMouseEvents");
+            L.DomUtil.addClass(this._map.popup.polyline.getElement(), "disableMouseEvents");
         }
+    },
+    getLine: function(p, xSign) {
+        var linePoints = [
+            [p.x + (xSign * (L.VectorTileLayer.CALLOUT_CIRCLE_RADIUS)), p.y],
+            [p.x + (xSign * (L.VectorTileLayer.CALLOUT_CIRCLE_RADIUS + L.VectorTileLayer.CALLOUT_LINE_LENGTH)), p.y]
+        ];
+        var latlngs = [];
+        for (const point of linePoints) {
+            latlngs.push(this._map.containerPointToLatLng(point));
+        }
+        return latlngs;
     },
     removePopup: function(evt) {
         var map = (this instanceof L.Map) ? this : this._map;
-        L.DomUtil.remove(map.popup);
-        if (map.popup.circle) {
-            map.popup.circle.remove();
-        }
-        if (map.popup.polyline) {
-            map.popup.polyline.remove();
+        if ((map) && (map.popup)) {
+            if (map.popup.circle) {
+                map.popup.circle.remove();
+            }
+            if (map.popup.polyline) {
+                map.popup.polyline.remove();
+            }
+            L.DomUtil.remove(map.popup);
         }
     },
     getPopupText: function(evt) {
@@ -179,24 +191,23 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
         }
         return array;
     },
+    //function to summarise the vector tiles for the current map extent in terms of the number of features and the classes that they contain
     populateLayerMetrics: function(evt) {
         var uniqueValues = [];
         var count = 0;
         for (var tileName in evt.target._vectorTiles) { //iterate through the tiles and get the unique layer names
-            var tile = evt.target._vectorTiles[tileName];
-            if (tile.hasOwnProperty("_layers")) {
-                count += Object.keys(tile._layers).length;
+            var tile = evt.target._vectorTiles[tileName]; //get the tile
+            if (tile.hasOwnProperty("_layers")) { //if the tile has some geographic features
+                count += Object.keys(tile._layers).length; //increment the count of features
             }
-            if (tile.hasOwnProperty("_features")) {
-                for (var _class in tile._features) {
-                    var layer = tile._features[_class];
-                    if (layer.hasOwnProperty("layerName")) {
-                        var layerName = layer.layerName; //get the layer that the class belongs to 
-                        if (layerName != "undefined") {
-                            var uniqueValue = layerName + " | " + _class;
-                            if (Object.values(uniqueValues).indexOf(uniqueValue) == -1) { //check that we havent already got the layer
-                                uniqueValues.push(uniqueValue);
-                            }
+            if (tile.hasOwnProperty("_features")) { //features are NOT geometric features but the different classes that are assgned to specific layers, e.g. canal, farmland, hamlet, minor, primary, residential
+                for (var className in tile._features) { //each class contains a single geographic feature and has the layer name, canal->layerName = 'waterway'
+                    var classObj = tile._features[className]; //e.g. get the canal object
+                    if (classObj.hasOwnProperty("layerName")) { //layers are how the vector tiles are delivered, e.g. boundary, building, landcover
+                        var layerName = classObj.layerName; //get the layer that the class belongs to 
+                        var uniqueValue = layerName + " | " + className;
+                        if (Object.values(uniqueValues).indexOf(uniqueValue) == -1) { //check that we havent already got the layer
+                            uniqueValues.push(uniqueValue);
                         }
                     }
                 }
@@ -205,6 +216,12 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
         console.debug(this.provider + ":");
         console.debug(uniqueValues.sort());
         console.debug("Total features: " + count);
+    },
+    handleClick: function(evt) {
+        //if in debug mode the highlighted feature will be hidden
+        if (this.options.debug) {
+            evt.layer._path.style = "display: none";
+        }
     },
 });
 L.vectorTileLayer = function(url, tileoptions, options) {
