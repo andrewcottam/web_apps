@@ -15,10 +15,6 @@ require(["node_modules/leaflet-geosearch/dist/bundle.min.js", "styles/vectorTile
                 return f.properties.class;
             }
         };
-        var provider = new geoSearch.OpenStreetMapProvider();
-        provider.search({ query: "southminster"}).then(function(results){
-            console.debug(results);
-        });
         //create the osm vector tile layers
         var openmapsLayer = L.vectorTileLayer("https://free-{s}.tilehosting.com/data/v3/{z}/{x}/{y}.pbf.pict?key=UmmATPUongHdDmIicgs7", vectorTileOptions, { debug: false }); //openmaps.org
         var mapboxLayer = L.vectorTileLayer("https://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v7/{z}/{x}/{y}.mvt?access_token=pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg", vectorTileOptions, { debug: false }); //mapbox
@@ -45,6 +41,12 @@ require(["node_modules/leaflet-geosearch/dist/bundle.min.js", "styles/vectorTile
             fullscreenControl: true,
         });
         L.control.scale().addTo(map);
+        //add the search control
+        const provider = new geoSearch.OpenStreetMapProvider();
+        const searchControl = new geoSearch.GeoSearchControl({
+            provider: provider,
+        });
+        map.addControl(searchControl);
         // L.control.mousePosition().addTo(map);
         //objects to pass to the layers control
         var osmLayers = {
