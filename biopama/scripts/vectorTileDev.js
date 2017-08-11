@@ -49,7 +49,7 @@ require(["dojo/request/script", "dojo/_base/lang", "dojo/keys", "dojo/query", "d
         });
         const searchControl = new geoSearch.GeoSearchControl({
             provider: provider,
-            autoClose: true,
+            // autoClose: true, //setting this to true stops showing the Leaflet marker symbol for the location
         });
         map.addControl(searchControl);
         query("input.glass").on("keydown", function(e) {
@@ -69,13 +69,6 @@ require(["dojo/request/script", "dojo/_base/lang", "dojo/keys", "dojo/query", "d
                 });
             }
         });
-        //     if (e.keyCode == keys.ENTER) {
-        //             // if ((e.srcElement.tagName == "INPUT") && (e.srcElement.placeholder == "Enter address") && (e.key == "Enter")) {
-        //             //     provider.options.params = {
-        //             //         osm_ids: "R146656,W104393803,N240109189",
-        //             //         q: "",
-        //             //     };
-        // L.control.mousePosition().addTo(map);
         //objects to pass to the layers control
         var osmLayers = {
             "openmaps.org": openmapsLayer,
