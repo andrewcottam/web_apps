@@ -1,6 +1,9 @@
 var FILL_OPACITY = 0.2;
 var OPACITY = 0.4;
 var vectorTileStyling = {
+    place: {
+        icon: new L.Icon.Default(),
+    },
     water: {
         fill: true,
         weight: 1,
