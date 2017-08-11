@@ -1,8 +1,11 @@
+/*global L*/
 var FILL_OPACITY = 0.2;
 var OPACITY = 0.4;
 var vectorTileStyling = {
     place: {
-        icon: new L.Icon.Default(),
+        icon: new L.Icon.Default({
+            imagePath: 'leaflet/images/marker-icon.png',
+        }),
     },
     water: {
         fill: true,
@@ -223,13 +226,13 @@ var vectorTileStyling = {
         fillOpacity: FILL_OPACITY,
         opacity: OPACITY
     },
-    place: {
-        weight: 1,
-        fillColor: '#f20e93',
-        color: '#f20e93',
-        fillOpacity: FILL_OPACITY,
-        opacity: OPACITY
-    },
+    // place: {
+    //     weight: 1,
+    //     fillColor: '#f20e93',
+    //     color: '#f20e93',
+    //     fillOpacity: FILL_OPACITY,
+    //     opacity: OPACITY
+    // },
     housenumber: {
         weight: 1,
         fillColor: '#ef4c8b',

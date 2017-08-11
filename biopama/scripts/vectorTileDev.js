@@ -1,5 +1,4 @@
-/*global L*/
-/*global vectorTileStyling*/
+/*global L vectorTileStyling*/
 require(["dojo/request/script", "dojo/_base/lang", "dojo/keys", "dojo/query", "dojo/on", "node_modules/leaflet-geosearch/dist/bundle.min.js", "scripts/sequentialLoader!./leaflet/leaflet.js", "scripts/sequentialLoader!./styles/vectorTileDefault.js", "scripts/sequentialLoader!./leaflet/Leaflet.fullscreen.js", "scripts/sequentialLoader!./leaflet/Leaflet.VectorGrid.bundled.min.js", "scripts/sequentialLoader!../widgets/scripts/vectorTileLayer.js", "scripts/sequentialLoader!../widgets/scripts/L.Control.MousePosition.js"],
     function(script, lang, keys, query, on, geoSearch) {
         var vectorTileOptions = {
@@ -53,6 +52,7 @@ require(["dojo/request/script", "dojo/_base/lang", "dojo/keys", "dojo/query", "d
         });
         map.addControl(searchControl);
         query("input.glass").on("keydown", function(e) {
+            //code for handling zooming to an osm id 
             if (e.keyCode == keys.ENTER) {
                 script.get("https://nominatim.openstreetmap.org/lookup?", {
                     query: {
