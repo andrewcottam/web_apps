@@ -222,6 +222,10 @@ L.VectorTileLayer = L.VectorGrid.Protobuf.extend({
         if (this.options.debug) {
             evt.layer._path.style = "display: none";
         }
+        //log the url of the vector tile that the clicked feature belongs to
+        var c = evt.layer._renderer._tileCoord;
+        // console.debug(evt.target._url.replace("{z}", c.z).replace("{x}", c.x).replace("{y}", c.y).replace("{s}", evt.target.options.subdomains));
+        console.debug(evt.target._url.replace("{z}", c.z).replace("{x}", c.x).replace("{y}", c.y).replace("{s}", "1")); //seems to be just '1'
     },
 });
 L.vectorTileLayer = function(url, tileoptions, options) {

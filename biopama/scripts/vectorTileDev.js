@@ -1,7 +1,7 @@
 /*global L*/
 /*global vectorTileStyling*/
-require(["node_modules/leaflet-geosearch/dist/bundle.min.js", "styles/vectorTileDefault.js", "scripts/sequentialLoader!./leaflet/leaflet.js", "scripts/sequentialLoader!./leaflet/Leaflet.fullscreen.js", "scripts/sequentialLoader!./leaflet/Leaflet.VectorGrid.bundled.min.js", "scripts/sequentialLoader!../widgets/scripts/vectorTileLayer.js", "scripts/sequentialLoader!../widgets/scripts/L.Control.MousePosition.js"],
-    function(geoSearch) {
+require(["dojo/request/script", "dojo/_base/lang", "dojo/keys", "dojo/query", "dojo/on", "node_modules/leaflet-geosearch/dist/bundle.min.js", "styles/vectorTileDefault.js", "scripts/sequentialLoader!./leaflet/leaflet.js", "scripts/sequentialLoader!./leaflet/Leaflet.fullscreen.js", "scripts/sequentialLoader!./leaflet/Leaflet.VectorGrid.bundled.min.js", "scripts/sequentialLoader!../widgets/scripts/vectorTileLayer.js", "scripts/sequentialLoader!../widgets/scripts/L.Control.MousePosition.js"],
+    function(script, lang, keys, query, on, geoSearch) {
         var vectorTileOptions = {
             rendererFactory: L.svg.tile,
             // rendererFactory: L.canvas.tile,
@@ -42,11 +42,39 @@ require(["node_modules/leaflet-geosearch/dist/bundle.min.js", "styles/vectorTile
         });
         L.control.scale().addTo(map);
         //add the search control
-        const provider = new geoSearch.OpenStreetMapProvider();
+        var provider = new geoSearch.OpenStreetMapProvider({
+            params: {
+                namedetails: 1
+            }
+        });
         const searchControl = new geoSearch.GeoSearchControl({
             provider: provider,
+            autoClose: true,
         });
         map.addControl(searchControl);
+        query("input.glass").on("keydown", function(e) {
+            if (e.keyCode == keys.ENTER) {
+                script.get("https://nominatim.openstreetmap.org/lookup?", {
+                    query: {
+                        osm_ids: this.value,
+                        format: "json",
+                    },
+                    jsonp: "json_callback"
+                }).then(function(data) {
+                    if (data && data.length != 0) {
+                        map.setView([data[0].lat, data[0].lon], 17);
+                    }
+                }, function(err) {
+                    console.error(err);
+                });
+            }
+        });
+        //     if (e.keyCode == keys.ENTER) {
+        //             // if ((e.srcElement.tagName == "INPUT") && (e.srcElement.placeholder == "Enter address") && (e.key == "Enter")) {
+        //             //     provider.options.params = {
+        //             //         osm_ids: "R146656,W104393803,N240109189",
+        //             //         q: "",
+        //             //     };
         // L.control.mousePosition().addTo(map);
         //objects to pass to the layers control
         var osmLayers = {

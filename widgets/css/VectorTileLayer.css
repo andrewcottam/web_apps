@@ -37,9 +37,9 @@ path {
 
 path:hover {
 	stroke-opacity: 1;
-	fill-opacity: 0.25;
+	/*fill-opacity: 0.25;*/
 }
-
+/*used to stop mouse events in the popup causing issues when the user is moving the cursor*/
 .disableMouseEvents {
 	pointer-events: none !important;
 }
