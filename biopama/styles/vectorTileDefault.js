@@ -3,8 +3,9 @@ var FILL_OPACITY = 0.2;
 var OPACITY = 0.4;
 var vectorTileStyling = {
     place: {
-        icon: new L.Icon.Default({
-            imagePath: 'leaflet/images/marker-icon.png',
+        icon: new L.Icon({
+            iconUrl: 'leaflet/images/marker-icon.png',
+            iconSize: [25,41],
         }),
     },
     water: {

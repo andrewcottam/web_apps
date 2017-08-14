@@ -12,7 +12,7 @@
             margin: 0;
             padding: 0;
         }
-        
+
         #map {
             position: absolute;
             top: 0;
@@ -28,8 +28,8 @@
         var map = new mapboxgl.Map({
             container: 'map',
             style: 'https://openmaptiles.github.io/osm-bright-gl-style/style-cdn.json',
-            center: [15.0144, 1.6921],
-            zoom: 13
+            center: [-14.8975, 16.5887],
+            zoom: 12
         });
         map.on('click', function(e) {
             var bbox = [

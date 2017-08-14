@@ -4,7 +4,7 @@ scene:
 sources:
     jrc:
         type: MVT
-        url: https://python-blishten.c9users.io/tilemaker/tiles/wdpa_africa/{z}/{x}/{y}.pbf
+        url: https://storage.googleapis.com/geeimageserver.appspot.com/wdpa_africa/{z}/{x}/{y}.pbf
         generate_label_centroids: true
     gswd:
         type: Raster
