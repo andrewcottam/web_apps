@@ -1,0 +1,74 @@
+{
+    "version": 8,
+    "name": "Basic",
+    "metadata": {
+        "mapbox:autocomposite": true,
+        "mapbox:type": "template"
+    },
+    "center": [
+        22.27365733729755, -2.1166245462450064
+    ],
+    "zoom": 6.753700426566788,
+    "bearing": 0,
+    "pitch": 0,
+    "sources": {
+        "mapbox_streets": {
+            "type": "vector",
+            "url": "mapbox://mapbox.mapbox-streets-v7,blishten.cj6g5i3ls05f42qmwd8s4zpri-93pm1"
+        },
+        "wdpa_africa_tilemaker": {
+            "type": "vector",
+            "tiles": ["https://storage.googleapis.com/geeimageserver.appspot.com/wdpa_africa/{z}/{x}/{y}.pbf"]
+        },
+        "wdpa_africa_tippecanoe": {
+            "type": "vector",
+            "tiles": ["https://storage.googleapis.com/geeimageserver.appspot.com/vectorTiles/wdpa_africa/tilesets/{z}/{x}/{y}.pbf"],
+            "vector_layers": [{
+                "id": "wdpa_africageojson",
+                "description": "bla bla bla",
+                "source": "UNEP-WCMC",
+                "source_name": "Wibble"
+            }]
+        }
+    },
+    "sprite": "mapbox://sprites/blishten/cj6f4n2j026qf2rnunkauikjm",
+    "glyphs": "mapbox://fonts/blishten/{fontstack}/{range}.pbf",
+    "layers": [{
+            "id": "background",
+            "type": "background",
+            "paint": {
+                "background-color": "#dedede"
+            }
+        },
+        {
+            "id": "water",
+            "type": "fill",
+            "source": "mapbox_streets",
+            "source-layer": "water",
+            "paint": {
+                "fill-color": "hsla(195, 48%, 75%, 0.26)",
+                "fill-opacity": 1,
+                "fill-outline-color": "hsl(195, 48%, 75%)"
+            }
+        },
+        {
+            "id": "wdpa_africa_tippecanoe",
+            "type": "fill",
+            "source": "wdpa_africa_tippecanoe",
+            "source-layer": "wdpa_africageojson",
+            "layout": {
+                "visibility": "visible"
+            },
+            "paint": {
+                "fill-color": "rgba(99,148,69, 0.2)",
+                "fill-outline-color": "rgba(87,131,61, 0.4)"
+            }
+        }
+    ],
+    "created": "2017-08-16T14:43:19.318Z",
+    "id": "cj6f4n2j026qf2rnunkauikjm",
+    "modified": "2017-08-17T14:09:59.833Z",
+    "owner": "blishten",
+    "visibility": "private",
+    "draft": false
+}

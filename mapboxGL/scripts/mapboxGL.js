@@ -15,7 +15,7 @@ require(["dojo/_base/lang", "dojo/_base/array", "dojo/io-query", "dojo/request/s
             // style: "https://openmaptiles.github.io/osm-bright-gl-style/style-cdn.json", //openmaptile style
             center: [-14.8975, 16.5887], //senegal
             center: [21, -2], //salonga
-            zoom: 12,
+            zoom: 9,
         });
         //add the map controls
         map.addControl(new MapboxInspect({
