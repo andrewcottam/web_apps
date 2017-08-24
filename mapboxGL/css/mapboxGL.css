@@ -55,10 +55,10 @@ svg {
 /*
 Menu styles for the layer controls
 */
-#menu {
+#layers {
     background: #fff;
     position: absolute;
-    z-index: 1;
+    z-index: 10000000000;
     top: 60px;
     right: 10px;
     border-radius: 3px;
@@ -67,7 +67,7 @@ Menu styles for the layer controls
     font-family: 'Open Sans', sans-serif;
 }
 
-#menu a {
+#layers a {
     font-size: 13px;
     color: #404040;
     display: block;
@@ -79,20 +79,20 @@ Menu styles for the layer controls
     text-align: center;
 }
 
-#menu a:last-child {
+#layers a:last-child {
     border: none;
 }
 
-#menu a:hover {
+#layers a:hover {
     background-color: #f8f8f8;
     color: #404040;
 }
 
-#menu a.active {
+#layers a.active {
     background-color: #3887be;
     color: #ffffff;
 }
 
-#menu a.active:hover {
+#layers a.active:hover {
     background: #3074a4;
 }

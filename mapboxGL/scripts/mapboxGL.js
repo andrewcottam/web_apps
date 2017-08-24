@@ -60,9 +60,10 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
         });
         map.addControl(geocoder);
         map.on("load", function(e) {
-            // addLayerContours();
+            addLayerContours();
             addLayerSentinelHub();
             addLayerWDPA();
+            addLayerWater();
             canvas = map.getCanvas();
             createSurface();
             createPopup();
@@ -94,7 +95,7 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
         map.on("pitchstart", hideCallout);
         map.on("rotatestart", hideCallout);
 
-        var toggleableLayerIds = ['imagery', 'WDPA Africa', 'openstreetmap'];
+        var toggleableLayerIds = ['imagery', 'WDPA Africa', 'openstreetmap', 'contours', 'water'];
 
         for (var i = 0; i < toggleableLayerIds.length; i++) {
             var id = toggleableLayerIds[i];
@@ -116,7 +117,7 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
                     showLayer(id);
                 }
             };
-            var layers = document.getElementById('menu');
+            var layers = document.getElementById('layers');
             layers.appendChild(link);
         }
 
@@ -148,6 +149,8 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
             }
         }
 
+
+
         function addLayerWDPA() {
             map.addLayer({
                 "id": "WDPA Africa",
@@ -172,7 +175,7 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
 
         function addLayerContours() {
             map.addLayer({
-                "id": "terrain-data",
+                "id": "contours",
                 "type": "line",
                 "source": {
                     "type": "vector",
@@ -181,7 +184,8 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
                 "source-layer": "contour",
                 "layout": {
                     "line-join": "round",
-                    "line-cap": "round"
+                    "line-cap": "round",
+                    "visibility": "visible"
                 },
                 "paint": {
                     "line-color": "#ff69b4",
@@ -215,6 +219,24 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
                     'type': 'raster',
                     'tiles': [
                         'https://services.sentinel-hub.com/v1/wms/363b9a1a-de1b-4009-b1d2-ba935bea739e?bbox={bbox-epsg-3857}&' + params,
+                    ],
+                    'tileSize': 256
+                },
+                'layout': {
+                    'visibility': 'visible'
+                },
+                'paint': {}
+            }, 'Landuse -National park');
+        }
+
+        function addLayerWater() {
+            map.addLayer({
+                'id': 'water',
+                'type': 'raster',
+                'source': {
+                    'type': 'raster',
+                    'tiles': [
+                        'https://storage.googleapis.com/global-surface-water/maptiles/transitions/{z}/{x}/{y}.png',
                     ],
                     'tileSize': 256
                 },
