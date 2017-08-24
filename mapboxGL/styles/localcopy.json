@@ -1,16 +1,5 @@
 {
     "version": 8,
-    "name": "Basic",
-    "metadata": {
-        "mapbox:autocomposite": true,
-        "mapbox:type": "template"
-    },
-    "center": [
-        22.27365733729755, -2.1166245462450064
-    ],
-    "zoom": 6.753700426566788,
-    "bearing": 0,
-    "pitch": 0,
     "sources": {
         "composite": {
             "url": "mapbox://mapbox.mapbox-streets-v7,blishten.cj6g5i3ls05f42qmwd8s4zpri-93pm1",
@@ -23,7 +12,7 @@
             "id": "background",
             "type": "background",
             "paint": {
-                "background-color": "#dedede"
+                "background-color": "#ffffff"
             }
         },
         {
@@ -851,11 +840,5 @@
                 "fill-color": "hsl(0, 96%, 51%)"
             }
         }
-    ],
-    "created": "2017-08-16T14:43:19.318Z",
-    "id": "cj6f4n2j026qf2rnunkauikjm",
-    "modified": "2017-08-17T14:09:59.833Z",
-    "owner": "blishten",
-    "visibility": "private",
-    "draft": false
+    ]
 }

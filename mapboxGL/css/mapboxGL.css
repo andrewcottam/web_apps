@@ -9,3 +9,90 @@ body {
     bottom: 0;
     width: 100%;
 }
+
+svg {
+    position: absolute;
+    pointer-events: none !important;
+}
+
+.mapboxgl-popup-content {
+    padding: 0px;
+    background-color: rgba(255, 255, 255, 0.9);
+    font-size: 12px;
+    color: rgba(25, 25, 25, 0.9);
+    display: inline-block;
+    white-space: nowrap;
+    position: absolute;
+    border: 3px solid #ffffff;
+}
+
+.mapboxgl-popup-tip {
+    display: none;
+}
+
+.popupTable {
+    padding: 8px;
+}
+
+.layer {
+    padding: 5px;
+    font-size: 16px;
+    text-align: center;
+}
+
+.propName {
+    font-variant: small-caps;
+    padding-left: 5px;
+}
+
+.propValue {}
+
+.name {
+    font-size: 19px;
+    padding: 2px 5px 10px 0px;
+    text-align: center;
+}
+/*
+Menu styles for the layer controls
+*/
+#menu {
+    background: #fff;
+    position: absolute;
+    z-index: 1;
+    top: 60px;
+    right: 10px;
+    border-radius: 3px;
+    width: 120px;
+    border: 1px solid rgba(0, 0, 0, 0.4);
+    font-family: 'Open Sans', sans-serif;
+}
+
+#menu a {
+    font-size: 13px;
+    color: #404040;
+    display: block;
+    margin: 0;
+    padding: 0;
+    padding: 10px;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+    text-align: center;
+}
+
+#menu a:last-child {
+    border: none;
+}
+
+#menu a:hover {
+    background-color: #f8f8f8;
+    color: #404040;
+}
+
+#menu a.active {
+    background-color: #3887be;
+    color: #ffffff;
+}
+
+#menu a.active:hover {
+    background: #3074a4;
+}

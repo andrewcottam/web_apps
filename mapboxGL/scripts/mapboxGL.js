@@ -1,6 +1,10 @@
-require(["dojo/_base/lang", "dojo/_base/array", "dojo/io-query", "dojo/request/script", "dojo/on", "node_modules/mapbox-gl/dist/mapbox-gl.js", "scripts/mapbox-gl-geocoder.min.js", "scripts/mapbox-gl-inspect.min.js"],
-    function(lang, array, ioQuery, script, on, mapboxgl, MapboxGeocoder, MapboxInspect) {
+require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx", "dojo/_base/lang", "dojo/_base/array", "dojo/io-query", "dojo/request/script", "dojo/on", "node_modules/mapbox-gl/dist/mapbox-gl.js", "scripts/mapbox-gl-geocoder.min.js", "scripts/mapbox-gl-inspect.min.js"],
+    function(array, domStyle, domGeom, gfx, lang, array, ioQuery, script, on, mapboxgl, MapboxGeocoder, MapboxInspect) {
         var debug = true;
+        var calloutSurface, popup, canvas, calloutRadius = 7,
+            calloutLength = 50,
+            calloutWidth = 3,
+            osmVisibility = 'visible';
         mapboxgl.accessToken = 'pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg'; //this is my access token
         if (debug) {
             console.debug("Using MapBoxGL version: " + mapboxgl.version);
@@ -8,24 +12,27 @@ require(["dojo/_base/lang", "dojo/_base/array", "dojo/io-query", "dojo/request/s
         }
         var map = new mapboxgl.Map({
             container: 'map',
-            // style: "mapbox://styles/mapbox/streets-v10", //vanilla mapbox style
-            // style: "mapbox://styles/blishten/cj6f4n2j026qf2rnunkauikjm", //my style with a few minor edits including the salonga tileset
-            // style: "styles/localcopy.json", //straight copy of the previous mapbox studio authored style
-            style: "styles/localcopyplus.json", //straight copy of the previous mapbox studio authored style plus tippecanoe data on C9 and tilemaker data on google cloud storage
+            // style: "mapbox://styles/mapbox/streets-v10?optimize=true", //vanilla mapbox style
+            style: "mapbox://styles/blishten/cj6f4n2j026qf2rnunkauikjm", //my Basic style
+            // style: "styles/localcopy.json", //local copy of the previous mapbox studio authored style
+            // style: "styles/localcopyplus.json", //local copy of the previous mapbox studio authored style plus tippecanoe data on google cloud storage
+            // style: "styles/mapzen_basic.json", //mapzen style
             // style: "https://openmaptiles.github.io/osm-bright-gl-style/style-cdn.json", //openmaptile style
             center: [-14.8975, 16.5887], //senegal
-            center: [21, -2], //salonga
-            zoom: 9,
+            // center: [21, -2], //salonga
+            zoom: 12,
         });
         //add the map controls
-        map.addControl(new MapboxInspect({
-            showInspectButton: debug,
-            popup: new mapboxgl.Popup({
-                closeButton: false,
-                closeOnClick: false
-            })
-        }));
-        map.addControl(new mapboxgl.FullscreenControl());
+        // map.addControl(new MapboxInspect({
+        //     showInspectButton: debug,
+        //     popup: new mapboxgl.Popup({
+        //         closeButton: false,
+        //         closeOnClick: false
+        //     })
+        // }));
+        map.addControl(new mapboxgl.FullscreenControl(), 'top-left');
+        map.addControl(new mapboxgl.ScaleControl());
+        map.addControl(new mapboxgl.NavigationControl(), 'top-left');
         var geocoder = new MapboxGeocoder({
             accessToken: mapboxgl.accessToken,
             flyTo: false, //this stops the geocoder panning to the result so we have to do it manually (below)
@@ -46,69 +53,140 @@ require(["dojo/_base/lang", "dojo/_base/array", "dojo/io-query", "dojo/request/s
                 }).then(function(data) {
                     if (data && data.length != 0) {
                         map.setCenter([data[0].lon, data[0].lat]);
+                        map.setZoom(15);
                     }
                 });
             }
         });
         map.addControl(geocoder);
         map.on("load", function(e) {
-            console.debug(e);
-            //to get the layer ids
-            // map.getStyle().layers;
-            // addLayerWDPA();
-            // addLayerTippeCanoe();
-            // addLayerSentinelHub();
             // addLayerContours();
+            addLayerSentinelHub();
+            addLayerWDPA();
+            canvas = map.getCanvas();
+            createSurface();
+            createPopup();
+        });
+        map.on("error", function(e) {
+            // console.error("Something bad happened");
+        });
+        map.on("click", function(e) {
+            map.setStyle('mapbox://styles/blishten/cj6q75jcd39gq2rqm1d7yv5rc'); //marine style
         });
         map.on("zoomend", function(e) {
             console.debug("Zoom: " + map.getZoom());
         });
-        map.on("styledata", function(e) {
-            // console.debug(e);
-        });
-        map.on("sourcedata", function(e) {
-            // console.debug(e);
+        map.on("resize", function(e) {
+            createSurface();
         });
         map.on("mousemove", function(e) {
-            if (debug) {
-                var features = map.queryRenderedFeatures(e.point);
-                // console.debug(features);
+            // console.debug("map mousemove");
+            var features = map.queryRenderedFeatures(e.point);
+            if (features.length) {
+                showCallout(features, e);
             }
+            else {
+                hideCallout(e);
+            }
+            // console.debug(canvas.style.cursor);
         });
 
-        //adds a vector layer produced by tippeecanoe on the vector-tiles C9 workspace 
-        function addLayerTippeCanoe() {
-            map.addLayer({
-                "id": "salongageojson",
-                "type": "fill",
-                layout: {
-                    visibility: "visible",
-                },
-                "source": {
-                    "type": 'vector',
-                    "tiles": ['https://vector-tiles-blishten.c9users.io/tilesets/{z}/{x}/{y}.pbf'],
-                },
-                "source-layer": "salongageojson",
-                "paint": {
-                    "fill-color": "rgba(99,148,69, 0.2)",
-                    "fill-outline-color": "rgba(87,131,61, 0.4)",
-                },
-            });
+        map.on("pitchstart", hideCallout);
+        map.on("rotatestart", hideCallout);
+
+        var toggleableLayerIds = ['imagery', 'WDPA Africa', 'openstreetmap'];
+
+        for (var i = 0; i < toggleableLayerIds.length; i++) {
+            var id = toggleableLayerIds[i];
+            var link = document.createElement('a');
+            link.href = '#';
+            link.className = 'active';
+            link.textContent = id;
+            link.onclick = function(e) {
+                var id = this.textContent;
+                e.preventDefault();
+                e.stopPropagation();
+                var visibility = (id == "openstreetmap") ? osmVisibility : map.getLayoutProperty(id, 'visibility');
+                if (visibility === 'visible') {
+                    hideLayer(id);
+                    this.className = '';
+                }
+                else {
+                    this.className = 'active';
+                    showLayer(id);
+                }
+            };
+            var layers = document.getElementById('menu');
+            layers.appendChild(link);
+        }
+
+        function hideLayer(id) {
+            if (id == 'openstreetmap') {
+                for (var layer in map.style._layers) {
+                    if (map.style._layers[layer].source == "composite") {
+                        map.setLayoutProperty(map.style._layers[layer].id, 'visibility', 'none');
+                    }
+                }
+                osmVisibility = 'none';
+            }
+            else {
+                map.setLayoutProperty(id, 'visibility', 'none');
+            }
+        }
+
+        function showLayer(id) {
+            if (id == 'openstreetmap') {
+                for (var layer in map.style._layers) {
+                    if (map.style._layers[layer].source == "composite") {
+                        map.setLayoutProperty(map.style._layers[layer].id, 'visibility', 'visible');
+                    }
+                }
+                osmVisibility = 'visible';
+            }
+            else {
+                map.setLayoutProperty(id, 'visibility', 'visible');
+            }
         }
 
         function addLayerWDPA() {
             map.addLayer({
-                "id": "wdpa",
+                "id": "WDPA Africa",
                 "type": "fill",
+                "attribution": "UNEP-WCMC",
                 "source": {
-                    type: 'vector',
-                    tiles: ['https://storage.googleapis.com/geeimageserver.appspot.com/wdpa_africa/{z}/{x}/{y}.pbf'],
+                    "type": "vector",
+                    "tilejson": "2.2.0",
+                    "maxzoom": 14,
+                    "tiles": ["https://storage.googleapis.com/geeimageserver.appspot.com/vectorTiles/wdpa_africa/tilesets/{z}/{x}/{y}.pbf"]
                 },
-                "source-layer": "protected_areas",
+                "source-layer": "wdpa_africageojson",
+                "layout": {
+                    "visibility": "visible"
+                },
                 "paint": {
                     "fill-color": "rgba(99,148,69, 0.2)",
-                    "fill-outline-color": "rgba(87,131,61, 0.4)",
+                    "fill-outline-color": "rgba(87,131,61, 0.4)"
+                }
+            });
+        }
+
+        function addLayerContours() {
+            map.addLayer({
+                "id": "terrain-data",
+                "type": "line",
+                "source": {
+                    "type": "vector",
+                    "url": "mapbox://mapbox.mapbox-terrain-v2"
                 },
+                "source-layer": "contour",
+                "layout": {
+                    "line-join": "round",
+                    "line-cap": "round"
+                },
+                "paint": {
+                    "line-color": "#ff69b4",
+                    "line-width": 1
+                }
             });
         }
 
@@ -131,7 +209,7 @@ require(["dojo/_base/lang", "dojo/_base/array", "dojo/io-query", "dojo/request/s
             };
             var params = ioQuery.objectToQuery(wmsParams);
             map.addLayer({
-                'id': 'wms-test-layer',
+                'id': 'imagery',
                 'type': 'raster',
                 'source': {
                     'type': 'raster',
@@ -140,27 +218,127 @@ require(["dojo/_base/lang", "dojo/_base/array", "dojo/io-query", "dojo/request/s
                     ],
                     'tileSize': 256
                 },
+                'layout': {
+                    'visibility': 'visible'
+                },
                 'paint': {}
-            }, 'landuse_overlay_national_park');
+            }, 'Landuse -National park');
         }
 
-        function addLayerContours() {
-            map.addLayer({
-                "id": "terrain-data",
-                "type": "line",
-                "source": {
-                    type: 'vector',
-                    url: 'mapbox://mapbox.mapbox-terrain-v2'
-                },
-                "source-layer": "contour",
-                "layout": {
-                    "line-join": "round",
-                    "line-cap": "round"
-                },
-                "paint": {
-                    "line-color": "#ff69b4",
-                    "line-width": 1
-                }
+        function createSurface() {
+            var position = domGeom.position("map");
+            if (calloutSurface) {
+                calloutSurface.setDimensions(position.w, position.h);
+            }
+            else {
+                var container = map.getCanvasContainer();
+                calloutSurface = gfx.createSurface(container, position.w, position.h);
+            }
+        }
+
+        function showCallout(features, e) {
+            var html = getPopupText(features);
+            if (calloutSurface && html) {
+                map.dragPan.disable();
+                calloutSurface.clear();
+                calloutSurface.createCircle({
+                    cx: e.point.x,
+                    cy: e.point.y,
+                    r: calloutRadius
+                }).setStroke({
+                    color: "white",
+                    width: calloutWidth
+                });
+                calloutSurface.createLine({
+                    x1: e.point.x + (calloutRadius / 2) + calloutWidth,
+                    y1: e.point.y,
+                    x2: e.point.x + calloutLength,
+                    y2: e.point.y
+                }).setStroke({
+                    color: "white",
+                    width: calloutWidth
+                });
+                popup.setLngLat(e.lngLat)
+                    .setHTML(html)
+                    .addTo(map);
+                var position = domGeom.position(popup._content);
+                popup.options.offset = [calloutLength, position.h / 2];
+                canvas.style.cursor = "none";
+            }
+        }
+
+        function hideCallout(e) {
+            if (calloutSurface) {
+                map.dragPan.enable();
+                calloutSurface.clear();
+                popup.remove();
+                canvas.style.cursor = "";
+            }
+        }
+
+        function createPopup() {
+            popup = new mapboxgl.Popup({
+                closeButton: false,
+                closeOnClick: false,
+                offset: [50, 0]
             });
+        }
+
+        function getPopupText(features) {
+            var feature = features[0];
+            var color = feature.layer.paint.hasOwnProperty("fill-color") ? feature.layer.paint["fill-color"] : feature.layer.paint["line-color"];
+            var header = "<div class='layer' style='background-color:" + color + "'>" + feature.layer.id + "</div>";
+            var properties = [];
+            var propertyNames = [];
+            var text = "";
+            var omitProps = ["sort_rank", "kind_detail", "id:right", "id:left", "source", "area", "min_zoom", "id", "osm_relation", "tier", "boundary", "ISO3"]; //exclude the following properties from appearing - these are Mapzen specific
+            for (var prop in feature.properties) { //iterate through the properties of the OSM feature and populate the properties that are valid and that we want to show
+                if (omitProps.indexOf(prop) == -1) { //omit certain system properties
+                    if (Object.values(properties).indexOf(feature.properties[prop]) == -1) { //check that we havent already got the value
+                        properties[prop] = feature.properties[prop];
+                        propertyNames.push(prop);
+                    }
+                }
+            }
+            //order the property names
+            moveElementToStart(propertyNames, "NAME");
+            moveElementToStart(propertyNames, "name");
+            moveElementToStart(propertyNames, "kind");
+            if (propertyNames.length > 0) {
+                text = "<table class='popupTable'>";
+                for (let prop of propertyNames) { //iterate through the properties that we want to show and build the html for the popup
+                    var value = properties[prop]; //get the value
+                    if (typeof(value) == "string") { //check the value is a string
+                        value = value.replace("_", " "); //replace any underscores
+                    }
+                    switch (prop) {
+                        case "NAME":
+                        case "name":
+                            text += "<tr><td colspan='2' class='name'>" + value + "</td></tr>";
+                            break;
+                        default:
+                            if (typeof(value) == "string") {
+                                value = toSentenceCase(value); //Sentence case
+                            }
+                            text += "<tr><td class='propName'>" + toSentenceCase(prop) + "</td><td class='propValue'>" + value + "</td></tr>"; //write the html text with the new value in
+                            break;
+                    }
+                }
+                text += "</table>";
+            }
+            return header + text;
+        }
+
+        function toSentenceCase(text) {
+            return text.substr(0, 1).toUpperCase() + text.substr(1);
+        }
+
+        function moveElementToStart(array, propertyName) {
+            var pos = array.indexOf(propertyName);
+            if (pos) {
+                array.unshift(array[pos]);
+                array.splice(pos + 1, 1);
+            }
+            return array;
         }
     });

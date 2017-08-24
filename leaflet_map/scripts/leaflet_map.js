@@ -253,8 +253,8 @@ require({
 			});
 			//openmaptiles.org vector tiles
 			var vectorTilesUrl = "https://free-{s}.tilehosting.com/data/v3/{z}/{x}/{y}.pbf.pict?key=UmmATPUongHdDmIicgs7"; //openmaps.org
-			var vectorTilesUrl = "https://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v7/{z}/{x}/{y}.mvt?access_token=pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg"; //mapbox
-			var vectorTilesUrl = "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt?api_key=vector-tiles-VyYjZGS"; //mapzen
+			// var vectorTilesUrl = "https://a.tiles.mapbox.com/v4/mapbox.mapbox-streets-v7/{z}/{x}/{y}.mvt?access_token=pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg"; //mapbox
+			// var vectorTilesUrl = "https://tile.mapzen.com/mapzen/vector/v1/all/{z}/{x}/{y}.mvt?api_key=vector-tiles-VyYjZGS"; //mapzen
 			// var vectorTilesUrl = "https://basemaps.arcgis.com/v1/arcgis/rest/services/World_Basemap/VectorTileServer/tile/{z}/{x}/{y}.pbf"; //esri
 			var openmaptilesVectorTileOptions = {
 				rendererFactory: L.svg.tile,
@@ -309,13 +309,13 @@ require({
 					accuracy: 4,
 				}, "photos"); //tags are an array, e.g. tags: ["biopama"], text is a string, e.g. text: "landscape"
 				photoViewer.startup();
-				var imageryTimeSlider = new ImageryTimeSlider({
-					leafletMap: map,
-					// provider: "geeImagerServer",
-					provider: "sentinelHub",
-					hideToEdge: true
-				}, "ImageryTimeSliderDiv");
-				imageryTimeSlider.startup();
+				// var imageryTimeSlider = new ImageryTimeSlider({
+				// 	leafletMap: map,
+				// 	// provider: "geeImagerServer",
+				// 	provider: "sentinelHub",
+				// 	hideToEdge: true
+				// }, "ImageryTimeSliderDiv");
+				// imageryTimeSlider.startup();
 				var vectorGridLayer = L.vectorTileLayer(vectorTilesUrl, openmaptilesVectorTileOptions).addTo(map);
 				var wdpaLayer = L.vectorTileLayer(wdpaUrl, wdpaTileOptions, {
 					"kind": "Protected area"
