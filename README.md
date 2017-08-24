@@ -1,6 +1,9 @@
 ### web_apps
 #### attractive_species_gallery 
 <a href='http://andrewcottam.github.io/web_apps/attractive_species_gallery/index.html' target='_blank'>index.html</a> - Gallery of charismatic species based on the number of images for the species from the Flickr API</br>
+#### BioPAMA
+<a href='https://andrewcottam.github.io/web_apps/biopama/index.html' target='_blank'>index.html</a> - Leaflet vector tiles using L.VectorGrid and comparing sources from MapBox, OpenMapTiles, MapZen and ESRI</br>
+<a href='https://andrewcottam.github.io/web_apps/biopama/vectorTileDev.html' target='_blank'>vectorTileDev.html</a> - Leaflet vector tiles using L.VectorGrid and combining OSM and WDPA data</br>
 #### BirdlifeMarineIBAMapper
 <a href='https://andrewcottam.github.io/web_apps/BirdlifeMarineIBAMapper/default.html' target='_blank'>default.html</a> - Website developed for Birdlife International under contract in 2012</br>
 #### cdn
@@ -31,6 +34,8 @@
 #### leaflet_map
 <a href='https://andrewcottam.github.io/web_apps/leaflet_map/index.html' target='_blank'>index.html</a> - test page for leaflet</br>
 <a href='https://andrewcottam.github.io/web_apps/leaflet_map/references.html' target='_blank'>references.html</a> - test page for references from the ScienceDirect API
+#### mapboxGL
+<a href='https://andrewcottam.github.io/web_apps/mapboxGL/index.html' target='_blank'>index.html</a> - Vector tiles in MapBoxGL Javascript Client</br>
 #### roadless areas validation tool
 <a href='https://andrewcottam.github.io/web_apps/roadless/index.html' target='_blank'>Roadless Validation tool</a>  
 #### species_validation_tool
