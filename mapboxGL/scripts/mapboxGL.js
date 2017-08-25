@@ -95,7 +95,7 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
         map.on("pitchstart", hideCallout);
         map.on("rotatestart", hideCallout);
 
-        var toggleableLayerIds = ['imagery', 'WDPA Africa', 'openstreetmap', 'contours', 'water'];
+        var toggleableLayerIds = ['imagery', 'WDPA', 'openstreetmap', 'contours', 'jrc_water'];
 
         for (var i = 0; i < toggleableLayerIds.length; i++) {
             var id = toggleableLayerIds[i];
@@ -153,16 +153,16 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
 
         function addLayerWDPA() {
             map.addLayer({
-                "id": "WDPA Africa",
+                "id": "WDPA",
                 "type": "fill",
                 "attribution": "UNEP-WCMC",
                 "source": {
                     "type": "vector",
                     "tilejson": "2.2.0",
                     "maxzoom": 14,
-                    "tiles": ["https://storage.googleapis.com/geeimageserver.appspot.com/vectorTiles/wdpa_africa/tilesets/{z}/{x}/{y}.pbf"]
+                    "tiles": ["https://storage.googleapis.com/geeimageserver.appspot.com/vectorTiles/wdpa/tilesets/{z}/{x}/{y}.pbf"]
                 },
-                "source-layer": "wdpa_africageojson",
+                "source-layer": "wdpa_aug_2017geojson",
                 "layout": {
                     "visibility": "visible"
                 },
@@ -231,7 +231,7 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
 
         function addLayerWater() {
             map.addLayer({
-                'id': 'water',
+                'id': 'jrc_water',
                 'type': 'raster',
                 'source': {
                     'type': 'raster',
