@@ -155,14 +155,14 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
             map.addLayer({
                 "id": "WDPA",
                 "type": "fill",
-                "attribution": "UNEP-WCMC",
                 "source": {
+                    "attribution": "IUCN and UNEP-WCMC (2017), The World Database on Protected Areas (WDPA) August 2017, Cambridge, UK: UNEP-WCMC. Available at: <a href='http://www.protectedplanet.net'>www.protectedplanet.net</a>",
                     "type": "vector",
                     "tilejson": "2.2.0",
-                    "maxzoom": 14,
+                    "maxzoom": 12,
                     "tiles": ["https://storage.googleapis.com/geeimageserver.appspot.com/vectorTiles/wdpa/tilesets/{z}/{x}/{y}.pbf"]
                 },
-                "source-layer": "wdpa_aug_2017geojson",
+                "source-layer": "wdpa",
                 "layout": {
                     "visibility": "visible"
                 },
