@@ -31,30 +31,37 @@ svg {
 }
 
 .popupTable {
-    padding: 8px;
+    font-size: 11px;
+    line-height: 13px;
+    padding: 0px 4px 4px 4px;
+}
+
+.popupTable td {
+    border-spacing: 2px;
 }
 
 .layer {
     padding: 5px;
-    font-size: 16px;
-    text-align: center;
+    font-size: 15px;
+    margin: 5px;
 }
 
 .propName {
     font-variant: small-caps;
-    padding-left: 5px;
+    padding-left: 4px;
 }
 
 .propValue {}
 
 .name {
-    font-size: 19px;
-    padding: 2px 5px 10px 0px;
-    text-align: center;
+    font-size: 15px;
+    padding: 3px;
 }
+
 /*
 Menu styles for the layer controls
 */
+
 #layers {
     background: #fff;
     position: absolute;

@@ -324,7 +324,13 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
 
         function getPopupText(features) {
             var feature = features[0];
-            var color = feature.layer.paint.hasOwnProperty("fill-color") ? feature.layer.paint["fill-color"] : feature.layer.paint["line-color"];
+            var color;
+            if (feature.layer['source-layer'] == 'wdpa') {
+                color = feature.properties.MARINE=="0" ? "rgba(99,148,69, 0.2)" : "rgba(63,127,191, 0.2)";
+            }
+            else {
+                color = feature.layer.paint.hasOwnProperty("fill-color") ? feature.layer.paint["fill-color"] : feature.layer.paint["line-color"];
+            }
             var header = "<div class='layer' style='background-color:" + color + "'>" + feature.layer.id + "</div>";
             var properties = [];
             var propertyNames = [];
