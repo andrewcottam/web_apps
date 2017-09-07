@@ -172,17 +172,19 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
                         "property": "MARINE",
                         "stops": [
                             ["0", "rgba(99,148,69, 0.2)"],
-                            ["1", "rgba(63,127,191, 0.2)"]
-                        ],
+                            ["1", "rgba(63,127,191, 0.2)"],
+                            ["2", "rgba(63,127,191, 0.2)"]
+                        ]
                     },
                     "fill-outline-color": {
                         "type": "categorical",
                         "property": "MARINE",
                         "stops": [
                             ["0", "rgba(99,148,69, 0.2)"],
-                            ["1", "rgba(63,127,191, 0.2)"]
-                        ],
-                    },
+                            ["1", "rgba(63,127,191, 0.2)"],
+                            ["2", "rgba(63,127,191, 0.2)"]
+                        ]
+                    }
                 }
             });
         }
