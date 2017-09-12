@@ -1,5 +1,5 @@
-require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx", "dojo/_base/lang", "dojo/_base/array", "dojo/io-query", "dojo/request/script", "dojo/on", "node_modules/mapbox-gl/dist/mapbox-gl.js", "scripts/mapbox-gl-geocoder.min.js", "scripts/mapbox-gl-inspect.min.js"],
-    function(array, domStyle, domGeom, gfx, lang, array, ioQuery, script, on, mapboxgl, MapboxGeocoder, MapboxInspect) {
+require(["dojo/query", "dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx", "dojo/_base/lang", "dojo/_base/array", "dojo/io-query", "dojo/request/script", "dojo/on", "node_modules/mapbox-gl/dist/mapbox-gl.js", "scripts/mapbox-gl-geocoder.min.js", "scripts/mapbox-gl-inspect.min.js"],
+    function(query, array, domStyle, domGeom, gfx, lang, array, ioQuery, script, on, mapboxgl, MapboxGeocoder, MapboxInspect) {
         var debug = true;
         var calloutSurface, popup, canvas, calloutRadius = 7,
             calloutLength = 50,
@@ -18,9 +18,12 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
             // style: "styles/localcopyplus.json", //local copy of the previous mapbox studio authored style plus tippecanoe data on google cloud storage
             // style: "styles/mapzen_basic.json", //mapzen style
             // style: "https://openmaptiles.github.io/osm-bright-gl-style/style-cdn.json", //openmaptile style
-            center: [-14.8975, 16.5887], //senegal
+            // center: [-14.8975, 16.5887], //senegal
             // center: [21, -2], //salonga
-            zoom: 12,
+            center: [161.76, -8.14], //pacific
+            zoom: 4,
+            // zoom: 12,
+            hash: true,
         });
         //add the map controls
         // map.addControl(new MapboxInspect({
@@ -83,7 +86,7 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
         map.on("mousemove", function(e) {
             // console.debug("map mousemove");
             var features = map.queryRenderedFeatures(e.point);
-            if (features.length) {
+            if ((features.length) && (features[0].layer.id != "Water")) {
                 showCallout(features, e);
             }
             else {
@@ -103,25 +106,30 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
             link.href = '#';
             link.className = 'active';
             link.textContent = id;
+            link.title = id;
             link.onclick = function(e) {
                 var id = this.textContent;
                 e.preventDefault();
                 e.stopPropagation();
                 var visibility = (id == "openstreetmap") ? osmVisibility : map.getLayoutProperty(id, 'visibility');
                 if (visibility === 'visible') {
-                    hideLayer(id);
-                    this.className = '';
+                    hideLayer(this);
                 }
                 else {
-                    this.className = 'active';
-                    showLayer(id);
+                    showLayer(this);
                 }
             };
             var layers = document.getElementById('layers');
             layers.appendChild(link);
         }
 
-        function hideLayer(id) {
+        query("nav#layers a[title=imagery]")[0].className = ''; //set the class on the link to not visible
+        query("nav#layers a[title=jrc_water]")[0].className = ''; //set the class on the link to not visible
+        query("nav#layers a[title=contours]")[0].className = ''; //set the class on the link to not visible
+
+        function hideLayer(linkButton) {
+            linkButton.className = '';
+            var id = linkButton.textContent;
             if (id == 'openstreetmap') {
                 for (var layer in map.style._layers) {
                     if (map.style._layers[layer].source == "composite") {
@@ -135,7 +143,9 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
             }
         }
 
-        function showLayer(id) {
+        function showLayer(linkButton) {
+            linkButton.className = "active";
+            var id = linkButton.textContent;
             if (id == 'openstreetmap') {
                 for (var layer in map.style._layers) {
                     if (map.style._layers[layer].source == "composite") {
@@ -201,7 +211,7 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
                 "layout": {
                     "line-join": "round",
                     "line-cap": "round",
-                    "visibility": "visible"
+                    "visibility": "none"
                 },
                 "paint": {
                     "line-color": "#ff69b4",
@@ -239,7 +249,7 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
                     'tileSize': 256
                 },
                 'layout': {
-                    'visibility': 'visible'
+                    'visibility': 'none'
                 },
                 'paint': {}
             }, 'Landuse -National park');
@@ -257,7 +267,7 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
                     'tileSize': 256
                 },
                 'layout': {
-                    'visibility': 'visible'
+                    'visibility': 'none'
                 },
                 'paint': {}
             }, 'Landuse -National park');
@@ -326,7 +336,7 @@ require(["dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx",
             var feature = features[0];
             var color;
             if (feature.layer['source-layer'] == 'wdpa') {
-                color = feature.properties.MARINE=="0" ? "rgba(99,148,69, 0.2)" : "rgba(63,127,191, 0.2)";
+                color = feature.properties.MARINE == "0" ? "rgba(99,148,69, 0.2)" : "rgba(63,127,191, 0.2)";
             }
             else {
                 color = feature.layer.paint.hasOwnProperty("fill-color") ? feature.layer.paint["fill-color"] : feature.layer.paint["line-color"];
