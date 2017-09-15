@@ -1,6 +1,14 @@
-require(["dojo/query", "dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx", "dojo/_base/lang", "dojo/_base/array", "dojo/io-query", "dojo/request/script", "dojo/on", "node_modules/mapbox-gl/dist/mapbox-gl.js", "scripts/mapbox-gl-geocoder.min.js", "scripts/mapbox-gl-inspect.min.js"],
-    function(query, array, domStyle, domGeom, gfx, lang, array, ioQuery, script, on, mapboxgl, MapboxGeocoder, MapboxInspect) {
-        var debug = true;
+require({
+        async: true,
+        paths: {
+            widgetsPackage: "/../../widgets",
+        }
+    }, ["widgetsPackage/PhotoBoxFlickr", "widgetsPackage/WebServiceAPIs/FlickrAPI", "dojo/dom-attr", "dojo/html", "dojo/dom", "dojo/dom-construct", "dojo/query", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx", "dojo/_base/lang", "dojo/_base/array", "dojo/io-query", "dojo/request/script", "dojo/on", "node_modules/mapbox-gl/dist/mapbox-gl.js", "scripts/mapbox-gl-geocoder.min.js", "scripts/mapbox-gl-inspect.min.js"],
+    function(PhotoBoxFlickr, FlickrAPI, domAttr, html, dom, domConstruct, query, domStyle, domGeom, gfx, lang, array, ioQuery, script, on, mapboxgl, MapboxGeocoder, MapboxInspect) {
+        var debug = true,
+            countryPopups = [],
+            provincePopups = [];
+        var pictCountries = ["American Samoa", "Cook Islands", "Federated States of Micronesia", "Fiji", "French Polynesia", "Guam", "Kiribati", "Marshall Islands", "Nauru", "New Caledonia", "Niue", "Northern Mariana Islands", "Palau", "Papua New Guinea", "Samoa", "Solomon Islands", "Tokelau", "Tonga", "Tuvalu", "Vanuatu", "Wallis and Futuna"];
         var calloutSurface, popup, canvas, calloutRadius = 7,
             calloutLength = 50,
             calloutWidth = 3,
@@ -42,7 +50,12 @@ require(["dojo/query", "dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry"
         });
         //zoom to the location of selected feature 
         geocoder.on("result", function(evt) {
-            map.setCenter(evt.result.geometry.coordinates);
+            if (evt.result.hasOwnProperty("bbox")) {
+                map.fitBounds(evt.result.bbox); //zoom to the bounding box if it has one
+            }
+            else {
+                map.setCenter(evt.result.geometry.coordinates); //otherwise zoom to the centre
+            }
         });
         //no results found so assume it is an OSM id and zoom to id
         geocoder.on("results", function(evt) {
@@ -62,14 +75,20 @@ require(["dojo/query", "dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry"
             }
         });
         map.addControl(geocoder);
+
+        //add the map events
         map.on("load", function(e) {
+            filterLabelsForPictCountries();
             addLayerContours();
             addLayerSentinelHub();
             addLayerWDPA();
             addLayerWater();
+            addGlobalForestWatch();
             canvas = map.getCanvas();
             createSurface();
             createPopup();
+            addCountriesTable();
+            addCountryTable();
         });
         map.on("error", function(e) {
             // console.error("Something bad happened");
@@ -80,6 +99,13 @@ require(["dojo/query", "dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry"
         map.on("zoomend", function(e) {
             console.debug("Zoom: " + map.getZoom());
         });
+        map.on("moveend", function(e) {
+            addCountryPopups();
+            addProvincesPopups();
+        });
+        // map.on("pitchend", function(e) {
+        //     addCountryPopups();
+        // });
         map.on("resize", function(e) {
             createSurface();
         });
@@ -94,12 +120,122 @@ require(["dojo/query", "dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry"
             }
             // console.debug(canvas.style.cursor);
         });
-
         map.on("pitchstart", hideCallout);
         map.on("rotatestart", hideCallout);
+        map.on("zoomstart", hideCallout);
 
-        var toggleableLayerIds = ['imagery', 'WDPA', 'openstreetmap', 'contours', 'jrc_water'];
+        //add the events for the breadcrumb trail
+        on(dom.byId("summaryText"), "click", function() {
+            gotoSummaryPage();
+        });
+        on(dom.byId("countriesText"), "click", function() {
+            gotoCountriesPage();
+        });
+        on(dom.byId("countryText"), "click", function(evt) {
+            gotoCountryPage(evt);
+        });
 
+        //add the events for the arrow clicks
+        on(dom.byId("gotoCountriesPageArrow"), "click", function() {
+            gotoCountriesPage();
+        });
+        on(dom.byId("countriesPage"), "click", function(evt) {
+            gotoCountryPage(evt);
+        });
+        on(dom.byId("countryPage"), "click", function(evt) {
+            gotoProvincePage(evt);
+        });
+        on(dom.byId("validate"), "click", function(evt) {
+            // map.setCenter([151.4739, -5.1169]);
+            // map.setZoom(11.44);
+            map.zoomTo(11.44);
+            map.setLayoutProperty("Imagery", 'visibility', 'visible'); //turn on the imagery
+            query("nav#layers a[title=Imagery]")[0].className = 'active';
+            removeProvincesPopups();
+            var bbox = map.getBounds();
+            var flickrapi = new FlickrAPI({
+                map: map,
+                providers: ["flickr"],
+                tags: ["biopama"],
+                text: "outdoor",
+                accuracy: 4,
+            }, 4);
+            flickrapi.getImagesForBBox(bbox._sw.lng, bbox._sw.lat, bbox._ne.lng, bbox._ne.lat);
+            on(flickrapi, "imagesLoaded", function(evt) {
+                array.forEach(this.photos, function(photo) {
+                    var photoBox = new PhotoBoxFlickr({
+                        photo: photo,
+                        photoSize: "thumbnail"
+                    });
+                    photoBox.startup();
+                    var photoPopup = new mapboxgl.Popup({
+                        closeButton: true,
+                        closeOnClick: false,
+                        offset: [0, 0]
+                    });
+                    photoPopup.setLngLat([151.4739, -5.1169])
+                        .setHTML(photoBox.domNode.outerHTML)
+                        .addTo(map);
+                });
+            });
+        });
+
+        function gotoSummaryPage() {
+            //show the first page and right arrow
+            domStyle.set("summaryPage", "display", "block");
+            domStyle.set("gotoCountriesPageArrow", "display", "block");
+            //hide the other pages
+            domStyle.set("countriesText", "display", "none");
+            domStyle.set("countriesPage", "display", "none");
+            domStyle.set("countryText", "display", "none");
+            domStyle.set("countryPage", "display", "none");
+            domStyle.set("actionPage", "display", "none");
+        }
+
+        function gotoCountriesPage() {
+            addCountryPopups();
+            //hide the other pages
+            domStyle.set("summaryPage", "display", "none");
+            domStyle.set("gotoCountriesPageArrow", "display", "none");
+            domStyle.set("countryText", "display", "none");
+            domStyle.set("countryPage", "display", "none");
+            domStyle.set("actionPage", "display", "none");
+            //show the countries page and text
+            domStyle.set("countriesText", "display", "inline");
+            domStyle.set("countriesPage", "display", "block");
+        }
+
+        function gotoCountryPage(evt) {
+            //zoom to the country
+            var country = evt.target.title.substr(8);
+            geocoder.options.types = "country,region";
+            geocoder.query(country);
+            geocoder.options.types = undefined; //reset the filter
+            //hide the other pages
+            domStyle.set("countriesPage", "display", "none");
+            domStyle.set("actionPage", "display", "none");
+            //show the country page and text
+            html.set("countryText", " | " + country);
+            domAttr.set("countryText", "title", "Back to " + country);
+            domStyle.set("countryText", "display", "inline");
+            domStyle.set("countryPage", "display", "block");
+        }
+
+        function gotoProvincePage(evt) {
+            var province = evt.target.title.substr(8);
+            geocoder.options.types = "country,region";
+            geocoder.query(province + " Papua New Guinea");
+            geocoder.options.types = undefined; //reset the filter
+            //hide the other pages
+            domStyle.set("countriesPage", "display", "none");
+            //show the country page and text
+            html.set("province", province);
+            domStyle.set("countryPage", "display", "none");
+            domStyle.set("actionPage", "display", "block");
+        }
+
+        //layer controls
+        var toggleableLayerIds = ['Imagery', 'WDPA', 'OpenStreetMap', 'GlobalForestWatch', 'Contours', 'JRC Water'];
         for (var i = 0; i < toggleableLayerIds.length; i++) {
             var id = toggleableLayerIds[i];
             var link = document.createElement('a');
@@ -111,7 +247,21 @@ require(["dojo/query", "dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry"
                 var id = this.textContent;
                 e.preventDefault();
                 e.stopPropagation();
-                var visibility = (id == "openstreetmap") ? osmVisibility : map.getLayoutProperty(id, 'visibility');
+                var visibility;
+                if (id == "OpenStreetMap") {
+                    visibility = osmVisibility;
+                    if (osmVisibility != 'visible') {
+                        addCountryPopups();
+                        addProvincesPopups();
+                    }
+                    else {
+                        removeCountryPopups();
+                        removeProvincesPopups();
+                    }
+                }
+                else {
+                    visibility = map.getLayoutProperty(id, 'visibility');
+                }
                 if (visibility === 'visible') {
                     hideLayer(this);
                 }
@@ -122,15 +272,15 @@ require(["dojo/query", "dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry"
             var layers = document.getElementById('layers');
             layers.appendChild(link);
         }
+        query("nav#layers a[title=Imagery]")[0].className = ''; //set the class on the link to not visible
+        query("nav#layers a[title=JRC Water]")[0].className = ''; //set the class on the link to not visible
+        query("nav#layers a[title=Contours]")[0].className = ''; //set the class on the link to not visible
 
-        query("nav#layers a[title=imagery]")[0].className = ''; //set the class on the link to not visible
-        query("nav#layers a[title=jrc_water]")[0].className = ''; //set the class on the link to not visible
-        query("nav#layers a[title=contours]")[0].className = ''; //set the class on the link to not visible
 
         function hideLayer(linkButton) {
             linkButton.className = '';
             var id = linkButton.textContent;
-            if (id == 'openstreetmap') {
+            if (id == 'OpenStreetMap') {
                 for (var layer in map.style._layers) {
                     if (map.style._layers[layer].source == "composite") {
                         map.setLayoutProperty(map.style._layers[layer].id, 'visibility', 'none');
@@ -146,7 +296,7 @@ require(["dojo/query", "dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry"
         function showLayer(linkButton) {
             linkButton.className = "active";
             var id = linkButton.textContent;
-            if (id == 'openstreetmap') {
+            if (id == 'OpenStreetMap') {
                 for (var layer in map.style._layers) {
                     if (map.style._layers[layer].source == "composite") {
                         map.setLayoutProperty(map.style._layers[layer].id, 'visibility', 'visible');
@@ -159,7 +309,27 @@ require(["dojo/query", "dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry"
             }
         }
 
-
+        function addGlobalForestWatch() {
+            map.addLayer({
+                'id': 'GlobalForestWatch',
+                'type': 'raster',
+                'source': {
+                    'type': 'raster',
+                    'tiles': [
+                        // 'https://globalforestwatch-624153201.us-west-1.elb.amazonaws.com/arcgis/services/ForestCover_lossyear/ImageServer/WMSServer?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.1.1&request=GetMap&srs=EPSG:3857&width=256&height=256&layers=0'
+                        // 'https://50.18.182.188:6080/arcgis/services/ForestCover_lossyear/ImageServer/WMSServer?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.1.1&request=GetMap&srs=EPSG:3857&width=256&height=256&layers=0'
+                        'https://gis-treecover.wri.org/arcgis/services/ForestCover_lossyear/ImageServer/WMSServer?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.1.1&request=GetMap&srs=EPSG:3857&width=256&height=256&layers=0'
+                    ],
+                    'tileSize': 256
+                },
+                "layout": {
+                    "visibility": "visible"
+                },
+                'maxzoom': 12.5,
+                'minzoom': 7,
+                'paint': {}
+            }, 'Intact Forest 2013');
+        }
 
         function addLayerWDPA() {
             map.addLayer({
@@ -201,7 +371,7 @@ require(["dojo/query", "dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry"
 
         function addLayerContours() {
             map.addLayer({
-                "id": "contours",
+                "id": "Contours",
                 "type": "line",
                 "source": {
                     "type": "vector",
@@ -226,20 +396,22 @@ require(["dojo/query", "dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry"
                 service: "WMS",
                 request: "GetMap",
                 layers: "TRUE_COLOR",
-                time: "2017-07-01/2017-07-31/P1D",
+                time: "2015-01-01/2017-09-31/P1D",
                 atmFilter: "DOS1",
                 transparent: true,
                 bgcolor: "#cccccc",
                 warnings: "no",
                 showLogo: false,
                 width: 256,
+                MAXCC: 20,
+                GAIN: 2,
                 height: 256,
                 format: "image/jpeg",
                 srs: "EPSG:3857",
             };
             var params = ioQuery.objectToQuery(wmsParams);
             map.addLayer({
-                'id': 'imagery',
+                'id': 'Imagery',
                 'type': 'raster',
                 'source': {
                     'type': 'raster',
@@ -257,7 +429,7 @@ require(["dojo/query", "dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry"
 
         function addLayerWater() {
             map.addLayer({
-                'id': 'jrc_water',
+                'id': 'JRC Water',
                 'type': 'raster',
                 'source': {
                     'type': 'raster',
@@ -311,6 +483,7 @@ require(["dojo/query", "dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry"
                     .addTo(map);
                 var position = domGeom.position(popup._content);
                 popup.options.offset = [calloutLength, position.h / 2];
+                popup.class = 'hover';
                 canvas.style.cursor = "none";
             }
         }
@@ -341,7 +514,7 @@ require(["dojo/query", "dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry"
             else {
                 color = feature.layer.paint.hasOwnProperty("fill-color") ? feature.layer.paint["fill-color"] : feature.layer.paint["line-color"];
             }
-            var header = "<div class='layer' style='background-color:" + color + "'>" + feature.layer.id + "</div>";
+            var header = "<div class='layer' style='background-color:" + color + "'><i class='fa fa-map-marker' aria-hidden='true'></i>" + feature.layer.id + "</div>";
             var properties = [];
             var propertyNames = [];
             var text = "";
@@ -394,5 +567,158 @@ require(["dojo/query", "dojo/_base/array", "dojo/dom-style", "dojo/dom-geometry"
                 array.splice(pos + 1, 1);
             }
             return array;
+        }
+
+        function getCountries(renderedOnly) {
+            var countries;
+            if (renderedOnly) {
+                // countries = map.queryRenderedFeatures({ layers: ['Country label'] });
+                var filter = ['in', 'name_en', "American Samoa", "Cook Islands", "Federated States of Micronesia", "Fiji", "French Polynesia", "Guam", "Kiribati", "Marshall Islands", "Nauru", "New Caledonia", "Niue", "Northern Mariana Islands", "Palau", "Papua New Guinea", "Samoa", "Solomon Islands", "Tokelau", "Tonga", "Tuvalu", "Vanuatu", "Wallis and Futuna"];
+                countries = map.queryRenderedFeatures({ layers: ['Country label'], filter: filter });
+            }
+            else {
+                countries = map.querySourceFeatures("composite", { sourceLayer: 'country_label' });
+            }
+            return countries;
+        }
+
+        function addCountryPopups() {
+            removeCountryPopups();
+            if ((map.getZoom() < 3) || (map.getZoom() >= 6)) {
+                return;
+            }
+            var countryFeatures = getCountries(true);
+            var countriesDone = [];
+            array.forEach(countryFeatures, function(feature) {
+                if (countriesDone.indexOf(feature.properties.name_en) == -1) { //because we are getting the features from ALL rendered tiles there will be duplicate countries so only take the first one
+                    countriesDone.push(feature.properties.name_en);
+                    var num = getArea(feature.properties.name_en);
+                    var color = ['Papua New Guinea', 'Solomon Islands', 'Fiji', 'New Caledonia'].indexOf(feature.properties.name_en) > -1 ? "#D0583B" : "#3974B1";
+                    // var latLng = getOffset(feature);
+                    var yOffset = (feature.properties.name_en.length > 17) ? 50 : 40;
+                    var popup = new mapboxgl.Popup({ closeButton: false, closeOnClick: false, offset: [-51, yOffset] })
+                        .setLngLat(feature.geometry.coordinates)
+                        .setHTML("<div class='indicatorPopup'><span class='fa fa-circle-o-notch' aria-hidden='true' style='font-size:19px;padding-right:10px;color:" + color + "'></span><span>" + num + " Km<span style='font-size:9px;vertical-align: super; padding: 2px;'>2</span></span></div>")
+                        .addTo(map);
+                    countryPopups.push(popup);
+                }
+            });
+        }
+
+        function getArea(name) {
+            var num;
+            switch (name) {
+                case "Papua New Guinea":
+                    num = 187645;
+                    break;
+                case "Solomon Islands":
+                    num = 3857;
+                    break;
+                case "Fiji":
+                    num = 3249;
+                    break;
+                case "New Caledonia":
+                    num = 8331;
+                    break;
+                default:
+                    num = 0;
+                    break;
+            }
+            return num;
+        }
+
+        function removeCountryPopups() {
+            array.forEach(countryPopups, function(countryPopup) {
+                countryPopup.remove();
+            });
+            countryPopups = [];
+        }
+
+        function getOffset(feature) {
+            //Open Sans Regular is the default font and is scaled from 14px to 22px with zoom levels from 3 to 8 - no longer used
+            var zoomLevel = map.getZoom();
+            var fontSize;
+            if (zoomLevel <= 3) {
+                fontSize = 14;
+            }
+            if (zoomLevel > 3) {
+                fontSize = 14 + (((zoomLevel - 3) / 5) * 8);
+            }
+            if (zoomLevel > 8) {
+                fontSize = 22;
+            }
+            var canvas = document.getElementById("hiddenCanvas");
+            var ctx = canvas.getContext('2d');
+            ctx.font = fontSize + "px Open Sans Regular";
+            var textWidth = ctx.measureText(feature.properties.name_en).width;
+            var centre = map.project(feature.geometry.coordinates);
+            var minX = centre.x - (textWidth / 2);
+            var latLng = map.unproject([minX, centre.y]);
+            return latLng;
+        }
+
+        function filterLabelsForPictCountries() {
+            //couldnt get the following to work so had to add the country filter as a literal string
+            // var s = JSON.stringify(pictCountries);
+            // s = s.substr(2, s.length - 4); //.replace(/"/g, "'");
+            // var filter = ['in', 'name_en', s];
+            var filter = ['in', 'name_en', "American Samoa", "Cook Islands", "Federated States of Micronesia", "Fiji", "French Polynesia", "Guam", "Kiribati", "Marshall Islands", "Nauru", "New Caledonia", "Niue", "Northern Mariana Islands", "Palau", "Papua New Guinea", "Samoa", "Solomon Islands", "Tokelau", "Tonga", "Tuvalu", "Vanuatu", "Wallis and Futuna"];
+            map.setFilter("Country label", filter);
+        }
+
+        function addCountriesTable() {
+            var countriesPageHtml = "<table>";
+            // var countryFeatures = getCountries(false);
+            var countryFeatures = pictCountries;
+            array.forEach(countryFeatures, function(feature) {
+                var num = getArea(feature);
+                var arrow = (feature == "Papua New Guinea") ? "<i class='fa fa-arrow-circle-right' aria-hidden='true' style='font-size:16px;cursor:pointer;padding-left:5px;color:grey' title='Zoom to " + feature + "'></i>" : "";
+                countriesPageHtml += "<tr><td class='td1'>" + feature + "</td><td class='td2'>" + num + " Km<span style='font-size:9px;vertical-align: super; padding: 2px;'>2</span></td><td>" + arrow + "</td></tr>";
+            });
+            countriesPageHtml += "</table>";
+            domConstruct.place(countriesPageHtml, dom.byId("countriesPage"), "first");
+        }
+
+        function addCountryTable() {
+            var provincesHtml = "<table id='countryTable'>";
+            var provinceFeatures = map.querySourceFeatures("composite", { sourceLayer: "Intact_Forest_Landscapes-24rowe" });
+            array.forEach(provinceFeatures, function(feature) {
+                provincesHtml += "<tr><td class='td1'>" + feature.properties.NAME_1 + "</td><td class='td2'>" + randomIntFromInterval(0, 100) + " Km<span style='font-size:9px;vertical-align: super; padding: 2px;'>2</span></td><td><i class='fa fa-arrow-circle-right' aria-hidden='true' style='font-size:16px;cursor:pointer;padding-left:5px;color:grey' title='Zoom to " + feature.properties.NAME_1 + "'></i></td></tr>";
+            });
+            provincesHtml += "</table>";
+            domConstruct.place(provincesHtml, dom.byId("countryPage"));
+        }
+
+        function randomIntFromInterval(min, max) {
+            return Math.floor(Math.random() * (max - min + 1) + min);
+        }
+
+        function addProvincesPopups() {
+            removeProvincesPopups();
+            if (map.getZoom() < 6) {
+                return;
+            }
+            var provinceFeatures = map.querySourceFeatures("composite", { sourceLayer: "Intact_Forest_Landscapes-24rowe" });
+            var provincesDone = [];
+            array.forEach(provinceFeatures, function(feature) {
+                if (provincesDone.indexOf(feature.properties.NAME_1) == -1) { //because we are getting the features from ALL rendered tiles there will be duplicate countries so only take the first one
+                    provincesDone.push(feature.properties.NAME_1);
+                    var num = randomIntFromInterval(0, 100);
+                    var color = (num > 50) ? "#D0583B" : "#3974B1";
+                    var yOffset = (feature.properties.NAME_1.length > 17) ? 50 : 40;
+                    var popup = new mapboxgl.Popup({ closeButton: false, closeOnClick: false, offset: [-51, yOffset] })
+                        .setLngLat(feature.geometry.coordinates)
+                        .setHTML("<div class='indicatorPopup'><span class='fa fa-circle-o-notch' aria-hidden='true' style='font-size:19px;padding-right:10px;color:" + color + "'></span><span>" + num + " Km<span style='font-size:9px;vertical-align: super; padding: 2px;'>2</span></span></div>")
+                        .addTo(map);
+                    provincePopups.push(popup);
+                }
+            });
+        }
+
+        function removeProvincesPopups() {
+            array.forEach(provincePopups, function(provincePopup) {
+                provincePopup.remove();
+            });
+            provincePopups = [];
         }
     });

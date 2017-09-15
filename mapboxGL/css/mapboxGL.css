@@ -58,6 +58,117 @@ svg {
     padding: 3px;
 }
 
+#detail table {
+    border-collapse: collapse;
+}
+
+#detail td {
+    padding: 1px 8px 1px 1px;
+}
+
+table {
+    font-size: 12px;
+}
+
+/*
+Styles for the indicator information box
+*/
+
+#indicatorBox {
+    background: #fff;
+    position: absolute;
+    z-index: 10000000000;
+    top: 176px;
+    max-width: 400px;
+    left: 0px;
+    border-radius: 3px;
+    box-shadow: 3px 3px 3px 2px rgba(0, 0, 0, 0.1);
+    font-family: 'Open Sans', sans-serif;
+    padding: 10px 10px 10px 15px;
+}
+
+#indicatorHeader {
+    font-size: 18px;
+    font-variant: small-caps;
+    padding-bottom: 10px;
+    color: chocolate;
+    border-bottom: 1px solid chocolate;
+    margin-bottom: 10px;
+}
+
+#indicatorTitle {
+    font-size: 21px;
+}
+
+#breadcrumb {
+    font-size: 15px;
+    padding: 5px 0px 5px 0px;
+    margin-top: 10px;
+    font-variant: small-caps;
+}
+
+#countriesText,
+#countryText,
+#countriesPage,
+#countryPage,
+#actionPage {
+    display: none;
+}
+
+#countriesPage {
+    padding-top: 10px;
+}
+
+#countryTable {
+    padding-top: 10px;
+}
+
+#countriesFooter {
+    padding: 10px;
+    margin-top: 14px;
+    font-size: 12px;
+    border-top: 1px solid chocolate;
+}
+
+#summaryPage {
+    margin-top: 38px;
+    margin-bottom: 38px;
+}
+
+#detail {
+    display: none;
+}
+
+#province {
+    font-size: 23px;
+    color: chocolate;
+    padding: 16px 0px;
+}
+
+/*
+Menu styles for the layer controls
+*/
+
+.indicatorPopup {
+    min-width: 100px;
+}
+
+.fa-map-marker {
+    padding-right: 8px;
+}
+
+#actionPage .fa {
+    padding: 10px;
+}
+
+.td1 {
+    width: 223px;
+}
+
+.td2 {
+    width: 73px;
+}
+
 /*
 Menu styles for the layer controls
 */
@@ -66,10 +177,10 @@ Menu styles for the layer controls
     background: #fff;
     position: absolute;
     z-index: 10000000000;
-    top: 60px;
+    top: 224px;
     right: 10px;
     border-radius: 3px;
-    width: 120px;
+    width: 128px;
     border: 1px solid rgba(0, 0, 0, 0.4);
     font-family: 'Open Sans', sans-serif;
 }
@@ -103,3 +214,89 @@ Menu styles for the layer controls
 #layers a.active:hover {
     background: #3074a4;
 }
+
+/*
+photobox css
+*/
+
+/*.box,*/
+
+/*.flickrbox {*/
+
+/*    font-family: Arial;*/
+
+/*    font-size: 12px;*/
+
+/*    display: inline-block;*/
+
+/*    text-align: center;*/
+
+/*    margin: 6px;*/
+
+/*    padding: 4px 4px 3px 4px;*/
+
+/*    box-shadow: 3px 3px 3px #ddd;*/
+
+/*    -moz-box-shadow: 3px 3px 3px #ddd;*/
+
+/*    border: 1px solid #ddd;*/
+
+/*    box-sizing: content-box;*/
+
+/*}*/
+
+/*.box {*/
+
+/*    max-width: 240px;*/
+
+/*}*/
+
+/*.box:hover,*/
+
+/*.flickrbox:hover {*/
+
+/*    box-shadow: 3px 3px 3px #bbb;*/
+
+/*    -moz-box-shadow: 3px 3px 3px #bbb;*/
+
+/*    border: 1px solid #bbb;*/
+
+/*}*/
+
+/*.panoramioLink {*/
+
+/*    vertical-align: middle;*/
+
+/*    text-align: left;*/
+
+/*    margin: 3px;*/
+
+/*    text-decoration: none;*/
+
+/*}*/
+
+/*body>svg {*/
+
+/*    position: absolute;*/
+
+/*    top: 0px;*/
+
+/*    left: 0px;*/
+
+/*    pointer-events: none;*/
+
+/*    z-index: 1000;*/
+
+/*}*/
+
+/*.middle {*/
+
+/*    vertical-align: middle;*/
+
+/*}*/
+
+/*.dateTakenNode {*/
+
+/*    display: none;*/
+
+/*}*/

@@ -11,12 +11,47 @@
     <!--SCRIPT FILES-->
     <script type="text/javascript" src="dojo/dojo.js" data-dojo-config="async:true"></script>
     <script type="text/javascript" src="scripts/mapboxGL.js" data-dojo-config="async:true"></script>
+    <!--fontawesome-->
+    <script src="https://use.fontawesome.com/d6894277f6.js"></script>
 </head>
 
 <body>
     <div id="map"></div>
     <nav id="layers"></nav>
-    <nav id="themes"></nav>
+    <div id="indicatorBox">
+        <!--<div id="indicatorTitle"><i class="fa fa-tachometer" title="Indicator"></i> Number of countries which have ceased logging intact forest</div>-->
+        <!--<div id="indicatorTitle"><i class="fa fa-circle-o-notch" title="Indicator" style="padding-right:20px"></i> Number of countries which have ceased logging intact forest</div>-->
+        <div id="indicatorHeader"><i class="fa fa-thermometer-empty" title="Indicator" style="padding-right:20px"></i>Indicator</div>
+        <div id="indicatorTitle">Number of countries which have ceased logging intact forest</div>
+        <div id="breadcrumb">
+            <span id="summaryText" title='Go back to the summary' style='cursor:pointer'>Summary</span>
+            <span id="countriesText" title='Go back to the list of countries' style='cursor:pointer'>&nbsp;|&nbsp;Countries</span>
+            <span id="countryText" style='cursor:pointer'>&nbsp;|&nbsp;Country</span>
+        </div>
+        <div id="summaryPage">
+            <img src="images/indicator2.png">
+            <img style="padding: 0px 0px 10px 10px;" src="images/indicator_history.png">
+        </div>
+        <div id="countriesPage">
+            <div id="countriesFooter">* Area logged in 2015</div>
+        </div>
+        <div id="countryPage"></div>
+        <div id="actionPage">
+            <div id="province"></div>
+            <div id="analysis" style="padding: 20px 0px 20px 0px;">Tools:</div>
+            <div class="action"><i class="fa fa-binoculars" aria-hidden="true" id="validate"></i>Validate with recent imagery</div>
+            <div class="action"><i class="fa fa-bug" aria-hidden="true"></i>Impact analysis</div>
+            <div id="actions" style="padding: 20px 0px 20px 0px;">Actions:</div>
+            <div class="action"><i class="fa fa-bullhorn" aria-hidden="true"></i>Report incident</div>
+            <div class="action"><i class="fa fa-phone" aria-hidden="true"></i>Contact enforcement agencies</div>
+            <div class="action"><i class="fa fa-phone" aria-hidden="true"></i>Contact provincial body</div>
+            <div class="action"><a href='https://www.amazon.com/Mat-Midwest-Air-Tech-317821A/dp/B000A1CEM6/ref=sr_1_9?ie=UTF8&qid=1505468782&sr=8-9&keywords=barbed+wire' target='_blank'><i class="fa fa-shopping-cart" aria-hidden="true"></i></a>Buy barbed wire with the Action
+                Fund
+            </div>
+        </div>
+        <div style='width:100%;text-align:center'><i id="gotoCountriesPageArrow" class="fa fa-arrow-circle-right" aria-hidden="true" style="font-size:16px;cursor:pointer;color:grey" title="Show more detail"></i></div>
+    </div>
+    <!--<canvas id="hiddenCanvas" style="display:none"></canvas>-->
 </body>
 
 </html>
