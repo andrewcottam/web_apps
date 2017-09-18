@@ -145,6 +145,16 @@ Styles for the indicator information box
     padding: 16px 0px;
 }
 
+.action{
+    font-size: 12px;
+}
+
+#analysis{
+    font-size: 13px;
+}
+#actions{
+    font-size: 13px;
+}
 /*
 Menu styles for the layer controls
 */
