@@ -1,0 +1,5 @@
+//>>built
+define("dojox/validate/_base",["dojo/_base/lang","dojo/regexp","dojo/number","./regexp"],function(g,m,k,l){var c=g.getObject("dojox.validate",!0);c.isText=function(b,a){a="object"==typeof a?a:{};return/^\s*$/.test(b)||"number"==typeof a.length&&a.length!=b.length||"number"==typeof a.minlength&&a.minlength>b.length||"number"==typeof a.maxlength&&a.maxlength<b.length?!1:!0};c._isInRangeCache={};c.isInRange=function(b,a){b=k.parse(b,a);if(isNaN(b))return!1;a="object"==typeof a?a:{};var h="number"==typeof a.max?
+a.max:Infinity,e="number"==typeof a.min?a.min:-Infinity,d=c._isInRangeCache,f=b+"max"+h+"min"+e+"dec"+("string"==typeof a.decimal?a.decimal:".");if("undefined"!=typeof d[f])return d[f];d[f]=!(b<e||b>h);return d[f]};c.isNumberFormat=function(b,a){return(new RegExp("^"+l.numberFormat(a)+"$","i")).test(b)};c.isValidLuhn=function(b){var a=0,c,e;g.isString(b)||(b=String(b));b=b.replace(/[- ]/g,"");c=b.length%2;for(var d=0;d<b.length;d++)e=parseInt(b.charAt(d)),d%2==c&&(e*=2),9<e&&(e-=9),a+=e;return!(a%
+10)};return c});
+//# sourceMappingURL=_base.js.map
