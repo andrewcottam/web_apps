@@ -8,6 +8,7 @@
     <link href='css/mapboxGL.css' rel='stylesheet' />
     <link href='css/mapbox-gl-geocoder.css' rel='stylesheet' />
     <link href='css/mapbox-gl-inspect.css' rel='stylesheet' />
+    <link href="dijit/themes/claro/claro.css" rel="stylesheet" />
     <!--SCRIPT FILES-->
     <script type="text/javascript" src="dojo/dojo.js" data-dojo-config="async:true"></script>
     <script type="text/javascript" src="scripts/mapboxGL.js" data-dojo-config="async:true"></script>
@@ -15,7 +16,7 @@
     <script src="https://use.fontawesome.com/d6894277f6.js"></script>
 </head>
 
-<body>
+<body class="claro">
     <div id="map"></div>
     <nav id="layers"></nav>
     <div id="indicatorBox">
@@ -31,6 +32,13 @@
         <div id="summaryPage">
             <img src="images/indicator2.png">
             <img style="padding: 0px 0px 10px 10px;" src="images/indicator_history.png">
+            <div style='width:100%;text-align:center;padding-top: 14px;'><i id="gotoCountriesPageArrow" class="fa fa-arrow-circle-right" aria-hidden="true" style="font-size:16px;cursor:pointer;color:grey" title="Show more detail"></i></div>
+            <div id="sources" ></div>
+            <!--<div class='source'>IUCN and UNEP-WCMC (2017), The World Database on Protected Areas (WDPA) August 2017, Cambridge, UK: UNEP-WCMC. Available at: <a href='http://www.protectedplanet.net'>www.protectedplanet.net</a></div>-->
+            <!--<div class='source'>Potapov P., Yaroshenko A., Turubanova S., Dubinin M., Laestadius L., Thies C., Aksenov D., Egorov A., Yesipova Y., Glushkov I., Karpachevskiy M., Kostikova A., Manisha A., Tsybikova E., Zhuravleva I. 2008. Mapping the World's Intact Forest-->
+            <!--    Landscapes by Remote Sensing. Ecology and Society, 13 (2)</div>-->
+            <!--<div class='source' id='forestcover_citation'></div>-->
+            <!--<div class='source'></div>-->
         </div>
         <div id="countriesPage">
             <div id="countriesFooter">* Area logged in 2015</div>
@@ -39,9 +47,10 @@
         <div id="actionPage">
             <div id="province"></div>
             <div id="analysis">Tools</div>
-            <div class="action"><i class="fa fa-binoculars" aria-hidden="true" id="validate"></i>Validate with recent imagery</div>
+            <div class="action"><i class="fa fa-binoculars" aria-hidden="true" id="validate" style="cursor:pointer" title="Click to zoom in and show recent imagery"></i>Validate with recent imagery</div>
             <div class="action"><i class="fa fa-bug" aria-hidden="true"></i>Impact analysis</div>
             <div class="action"><i class="fa fa-bug" aria-hidden="true"></i>Threat analysis</div>
+            <div class="action" id='addplacemark' title='Add a placemark' style='curson:pointer'><i class="fa fa-map-marker" aria-hidden="true"></i>Add placemark</div>
             <div id="actions">Actions</div>
             <div class="action"><i class="fa fa-bullhorn" aria-hidden="true"></i>Report incident</div>
             <div class="action"><i class="fa fa-phone" aria-hidden="true"></i>Contact enforcement agencies</div>
@@ -50,7 +59,7 @@
                 Fund
             </div>
         </div>
-        <div style='width:100%;text-align:center'><i id="gotoCountriesPageArrow" class="fa fa-arrow-circle-right" aria-hidden="true" style="font-size:16px;cursor:pointer;color:grey" title="Show more detail"></i></div>
+
     </div>
     <!--<canvas id="hiddenCanvas" style="display:none"></canvas>-->
 </body>

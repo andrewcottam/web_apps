@@ -3,16 +3,30 @@ require({
         paths: {
             widgetsPackage: "/../../widgets",
         }
-    }, ["widgetsPackage/PhotoBoxFlickr", "widgetsPackage/WebServiceAPIs/FlickrAPI", "dojo/dom-attr", "dojo/html", "dojo/dom", "dojo/dom-construct", "dojo/query", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx", "dojo/_base/lang", "dojo/_base/array", "dojo/io-query", "dojo/request/script", "dojo/on", "node_modules/mapbox-gl/dist/mapbox-gl.js", "scripts/mapbox-gl-geocoder.min.js", "scripts/mapbox-gl-inspect.min.js"],
-    function(PhotoBoxFlickr, FlickrAPI, domAttr, html, dom, domConstruct, query, domStyle, domGeom, gfx, lang, array, ioQuery, script, on, mapboxgl, MapboxGeocoder, MapboxInspect) {
+    }, ["dojo/request/xhr", "widgetsPackage/PhotoBoxFlickr", "widgetsPackage/WebServiceAPIs/FlickrAPI", "dojo/dom-attr", "dojo/html", "dojo/dom", "dojo/dom-construct", "dojo/query", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx", "dojo/_base/lang", "dojo/_base/array", "dojo/io-query", "dojo/request/script", "dojo/on", "node_modules/mapbox-gl/dist/mapbox-gl.js", "scripts/mapbox-gl-geocoder.min.js", "scripts/mapbox-gl-inspect.min.js"],
+    function(xhr, PhotoBoxFlickr, FlickrAPI, domAttr, html, dom, domConstruct, query, domStyle, domGeom, gfx, lang, array, ioQuery, script, on, mapboxgl, MapboxGeocoder, MapboxInspect) {
         var debug = true,
             countryPopups = [],
-            provincePopups = [];
+            provincePopups = [],
+            addingplacemark = false;
         var pictCountries = ["American Samoa", "Cook Islands", "Federated States of Micronesia", "Fiji", "French Polynesia", "Guam", "Kiribati", "Marshall Islands", "Nauru", "New Caledonia", "Niue", "Northern Mariana Islands", "Palau", "Papua New Guinea", "Samoa", "Solomon Islands", "Tokelau", "Tonga", "Tuvalu", "Vanuatu", "Wallis and Futuna"];
         var calloutSurface, popup, canvas, calloutRadius = 7,
             calloutLength = 50,
             calloutWidth = 3,
             osmVisibility = 'visible';
+        var today = new Date();
+        var dd = today.getDate();
+        var mm = today.getMonth() + 1; //January is 0!
+
+        var yyyy = today.getFullYear();
+        if (dd < 10) {
+            dd = '0' + dd;
+        }
+        if (mm < 10) {
+            mm = '0' + mm;
+        }
+        var today = dd + '/' + mm + '/' + yyyy;
+        // html.set("forestcover_citation", "ForestCover_lossyear. World Resources Institute. Accessed through Global Forest Watch on " + today + ". <a href='www.globalforestwatch.org'>www.globalforestwatch.org</a>");
         mapboxgl.accessToken = 'pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg'; //this is my access token
         if (debug) {
             console.debug("Using MapBoxGL version: " + mapboxgl.version);
@@ -41,9 +55,9 @@ require({
         //         closeOnClick: false
         //     })
         // }));
-        map.addControl(new mapboxgl.FullscreenControl(), 'top-left');
+        map.addControl(new mapboxgl.FullscreenControl(), 'bottom-right');
         map.addControl(new mapboxgl.ScaleControl());
-        map.addControl(new mapboxgl.NavigationControl(), 'top-left');
+        map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
         var geocoder = new MapboxGeocoder({
             accessToken: mapboxgl.accessToken,
             flyTo: false, //this stops the geocoder panning to the result so we have to do it manually (below)
@@ -80,6 +94,7 @@ require({
         map.on("load", function(e) {
             filterLabelsForPictCountries();
             addLayerContours();
+            // addDigitalGlobeImagey(); //no license for this at the moment
             addLayerSentinelHub();
             addLayerWDPA();
             addLayerWater();
@@ -94,10 +109,38 @@ require({
             // console.error("Something bad happened");
         });
         map.on("click", function(e) {
-            map.setStyle('mapbox://styles/blishten/cj6q75jcd39gq2rqm1d7yv5rc'); //marine style
+            if (addingplacemark) {
+                addPlacemark(e);
+            }
+            else {
+                map.setStyle('mapbox://styles/blishten/cj6q75jcd39gq2rqm1d7yv5rc'); //marine style
+            }
         });
         map.on("zoomend", function(e) {
             console.debug("Zoom: " + map.getZoom());
+            //lots of attempts at getting photo data from various sources but none working
+            // script.get("https://maps.googleapis.com/maps/api/place/nearbysearch/json?", {
+            //     query: {
+            //         key: 'AIzaSyDTxDpwaFu7qVsS-EeptGHgYMeeTEfzWzg',
+            //         location: '-5.631,150.933',
+            //         radius: 50000
+            //     },
+            //     jsonp: "callback"
+            // }).then(function(data) {
+            //     console.log(data);
+            // });
+            // script.get("https://mapsights.com/get_photos?minlat=-4.23497294268466&minlng=152.0629692077637&maxlat=-4.162041447792609&maxlng=152.2826957702637", {
+            //     jsonp: "callback"
+            // }).then(function(data) {
+            //     console.log(data);
+            // });
+
+            // xhr("https://mapsights.com/get_photos?minlat=-4.23497294268466&minlng=152.0629692077637&maxlat=-4.162041447792609&maxlng=152.2826957702637", {
+            //     headers: { "X-Requested-With": null },
+            //     handleAs: "json"
+            // }).then(function(data) {
+            //     console.log(data);
+            // }, function(err) {}, function(evt) {});
         });
         map.on("moveend", function(e) {
             addCountryPopups();
@@ -152,38 +195,57 @@ require({
             map.setLayoutProperty("Imagery", 'visibility', 'visible'); //turn on the imagery
             query("nav#layers a[title=Imagery]")[0].className = 'active';
             removeProvincesPopups();
-            var bbox = map.getBounds();
-            var flickrapi = new FlickrAPI({
-                map: map,
-                providers: ["flickr"],
-                tags: ["biopama"],
-                text: "outdoor",
-                accuracy: 4,
-            }, 4);
-            flickrapi.getImagesForBBox(bbox._sw.lng, bbox._sw.lat, bbox._ne.lng, bbox._ne.lat);
-            on(flickrapi, "imagesLoaded", function(evt) {
-                array.forEach(this.photos, function(photo) {
-                    var photoBox = new PhotoBoxFlickr({
-                        photo: photo,
-                        photoSize: "thumbnail"
-                    });
-                    photoBox.startup();
-                    var photoPopup = new mapboxgl.Popup({
-                        closeButton: true,
-                        closeOnClick: false,
-                        offset: [0, 0]
-                    });
-                    photoPopup.setLngLat([151.4739, -5.1169])
-                        .setHTML(photoBox.domNode.outerHTML)
-                        .addTo(map);
-                });
+            // var bbox = map.getBounds();
+            // var flickrapi = new FlickrAPI({
+            //     map: map,
+            //     providers: ["flickr"],
+            //     tags: ["biopama"],
+            //     text: "outdoor",
+            //     accuracy: 4,
+            // }, 4);
+            // flickrapi.getImagesForBBox(bbox._sw.lng, bbox._sw.lat, bbox._ne.lng, bbox._ne.lat);
+            // on(flickrapi, "imagesLoaded", function(evt) {
+            //     array.forEach(this.photos, function(photo) {
+            //         var photoBox = new PhotoBoxFlickr({
+            //             photo: photo,
+            //             photoSize: "thumbnail"
+            //         });
+            //         photoBox.startup();
+            //         var photoPopup = new mapboxgl.Popup({
+            //             closeButton: true,
+            //             closeOnClick: false,
+            //             offset: [0, 0]
+            //         });
+            //         photoPopup.setLngLat([151.4739, -5.1169])
+            //             .setHTML(photoBox.domNode.outerHTML)
+            //             .addTo(map);
+            //     });
+            // });
+            var photoPopup = new mapboxgl.Popup({
+                closeButton: true,
+                closeOnClick: false,
+                offset: [0, 0]
             });
+            photoPopup.setLngLat([151.3399, -5.1107])
+                .setHTML("<img src='images/png_deforestation.png' title='Deforestation in PNG'>")
+                .addTo(map);
+
         });
+
+        on(dom.byId('addplacemark'), 'click', function(evy) {
+            addingplacemark = true;
+        })
+
+        function addPlacemark(e) {
+            var popup = new mapboxgl.Popup({ closeOnClick: false })
+                .setLngLat(e.lngLat)
+                .setHTML('<form style="margin:5px">  <input type="radio" name="val1" checked> Groundtruth required<br>  <input type="radio" name="val1"> Within logging concession<br>  <input type="radio" name="val1" > Illegal activity<br>  <br/><input type="button" value="go"></form>')
+                .addTo(map);
+        }
 
         function gotoSummaryPage() {
             //show the first page and right arrow
             domStyle.set("summaryPage", "display", "block");
-            domStyle.set("gotoCountriesPageArrow", "display", "block");
             //hide the other pages
             domStyle.set("countriesText", "display", "none");
             domStyle.set("countriesPage", "display", "none");
@@ -196,7 +258,6 @@ require({
             addCountryPopups();
             //hide the other pages
             domStyle.set("summaryPage", "display", "none");
-            domStyle.set("gotoCountriesPageArrow", "display", "none");
             domStyle.set("countryText", "display", "none");
             domStyle.set("countryPage", "display", "none");
             domStyle.set("actionPage", "display", "none");
@@ -315,6 +376,7 @@ require({
                 'type': 'raster',
                 'source': {
                     'type': 'raster',
+                    // "attribution":"Potapov P. et al. 2008. Mapping the World's Intact Forest Landscapes by Remote Sensing. Ecology and Society, 13 (2)",
                     'tiles': [
                         // 'https://globalforestwatch-624153201.us-west-1.elb.amazonaws.com/arcgis/services/ForestCover_lossyear/ImageServer/WMSServer?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.1.1&request=GetMap&srs=EPSG:3857&width=256&height=256&layers=0'
                         // 'https://50.18.182.188:6080/arcgis/services/ForestCover_lossyear/ImageServer/WMSServer?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.1.1&request=GetMap&srs=EPSG:3857&width=256&height=256&layers=0'
@@ -325,7 +387,7 @@ require({
                 "layout": {
                     "visibility": "visible"
                 },
-                'maxzoom': 12.5,
+                'maxzoom': 14,
                 'minzoom': 7,
                 'paint': {}
             }, 'Intact Forest 2013');
@@ -390,6 +452,25 @@ require({
             });
         }
 
+        function addDigitalGlobeImagey() {
+            map.addLayer({
+                'id': 'Imagery',
+                'type': 'raster',
+                'source': {
+                    'type': 'raster',
+                    'tiles': [
+                        'https://a.tiles.mapbox.com/v4/digitalglobe.n6nhclo2/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYSI6ImIzMWY3NDA3NjlhYThlNjdiMTA2MGMxNzU0ZDE2YzY4In0.8jtWjgDsAwqFouTWzSnkJw',
+                    ],
+                    'tileSize': 256
+                },
+                'maxzoom': 19,
+                'layout': {
+                    'visibility': 'none'
+                },
+                'paint': {}
+            }, 'Landuse -National park');
+        }
+
         function addLayerSentinelHub() {
             //sentinel hub parameters - hard-coded for now
             var wmsParams = {
@@ -438,6 +519,7 @@ require({
                     ],
                     'tileSize': 256
                 },
+                'maxzoom': 14,
                 'layout': {
                     'visibility': 'none'
                 },

@@ -78,7 +78,7 @@ Styles for the indicator information box
     background: #fff;
     position: absolute;
     z-index: 10000000000;
-    top: 176px;
+    top: 12px;
     max-width: 400px;
     left: 0px;
     border-radius: 3px;
@@ -94,6 +94,18 @@ Styles for the indicator information box
     color: chocolate;
     border-bottom: 1px solid chocolate;
     margin-bottom: 10px;
+}
+
+#sources {
+    border-top: 1px solid chocolate;
+    padding-top: 10px;
+    margin-top: 33px;
+    font-size: 10px;
+}
+
+.source {
+    margin: 5px;
+    font-size: 9px;
 }
 
 #indicatorTitle {
@@ -132,7 +144,7 @@ Styles for the indicator information box
 
 #summaryPage {
     margin-top: 38px;
-    margin-bottom: 38px;
+    margin-bottom: 16px;
 }
 
 #detail {
@@ -145,16 +157,18 @@ Styles for the indicator information box
     padding: 16px 0px;
 }
 
-.action{
+.action {
     font-size: 12px;
 }
 
-#analysis{
+#analysis {
     font-size: 13px;
 }
-#actions{
+
+#actions {
     font-size: 13px;
 }
+
 /*
 Menu styles for the layer controls
 */
