@@ -94,8 +94,8 @@ require({
         map.on("load", function(e) {
             filterLabelsForPictCountries();
             addLayerContours();
-            // addDigitalGlobeImagey(); //no license for this at the moment
-            addLayerSentinelHub();
+            addDigitalGlobeImagey(); //no license for this at the moment
+            // addLayerSentinelHub();
             addLayerWDPA();
             addLayerWater();
             addGlobalForestWatch();

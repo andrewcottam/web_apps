@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!--Using an external source with the Mapbox GL JS Library-->
+<html>
+
+<head>
+    <title>CBD Target 11 Visualisation</title>
+    <!--STYLESHEETS-->
+    <link href='node_modules/mapbox-gl/dist/mapbox-gl.css' rel='stylesheet' />
+    <link href='css/cbd11.css' rel='stylesheet' />
+    <link href="dijit/themes/claro/claro.css" rel="stylesheet" />
+    <!--SCRIPT FILES-->
+    <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+    <script type="text/javascript" src="dojo/dojo.js" data-dojo-config="async:true"></script>
+    <script type="text/javascript" src="scripts/cbd11.js" data-dojo-config="async:true"></script>
+</head>
+
+<body class="claro">
+    <div id='map'></div>
+    <div id="panel">
+        <div>
+            <div id="countriesContainer">
+                <div id="countries"></div>
+                <div id="year">2020</div>
+            </div>
+            <div id="sliderContainer">
+                <div id="slider"></div>
+            </div>
+        </div>
+        <div id="info">
+            <table>
+                <tr>
+                    <td><span id="prefix">Country area:</span></td>
+                    <td class="ralign"><span id="intarea2"></span><span id="floatarea2"></span></td>
+                    <td><span id="unitarea2"> Km<sup>2</sup></span></td>
+                </tr>
+                <tr>
+                    <td><span id="prefix">Area protected:</span></td>
+                    <td class="ralign"><span id="intarea"></span><span id="floatarea"></span></td>
+                    <td><span id="unitarea"> Km<sup>2</sup></span></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td class="ralign">
+                        <div id="percentage"></div>
+                    </td>
+                    <td id="percent">%</td>
+                </tr>
+            </table>
+
+        </div>
+    </div>
+</body>
+
+</html>
