@@ -1,8 +1,6 @@
 require(["dojo/dom-style", "dijit/registry", "dojo/_base/array", "dojo/json", "dojo/store/Memory", "dojo/request/xhr", "dojo/dom", "dijit/form/Select", "dojo/parser", "dijit/form/HorizontalSlider", "dojo/on", "node_modules/mapbox-gl/dist/mapbox-gl.js"],
     function(domStyle, registry, array, json, Memory, xhr, dom, Select, parser, HorizontalSlider, on, mapboxgl) {
         var countryStore, selectedCountry, currentYear = 2020,
-            renderComplete = false,
-            moveComplete = false,
             countryArea = 0;
         parser.parse();
         new HorizontalSlider({
@@ -36,21 +34,13 @@ require(["dojo/dom-style", "dijit/registry", "dojo/_base/array", "dojo/json", "d
         });
         //called each time a tile is rendered
         map.on("render", function(e) {
-            if (map.loaded()) renderComplete = true;
-            if (renderComplete && moveComplete) calculateArea();
-        });
-        //called when the filter is applied to the map layer either by changing the country or changing the year
-        map.on("styledata", function(e) {
-            renderComplete = false;
+            var features = map.queryRenderedFeatures({ layers: ['WDPA'] });
+            console.log(features.length + " rendered features");
+            calculateArea();
         });
         //called when the country changes
         map.on("movestart", function(e) {
-            moveComplete = false;
             invalidateArea();
-        });
-        //called when the map has finished moving
-        map.on("moveend", function(e) {
-            moveComplete = true;
         });
         map.on("error", function(e) {
             console.error(e.error);
@@ -91,7 +81,7 @@ require(["dojo/dom-style", "dijit/registry", "dojo/_base/array", "dojo/json", "d
                         ]
                     }
                 }
-            });
+            },"place-island");
         }
 
         function addCountrySelector() {
@@ -155,13 +145,14 @@ require(["dojo/dom-style", "dijit/registry", "dojo/_base/array", "dojo/json", "d
         }
 
         function calculateArea() {
+            console.log("calculateArea")
             var totalArea = 0;
             var wdpaids = [];
             var features = map.queryRenderedFeatures({ layers: ['WDPA'] });
             array.forEach(features, function(feature) {
                 if (wdpaids.indexOf(feature.properties.WDPAID) == -1) {
                     totalArea = totalArea + feature.properties.REP_AREA; // marine area is REP_M_AREA
-                    console.log("xyz:" + feature._vectorTileFeature._x + "_" + feature._vectorTileFeature._y + "_" + feature._vectorTileFeature._z + " wdpaid:" + feature.properties.WDPAID);
+                    // console.log("xyz:" + feature._vectorTileFeature._x + "_" + feature._vectorTileFeature._y + "_" + feature._vectorTileFeature._z + " wdpaid:" + feature.properties.WDPAID);
                     wdpaids.push(feature.properties.WDPAID);
                 }
             });
@@ -172,6 +163,8 @@ require(["dojo/dom-style", "dijit/registry", "dojo/_base/array", "dojo/json", "d
                 dom.byId("intarea2").innerHTML = parseInt(countryArea).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //puts a comma in if needed
                 dom.byId("percentage").innerHTML = percentProtected.toString();
                 (percentProtected >= 17) ? domStyle.set("percentage", "color", "forestgreen"): domStyle.set("percentage", "color", "crimson");
+            }else{
+                domStyle.set("info", "display", "none");
             }
         }
 
