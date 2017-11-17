@@ -1,21 +1,22 @@
 /*global turf */
-require(["dojo/dom-style", "dijit/registry", "dojo/_base/array", "dojo/json", "dojo/store/Memory", "dojo/request/xhr", "dojo/dom", "dijit/form/Select", "dojo/parser", "dijit/form/HorizontalSlider", "dojo/on", "node_modules/mapbox-gl/dist/mapbox-gl.js"],
-    function(domStyle, registry, array, json, Memory, xhr, dom, Select, parser, HorizontalSlider, on, mapboxgl) {
+require(["dijit/registry", "dojo/_base/lang", "dojo/request/script", "dojo/dom-style", "dijit/registry", "dojo/_base/array", "dojo/json", "dojo/store/Memory", "dojo/request/xhr", "dojo/dom", "dijit/form/Select", "dojo/parser", "dijit/form/HorizontalSlider", "dojo/on", "node_modules/mapbox-gl/dist/mapbox-gl.js"],
+    function(registry, lang, script, domStyle, registry, array, json, Memory, xhr, dom, Select, parser, HorizontalSlider, on, mapboxgl) {
         var countryStore, selectedCountry, currentYear = 2020,
-            countryArea = 0;
+            restServerUrl = "https://db-server-blishten.c9users.io/cgi-bin/services.py/biopama/services/";
         parser.parse();
         new HorizontalSlider({
             name: "slider",
             value: 2020,
-            minimum: 1940,
+            minimum: 1900,
             maximum: 2020,
-            discreteValues: 9,
+            discreteValues: 121,
             intermediateChanges: true,
             style: "width:300px;",
             showButtons: false,
             onChange: function(value) {
                 currentYear = value;
                 setMapFilter();
+                showYearStatistics();
                 dom.byId("year").innerHTML = value;
             }
         }, "slider").startup();
@@ -38,8 +39,8 @@ require(["dojo/dom-style", "dijit/registry", "dojo/_base/array", "dojo/json", "d
         map.on("render", function(e) {
             var features = map.queryRenderedFeatures({ layers: ['WDPA'] });
             console.log(features.length + " rendered features");
-            // calculateArea();
-            calculateAreaTurf();
+            //calculateArea();
+            // calculateAreaTurf();
         });
         //called when the country changes
         map.on("movestart", function(e) {
@@ -53,10 +54,13 @@ require(["dojo/dom-style", "dijit/registry", "dojo/_base/array", "dojo/json", "d
             var features = map.queryRenderedFeatures({ layers: ['WDPA'] });
             if (features.length) {
                 var fc = turf.featureCollection(features);
-                var combined = turf.combine(fc);
+                // var fc = turf.featureCollection([features[3],features[8]]);
+                // var combined = turf.dissolve(fc);
+                var combined = turf.flatten(fc);
+                // var combined = turf.union.apply(this, features);
                 map.getSource('turf-outputs').setData({
                     type: 'FeatureCollection',
-                    features: [combined.features[0]]
+                    features: combined.features
                 });
                 map.addLayer({
                     id: 'turf-outputs-layer',
@@ -106,6 +110,105 @@ require(["dojo/dom-style", "dijit/registry", "dojo/_base/array", "dojo/json", "d
                     }
                 }
             }, "place-island");
+            map.addLayer({
+                "id": "WDPA_selected",
+                "type": "fill",
+                "source": {
+                    "type": "vector",
+                    "tilejson": "2.2.0",
+                    "maxzoom": 12,
+                    "tiles": ["https://storage.googleapis.com/geeimageserver.appspot.com/vectorTiles/wdpa/tilesets/{z}/{x}/{y}.pbf"]
+                },
+                "source-layer": "wdpa",
+                "layout": {
+                    "visibility": "visible"
+                },
+                "paint": {
+                    "fill-color": {
+                        "type": "categorical",
+                        "property": "MARINE",
+                        "stops": [
+                            ["0", "rgba(255,0,0, 0.5)"],
+                            ["1", "rgba(255,0,0, 0.5)"],
+                            ["2", "rgba(255,0,0, 0.5)"]
+                        ]
+                    },
+                    "fill-outline-color": {
+                        "type": "categorical",
+                        "property": "MARINE",
+                        "stops": [
+                            ["0", "rgba(255,0,0, 0.7)"],
+                            ["1", "rgba(255,0,0, 0.7)"],
+                            ["2", "rgba(255,0,0, 0.7)"]
+                        ]
+                    }
+                }
+            }, "WDPA");
+        }
+
+        function zoomToCountry() {
+            xhr("https://api.mapbox.com/geocoding/v5/mapbox.places/" + selectedCountry.item.name + ".json?access_token=pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg&country=" + selectedCountry.item.alpha2Code).then(function(data) {
+                var jsonData = json.parse(data);
+                if (jsonData.features.length > 0) {
+                    var feature = jsonData.features[0];
+                    if (feature.hasOwnProperty("bbox")) {
+                        map.fitBounds(feature.bbox);
+                    }
+                }
+            });
+        }
+
+        function getCountryCoverageStats() {
+            script.get(restServerUrl + "get_wdpa_terrestrial_coverage_statistics", {
+                query: {
+                    iso3code: selectedCountry.item.alpha3Code
+                },
+                jsonp: "callback"
+            }).then(function(response) {
+                if (!response.metadata.success) {
+                    alert('Unable to login. ' + response.metadata.error);
+                }
+                else {
+                    if (response.records.length > 0) {
+                        console.log(response.records);
+                        lang.mixin(selectedCountry, {
+                            terrestrial_coverage: response.records
+
+                        });
+                        showCountryArea();
+                        showYearStatistics();
+                        populateChart();
+                    }
+                }
+            });
+        }
+
+        function showCountryArea() {
+            if (selectedCountry.item.area) {
+                domStyle.set("info", "display", "block");
+                dom.byId("intarea2").innerHTML = parseInt(selectedCountry.item.area).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //puts a comma in if needed
+            }
+
+        }
+
+        function showYearStatistics() {
+            if (selectedCountry.terrestrial_coverage) {
+                var yr = registry.byId("slider").value;
+                var totalArea;
+                array.forEach(selectedCountry.terrestrial_coverage, function(item) {
+                    if (item.yr <= yr) {
+                        totalArea = item.cum_area;
+                    }
+                });
+                dom.byId("intarea").innerHTML = parseInt(totalArea).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //puts a comma in if needed
+                var percentProtected = (totalArea > 0) ? parseFloat((totalArea / selectedCountry.item.area) * 100).toFixed(1) : "0";
+                dom.byId("percentage").innerHTML = percentProtected.toString();
+                (percentProtected >= 17) ? domStyle.set("percentage", "color", "forestgreen"): domStyle.set("percentage", "color", "crimson");
+            }
+        }
+
+        function populateChart() {
+
         }
 
         function addCountrySelector() {
@@ -133,17 +236,8 @@ require(["dojo/dom-style", "dijit/registry", "dojo/_base/array", "dojo/json", "d
                         }
                         //get the bounding box from the mapbox geocoding api
                         if (selectedCountry) {
-                            xhr("https://api.mapbox.com/geocoding/v5/mapbox.places/" + selectedCountry.item.name + ".json?access_token=pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg&country=" + selectedCountry.item.alpha2Code).then(function(data) {
-                                var jsonData = json.parse(data);
-                                if (jsonData.features.length > 0) {
-                                    var feature = jsonData.features[0];
-                                    if (feature.hasOwnProperty("bbox")) {
-                                        map.fitBounds(feature.bbox);
-                                    }
-                                }
-                            });
-                            //get the country area so we can work out the 17% target for protected
-                            countryArea = selectedCountry.item.area;
+                            getCountryCoverageStats();
+                            zoomToCountry();
                         }
                         setMapFilter();
                     }
@@ -168,9 +262,13 @@ require(["dojo/dom-style", "dijit/registry", "dojo/_base/array", "dojo/json", "d
                 map.setFilter("WDPA", ["all", ["<", "STATUS_YR", currentYear],
                     ["==", "PARENT_ISO", selectedCountry.item.alpha3Code]
                 ]);
+                map.setFilter("WDPA_selected", ["all", ["==", "STATUS_YR", currentYear],
+                    ["==", "PARENT_ISO", selectedCountry.item.alpha3Code]
+                ]);
             }
             else {
                 map.setFilter("WDPA", null);
+                map.setFilter("WDPA_selected", null);
             }
         }
 
@@ -192,8 +290,8 @@ require(["dojo/dom-style", "dijit/registry", "dojo/_base/array", "dojo/json", "d
             });
             domStyle.set("info", "display", "block");
             dom.byId("intarea").innerHTML = parseInt(totalArea).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //puts a comma in if needed
-            dom.byId("intarea2").innerHTML = parseInt(countryArea).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //puts a comma in if needed
-            var percentProtected = (totalArea > 0) ? parseFloat((totalArea / countryArea) * 100).toFixed(1) : "0";
+            dom.byId("intarea2").innerHTML = parseInt(selectedCountry.item.area).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //puts a comma in if needed
+            var percentProtected = (totalArea > 0) ? parseFloat((totalArea / selectedCountry.item.area) * 100).toFixed(1) : "0";
             dom.byId("percentage").innerHTML = percentProtected.toString();
             (percentProtected >= 17) ? domStyle.set("percentage", "color", "forestgreen"): domStyle.set("percentage", "color", "crimson");
         }
@@ -213,10 +311,10 @@ require(["dojo/dom-style", "dijit/registry", "dojo/_base/array", "dojo/json", "d
                 // }
                 // var totalArea = turf.area(feature) / 1000000;
                 // if (totalArea > 0) {
-                //     var percentProtected = parseFloat((totalArea / countryArea) * 100).toFixed(1);
+                //     var percentProtected = parseFloat((totalArea / selectedCountry.item.area) * 100).toFixed(1);
                 //     domStyle.set("info", "display", "block");
                 //     dom.byId("intarea").innerHTML = parseInt(totalArea).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //puts a comma in if needed
-                //     dom.byId("intarea2").innerHTML = parseInt(countryArea).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //puts a comma in if needed
+                //     dom.byId("intarea2").innerHTML = parseInt(selectedCountry.item.area).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); //puts a comma in if needed
                 //     dom.byId("percentage").innerHTML = percentProtected.toString();
                 //     (percentProtected >= 17) ? domStyle.set("percentage", "color", "forestgreen"): domStyle.set("percentage", "color", "crimson");
                 // }
