@@ -128,9 +128,9 @@ require(["dijit/registry", "dojo/_base/lang", "dojo/request/script", "dojo/dom-s
                         "type": "categorical",
                         "property": "MARINE",
                         "stops": [
-                            ["0", "rgba(255,0,0, 0.5)"],
-                            ["1", "rgba(255,0,0, 0.5)"],
-                            ["2", "rgba(255,0,0, 0.5)"]
+                            ["0", "rgba(255,0,0, 0.7)"],
+                            ["1", "rgba(255,0,0, 0.7)"],
+                            ["2", "rgba(255,0,0, 0.7)"]
                         ]
                     },
                     "fill-outline-color": {
@@ -143,7 +143,25 @@ require(["dijit/registry", "dojo/_base/lang", "dojo/request/script", "dojo/dom-s
                         ]
                     }
                 }
-            }, "WDPA");
+            }, "place-island");
+            map.addLayer({
+                "id": "WDPA_names",
+                "type": "symbol",
+                "source": {
+                    type: 'vector',
+                    url: 'mapbox://blishten.6bj0u9pi'
+                },
+                "source-layer": "Archive-5rpwu0",
+                "layout": {
+                    "text-field": "{NAME}",
+                    "text-size": 13
+                },
+                "paint": {
+                    "text-halo-width": 1,
+                    "text-halo-blur": 1,
+                    "text-halo-color": "hsla(0, 0%, 100%, 0.8)"
+                }
+            }, "place-island");
         }
 
         function zoomToCountry() {
@@ -265,10 +283,14 @@ require(["dijit/registry", "dojo/_base/lang", "dojo/request/script", "dojo/dom-s
                 map.setFilter("WDPA_selected", ["all", ["==", "STATUS_YR", currentYear],
                     ["==", "PARENT_ISO", selectedCountry.item.alpha3Code]
                 ]);
+                map.setFilter("WDPA_names", ["all", ["==", "STATUS_YR", currentYear],
+                    ["==", "PARENT_ISO", selectedCountry.item.alpha3Code]
+                ]);
             }
             else {
                 map.setFilter("WDPA", null);
                 map.setFilter("WDPA_selected", null);
+                map.setFilter("WDPA_names", null);
             }
         }
 
