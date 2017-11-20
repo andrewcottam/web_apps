@@ -37,8 +37,10 @@ require(["dijit/registry", "dojo/_base/lang", "dojo/request/script", "dojo/dom-s
         });
         //called each time a tile is rendered
         map.on("render", function(e) {
-            var features = map.queryRenderedFeatures({ layers: ['WDPA'] });
-            console.log(features.length + " rendered features");
+            if (this.getLayer("WDPA")) {
+                var features = map.queryRenderedFeatures({ layers: ['WDPA'] });
+                console.log(features.length + " rendered features");
+            }
             //calculateArea();
             // calculateAreaTurf();
         });
@@ -162,6 +164,8 @@ require(["dijit/registry", "dojo/_base/lang", "dojo/request/script", "dojo/dom-s
                     "text-halo-color": "hsla(0, 0%, 100%, 0.8)"
                 }
             }, "place-island");
+                map.setFilter("WDPA_selected", ['==', 'wdpaid', -1]);
+                map.setFilter("WDPA_names", ['==', 'wdpaid', -1]);
         }
 
         function zoomToCountry() {
