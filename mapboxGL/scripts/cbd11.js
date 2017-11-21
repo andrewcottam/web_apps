@@ -31,7 +31,7 @@ require(["dojox/charting/themes/PlotKit/blue", "dijit/form/HorizontalSlider", "d
         });
         //called when the country changes
         map.on("movestart", function(e) {
-            invalidateArea();
+            // invalidateArea();
         });
         map.on("error", function(e) {
             console.error(e.error);
