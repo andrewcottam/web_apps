@@ -40,24 +40,24 @@ require(["dojox/charting/themes/PlotKit/blue", "dijit/form/HorizontalSlider", "d
         map.on("click", function() {
             var features = map.queryRenderedFeatures({ layers: ['WDPA'] });
             if (features.length) {
-                var fc = turf.featureCollection(features);
-                // var fc = turf.featureCollection([features[3],features[8]]);
-                // var combined = turf.dissolve(fc);
-                var combined = turf.flatten(fc);
-                // var combined = turf.union.apply(this, features);
-                map.getSource('turf-outputs').setData({
-                    type: 'FeatureCollection',
-                    features: combined.features
-                });
-                map.addLayer({
-                    id: 'turf-outputs-layer',
-                    type: 'fill',
-                    source: 'turf-outputs',
-                    paint: {
-                        "fill-color": "#0000ff",
-                        "fill-outline-color": "#ff0000"
-                    }
-                });
+                // var fc = turf.featureCollection(features);
+                // // var fc = turf.featureCollection([features[3],features[8]]);
+                // // var combined = turf.dissolve(fc);
+                // var combined = turf.flatten(fc);
+                // // var combined = turf.union.apply(this, features);
+                // map.getSource('turf-outputs').setData({
+                //     type: 'FeatureCollection',
+                //     features: combined.features
+                // });
+                // map.addLayer({
+                //     id: 'turf-outputs-layer',
+                //     type: 'fill',
+                //     source: 'turf-outputs',
+                //     paint: {
+                //         "fill-color": "#0000ff",
+                //         "fill-outline-color": "#ff0000"
+                //     }
+                // });
             }
         });
 
