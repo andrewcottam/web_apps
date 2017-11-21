@@ -1,25 +1,10 @@
 /*global turf */
-require(["dijit/registry", "dojo/_base/lang", "dojo/request/script", "dojo/dom-style", "dijit/registry", "dojo/_base/array", "dojo/json", "dojo/store/Memory", "dojo/request/xhr", "dojo/dom", "dijit/form/Select", "dojo/parser", "dijit/form/HorizontalSlider", "dojo/on", "node_modules/mapbox-gl/dist/mapbox-gl.js"],
-    function(registry, lang, script, domStyle, registry, array, json, Memory, xhr, dom, Select, parser, HorizontalSlider, on, mapboxgl) {
+require(["dojox/charting/themes/PlotKit/blue", "dijit/form/HorizontalSlider", "dojox/charting/StoreSeries", "dojox/charting/axis2d/Default", "dojox/charting/plot2d/Markers", "dojox/charting/plot2d/Areas", "dojox/charting/Chart", "dojo/_base/lang", "dojo/request/script", "dojo/dom-style", "dijit/registry", "dojo/_base/array", "dojo/json", "dojo/store/Memory", "dojo/request/xhr", "dojo/dom", "dijit/form/Select", "dojo/parser", "dijit/form/HorizontalSlider", "dojo/on", "node_modules/mapbox-gl/dist/mapbox-gl.js"],
+    function(blue, HorizontalSlider, StoreSeries, Default, Markers, Areas, Chart, lang, script, domStyle, registry, array, json, Memory, xhr, dom, Select, parser, HorizontalSlider, on, mapboxgl) {
         var countryStore, selectedCountry, currentYear = 2020,
-            restServerUrl = "https://db-server-blishten.c9users.io/cgi-bin/services.py/biopama/services/";
+            restServerUrl = "https://db-server-blishten.c9users.io/cgi-bin/services.py/biopama/services/",
+            chart, slider;
         parser.parse();
-        new HorizontalSlider({
-            name: "slider",
-            value: 2020,
-            minimum: 1900,
-            maximum: 2020,
-            discreteValues: 121,
-            intermediateChanges: true,
-            style: "width:300px;",
-            showButtons: false,
-            onChange: function(value) {
-                currentYear = value;
-                setMapFilter();
-                showYearStatistics();
-                dom.byId("year").innerHTML = value;
-            }
-        }, "slider").startup();
         mapboxgl.accessToken = 'pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg'; //this is my access token
         var map = new mapboxgl.Map({
             container: 'map',
@@ -39,7 +24,7 @@ require(["dijit/registry", "dojo/_base/lang", "dojo/request/script", "dojo/dom-s
         map.on("render", function(e) {
             if (this.getLayer("WDPA")) {
                 var features = map.queryRenderedFeatures({ layers: ['WDPA'] });
-                console.log(features.length + " rendered features");
+                // console.log(features.length + " rendered features");
             }
             //calculateArea();
             // calculateAreaTurf();
@@ -126,24 +111,8 @@ require(["dijit/registry", "dojo/_base/lang", "dojo/request/script", "dojo/dom-s
                     "visibility": "visible"
                 },
                 "paint": {
-                    "fill-color": {
-                        "type": "categorical",
-                        "property": "MARINE",
-                        "stops": [
-                            ["0", "rgba(255,0,0, 0.7)"],
-                            ["1", "rgba(255,0,0, 0.7)"],
-                            ["2", "rgba(255,0,0, 0.7)"]
-                        ]
-                    },
-                    "fill-outline-color": {
-                        "type": "categorical",
-                        "property": "MARINE",
-                        "stops": [
-                            ["0", "rgba(255,0,0, 0.7)"],
-                            ["1", "rgba(255,0,0, 0.7)"],
-                            ["2", "rgba(255,0,0, 0.7)"]
-                        ]
-                    }
+                    "fill-color": "rgba(229,58,45, 0.8)",
+                    "fill-outline-color": "rgba(229,58,45, 0.8)"
                 }
             }, "place-island");
             map.addLayer({
@@ -159,13 +128,13 @@ require(["dijit/registry", "dojo/_base/lang", "dojo/request/script", "dojo/dom-s
                     "text-size": 13
                 },
                 "paint": {
-                    "text-halo-width": 1,
+                    "text-halo-width": 2,
                     "text-halo-blur": 1,
                     "text-halo-color": "hsla(0, 0%, 100%, 0.8)"
                 }
             }, "place-island");
-                map.setFilter("WDPA_selected", ['==', 'wdpaid', -1]);
-                map.setFilter("WDPA_names", ['==', 'wdpaid', -1]);
+            map.setFilter("WDPA_selected", ['==', 'wdpaid', -1]);
+            map.setFilter("WDPA_names", ['==', 'wdpaid', -1]);
         }
 
         function zoomToCountry() {
@@ -192,10 +161,15 @@ require(["dijit/registry", "dojo/_base/lang", "dojo/request/script", "dojo/dom-s
                 }
                 else {
                     if (response.records.length > 0) {
-                        console.log(response.records);
+                        //console.log(response.records);
+                        array.forEach(response.records, function(item) {
+                            lang.mixin(item, {
+                                percentProtected: (item.cum_area / selectedCountry.item.area) * 100,
+                                fill: "red",
+                            });
+                        });
                         lang.mixin(selectedCountry, {
                             terrestrial_coverage: response.records
-
                         });
                         showCountryArea();
                         showYearStatistics();
@@ -215,10 +189,9 @@ require(["dijit/registry", "dojo/_base/lang", "dojo/request/script", "dojo/dom-s
 
         function showYearStatistics() {
             if (selectedCountry.terrestrial_coverage) {
-                var yr = registry.byId("slider").value;
                 var totalArea;
                 array.forEach(selectedCountry.terrestrial_coverage, function(item) {
-                    if (item.yr <= yr) {
+                    if (item.yr <= currentYear) {
                         totalArea = item.cum_area;
                     }
                 });
@@ -230,8 +203,115 @@ require(["dijit/registry", "dojo/_base/lang", "dojo/request/script", "dojo/dom-s
         }
 
         function populateChart() {
+            var minX = selectedCountry.terrestrial_coverage[1].yr;
+            var maxX = new Date().getFullYear();
+            if (!chart) {
+                if (selectedCountry.terrestrial_coverage.length >= 2) {
+                    chart = new Chart("chart");
+                    chart.setTheme(blue);
+                    chart.addPlot("default", {
+                        type: "Markers",
+                        tension: "S",
+                        styleFunc: function(item) {
+                            if (item.y <= 17) {
+                                return { fill: "red" };
+                            }
+                            else {
+                                return { fill: "green" };
+                            }
+                            return {};
+                        }
+                    });
+                    chart.addAxis("x", {
+                        majorTickStep: 10,
+                        minorTicks: false,
+                        majorLabels: true,
+                        min: minX,
+                        max: maxX,
+                        fixUpper: "minor",
+                        fixLower: "minor",
+                    });
+                    chart.addAxis("y", {
+                        vertical: true,
+                        min: 0,
+                        max: 40,
+                        fixUpper: "major",
+                    });
+                    //add the 17% threshold line
 
+                    //add the line series
+                    var datastore = new Memory({
+                        data: selectedCountry.terrestrial_coverage,
+                    });
+                    var storeSeries = new StoreSeries(datastore, {}, {
+                        x: "yr",
+                        y: "percentProtected",
+                    });
+                    chart.addSeries("Series 1", storeSeries, {
+                        plot: "default",
+                    });
+                    // //add the area series
+                    // chart.addPlot("areas", {
+                    //     type: Areas,
+                    // });
+                    // var datastore2 = new Memory({
+                    //     data: selectedCountry.terrestrial_coverage,
+                    // });
+                    // var storeSeries2 = new StoreSeries(datastore2, {}, {
+                    //     x: "yr",
+                    //     y: "percentProtected",
+                    // });
+                    // chart.addSeries("Series 2", storeSeries2, {
+                    //     plot: "areas",
+                    // });
+                    chart.render();
+                }
+            }
+            if (!slider) {
+                //get the size and shape of the plot area so we can position the slider over the x axis
+                var plotAreaShape = chart.surface.children[1].shape;
+                domStyle.set("sliderContainer", {
+                    left: plotAreaShape.x - 5 + "px",
+                    top: plotAreaShape.y + plotAreaShape.height - 5 + "px",
+                });
+                //create the slider
+                slider = new HorizontalSlider({
+                    name: "slider",
+                    value: maxX,
+                    minimum: chart.axes.x.scaler.bounds.lower,
+                    maximum: chart.axes.x.scaler.bounds.upper,
+                    discreteValues: chart.axes.x.scaler.bounds.upper - chart.axes.x.scaler.bounds.lower + 1,
+                    intermediateChanges: true,
+                    showButtons: false,
+                    style: "width:" + (chart.axes.x.scaler.bounds.span + 20) + "px",
+                    onChange: function(value) {
+                        currentYear = value;
+                        //get the terrestrial coverage up to the year that the user has selected
+                        var data = [];
+                        array.every(selectedCountry.terrestrial_coverage, function(item) {
+                            if (item.yr <= currentYear) {
+                                data.push(item);
+                            }
+                            return (item.yr <= currentYear);
+                        });
+                        var datastore = new Memory({
+                            data: data
+                        });
+                        var storeSeries = new StoreSeries(datastore, {}, {
+                            x: "yr",
+                            y: "percentProtected",
+                        });
+                        //update the area chart
+                        chart.updateSeries("Series 1", storeSeries);
+                        chart.render();
+                        setMapFilter();
+                        showYearStatistics();
+                        dom.byId("year").innerHTML = value;
+                    }
+                }, "slider").startup();
+            }
         }
+
 
         function addCountrySelector() {
             //populate the select box with countries and codes from an external service
