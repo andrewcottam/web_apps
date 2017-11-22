@@ -111,10 +111,13 @@ require(["dojox/charting/themes/PlotKit/blue", "dijit/form/HorizontalSlider", "d
                     "visibility": "visible"
                 },
                 "paint": {
-                    "fill-color": "rgba(99,148,69,1)",
-                    "fill-pattern": "hatch_36px-2pxSp-0.5pt"
+                    "fill-color": "rgba(229,58,45, 0.8)",
+                    "fill-outline-color": "rgba(229,58,45, 0.8)"
                 }
             }, "place-island");
+            //to use a sprite from North Star put this in paint
+            // "fill-color": "rgba(229,58,45, 0.8)",
+            // "fill-outline-color": "rgba(229,58,45, 0.8)"
             map.addLayer({
                 "id": "WDPA_names",
                 "type": "symbol",
