@@ -111,8 +111,8 @@ require(["dojox/charting/themes/PlotKit/blue", "dijit/form/HorizontalSlider", "d
                     "visibility": "visible"
                 },
                 "paint": {
-                    "fill-color": "rgba(229,58,45, 0.8)",
-                    "fill-outline-color": "rgba(229,58,45, 0.8)"
+                    "fill-color": "rgba(99,148,69,1)",
+                    "fill-pattern": "hatch_36px-2pxSp-0.5pt"
                 }
             }, "place-island");
             map.addLayer({
