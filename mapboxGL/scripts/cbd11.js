@@ -8,14 +8,14 @@ require(["dojox/charting/themes/PlotKit/blue", "dijit/form/HorizontalSlider", "d
         mapboxgl.accessToken = 'pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg'; //this is my access token
         var map = new mapboxgl.Map({
             container: 'map',
-            style: "mapbox://styles/blishten/cj6q75jcd39gq2rqm1d7yv5rc",
+            style: "mapbox://styles/blishten/cjckavkjc9xui2snvo09hqpfs",
             center: [21, -2], //salonga
             zoom: 4,
             hash: true,
         });
+
         //add the map events
         map.on("load", function(e) {
-            addLayerWDPA();
             addCountrySelector();
             addTurfOutputsLayer();
             // console.log("load " + e);
@@ -60,85 +60,6 @@ require(["dojox/charting/themes/PlotKit/blue", "dijit/form/HorizontalSlider", "d
                 // });
             }
         });
-
-        function addLayerWDPA() {
-            map.addLayer({
-                "id": "WDPA",
-                "type": "fill",
-                "source": {
-                    "attribution": "IUCN and UNEP-WCMC (2017), The World Database on Protected Areas (WDPA) August 2017, Cambridge, UK: UNEP-WCMC. Available at: <a href='http://www.protectedplanet.net'>www.protectedplanet.net</a>",
-                    "type": "vector",
-                    "tilejson": "2.2.0",
-                    "maxzoom": 12,
-                    "tiles": ["https://storage.googleapis.com/geeimageserver.appspot.com/vectorTiles/wdpa/tilesets/{z}/{x}/{y}.pbf"]
-                },
-                "source-layer": "wdpa",
-                "layout": {
-                    "visibility": "visible"
-                },
-                "paint": {
-                    "fill-color": {
-                        "type": "categorical",
-                        "property": "MARINE",
-                        "stops": [
-                            ["0", "rgba(99,148,69, 0.5)"],
-                            ["1", "rgba(63,127,191, 0.5)"],
-                            ["2", "rgba(63,127,191, 0.5)"]
-                        ]
-                    },
-                    "fill-outline-color": {
-                        "type": "categorical",
-                        "property": "MARINE",
-                        "stops": [
-                            ["0", "rgba(99,148,69, 0.5)"],
-                            ["1", "rgba(63,127,191, 0.5)"],
-                            ["2", "rgba(63,127,191, 0.5)"]
-                        ]
-                    }
-                }
-            }, "place-island");
-            map.addLayer({
-                "id": "WDPA_selected",
-                "type": "fill",
-                "source": {
-                    "type": "vector",
-                    "tilejson": "2.2.0",
-                    "maxzoom": 12,
-                    "tiles": ["https://storage.googleapis.com/geeimageserver.appspot.com/vectorTiles/wdpa/tilesets/{z}/{x}/{y}.pbf"]
-                },
-                "source-layer": "wdpa",
-                "layout": {
-                    "visibility": "visible"
-                },
-                "paint": {
-                    "fill-color": "rgba(229,58,45, 0.8)",
-                    "fill-outline-color": "rgba(229,58,45, 0.8)"
-                }
-            }, "place-island");
-            //to use a sprite from North Star put this in paint
-            // "fill-color": "rgba(229,58,45, 0.8)",
-            // "fill-outline-color": "rgba(229,58,45, 0.8)"
-            map.addLayer({
-                "id": "WDPA_names",
-                "type": "symbol",
-                "source": {
-                    type: 'vector',
-                    url: 'mapbox://blishten.6bj0u9pi'
-                },
-                "source-layer": "Archive-5rpwu0",
-                "layout": {
-                    "text-field": "{NAME}",
-                    "text-size": 13
-                },
-                "paint": {
-                    "text-halo-width": 2,
-                    "text-halo-blur": 1,
-                    "text-halo-color": "hsla(0, 0%, 100%, 0.8)"
-                }
-            }, "place-island");
-            map.setFilter("WDPA_selected", ['==', 'wdpaid', -1]);
-            map.setFilter("WDPA_names", ['==', 'wdpaid', -1]);
-        }
 
         function zoomToCountry() {
             xhr("https://api.mapbox.com/geocoding/v5/mapbox.places/" + selectedCountry.item.name + ".json?access_token=pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg&country=" + selectedCountry.item.alpha2Code).then(function(data) {
@@ -364,13 +285,22 @@ require(["dojox/charting/themes/PlotKit/blue", "dijit/form/HorizontalSlider", "d
 
         function setMapFilter() {
             if (selectedCountry) {
-                map.setFilter("WDPA", ["all", ["<", "STATUS_YR", currentYear],
+                map.setFilter("terrestrial-pas", ["all", ["<", "STATUS_YR", currentYear],
                     ["==", "PARENT_ISO", selectedCountry.item.alpha3Code]
                 ]);
-                map.setFilter("WDPA_selected", ["all", ["==", "STATUS_YR", currentYear],
+                map.setFilter("terrestrial-pas-active", ["all", ["==", "STATUS_YR", currentYear],
                     ["==", "PARENT_ISO", selectedCountry.item.alpha3Code]
                 ]);
-                map.setFilter("WDPA_names", ["all", ["==", "STATUS_YR", currentYear],
+                map.setFilter("terrestrial-pas-labels", ["all", ["==", "STATUS_YR", currentYear],
+                    ["==", "PARENT_ISO", selectedCountry.item.alpha3Code]
+                ]);
+                map.setFilter("marine-pas", ["all", ["<", "STATUS_YR", currentYear],
+                    ["==", "PARENT_ISO", selectedCountry.item.alpha3Code]
+                ]);
+                map.setFilter("marine-pas-active", ["all", ["==", "STATUS_YR", currentYear],
+                    ["==", "PARENT_ISO", selectedCountry.item.alpha3Code]
+                ]);
+                map.setFilter("marine-pas-labels", ["all", ["==", "STATUS_YR", currentYear],
                     ["==", "PARENT_ISO", selectedCountry.item.alpha3Code]
                 ]);
             }
