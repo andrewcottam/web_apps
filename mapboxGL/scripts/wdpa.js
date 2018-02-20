@@ -5,19 +5,16 @@ require(["dojo/request/xhr", "dojo/dom-attr", "dojo/html", "dojo/dom", "dojo/dom
             calloutWidth = 3,
             canvas;
         mapboxgl.accessToken = 'pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg'; //this is my access token
+        var btn = dom.byId("btn");
+        on(btn, "click", function(e) {
+            var filter = ['in', 'DESIG', "Ramsar Site, Wetland of International Importance"];
+            map.setFilter("WDPA", filter);
+        });
         var map = new mapboxgl.Map({
             container: 'map',
-            // style: "mapbox://styles/mapbox/streets-v10?optimize=true", //vanilla mapbox style
             style: "mapbox://styles/blishten/cj6f4n2j026qf2rnunkauikjm", //my Basic style
-            // style: "styles/localcopy.json", //local copy of the previous mapbox studio authored style
-            // style: "styles/localcopyplus.json", //local copy of the previous mapbox studio authored style plus tippecanoe data on google cloud storage
-            // style: "styles/mapzen_basic.json", //mapzen style
-            // style: "https://openmaptiles.github.io/osm-bright-gl-style/style-cdn.json", //openmaptile style
-            // center: [-14.8975, 16.5887], //senegal
-            // center: [21, -2], //salonga
-            center: [0, 0], //pacific
+            center: [0, 0], 
             zoom: 4,
-            // zoom: 12,
             hash: true,
         });
         map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
