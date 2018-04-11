@@ -35,8 +35,8 @@ require({
         var map = new mapboxgl.Map({
             container: 'map',
             // style: "mapbox://styles/mapbox/streets-v10?optimize=true", //vanilla mapbox style
-            style: "mapbox://styles/blishten/cj6f4n2j026qf2rnunkauikjm", //my Basic style
-            // style: "styles/localcopy.json", //local copy of the previous mapbox studio authored style
+            // style: "mapbox://styles/blishten/cj6f4n2j026qf2rnunkauikjm", //my Basic style
+            style: "styles/cbd11.json", //local copy of the previous mapbox studio authored style
             // style: "styles/localcopyplus.json", //local copy of the previous mapbox studio authored style plus tippecanoe data on google cloud storage
             // style: "styles/mapzen_basic.json", //mapzen style
             // style: "https://openmaptiles.github.io/osm-bright-gl-style/style-cdn.json", //openmaptile style
@@ -96,7 +96,7 @@ require({
             addLayerContours();
             addDigitalGlobeImagey(); //no license for this at the moment
             // addLayerSentinelHub();
-            addLayerWDPA();
+            // addLayerWDPA();
             addLayerWater();
             addGlobalForestWatch();
             canvas = map.getCanvas();

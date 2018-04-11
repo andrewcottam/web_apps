@@ -1,5 +1,7 @@
 explorer/
 dojo-release-1.12.2/
+mbtiles-server/
+tileserver-php-master/
 
 #################
 ## Eclipse
