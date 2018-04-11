@@ -1,0 +1,24 @@
+<h3 class="appTitle"><!--<%= title %>--></h3>
+<div class="buttons btn-group">
+	<button class="builder-cmd builder-settings" title="<%= btnSettings %>">
+		<span class="builder-cmd-hidden-label"><%= btnSettings %></span>
+	</button>
+	<button class="builder-cmd builder-share" data-title="<%= tooltipFirstSave %>" data-placement="bottom" title="<%= btnShare %>">
+		<span class="builder-cmd-hidden-label"><%= btnShare %></span>
+	</button>
+	<button class="builder-cmd builder-preview" data-title="<%= tooltipNotShared %>" data-placement="bottom" title="<%= btnPreview %>">
+		<span class="builder-cmd-hidden-label"><%= btnPreview %></span>
+	</button>
+	<button class="builder-cmd builder-help" title="<%= btnHelp %>">
+		<span class="builder-cmd-hidden-label"><%= btnHelp %></span>
+</div>
+<div class="status-bar">
+	<div class="status-bar-info">
+		<span class="status-msg"></span>
+		<span class="status-btns">
+			<button class="btn btn-warning check-story"></button>
+			<button type="button" class="btn btn-default builder-save disabled" tabindex="-1"><%= btnSave %></button>
+		</span>
+	</div>
+</div>
+<div class="builder-mask"></div>
