@@ -6,26 +6,32 @@ define(["dojo/topic", "dojo/on", "dojo/dom-style", "dojo/request/script", "dojo/
   var geeServerUrl = "https://geeImageServer.appspot.com";
   var monthlyRecurrenceChart, yearlyClassificationsChart;
 
+  topic.subscribe("story-loaded-map", function(result) {
+    if (app.map) {
+      //remove the light class from the infowindow - this is added in the esri storymap for some reason and it hides the title
+      $(app.map.infoWindow.domNode).removeClass("light");
+      app.map.infoWindow.setContent("<div class='chartHolder'><img src='images/loading.gif' class='loadingIcon' id='loading1'><div id='monthlyRecurrenceChart' class='chart'></div></div><div class='chartHolder'><img src='images/loading.gif' class='loadingIcon' id='loading2'><div id='yearlyClassificationsChart' class='chart2'></div></div>");
+      app.map.infoWindow.resize(370, 400);
+      app.map.infoWindow.setTitle("Water history");
+      createMonthlyRecurrenceChart();
+      createYearlyClassificationsChart();
+      if (!app.map.clickAttached) {
+        app.map.clickAttached = on(app.map, "click", function(evt) {
+          var ll = webMercatorUtils.xyToLngLat(evt.mapPoint.x, evt.mapPoint.y);
+          var latlng = { lat: ll[1], lng: ll[0] };
+          getMonthlyRecurrence(latlng);
+          getYearlyClassifications(latlng);
+          app.map.infoWindow.show(evt.screenPoint, app.map.getInfoWindowAnchor(evt.screenPoint));
+        });
+      }
+    }
+  });
+
   // The application is ready
   topic.subscribe("tpl-ready", function() {
     /*
      * Custom Javascript to be executed when the application is ready goes here
      */
-    //remove the light class from the infowindow - this is added in the esri storymap for some reason and it hides the title
-    $(app.map.infoWindow.domNode).removeClass("light");
-    app.map.infoWindow.setContent("<div class='chartHolder'><img src='images/loading.gif' class='loadingIcon' id='loading1'><div id='monthlyRecurrenceChart' class='chart'></div></div><div class='chartHolder'><img src='images/loading.gif' class='loadingIcon' id='loading2'><div id='yearlyClassificationsChart' class='chart2'></div></div>");
-    app.map.infoWindow.resize(370, 400);
-    app.map.infoWindow.setTitle("Water history");
-    createMonthlyRecurrenceChart();
-    createYearlyClassificationsChart();
-
-    on(app.map, "click", function(evt) {
-      var ll = webMercatorUtils.xyToLngLat(evt.mapPoint.x, evt.mapPoint.y);
-      var latlng = { lat: ll[1], lng: ll[0] };
-      getMonthlyRecurrence(latlng);
-      getYearlyClassifications(latlng);
-      app.map.infoWindow.show(evt.screenPoint, app.map.getInfoWindowAnchor(evt.screenPoint));
-    });
   });
 
   function createMonthlyRecurrenceChart() {
@@ -274,7 +280,7 @@ define(["dojo/topic", "dojo/on", "dojo/dom-style", "dojo/request/script", "dojo/
       jsonp: "callback"
     }).then(lang.hitch(this, function(response) {
       var recurrenceData = [],
-      obsData = [];
+        obsData = [];
       array.forEach(response.records, function(record, index) {
         recurrenceData.push({
           x: index + 1,
