@@ -8,19 +8,20 @@ define(["dojo/topic", "dojo/on", "dojo/dom-style", "dojo/request/script", "dojo/
 
   topic.subscribe("story-loaded-map", function(result) {
     if (app.map) {
+      var mapid = result.id;
       //remove the light class from the infowindow - this is added in the esri storymap for some reason and it hides the title
       $(app.map.infoWindow.domNode).removeClass("light");
-      app.map.infoWindow.setContent("<div class='chartHolder'><img src='https://www.arcgis.com/sharing/rest/content/items/6e9b0cac8b61432fb4dc422840f18240/resources/loading__1523620657133.gif' class='loadingIcon' id='loading1'><div id='monthlyRecurrenceChart' class='chart'></div></div><div class='chartHolder'><img src='https://www.arcgis.com/sharing/rest/content/items/6e9b0cac8b61432fb4dc422840f18240/resources/loading__1523620657133.gif' class='loadingIcon' id='loading2'><div id='yearlyClassificationsChart' class='chart2'></div></div>");
+      app.map.infoWindow.setContent("<div class='chartHolder'><img src='https://www.arcgis.com/sharing/rest/content/items/6e9b0cac8b61432fb4dc422840f18240/resources/loading__1523620657133.gif' class='loadingIcon' id='loading1_" + mapid + "'><div id='monthlyRecurrenceChart_" + mapid + "' class='chart'></div></div><div class='chartHolder'><img src='https://www.arcgis.com/sharing/rest/content/items/6e9b0cac8b61432fb4dc422840f18240/resources/loading__1523620657133.gif' class='loadingIcon' id='loading2_" + mapid + "'><div id='yearlyClassificationsChart_" + mapid + "' class='chart2'></div><div class='legendText'>Blue=permanent water,Light Blue=seasonal water,Yellow=Not water,White=No data</div></div>");
       app.map.infoWindow.resize(370, 400);
       app.map.infoWindow.setTitle("Water history");
-      createMonthlyRecurrenceChart();
-      createYearlyClassificationsChart();
+      createMonthlyRecurrenceChart(mapid);
+      createYearlyClassificationsChart(mapid);
       if (!app.map.clickAttached) {
         app.map.clickAttached = on(app.map, "click", function(evt) {
           var ll = webMercatorUtils.xyToLngLat(evt.mapPoint.x, evt.mapPoint.y);
           var latlng = { lat: ll[1], lng: ll[0] };
-          getMonthlyRecurrence(latlng);
-          getYearlyClassifications(latlng);
+          getMonthlyRecurrence(latlng, mapid);
+          getYearlyClassifications(latlng, mapid);
           app.map.infoWindow.show(evt.screenPoint, app.map.getInfoWindowAnchor(evt.screenPoint));
         });
       }
@@ -34,8 +35,8 @@ define(["dojo/topic", "dojo/on", "dojo/dom-style", "dojo/request/script", "dojo/
      */
   });
 
-  function createMonthlyRecurrenceChart() {
-    monthlyRecurrenceChart = new Chart("monthlyRecurrenceChart", {
+  function createMonthlyRecurrenceChart(mapid) {
+    monthlyRecurrenceChart = new Chart("monthlyRecurrenceChart_" + mapid, {
       title: "Monthly",
       titleFont: "normal normal normal 8pt Tahoma",
       titleGap: 6
@@ -121,8 +122,8 @@ define(["dojo/topic", "dojo/on", "dojo/dom-style", "dojo/request/script", "dojo/
     }); //end connectToPlot
   };
 
-  function createYearlyClassificationsChart() {
-    yearlyClassificationsChart = new Chart("yearlyClassificationsChart", {
+  function createYearlyClassificationsChart(mapid) {
+    yearlyClassificationsChart = new Chart("yearlyClassificationsChart_" + mapid, {
       title: "Yearly",
       titleFont: "normal normal normal 8pt Tahoma",
       titleGap: 7
@@ -270,8 +271,8 @@ define(["dojo/topic", "dojo/on", "dojo/dom-style", "dojo/request/script", "dojo/
     }); //end connectToPlot
   }
 
-  function getMonthlyRecurrence(latLong) {
-    domStyle.set("loading1", "display", "block");
+  function getMonthlyRecurrence(latLong, mapid) {
+    domStyle.set("loading1_" + mapid, "display", "block");
     script.get(geeServerUrl + "/monthlyRecurrence", {
       query: {
         lng: latLong.lng,
@@ -302,12 +303,12 @@ define(["dojo/topic", "dojo/on", "dojo/dom-style", "dojo/request/script", "dojo/
         data: obsData
       });
       monthlyRecurrenceChart.render();
-      domStyle.set("loading1", "display", "none");
+      domStyle.set("loading1_" + mapid, "display", "none");
     }));
   }
 
-  function getYearlyClassifications(latLong) {
-    domStyle.set("loading2", "display", "block");
+  function getYearlyClassifications(latLong, mapid) {
+    domStyle.set("loading2_" + mapid, "display", "block");
     script.get(geeServerUrl + "/yearlyClassifications", {
       query: {
         lng: latLong.lng,
@@ -319,10 +320,6 @@ define(["dojo/topic", "dojo/on", "dojo/dom-style", "dojo/request/script", "dojo/
       array.forEach(response.records, function(record, index) {
         var color, value = 1;
         switch (record.waterClass) {
-          case 0:
-            color = "none";
-            value = 0; //dont show the bar
-            break;
           case 1:
             color = "#FFD5A7"; //not water
             break;
@@ -331,6 +328,10 @@ define(["dojo/topic", "dojo/on", "dojo/dom-style", "dojo/request/script", "dojo/
             break;
           case 3:
             color = "#006AC2"; //permanent
+            break;
+          default:
+            color = "none";
+            value = 0; //dont show the bar
             break;
         }
         yearlyData.push({
@@ -344,7 +345,7 @@ define(["dojo/topic", "dojo/on", "dojo/dom-style", "dojo/request/script", "dojo/
         data: yearlyData
       });
       yearlyClassificationsChart.render();
-      domStyle.set("loading2", "display", "none");
+      domStyle.set("loading2_" + mapid, "display", "none");
     }));
   }
 });

@@ -81,6 +81,10 @@
 <body class="claro">
 	<style>
 		/* CUSTOM CSS RULES */
+
+		.headerDesktop2 {
+			background-color: red;
+		}
 	</style>
 
 	<!-- Builder top panel is injected here -->
@@ -102,7 +106,7 @@
 			<div class="menu"></div>
 		</div>
 		<!-- Desktop header -->
-		<div id="headerDesktop" aria-hidden="true">
+		<div id="headerDesktop" aria-hidden="true" class="headerDesktop2">
 			<div class="rightArea">
 				<div class="linkSocialContainer">
 					<span class="error-status">
@@ -199,12 +203,20 @@
 
 	<!-- Loading -->
 	<style>
-	/*.title {*/
-	/*	background-color: #444444;*/
-	/*}*/
-			.chartHolder {
+		/*.title {*/
+
+		/*	background-color: #444444;*/
+
+		/*}*/
+
+		.chartHolder {
 			position: relative;
 			/*margin: 14px;*/
+		}
+
+		.legendText {
+			font-size: 8px;
+			margin:10px 3px 3px 3px;
 		}
 
 		.loadingIcon {
