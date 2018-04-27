@@ -41,7 +41,7 @@
                 "type": "fill",
                 "source": {
                     "type": "vector",
-                    "tiles": ["http://lrmadmin.ies.jrc.it/geoserver/gwc/service/tms/1.0.0/dopa:dopa_geoserver_wdpa_master@EPSG%3A900913@pbf/{z}/{x}/{y}.pbf"],
+                    "tiles": ["http://lrmadmin.ies.jrc.it/geoserver/gwc/service/wmts?layer=dopa:dopa_geoserver_wdpa_master&tilematrixset=EPSG:900913&Service=WMTS&Request=GetTile&Version=1.0.0&Format=application/x-protobuf;type=mapbox-vector&TileMatrix=EPSG:900913:{z}&TileCol={x}&TileRow={y}"],
                     "minzoom": 3,
                     "maxzoom": 14
                 },
