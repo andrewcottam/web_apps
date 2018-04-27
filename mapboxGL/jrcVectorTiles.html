@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8' />
+    <title>Add a third party vector tile source</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id='map'></div>
+    <script>
+        /*global mapboxgl*/
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg'; //this is my access token
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/light-v9',
+            zoom: 3,
+            center: [0,0]
+        });
+
+        map.on('load', function() {
+            map.addLayer({
+                "id": "jrc_vector_tiles",
+                "type": "fill",
+                "source": {
+                    "type": "vector",
+                    "tiles": ["http://lrmadmin.ies.jrc.it/geoserver/gwc/service/tms/1.0.0/dopa:dopa_geoserver_wdpa_master@EPSG%3A900913@pbf/{z}/{x}/{y}.pbf"],
+                    "minzoom": 3,
+                    "maxzoom": 14
+                },
+                "source-layer": "dopa_geoserver_wdpa_master",
+                "paint": {
+                    "fill-color": "rgba(99, 148, 69, 0.5)"
+                }
+            });
+        });
+
+        map.addControl(new mapboxgl.NavigationControl());
+    </script>
+
+</body>
+
+</html>
