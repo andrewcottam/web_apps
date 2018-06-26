@@ -32,7 +32,7 @@
             container: 'map',
             style: 'mapbox://styles/mapbox/light-v9',
             zoom: 3,
-            center: [0,0]
+            center: [0, 0]
         });
 
         map.on('load', function() {
@@ -48,6 +48,31 @@
                 "source-layer": "dopa_geoserver_wdpa_master",
                 "paint": {
                     "fill-color": "rgba(99, 148, 69, 0.5)"
+                }
+            });
+            map.addLayer({
+                'id': 'wms-test-layer',
+                'type': 'raster',
+                'source': {
+                    'type': 'raster',
+                    'tiles': [
+                        'https://geodata.state.nj.us/imagerywms/Natural2015?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.1.1&request=GetMap&srs=EPSG:3857&width=256&height=256&layers=Natural2015'
+                    ],
+                    'tileSize': 256
+                },
+                'paint': {}
+            }, 'aeroway-taxiway');
+            map.addSource('planet_xyz', {
+                type: 'raster',
+                tiles: ['https://tiles.planet.com/basemaps/v1/planet-tiles/global_monthly_2018_05_mosaic/gmap/{z}/{x}/{y}.png?api_key=33b3bd5bbd5e4e5db1a65c44d223d46a'],
+                tileSize: 256
+            });
+            map.addLayer({
+                'id': 'planet_xyz_layer',
+                'type': 'raster',
+                'source': 'planet_xyz',
+                'layout': {
+                    'visibility': 'visible'
                 }
             });
         });
