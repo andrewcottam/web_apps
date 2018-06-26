@@ -31,8 +31,8 @@
         var map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/light-v9',
-            zoom: 3,
-            center: [0, 0]
+            zoom: 13,
+            center: [142.46, -3.33]
         });
 
         map.on('load', function() {
@@ -41,7 +41,7 @@
                 "type": "fill",
                 "source": {
                     "type": "vector",
-                    "tiles": ["http://lrmadmin.ies.jrc.it/geoserver/gwc/service/wmts?layer=dopa:dopa_geoserver_wdpa_master&tilematrixset=EPSG:900913&Service=WMTS&Request=GetTile&Version=1.0.0&Format=application/x-protobuf;type=mapbox-vector&TileMatrix=EPSG:900913:{z}&TileCol={x}&TileRow={y}"],
+                    "tiles": ["https://lrmadmin.ies.jrc.it/geoserver/gwc/service/wmts?layer=dopa:dopa_geoserver_wdpa_master&tilematrixset=EPSG:900913&Service=WMTS&Request=GetTile&Version=1.0.0&Format=application/x-protobuf;type=mapbox-vector&TileMatrix=EPSG:900913:{z}&TileCol={x}&TileRow={y}"],
                     "minzoom": 3,
                     "maxzoom": 14
                 },
@@ -73,6 +73,21 @@
                 'source': 'planet_xyz',
                 'layout': {
                     'visibility': 'visible'
+                }
+            });
+            map.addLayer({
+                "id": "torricelli_proposed_pa",
+                "type": "fill",
+                "source": {
+                    type: 'vector',
+                    url: 'mapbox://blishten.Torricelli_Proposed_PA'
+                },
+                "source-layer": "Torricelli_Proposed_PA",
+                "layout": {
+                    "visibility": "visible"
+                },
+                "paint": {
+                    "fill-color": "rgba(99, 148, 69, 0.5)"
                 }
             });
         });
