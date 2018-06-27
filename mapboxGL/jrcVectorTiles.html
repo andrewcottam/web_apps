@@ -35,46 +35,62 @@
             center: [142.46, -3.33]
         });
 
-        map.on('load', function() {
+        map.on('click', function() {
             map.addLayer({
-                "id": "jrc_vector_tiles",
-                "type": "fill",
-                "source": {
-                    "type": "vector",
-                    "tiles": ["https://lrmadmin.ies.jrc.it/geoserver/gwc/service/wmts?layer=dopa:dopa_geoserver_wdpa_master&tilematrixset=EPSG:900913&Service=WMTS&Request=GetTile&Version=1.0.0&Format=application/x-protobuf;type=mapbox-vector&TileMatrix=EPSG:900913:{z}&TileCol={x}&TileRow={y}"],
-                    "minzoom": 3,
-                    "maxzoom": 14
-                },
-                "source-layer": "dopa_geoserver_wdpa_master",
-                "paint": {
-                    "fill-color": "rgba(99, 148, 69, 0.5)"
-                }
-            });
-            map.addLayer({
-                'id': 'wms-test-layer',
+                'id': 'planet_xyz_layer3',
                 'type': 'raster',
                 'source': {
-                    'type': 'raster',
-                    'tiles': [
-                        'https://geodata.state.nj.us/imagerywms/Natural2015?bbox={bbox-epsg-3857}&format=image/png&service=WMS&version=1.1.1&request=GetMap&srs=EPSG:3857&width=256&height=256&layers=Natural2015'
-                    ],
-                    'tileSize': 256
+                    type: 'raster',
+                    tiles: ['https://tiles.planet.com/basemaps/v1/planet-tiles/global_monthly_2018_05_mosaic/gmap/{z}/{x}/{y}.png?api_key=33b3bd5bbd5e4e5db1a65c44d223d46a'],
+                    tileSize: 256
                 },
-                'paint': {}
-            }, 'aeroway-taxiway');
-            map.addSource('planet_xyz', {
-                type: 'raster',
-                tiles: ['https://tiles.planet.com/basemaps/v1/planet-tiles/global_monthly_2018_05_mosaic/gmap/{z}/{x}/{y}.png?api_key=33b3bd5bbd5e4e5db1a65c44d223d46a'],
-                tileSize: 256
-            });
-            map.addLayer({
-                'id': 'planet_xyz_layer',
-                'type': 'raster',
-                'source': 'planet_xyz',
                 'layout': {
                     'visibility': 'visible'
                 }
             });
+        });
+        
+        map.on('load', function() {
+            //commented out for now as it no longer seems to work 26/06/2018
+            // map.addLayer({
+            //     "id": "jrc_vector_tiles",
+            //     "type": "fill",
+            //     "source": {
+            //         "type": "vector",
+            //         "tiles": ["https://lrmadmin.ies.jrc.it/geoserver/gwc/service/wmts?layer=dopa:dopa_geoserver_wdpa_master&tilematrixset=EPSG:900913&Service=WMTS&Request=GetTile&Version=1.0.0&Format=application/x-protobuf;type=mapbox-vector&TileMatrix=EPSG:900913:{z}&TileCol={x}&TileRow={y}"],
+            //         "minzoom": 3,
+            //         "maxzoom": 14
+            //     },
+            //     "source-layer": "dopa_geoserver_wdpa_master",
+            //     "paint": {
+            //         "fill-color": "rgba(99, 148, 69, 0.5)"
+            //     }
+            // });
+
+            //this will only work for 14 days from 26/06/2018 as I have a free trial period
+
+            //mosaic from april 2018
+            map.addLayer({
+                'id': 'planet_xyz_layer1',
+                'type': 'raster',
+                'source': {
+                    type: 'raster',
+                    tiles: ['https://tiles.planet.com/basemaps/v1/planet-tiles/global_monthly_2018_04_mosaic/gmap/{z}/{x}/{y}.png?api_key=33b3bd5bbd5e4e5db1a65c44d223d46a'],
+                    tileSize: 256
+                }
+            });
+
+            //scene from 17/06/2018
+            map.addLayer({
+                'id': 'planet_xyz_layer2',
+                'type': 'raster',
+                'source': {
+                    type: 'raster',
+                    tiles: ['https://tiles1.planet.com/data/v1/PSScene3Band/20180617_001913_1042/{z}/{x}/{y}.png?api_key=33b3bd5bbd5e4e5db1a65c44d223d46a'],
+                    tileSize: 256
+                }
+            });
+
             map.addLayer({
                 "id": "torricelli_proposed_pa",
                 "type": "fill",
@@ -83,11 +99,9 @@
                     url: 'mapbox://blishten.Torricelli_Proposed_PA'
                 },
                 "source-layer": "Torricelli_Proposed_PA",
-                "layout": {
-                    "visibility": "visible"
-                },
                 "paint": {
-                    "fill-color": "rgba(99, 148, 69, 0.5)"
+                    "fill-color": "rgba(99, 148, 69, 0.2)",
+                    "fill-outline-color": "rgba(99, 148, 69, 0.6)"
                 }
             });
         });
