@@ -36,18 +36,18 @@
         });
 
         map.on('click', function() {
-            map.addLayer({
-                'id': 'planet_xyz_layer3',
-                'type': 'raster',
-                'source': {
-                    type: 'raster',
-                    tiles: ['https://tiles.planet.com/basemaps/v1/planet-tiles/global_monthly_2018_05_mosaic/gmap/{z}/{x}/{y}.png?api_key=33b3bd5bbd5e4e5db1a65c44d223d46a'],
-                    tileSize: 256
-                },
-                'layout': {
-                    'visibility': 'visible'
-                }
-            });
+            // map.addLayer({
+            //     'id': 'planet_xyz_layer3',
+            //     'type': 'raster',
+            //     'source': {
+            //         type: 'raster',
+            //         tiles: ['https://tiles.planet.com/basemaps/v1/planet-tiles/global_monthly_2018_05_mosaic/gmap/{z}/{x}/{y}.png?api_key=33b3bd5bbd5e4e5db1a65c44d223d46a'],
+            //         tileSize: 256
+            //     },
+            //     'layout': {
+            //         'visibility': 'visible'
+            //     }
+            // });
         });
         
         map.on('load', function() {
