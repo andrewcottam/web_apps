@@ -51,7 +51,7 @@ require(["dojo/request/xhr", "dojo/dom-attr", "dojo/html", "dojo/dom", "dojo/dom
             // console.debug(canvas.style.cursor);
         });
 
-        function addLayerWDPA() {
+        function addLayerWDPA() { 
             map.addLayer({
                 "id": "WDPA",
                 "type": "fill",
