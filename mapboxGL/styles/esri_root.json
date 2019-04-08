@@ -5133,7 +5133,8 @@
                 "sources": { 
                     "esri": { 
                         "type": "vector",
-                        "tiles": ["https://basemaps.arcgis.com/arcgis/rest/services/OpenStreetMap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf"]                    
+                        "tiles": ["https://basemaps.arcgis.com/arcgis/rest/services/OpenStreetMap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf"],                    
+                        "maxzoom": 11
                         } 
                     } 
                 }

@@ -39,6 +39,7 @@
 <a href='https://andrewcottam.github.io/web_apps/mapboxGL/cbd11.html' target='_blank'>cbd11.html</a> - Indicator example for protected areas coverage under CBD target 11</br>
 <a href='https://andrewcottam.github.io/web_apps/mapboxGL/wdpa.html' target='_blank'>wdpa.html</a> - Simple demo page for WDPA vector tiles</br>
 <a href='https://andrewcottam.github.io/web_apps/mapboxGL/jrcVectorTiles.html' target='_blank'>jrcVectorTiles.html</a> - Mapbox GL Client using JRC hosted vector tiles</br>
+<a href='https://andrewcottam.github.io/web_apps/mapboxGL/esri_vector_tiles.html' target='_blank'>esri_vector_tiles.html</a> - Mapbox GL Client using ESRI OpenStreetMap hosted vector tiles</br>
 #### roadless areas validation tool
 <a href='https://andrewcottam.github.io/web_apps/roadless/index.html' target='_blank'>Roadless Validation tool</a>  
 #### species_validation_tool
