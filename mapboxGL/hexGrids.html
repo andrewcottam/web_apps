@@ -32,12 +32,11 @@
         var map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/light-v9',
-            zoom: 6,
-            center: [150, -6]
+            zoom: 3
         });
 
         map.on('click', function() {
-            var bbox = [-96, 31, -84, 40];
+            var bbox = [-180, -20, 180, 20];
             var cellSide = 50;
             var options = { units: 'miles' };
             var hexgrid = turf.hexGrid(bbox, cellSide, options);
