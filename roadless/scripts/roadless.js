@@ -55,7 +55,7 @@ require(["dojo/date/locale", "dijit/focus", "dojo/parser", "dijit/form/RadioButt
 		addValidationSquare(imagerymap, START_POINT);
 		//add the extent of the high resolution map to the context map
 		addExtentToContextMap();
-		var restServerUrl = "https://db-server-blishten.c9users.io/cgi-bin/services.py/";
+		var restServerUrl = "https://61c92e42cb1042699911c485c38d52ae.vfs.cloud9.eu-west-1.amazonaws.com:8081/python-rest-server/";
 //		geeServerUrl = (document.domain === "localhost") ? "http://localhost:8080" : "http://geeImageServer.appspot.com";
 		var geeServerUrl = "https://geeImageServer.appspot.com";
 		getValidationClasses();
