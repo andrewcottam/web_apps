@@ -2,7 +2,7 @@ require({
 	async : true,
 	packages : [{
 		name : "jrc",
-		location : "/gee_simple_client/scripts"
+		location : "/web_apps/gee_simple_client/scripts"
 	}]
 }, ["dojo/window", "dojo/dom-geometry", "esri/symbols/PictureMarkerSymbol", "esri/InfoTemplate", "esri/layers/GraphicsLayer", "jrc/GeeLayer", "dojo/_base/lang", "esri/request", "dojo/_base/window", "dojo/io-query", "esri/layers/FeatureLayer", "esri/symbols/SimpleFillSymbol", "esri/geometry/Polygon", "dojo/_base/array", "dojo/ready", "dojo/dom-style", "dojo/date/locale", "dojo/date/stamp", "esri/arcgis/utils", "dojo/_base/Color", "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/symbols/SimpleMarkerSymbol", "esri/geometry/Point", "esri/geometry/webMercatorUtils", "esri/map", "esri/layers/WMSLayer", "esri/layers/WMSLayerInfo", "esri/geometry/Extent", "dojo/dom", "dijit/registry", "dojo/query", "dojo/on", "dojo/parser", "dojo/dom-construct", "jrc/PanoramioBox", "jrc/WebServiceAPIs/PanoramioAPI", "jrc/WebServiceAPIs/FlickrAPI", "jrc/FlickrBox", "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dijit/form/CheckBox", "dijit/form/Button", "dijit/form/Select", "dijit/form/RadioButton", "dijit/form/HorizontalSlider", "dijit/layout/StackContainer", "dijit/layout/StackController"], function(window, domGeom, PictureMarkerSymbol, InfoTemplate, GraphicsLayer, GeeLayer, lang, esriRequest, win, ioQuery, FeatureLayer, SimpleFillSymbol, Polygon, arrayUtils, ready, domStyle, locale, stamp, arcgisUtils, Color, SimpleLineSymbol, Graphic, SimpleMarkerSymbol, Point, utils, Map, WMSLayer, WMSLayerInfo, Extent, dom, registry, query, on, parser, domConstruct, PanoramioBox, PanoramioAPI, FlickrAPI, FlickrBox) {
 	ready(function() {

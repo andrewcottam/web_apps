@@ -55,7 +55,8 @@ require(["dojo/date/locale", "dijit/focus", "dojo/parser", "dijit/form/RadioButt
 		addValidationSquare(imagerymap, START_POINT);
 		//add the extent of the high resolution map to the context map
 		addExtentToContextMap();
-		var restServerUrl = "https://61c92e42cb1042699911c485c38d52ae.vfs.cloud9.eu-west-1.amazonaws.com:8081/python-rest-server/";
+		// var restServerUrl = "https://61c92e42cb1042699911c485c38d52ae.vfs.cloud9.eu-west-1.amazonaws.com:8081/python-rest-server/"; //AWS C9 ec2-default environment only
+		var restServerUrl = "http://52.213.11.222:8080/python-rest-server/"; // python-rest-server running on tornado on ec2-default instance
 //		geeServerUrl = (document.domain === "localhost") ? "http://localhost:8080" : "http://geeImageServer.appspot.com";
 		var geeServerUrl = "https://geeImageServer.appspot.com";
 		getValidationClasses();

@@ -20,7 +20,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 			paneID: "imageryTimeSliderContainer",
 			hideToEdge: false,
 			atmCorrection: "DOS1", //default value
-			provider: "sentinelProvider", //default value
+			provider: "geeProvider", //default value
 			priority: "leastCC", //default value
 			preview: 0, //default value is to not show resampled imagery
 			unfilteredYearMonths: null,
@@ -96,7 +96,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 			},
 			showControls: function() {
 				//selects the controls for the appropriate provider and makes them visible
-				var classname = (this.provider == "sentinelHub") ? "sentinelProvider" : "geeProvider";
+				var classname = (this.provider == "sentinelHub") ? "sentinelHub" : "geeProvider";
 				var nodes = query("." + classname);
 				array.forEach(nodes, function(node) {
 					domStyle.set(node, "display", "table");
@@ -109,7 +109,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 					case "sentinelHub":
 						this.requestDates_sentinelHub();
 						break;
-					case "geeImagerServer":
+					case "geeProvider":
 						this.requestDates_geeImageServer();
 						break;
 				}
@@ -288,7 +288,7 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 							this.imageLayer.setParams(wmsParams);
 						}
 						break;
-					case "geeImagerServer":
+					case "geeProvider":
 						wmsParams = this.getParams_geeImageServer(startDateF, endDateF);
 						if (!this.imageLayer) { //add the layer if it is not already present
 							this.imageLayer = new geeImageLayer(this.geeServerUrl + "/ogc", wmsParams);
