@@ -1,0 +1,14 @@
+{
+  "name": "gee_js_api",
+  "version": "1.0.0",
+  "description": "Google Earth Engine Javascript API Test",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/earthengine": "^0.1.195"
+  }
+}

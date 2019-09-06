@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Google Earth Engine Javascript API Test</title>
+        <script src="node_modules/@google/earthengine/build/ee_api_js_npm.js"></script>
+    </head>
+    <body>
+        <script type="text/javascript">
+            var initialize = function() {
+              ee.initialize(null, null, function() {
+                var image = new ee.Image('srtm90_v4');
+                image.getMap({min: 0, max: 1000}, function(map) {
+                  console.log(map);
+                });
+              }, function(e) {
+                console.error('Initialization error: ' + e);
+              });
+            };
+            ee.data.authenticateViaOauth("525442053161-h8qffnr2c6e0gi7laocdpkpn52ac8r2e.apps.googleusercontent.com", initialize, function(e) {
+              console.error('Authentication error: ' + e);
+            }, null, function() {
+              ee.data.authenticateViaPopup(initialize);
+            });
+            
+        </script>
+    </body>
+</html>
