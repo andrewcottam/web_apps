@@ -1,0 +1,1 @@
+Projects in this folder use the Google Earth Engine Javascript API. See [here](https://developers.google.com/earth-engine/npm_install).
