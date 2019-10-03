@@ -26,14 +26,66 @@
 
     <div id='map'></div>
     <script>
+        /*global
+        mapboxgl
+        fetch
+        */
         mapboxgl.accessToken = 'pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg';
-        var map = new mapboxgl.Map({
-            container: 'map',
-            style: "styles/esri_root.json", //local copy of https://www.arcgis.com/sharing/rest/content/items/3e1a00aeae81496587988075fe529f71/resources/styles/root.json?f=json
-            zoom: 8,
-            center: [-74.5447, 40.6892]
-        });
-    </script>
+
+        //the following is used from http://bl.ocks.org/jgravois/51e2b30e3d6cf6c00f06b263a29108a2
+        // const styleUrl = "https://www.arcgis.com/sharing/rest/content/items/3e1a00aeae81496587988075fe529f71/resources/styles/root.json"; //osm - works
+        // const styleUrl = "https://www.arcgis.com/sharing/rest/content/items/dfb04de5f3144a80bc3f9f336228d24a/resources/styles/root.json"; //newspaper 
+        // const styleUrl = "https://www.arcgis.com/sharing/rest/content/items/63c47b7177f946b49902c24129b87252/resources/styles/root.json"; //world navigation map 
+        // const styleUrl = "https://www.arcgis.com/sharing/rest/content/items/1c365daf37a744fbad748b67aa69dac8/resources/styles/root.json"; //charted territory - USE
+        // const styleUrl = "https://www.arcgis.com/sharing/rest/content/items/3d1a30626bbc46c582f148b9252676ce/resources/styles/root.json"; //national geographic - doesnt work
+        const styleUrl = "https://www.arcgis.com/sharing/rest/content/items/0f52cd2d17ea4773944a1d0e0fb99ea4/resources/styles/root.json"; //world topographic map - USE
+        
+        // first fetch the esri style file
+        fetch(styleUrl)
+          .then(response => {
+              return response.json()
+              .then(style => {
+                // next fetch metadata for the raw tiles
+                const TileJSON = style.sources.esri.url;
+                fetch(TileJSON)
+                  .then(response => {
+                      return response.json()
+                      .then(metadata => {
+                        const ready = format(style, metadata, TileJSON);
+                        new mapboxgl.Map({
+                            container: 'map', 
+                            style: ready,
+                            center: [-74.50, 40], // starting position [lng, lat]
+                            zoom: 8, // starting zoom
+                            customAttribution: "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors, map layer by Esri"
+                        });
+                      });
+                  });
+              });
+          });
+        
+        
+        function format (style, metadata, TileJSON) {
+          // ArcGIS Pro published vector services dont prepend tile or tileMap urls with a /
+          let tilesurl = (metadata.tiles[0].substr(0,1) === "/") ? TileJSON + metadata.tiles[0] : TileJSON + '/' + metadata.tiles[0];
+          style.sources.esri = {
+            type: 'vector',
+            scheme: 'xyz',
+            tilejson: metadata.tilejson || '2.0.0',
+            format: (metadata.tileInfo && metadata.tileInfo.format) || 'pbf',
+            /* mapbox-gl-js does not respect the indexing of esri tiles because we cache to different zoom levels depending on feature density, in rural areas 404s will still be encountered. more info: https://github.com/mapbox/mapbox-gl-js/pull/1377*/
+            // index: metadata.tileMap ? style.sources.esri.url + '/' + metadata.tileMap : null,
+            maxzoom: 15,  
+            tiles: [
+              tilesurl
+            ],
+            description: metadata.description,
+            name: metadata.name
+          };
+          return style;
+        }
+        
+</script>
 
 </body>
 

@@ -14,7 +14,7 @@ require(["dojo/dom-class", "esri/SpatialReference", "esri/geometry/Point", "esri
 			basemap : "satellite"
 		});
 		// restServerUrl = "https://61c92e42cb1042699911c485c38d52ae.vfs.cloud9.eu-west-1.amazonaws.com:8081/python-rest-server/h05googleearthengine"; #AWS C9 environment only
-		restServerUrl = "http://52.213.11.222:8080/python-rest-server/h05googleearthengine"; // python-rest-server running on tornado on ec2-default instance
+		restServerUrl = "http://18.200.163.92:8080/python-rest-server/h05googleearthengine"; // python-rest-server running on tornado on ec2-default instance
 		geeServerUrl = "https://geeImageServer.appspot.com";
 		getValidationClasses();
 		topic.subscribe("urlsPopulated", urlsPopulated);

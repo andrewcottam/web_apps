@@ -1,0 +1,72 @@
+<html>
+<head>
+    <title>JEODPP map</title>
+    <link rel="stylesheet" href="https://jeodpp.jrc.ec.europa.eu/services/shared//html/leaflet-0.7.3/leaflet.css" />
+    <script src="https://jeodpp.jrc.ec.europa.eu/services/shared//html/leaflet-0.7.3/leaflet.js"></script>
+    <style>
+        #map {
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <script>
+
+  // initialize the map
+  var map = L.map('map').setView([43.5, 12.25], 8);
+
+  // base map
+  var baselayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  {
+    attribution: 'Map data (c) <a href="https://openstreetmap.org">OpenStreetMap</a> contributors',
+    maxZoom: 19,
+    minZoom: 0
+  }).addTo(map);
+
+  // Layer
+  var layer = L.tileLayer('https://jeodpp.jrc.ec.europa.eu/jiplib-view-dev/?dynapi=true&lonmin=12&lonmax=12.5&latmin=43&latmax=44&&datemin=2019-08-01&datemax=2019-09-01&cloud=80&limit=1&r=B04&g=B03&b=B02&x={x}&y={y}&z={z}',
+  {
+    attribution: 'European Commission - JRC - JEODPP',
+    maxZoom: 19,
+    minZoom: 0
+  }).addTo(map);
+
+  var baseLayers = {
+		"OpenStreetMap": baselayer
+	};
+
+  var overlays = {
+		"JEODPP Overlay": layer
+	};
+
+  // LayersControl
+  L.control.layers(baseLayers, overlays).addTo(map);
+
+  // Watermark
+  L.Control.Watermark = L.Control.extend({
+      onAdd: function (map) {
+          var img = L.DomUtil.create('img');
+
+          img.src = 'https://jeodpp.jrc.ec.europa.eu/services/shared/Notebooks/images/JRCBigDataPlatform_256.png';
+          img.style.width = '256px';
+
+          return img;
+      },
+
+      onRemove: function (map) {
+          // Nothing to do here
+      }
+  });
+
+  L.control.watermark = function (opts) {
+      return new L.Control.Watermark(opts);
+  }
+
+  L.control.watermark({ position: 'bottomleft' }).addTo(map);
+
+    </script>
+</body>
+</html>
