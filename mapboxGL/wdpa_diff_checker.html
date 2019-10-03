@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8' />
+    <title>Diff checker between different versions of the World Database of Protected Areas</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.2/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+            display: none;
+        }
+
+        .mapboxgl-popup-content {
+            padding: 10px;
+            color: #666666;
+            font-family: 'MuseoSans';
+            font-weight: 500;
+            font-size: 1.325rem;
+            line-height: 2rem;
+            margin-top: 1.875rem;
+            margin-bottom: 0.625rem;
+            text-decoration: none;
+        }
+
+        .mapboxgl-popup-content a {
+            text-decoration: none;
+            color: #666666;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id='map'></div>
+    <script>
+        /*global mapboxgl*/
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg'; //this is my access token
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/light-v9',
+            zoom: 12,
+            center: [-175.1029, -21.2]
+        });
+
+        map.on('load', function() {
+            map.addLayer({
+                "id": "wdpa_aug_2019_polygons",
+                "type": "fill",
+                "source": {
+                    "type": "vector",
+                    "tiles": ["https://geospatial.jrc.ec.europa.eu/geoserver/gwc/service/wmts?layer=marxan:wdpa_aug_2019_polygons&tilematrixset=EPSG:900913&Service=WMTS&Request=GetTile&Version=1.0.0&Format=application/x-protobuf;type=mapbox-vector&TileMatrix=EPSG:900913:{z}&TileCol={x}&TileRow={y}"]
+                },
+                "source-layer": "wdpa_aug_2019_polygons",
+                "paint": {
+                    'fill-color': "rgba(100, 100, 100, 0.2)",
+                    'fill-outline-color': "rgba(20, 20, 20, 0.2)"
+                }
+            });
+            map.addLayer({
+                "id": "wdpa_sep_2019_polygons",
+                "type": "fill",
+                "source": {
+                    "type": "vector",
+                    "tiles": ["https://geospatial.jrc.ec.europa.eu/geoserver/gwc/service/wmts?layer=marxan:wdpa_sep_2019_polygons&tilematrixset=EPSG:900913&Service=WMTS&Request=GetTile&Version=1.0.0&Format=application/x-protobuf;type=mapbox-vector&TileMatrix=EPSG:900913:{z}&TileCol={x}&TileRow={y}"]
+                },
+                "source-layer": "wdpa_sep_2019_polygons",
+                "paint": {
+                    "fill-color": {
+                        "type": "categorical",
+                        "property": "marine",
+                        "stops": [
+                            ["0", "rgba(99,148,69, 0.2)"],
+                            ["1", "rgba(63,127,191, 0.2)"],
+                            ["2", "rgba(63,127,191, 0.2)"]
+                        ]
+                    },
+                    "fill-outline-color": {
+                        "type": "categorical",
+                        "property": "marine",
+                        "stops": [
+                            ["0", "rgba(99,148,69, 0.2)"],
+                            ["1", "rgba(63,127,191, 0.2)"],
+                            ["2", "rgba(63,127,191, 0.2)"]
+                        ]
+                    }
+                }
+            });
+        });
+
+        var popup = new mapboxgl.Popup({});
+
+        map.on('mouseenter', 'wdpa_sep_2019_polygons', function(e) {
+            map.getCanvas().style.cursor = 'pointer';
+            var coordinates = e.lngLat;
+            while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+                coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+            }
+            popup.setLngLat(coordinates)
+                .setHTML("<div><a href='https://www.protectedplanet.net/" + e.features[0].properties.wdpaid + "' target='_blank'>" + e.features[0].properties.name + " (" + e.features[0].properties.iucn_cat + ")</a></div>")
+                .addTo(map);
+        });
+
+        map.on('mouseleave', 'wdpa_sep_2019_polygons', function() {
+            // setTimeout(function(){
+            //     map.getCanvas().style.cursor = '';
+            //     popup.remove();
+            // }, 5000);            
+        });
+        map.addControl(new mapboxgl.NavigationControl());
+    </script>
+
+</body>
+
+</html>

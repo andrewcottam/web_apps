@@ -11,7 +11,7 @@ require({
 		parser.parse();
 		var taxongroup, language, restServerUrl, queryObject;
 		queryObject = ioQuery.queryToObject(win.doc.location.search.substring(1));
-		restServerUrl = "http://52.213.11.222:8080/python-rest-server/h05googleearthengine";
+		restServerUrl = "http://18.200.163.92:8080/python-rest-server/h05googleearthengine";
 		setLanguage();
 		setTaxonGroup();
 		on(registry.byId("selectLanguage"), "change", function(value) {
