@@ -28,6 +28,7 @@
 #### gee_tools
 <a href='https://andrewcottam.github.io/web_apps/gee_tools/index.html' target='_blank'>index.html</a>Start page for the tools used in the Global Surface Water Project</br>
 <a href='https://61c92e42cb1042699911c485c38d52ae.vfs.cloud9.eu-west-1.amazonaws.com/web_apps/gee_tools/water_validation_tool.html' target='_blank'>index.html</a>Water Validation Tool (On AWS C9)</br>
+<a href='https://andrewcottam.github.io/web_apps/gee_tools/water.html' target='_blank'>index.html</a>Global Surface Water Publishing Tool</br> 
 #### IUCN-Red-List-Mapper
 <a href='https://andrewcottam.github.io/web_apps/IUCN-Red-List-Mapper/index.html' target='_blank'>index.html</a> - Something really funky</br>
 #### IUCN-Web-Services
