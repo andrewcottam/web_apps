@@ -1,4 +1,4 @@
-require(["dojo/request/xhr", "dojo/dom-attr", "dojo/html", "dojo/dom", "dojo/dom-construct", "dojo/query", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx", "dojo/_base/lang", "dojo/_base/array", "dojo/io-query", "dojo/request/script", "dojo/on", "node_modules/mapbox-gl/dist/mapbox-gl.js"],
+require(["dojo/request/xhr", "dojo/dom-attr", "dojo/html", "dojo/dom", "dojo/dom-construct", "dojo/query", "dojo/dom-style", "dojo/dom-geometry", "dojox/gfx", "dojo/_base/lang", "dojo/_base/array", "dojo/io-query", "dojo/request/script", "dojo/on", "https://api.mapbox.com/mapbox-gl-js/v1.4.1/mapbox-gl.js"],
     function(xhr, domAttr, html, dom, domConstruct, query, domStyle, domGeom, gfx, lang, array, ioQuery, script, on, mapboxgl) {
         var calloutSurface, popup, calloutRadius = 7,
             calloutLength = 50,
@@ -12,12 +12,11 @@ require(["dojo/request/xhr", "dojo/dom-attr", "dojo/html", "dojo/dom", "dojo/dom
         });
         var map = new mapboxgl.Map({
             container: 'map',
-            style: "mapbox://styles/blishten/cj6f4n2j026qf2rnunkauikjm", //my Basic style
+            style: "mapbox://styles/blishten/ck1hsullb06lw1cmyzz7wrycl", 
             center: [0, 0], 
-            zoom: 4,
-            hash: true,
+            zoom: 2
         });
-        map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+        // map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
         //add the map events
         map.on("load", function(e) {
@@ -52,44 +51,94 @@ require(["dojo/request/xhr", "dojo/dom-attr", "dojo/html", "dojo/dom", "dojo/dom
         });
 
         function addLayerWDPA() { 
+            //add wdpa layer from tippecanoe files
             map.addLayer({
                 "id": "WDPA",
                 "type": "fill",
                 "source": {
-                    "attribution": "IUCN and UNEP-WCMC (2017), The World Database on Protected Areas (WDPA) August 2017, Cambridge, UK: UNEP-WCMC. Available at: <a href='http://www.protectedplanet.net'>www.protectedplanet.net</a>",
+                    "attribution": "IUCN and UNEP-WCMC (2019), The World Database on Protected Areas (WDPA) November 2019, Cambridge, UK: UNEP-WCMC. Available at: <a href='http://www.protectedplanet.net'>www.protectedplanet.net</a>",
                     "type": "vector",
                     "tilejson": "2.2.0",
                     "maxzoom": 12,
-                    "tiles": ["https://storage.googleapis.com/geeimageserver.appspot.com/vectorTiles/wdpa/tilesets/{z}/{x}/{y}.pbf"]
+                    "tiles": ["https://storage.googleapis.com/geeimageserver.appspot.com/vectorTiles/wdpa_nov_2019_polygons/tilesets/{z}/{x}/{y}.pbf"]
                 },
-                "source-layer": "wdpa",
+                "source-layer": "wdpa_nov_2019_polygons",
                 "layout": {
                     "visibility": "visible"
                 },
-                "paint": {
-                    "fill-color": {
-                        "type": "categorical",
-                        "property": "MARINE",
-                        "stops": [
-                            ["0", "rgba(99,148,69, 0.2)"],
-                            ["1", "rgba(63,127,191, 0.2)"],
-                            ["2", "rgba(63,127,191, 0.2)"]
-                        ]
-                    },
-                    "fill-outline-color": {
-                        "type": "categorical",
-                        "property": "MARINE",
-                        "stops": [
-                            ["0", "rgba(99,148,69, 0.2)"],
-                            ["1", "rgba(63,127,191, 0.2)"],
-                            ["2", "rgba(63,127,191, 0.2)"]
-                        ]
-                    }
-                }
+                "paint": { "fill-color": "rgba(99,148,69,0.2)", "fill-outline-color": "rgba(99,148,69,0.3)"}
             });
+            //add layer from geoserver 
+            // map.addLayer({
+            //     "id": "WDPA",
+            //     "type": "fill",
+            //     "source": {
+            //         "attribution": "IUCN and UNEP-WCMC (2019), The World Database on Protected Areas (WDPA) November 2019, Cambridge, UK: UNEP-WCMC. Available at: <a href='http://www.protectedplanet.net'>www.protectedplanet.net</a>",
+            //         "type": "vector",
+            //         "tilejson": "2.2.0",
+            //         "maxzoom": 12,
+            //         "tiles": ["https://geospatial.jrc.ec.europa.eu/geoserver/gwc/service/wmts?layer=marxan:wdpa_nov_2019_polygons&tilematrixset=EPSG:900913&Service=WMTS&Request=GetTile&Version=1.0.0&Format=application/x-protobuf;type=mapbox-vector&TileMatrix=EPSG:900913:{z}&TileCol={x}&TileRow={y}"]
+            //     },
+            //     "source-layer": "wdpa_nov_2019_polygons",
+            //     "layout": {
+            //         "visibility": "visible"
+            //     },
+            //     "paint": { "fill-color": "rgba(99,148,69,0.2)", "fill-outline-color": "rgba(99,148,69,0.3)"}
+            // });
+            
+            // map.addLayer({
+            //     "id": "WDPA",
+            //     "type": "fill",
+            //     "source": {
+            //         "attribution": "IUCN and UNEP-WCMC (2019), The World Database on Protected Areas (WDPA) November 2019, Cambridge, UK: UNEP-WCMC. Available at: <a href='http://www.protectedplanet.net'>www.protectedplanet.net</a>",
+            //         "type": "vector",
+            //         "tilejson": "2.2.0",
+            //         "maxzoom": 12,
+            //         "tiles": ["https://storage.googleapis.com/geeimageserver.appspot.com/vectorTiles/wdpa_nov_2019_polygons/tilesets/{z}/{x}/{y}.pbf"]
+            //     },
+            //     "source-layer": "wdpa_nov_2019_polygons",
+            //     "layout": {
+            //         "visibility": "visible"
+            //     },
+            //     "paint": {
+            //         "fill-color": {
+            //             "type": "categorical",
+            //             "property": "MARINE",
+            //             "stops": [
+            //                 ["0", "rgba(99,148,69, 0.2)"],
+            //                 ["1", "rgba(63,127,191, 0.2)"],
+            //                 ["2", "rgba(63,127,191, 0.2)"]
+            //             ]
+            //         },
+            //         "fill-outline-color": {
+            //             "type": "categorical",
+            //             "property": "MARINE",
+            //             "stops": [
+            //                 ["0", "rgba(99,148,69, 0.2)"],
+            //                 ["1", "rgba(63,127,191, 0.2)"],
+            //                 ["2", "rgba(63,127,191, 0.2)"]
+            //             ]
+            //         }
+            //     }
+            // });
         }
 
+  //gets unique features from an array of features based on the key property
+  function removeDuplicateFeatures(arr, key){
+    let uniqueValues =[], uniqueFeatures = [];
+		arr.forEach(feature=>{
+			if (uniqueValues.indexOf(feature.properties[key]) === -1){
+				uniqueFeatures.push(feature);
+				uniqueValues.push(feature.properties[key]);
+			}
+		});
+    return uniqueFeatures;
+  }
         function showCallout(features, e) {
+            let allFeatures = map.queryRenderedFeatures(map.getBounds());
+            console.log("All features: " + allFeatures.length);
+            let wdpaids = removeDuplicateFeatures(allFeatures, "WDPAID");
+            console.log("Unique wdpaids: " + wdpaids.length);
             var html = getPopupText(features);
             if (calloutSurface && html) {
                 calloutSurface.clear();
