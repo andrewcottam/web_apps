@@ -16,7 +16,7 @@ require(["dojo/request/xhr", "dojo/dom-attr", "dojo/html", "dojo/dom", "dojo/dom
             center: [0, 0], 
             zoom: 2
         });
-        // map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
+        map.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
 
         //add the map events
         map.on("load", function(e) {
