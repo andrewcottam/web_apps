@@ -2,7 +2,8 @@ define(["require"], function(moduleRequire){
 "use strict";
 /*
  * AMD css! plugin
- * This plugin will load and wait for css files.  This could be handy when
+ * This plugin will load and wait for css files. This allows JavaScript resources to 
+ * fully there dependencies on stylesheets. This can also be used when
  * loading css files as part of a layer or as a way to apply a run-time theme. This
  * module checks to see if the CSS is already loaded before incurring the cost
  * of loading the full CSS loader codebase
@@ -12,36 +13,59 @@ define(["require"], function(moduleRequire){
 		var docElement = document.documentElement;
 		var testDiv = docElement.insertBefore(document.createElement(tag), docElement.firstChild);
 		testDiv.id = id;
-		var styleValue = (testDiv.currentStyle || getComputedStyle(testDiv, null))[property];
+		var styleValue = (testDiv.currentStyle || getComputedStyle(testDiv, null) || {})[property];
 		docElement.removeChild(testDiv);
  		return styleValue;
  	} 
  	return {
 		load: function(resourceDef, require, callback, config) {
 			var url = require.toUrl(resourceDef);
+			var options;
+			if(url.match(/!$/)){
+				// a final ! can be used to indicate not to wait for the stylesheet to load
+				options = {
+					wait: false
+				};
+				url = url.slice(0, -1);
+			}
 			var cachedCss = require.cache && require.cache['url:' + url];
-			if(cachedCss){
+			if(cachedCss != null){
 				// we have CSS cached inline in the build
 				if(cachedCss.xCss){
 					var parser = cachedCss.parser;
 					var xCss =cachedCss.xCss;
 					cachedCss = cachedCss.cssText;
 				}
-				moduleRequire(['./util/createStyleSheet'],function(createStyleSheet){
-					createStyleSheet(cachedCss);
-				});
+				// cachedCss might be {}, indicating this CSS was part of a built stylesheet. Assume the built
+				// stylesheet is already loaded, so no need to inject this CSS again.
+				if (typeof cachedCss == 'string') {
+					moduleRequire(['./core/load-css'],function(load){
+						checkForParser(load.insertCss(cachedCss));
+					});
+				} else {
+					checkForParser();
+				}
 				if(xCss){
 					//require([parsed], callback);
 				}
-				return checkForParser();
+				return;
 			}
-			function checkForParser(){
+			function checkForParser(styleSheetElement){
 				var parser = testElementStyle('x-parse', null, 'content');
-				if(parser && parser != 'none'){
+				var sheet = styleSheetElement && 
+					(styleSheetElement.sheet || styleSheetElement.styleSheet);
+				if(parser && parser != 'none' && parser != 'normal'){
 					// TODO: wait for parser to load
-					require([eval(parser)], callback);
+					require([eval(parser)], function(parser){
+						if(styleSheetElement){
+							parser.process(styleSheetElement, callback);
+						}else{
+							parser.processAll();
+							callback(sheet);
+						}
+					});
 				}else{
-					callback();
+					callback(sheet);
 				}
 			}
 			
@@ -54,7 +78,7 @@ define(["require"], function(moduleRequire){
 			}
 			// use dynamic loader
 			moduleRequire(["./core/load-css"], function(load){
-				load(url, checkForParser);
+				load(url, checkForParser, options);
 			});
 		}
 	};
