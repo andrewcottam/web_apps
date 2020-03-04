@@ -19,14 +19,7 @@ html, body {
 	display: inline-block;
 	vertical-align: top;
 }
-#image {
-	width: 400px;
-	height: 400px;
-	position: relative;
-	left: 0;
-	top: 0;
-}
-#image2, #image3 {
+#image, #image2, #image3 {
 	width: 400px;
 	height: 400px;
 	position: relative;
@@ -34,7 +27,7 @@ html, body {
 	top: 0;
 }
 #geimage {
-	position: relative;
+	position: absolute;
 	top: 0;
 	left: 0;
 }

@@ -13,15 +13,18 @@ require(["dojo/dom-class", "esri/SpatialReference", "esri/geometry/Point", "esri
 			zoom : 14,
 			basemap : "satellite"
 		});
-		restServerUrl = "https://61c92e42cb1042699911c485c38d52ae.vfs.cloud9.eu-west-1.amazonaws.com:8081/python-rest-server/h05googleearthengine"; //AWS C9 environment only
-		// restServerUrl = "http://18.200.163.92:8080/python-rest-server/h05googleearthengine"; // python-rest-server running on tornado on ec2-default instance
+		restServerUrl = "https://61c92e42cb1042699911c485c38d52ae.vfs.cloud9.eu-west-1.amazonaws.com:8081/python-rest-server/h05googleearthengine"; //ec2-default
 		geeServerUrl = "https://geeImageServer.appspot.com";
 		getValidationClasses();
 		topic.subscribe("urlsPopulated", urlsPopulated);
 		on(document, "keydown", keydown);
 		on(dom.byId("geimage"), "load", hideLoading);
 		var surface = gfx.createSurface("image", imageSize, imageSize);
-		surface.createPath("M196 196L204 196L204 204L196 204Z").setStroke("#888888");
+		surface.createPath("M196 196L204 196L204 204L196 204Z").setStroke("#fff");
+		surface = gfx.createSurface("image2", imageSize, imageSize);
+		surface.createPath("M196 196L204 196L204 204L196 204Z").setStroke("#000");
+		surface = gfx.createSurface("image3", imageSize, imageSize);
+		surface.createPath("M196 196L204 196L204 204L196 204Z").setStroke("#fff");
 		populateSiteData(bufferSize, 0);
 
 		function hideLoading() {
@@ -146,15 +149,11 @@ require(["dojo/dom-class", "esri/SpatialReference", "esri/geometry/Point", "esri
 						wkid : 3857
 					}));
 					map.centerAt(centerPoint);
-					var surface = gfx.createSurface("image2", imageSize, imageSize);
-					surface.createPath("M196 196L204 196L204 204L196 204Z").setStroke("#000000");
 					imagerymap.centerAndZoom(centerPoint, 14);
 					console.log("Center point x=" + centerPoint.x + " y=" + centerPoint.y);
 					console.log("Extent of ArcGIS imagery: xmin=" + imagerymap.extent.xmin + " xmax=" + imagerymap.extent.xmax + " ymin=" + imagerymap.extent.ymin + " ymax=" + imagerymap.extent.ymax + " width=" + (imagerymap.extent.xmax - imagerymap.extent.xmin) + " height=" + (imagerymap.extent.ymax - imagerymap.extent.ymin) + " mapCenterX:" + imagerymap.extent.getCenter().x + "  mapCenterY:" + imagerymap.extent.getCenter().y);
 					console.log("Site centroid x=" + site.x + " y=" + site.y);
 					console.log("Bounding box for GEE img: xmin:" + (site.x - bboxSize) + " xmax=" + (site.x + bboxSize) + " ymin=" + (site.y - bboxSize) + " ymax=" + (site.y + bboxSize) + " width:" + (2 * bboxSize) + " height:" + (2 * bboxSize));
-					var surface2 = gfx.createSurface("image3", imageSize, imageSize);
-					surface2.createPath("M196 196L204 196L204 204L196 204Z").setStroke("#888888");
 				}
 				setLandCoverClass(site);
 				display = (site.hasOwnProperty("validated_class")) ? "block" : "none";
@@ -276,7 +275,7 @@ require(["dojo/dom-class", "esri/SpatialReference", "esri/geometry/Point", "esri
 		}
 
 		function openDirect() {
-			window.open("https://web-apps-blishten.c9users.io/gee_spectral_library_builder/index.html?x=" + sites[position].x + "&y=" + sites[position].y + "&level=14&sceneid=" + sites[position].sceneid + "&bands=6,4,3", "_test");
+			window.open("https://andrewcottam.github.io/web_apps/gee_tools/spectral.html?x=" + sites[position].x + "&y=" + sites[position].y + "&level=14&sceneid=" + sites[position].sceneid + "&bands=6,4,3", "_test");
 		}
 
 	});
