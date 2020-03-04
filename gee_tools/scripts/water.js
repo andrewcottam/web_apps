@@ -9,7 +9,7 @@ require({
 	}, ["widgetsPath/ImageryTimeSlider", "dojo/_base/window", "dojo/io-query", "dojox/charting/plot2d/StackedColumns", "dojox/charting/axis2d/Default", "dojo/dom-style", "dojox/charting/Chart", "dojo/_base/lang", "dojo/request/script", "dojo/date/stamp", "dijit/registry", "dojo/ready", "dojo/parser", "dojo/_base/array", "dojo/on", "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dijit/form/CheckBox", "dojox/charting/axis2d/Default", "dojox/charting/plot2d/Columns"],
 	function(ImageryTimeSlider, win, ioQuery, StackedColumns, Default, domStyle, Chart, lang, script, stamp, registry, ready, parser, array, on) {
 		ready(function() {
-			var map, mbLayer, transitionsLayer, p32occurrence, p1p2change, annualRecurrence, maxWaterExtent, seasonality, monthlyRecurrenceChart, yearlyClassificationsChart, queryObject, digitalGlobeLayer;
+			var map, imageryTimeSlider, mbLayer, transitionsLayer, p32occurrence, p1p2change, annualRecurrence, maxWaterExtent, seasonality, monthlyRecurrenceChart, yearlyClassificationsChart, queryObject, digitalGlobeLayer;
 			var geeServerUrl = "https://geeImageServer.appspot.com";
 			var digitialGlobeApiKey = "pk.eyJ1IjoiZGlnaXRhbGdsb2JlIiwiYSI6ImNpbmJscnhhZTBudmp0cWx3MXI5bWt0djgifQ.9DibR63tG-LY6FvjDLhCXg";
 			//custom extent can be specified as follows: index.html?lat=15.4818&lng=-3.7372&zoom=12
@@ -19,7 +19,7 @@ require({
 					(value) ? map.addLayer(mbLayer): map.removeLayer(mbLayer);
 				});
 				on(registry.byId("toggleDGbasemap"), "change", function(value) {
-					(value) ? map.addLayer(digitalGlobeLayer): map.removeLayer(digitalGlobeLayer);
+					(value) ? imageryTimeSlider.show(): imageryTimeSlider.hide();
 				});
 				on(registry.byId("toggleTransitions"), "change", function(value) {
 					(value) ? map.addLayer(transitionsLayer): map.removeLayer(transitionsLayer);
@@ -107,7 +107,7 @@ require({
 					getMonthlyRecurrence(e.latlng);
 					getYearlyClassifications(e.latlng);
 				});
-				var imageryTimeSlider = new ImageryTimeSlider({
+				imageryTimeSlider = new ImageryTimeSlider({
 					leafletMap: map,
 					hideToEdge: true
 				}, "ImageryTimeSliderDiv");
