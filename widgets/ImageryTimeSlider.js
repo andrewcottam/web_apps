@@ -461,11 +461,11 @@ define(["dojo/query", "dojo/request/xhr", "dojo/Evented", "dijit/registry", "doj
 			hide: function() {
 				domStyle.set(this.domNode, "display", "none");
 				if (this.hideToEdge) { //show the show arrow at the right of the leaflet map
-					var mapGeom = domGeom.position(this.leafletMap.getContainer()); //get the position of the dom for the leaflet map
+					// var mapGeom = domGeom.position(this.leafletMap.getContainer()); //get the position of the dom for the leaflet map
 					//show the open image
-					domStyle.set("showImg", "display", "block");
-					domStyle.set("showImg", "left", mapGeom.x + mapGeom.w - 16 + "px");
-					domStyle.set("showImg", "top", mapGeom.y + mapGeom.h - 66 + "px");
+					// domStyle.set("showImg", "display", "block");
+					// domStyle.set("showImg", "left", mapGeom.x + mapGeom.w - 16 + "px");
+					// domStyle.set("showImg", "top", mapGeom.y + mapGeom.h - 66 + "px");
 					this.leafletMap.removeLayer(this.imageLayer); //remove the layer from the map
 				}
 				else {
