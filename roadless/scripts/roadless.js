@@ -39,7 +39,7 @@ require(["dojo/date/locale", "dijit/focus", "dojo/parser", "dijit/form/RadioButt
 			addExtentToContextMap();
 		});
 		var imagerymap = L.map('mapDiv2',{
-			layers: [digitalGlobeLayer],
+			layers: [bingLayer],
 		    center: START_POINT,
 		    zoom: 15,
 		    loadingControl: true,
