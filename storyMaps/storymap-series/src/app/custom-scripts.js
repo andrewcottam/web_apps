@@ -41,7 +41,7 @@ define(["dojo/dom","dojo/dom-geometry", "dojo/_base/window", "dojo/dom-construct
 
   function createMonthlyRecurrenceChart() {
     monthlyRecurrenceChart = new Chart("monthlyRecurrenceChart_" + mapid, {
-      title: "Monthly",
+      title: "Month",
       titleFont: "normal normal normal 8pt Tahoma",
       titleGap: 6
     });
@@ -216,7 +216,7 @@ define(["dojo/dom","dojo/dom-geometry", "dojo/_base/window", "dojo/dom-construct
 
   function createYearlyClassificationsChart() {
     yearlyClassificationsChart = new Chart("yearlyClassificationsChart_" + mapid, {
-      title: "Yearly",
+      title: "Year",
       titleFont: "normal normal normal 8pt Tahoma",
       titleGap: 7
     });
@@ -327,6 +327,15 @@ define(["dojo/dom","dojo/dom-geometry", "dojo/_base/window", "dojo/dom-construct
       }, {
         value: 32,
         text: "2015"
+      }, {
+        value: 33,
+        text: "2016"
+      }, {
+        value: 34,
+        text: "2017"
+      }, {
+        value: 35,
+        text: "2018"
       }]
     });
     yearlyClassificationsChart.addAxis("y", {
@@ -378,7 +387,7 @@ define(["dojo/dom","dojo/dom-geometry", "dojo/_base/window", "dojo/dom-construct
       array.forEach(response.records, function(record, index) {
         recurrenceData.push({
           x: index + 1,
-          y: record.monthly_recurrence,
+          y: (record.monthly_recurrence/100),
           fill: "#006AC2",
           stroke: "#ffffff"
         });
