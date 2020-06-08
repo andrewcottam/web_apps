@@ -1456,7 +1456,7 @@ require({
 		function clearAlgorithmsInList() {
 			console.log("clearAlgorithmsInList");
 			var algorithmList = registry.byId("algorithmList");
-			algorithmList.removeOption(algorithmList.getOptions());
+			if (algorithmList) algorithmList.removeOption(algorithmList.getOptions());
 		}
 
 		function openLoadAlgorithmDialog() {
