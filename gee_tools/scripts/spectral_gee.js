@@ -35,6 +35,7 @@ require({
 		// line update the existing algorithms points
 		parser.parse().then(function() {
 			console.log('parser.parsed');
+			logout();
 			algorithmNameDialog = new EnterTextDialog();
 			algorithmNameDialog.startup();
 			loadTextDialog = new LoadTextDialog();
@@ -159,7 +160,6 @@ require({
 		initExtent = new Extent(-517344.4386681639, 1662324.7040100119, -443964.8915144937, 1740596.2209739268, new SpatialReference({
 			wkid : 102100
 		}));
-		logout();
 		map = new Map("mapDiv", {
 			extent : initExtent,
 			basemap : "topo",
