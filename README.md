@@ -49,9 +49,9 @@
 <a href='https://andrewcottam.github.io/web_apps/species_validation_tool/index.html' target='_blank'>index.html</a> - Proof-of-concept tool for validating species presence within protected areas</br>
 #### ESRI Custom Story Maps
 ##### Development 
-<a href='https://andrewcottam.github.io/web_apps/storyMaps/storymap-series/src/index.html?appid=6e9b0cac8b61432fb4dc422840f18240' target='_blank'>Applications of Global Surface Water Dataset (GitHub)</a>
+<a href='https://andrewcottam.github.io/web_apps/storyMaps/storymap-series/src/index.html?appid=6e9b0cac8b61432fb4dc422840f18240' target='_blank'>Applications of Global Surface Water Dataset</a>
 ##### Deployment 
-<a href='https://andrewcottam.github.io/web_apps/storyMaps/storymap-series/deploy/index.html?appid=6e9b0cac8b61432fb4dc422840f18240' target='_blank'>Applications of Global Surface Water Dataset (GitHub)</a>
+<a href='https://andrewcottam.github.io/web_apps/storyMaps/storymap-series/deploy/index.html?appid=6e9b0cac8b61432fb4dc422840f18240' target='_blank'>Applications of Global Surface Water Dataset</a>
 #### tourism_potential_global
 <a href='https://andrewcottam.github.io/web_apps/tourism_potential_global/index.html' target='_blank'>index.html</a> - Shows the potential of protected areas globally for eco-tourism based on their species and the species charisma</br>
 #### vanilla_dojo_layout
