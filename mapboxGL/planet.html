@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>NORWAY’S INTERNATIONAL CLIMATE AND FORESTS INITIATIVE</title>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
+</head>
+
+<body>
+    <div id='map' style='position: absolute; top: 0; bottom: 0; width: 100%;'></div>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg';
+        var map = new mapboxgl.Map({
+            container: 'map',
+            style: {"version":8,"name":"Blank","center":[0,0],"zoom":0,"sources":{},"sprite":"file://roblabs.com/sprite","glyphs":"file://roblabs.com/fonts/mapbox/{fontstack}/{range}.pbf","layers":[{"id":"background","type":"background","paint":{"background-color":"rgba(255,255,255,1)"}}],"id":"blank"}
+        });
+        // map.on('load', function() {
+        //     map.addLayer({
+        //         'id': 'planet_wmts_latest_monthly',
+        //         'type': 'raster',
+        //         'source': {
+        //             type: 'raster',
+        //             tiles: ['https://tiles.planet.com/basemaps/v1/latest-series/1725ab80-8e12-4b3c-9c25-99550eb466e4/gmap/{z}/{x}/{y}.png?api_key=361954dfdb954107a761d96cfcf8bab3'],
+        //             tileSize: 256
+        //         }
+        //     });
+        // });
+        map.on('load', function() {
+            map.addLayer({
+                'id': 'planet_wmts_latest_biannual',
+                'type': 'raster',
+                'source': {
+                    type: 'raster',
+                    tiles: ['https://tiles.planet.com/basemaps/v1/latest-series/1725ab80-8e12-4b3c-9c25-99550eb466e4/gmap/{z}/{x}/{y}.png?api_key=361954dfdb954107a761d96cfcf8bab3'],
+                    tileSize: 256
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>
