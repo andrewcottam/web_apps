@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>NORWAY’S INTERNATIONAL CLIMATE AND FORESTS INITIATIVE</title>
+    <title>Planet Latest Biannual</title>
     <script src='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js'></script>
     <link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
 </head>
@@ -13,6 +13,7 @@
         mapboxgl.accessToken = 'pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg';
         var map = new mapboxgl.Map({
             container: 'map',
+            zoom: 1,
             style: {"version":8,"name":"Blank","center":[0,0],"zoom":0,"sources":{},"sprite":"file://roblabs.com/sprite","glyphs":"file://roblabs.com/fonts/mapbox/{fontstack}/{range}.pbf","layers":[{"id":"background","type":"background","paint":{"background-color":"rgba(255,255,255,1)"}}],"id":"blank"}
         });
         // map.on('load', function() {
