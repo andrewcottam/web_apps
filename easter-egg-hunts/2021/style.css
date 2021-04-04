@@ -3,8 +3,10 @@ h1 {
 }
 
 input {
-    width: 2ch;
+    width: 1ch;
     box-sizing: content-box;
+    height: 2ch;
+    margin: 3px;
 }
 .firstline{
     font-size:40px;
@@ -20,8 +22,8 @@ input {
     font-size:65px;
 }
 .location{
-    font-size:40px;
+    font-size:30px;
 }
 .welldone{
-    font-size:40px;
+    font-size:30px;
 }
