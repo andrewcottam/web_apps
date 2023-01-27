@@ -6,7 +6,7 @@ define(["dojo/_base/declare", "esri/arcgis/utils", "dojo/Evented", "dojo/_base/l
 		getImagesForBBox : function(minx, miny, maxx, maxy, size) {
 			//size can be original, medium (default value), small, thumbnail, square, mini_square
 			this.requestPromise = esri.request({
-				url : "http://www.panoramio.com/map/get_panoramas.php",
+				url : "https://www.panoramio.com/map/get_panoramas.php",
 				content : {
 					set : "public",
 					from : "0",
