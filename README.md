@@ -19,7 +19,8 @@ Mainly simple demo pages based on a range of technologies. Many no longer availa
 |Google Earth Engine Javascript client|Connects a Javascript client to Google Earth Engine|<a href='https://andrewcottam.github.io/web_apps/gee_js_api/index.html'>Not finished</a>|
 |Google Earth Engine Simple client|Combines a number of external APIs (Flickr, Panoramio) into one place for a protected area|<a href='https://andrewcottam.github.io/web_apps/gee_simple_client/index.html?wdpaid=780'>Not finished</a>|
 |IUCN Red List Mapper|Delivery of the IUCN Red List of Threatened Species under contract in 2012|<a href='https://andrewcottam.github.io/web_apps/IUCN-Red-List-Mapper/index.html'>IUCN Services no longer available</a>|
-
+|IUCN Web Services|Clients and tools that use the IUCN Red List API and services|<a href='https://andrewcottam.github.io/web_apps/IUCN-Web-Services/index.html'>IUCN Services no longer available</a>|
+|JRC EO data and processing platform client|Web client for the backline services that are available from the JEODPP|<a href='https://andrewcottam.github.io/web_apps/jeodpp/index.html'>JRC Services no longer available</a>|
 
 
 
@@ -39,7 +40,7 @@ Mainly simple demo pages based on a range of technologies. Many no longer availa
 <a href='https://61c92e42cb1042699911c485c38d52ae.vfs.cloud9.eu-west-1.amazonaws.com/web_apps/gee_tools/water_validation_tool.html' target='_blank'>index.html</a>Water Validation Tool (On AWS C9)</br>
 <a href='https://andrewcottam.github.io/web_apps/gee_tools/water.html' target='_blank'>index.html</a>Global Surface Water Publishing Tool</br> 
 #### IUCN-Web-Services
-<a href='https://andrewcottam.github.io/web_apps/IUCN-Web-Services/index.html' target='_blank'>index.html</a> - Lots and lots of things that probably don't work any more</br>
+
 #### leaflet_map
 <a href='https://andrewcottam.github.io/web_apps/leaflet_map/index.html' target='_blank'>index.html</a> - test page for leaflet</br>
 <a href='https://andrewcottam.github.io/web_apps/leaflet_map/references.html' target='_blank'>references.html</a> - test page for references from the ScienceDirect API
