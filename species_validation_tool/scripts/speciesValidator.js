@@ -23,7 +23,7 @@ require({
 		if (!wdpa_id) {
 			alert('no wdpaid');
 		}
-		restServerUrl = "https://61c92e42cb1042699911c485c38d52ae.vfs.cloud9.eu-west-1.amazonaws.com:8081/python-rest-server/h05googleearthengine";
+		restServerUrl = "https://python-rest-server-ny43uciwwa-oc.a.run.app/python-rest-server/jrc-database";
 		parser.parse();
 		setLanguage();
 		setTaxonGroup();
