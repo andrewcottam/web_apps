@@ -33,14 +33,20 @@ Mainly simple demo pages based on a range of technologies. Many no longer availa
 |Mapbox WDPA Vector tiles|World Database of Protected Areas vector tiles in MapBox|<a href='https://andrewcottam.github.io/web_apps/mapboxGL/wdpa.html'>Unknown</a>|
 |Mapbox Hosted JRC Vector tiles|Hosted JRC vector tiles in MapBox|<a href='https://andrewcottam.github.io/web_apps/mapboxGL/jrcVectorTiles.html'>Unknown</a>|
 |Mapbox ESRI OpenStreetMap|Mapbox GL Client using ESRI OpenStreetMap hosted vector tiles|<a href='https://andrewcottam.github.io/web_apps/mapboxGL/esri_vector_tiles.html'>Unknown</a>|
-|Roadless areas validation tool|Tool to rapidly validate the forest classifications for the Roadless areas project|<a href='https://andrewcottam.github.io/web_apps/roadless/index.html'>JRC Services no longer available</a>  
-|Species validation tool|Page of species for a site which allows the user to check the data against GBIF and validate the records|<a href='https://andrewcottam.github.io/web_apps/species_validation_tool/index.html?wdpaid=785'>Online</a>
+|Roadless areas validation tool|Tool to rapidly validate the forest classifications for the Roadless areas project|<a href='https://andrewcottam.github.io/web_apps/roadless/index.html'>JRC Services no longer available</a> | 
+|Species validation tool|Page of species for a site which allows the user to check the data against GBIF and validate the records|<a href='https://andrewcottam.github.io/web_apps/species_validation_tool/index.html?wdpaid=785'>Online (but not finished)</a>|
+|JRC Global Surface Water Story Map|Highlights a range of different applications of the JRC water dataset in an ESRI story map|<a href='https://andrewcottam.github.io/web_apps/storyMaps/storymap-series/deploy/index.html?appid=6e9b0cac8b61432fb4dc422840f18240'>Online</a>|
+|Tourism potential global|Shows the ranked tourism potential for protected areas globally based on the total charisma of the species that occur there|<a href='https://andrewcottam.github.io/web_apps/tourism_potential_global/index.html'>Unknown</a>
+
 
 #### BioPAMA
 <a href='https://andrewcottam.github.io/web_apps/biopama/index.html' target='_blank'>index.html</a> - Leaflet vector tiles using L.VectorGrid and comparing sources from MapBox, OpenMapTiles, MapZen and ESRI</br>
 <a href='https://andrewcottam.github.io/web_apps/biopama/vectorTileDev.html' target='_blank'>vectorTileDev.html</a> - Leaflet vector tiles using L.VectorGrid and combining OSM and WDPA data</br>
 #### cdn
 <a href='https://andrewcottam.github.io/web_apps/cdn/index.html' target='_blank'>index.html</a> - My own Content Delivery Network - not really used</br>
+
+
+
 
 
 #### roadless areas validation tool
@@ -51,8 +57,7 @@ Mainly simple demo pages based on a range of technologies. Many no longer availa
 <a href='https://andrewcottam.github.io/web_apps/storyMaps/storymap-series/src/index.html?appid=6e9b0cac8b61432fb4dc422840f18240' target='_blank'>Applications of Global Surface Water Dataset</a>
 ##### Deployment 
 <a href='https://andrewcottam.github.io/web_apps/storyMaps/storymap-series/deploy/index.html?appid=6e9b0cac8b61432fb4dc422840f18240' target='_blank'>Applications of Global Surface Water Dataset</a>
-#### tourism_potential_global
-<a href='https://andrewcottam.github.io/web_apps/tourism_potential_global/index.html' target='_blank'>index.html</a> - Shows the potential of protected areas globally for eco-tourism based on their species and the species charisma</br>
+protected areas globally for eco-tourism based on their species and the species charisma</br>
 #### vanilla_dojo_layout
 <a href='https://andrewcottam.github.io/web_apps/vanilla_dojo_layout/index.html' target='_blank'>index.html</a> - Simple vanilla Dojo layout</br>
 #### vectorTileClients
