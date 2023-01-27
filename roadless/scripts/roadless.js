@@ -57,7 +57,7 @@ require(["dojo/date/locale", "dijit/focus", "dojo/parser", "dijit/form/RadioButt
 		addExtentToContextMap();
 		var restServerUrl = "https://61c92e42cb1042699911c485c38d52ae.vfs.cloud9.eu-west-1.amazonaws.com:8081/python-rest-server/"; //AWS C9 ec2-default environment only
 		// var restServerUrl = "http://18.200.163.92:8080/python-rest-server/"; // python-rest-server running on tornado on ec2-default instance
-//		geeServerUrl = (document.domain === "localhost") ? "http://localhost:8080" : "http://geeImageServer.appspot.com";
+//		geeServerUrl = (document.domain === "localhost") ? "http://localhost:8080" : "https://google-earth-engine-server-ny43uciwwa-oc.a.run.app";
 		var geeServerUrl = "https://geeImageServer.appspot.com";
 		getValidationClasses();
 		topic.subscribe("urlsPopulated", urlsPopulated);
