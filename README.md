@@ -1,28 +1,35 @@
-### web_apps
-#### Attractive Species Gallery (Status: Online)
-<a href='http://andrewcottam.github.io/web_apps/attractive_species_gallery/index.html' target='_blank'>index.html</a> - Gallery of charismatic species based on the number of images for the species from the Flickr API</br>
-#### BirdlifeMarineIBAMapper (Status: ArcGIS Enterprise Services no longer available)
-<a href='https://andrewcottam.github.io/web_apps/BirdlifeMarineIBAMapper/default.html' target='_blank'>default.html</a> - Website developed for Birdlife International under contract in 2012</br>
+### webb_apps  
+Mainly simple demo pages based on a range of technologies. Many no longer available. <br/><br/>
+| Name | Description | Status |
+|------|-------------|--------|
+|Attractive Species Gallery | Gallery of charismatic species based on the number of images for the species from the Flickr API | <a href='http://andrewcottam.github.io/web_apps/attractive_species_gallery/index.html'>Online</a> |
+|Birdlife  Marine IBA Mapper|Website developed for Birdlife International under contract in 2012|<a href='https://andrewcottam.github.io/web_apps/BirdlifeMarineIBAMapper/default.html'>Birdlife ArcGIS Server Services no longer available</a>|
+|Client Richness Demo|Shows species richness on the client and allows for you to change the threshold|<a href='https://andrewcottam.github.io/web_apps/eSpecies_client_richness/index.html'>JRC services no longer available</a>|
+|African Protected Areas Assessment and Monitoring Tool|Shows radar plots of species richness by taxonomic group|<a href='https://andrewcottam.github.io/web_apps/eSpecies-Client-Demo/apaat.html'>JRC services no longer available</a>|
+|Browser canvas experiments|Experiments with different overlay operations in the browsers canvas. Chrome only|<a href='https://andrewcottam.github.io/web_apps/eSpecies-Client-Demo/canvasTest.html'>Online</a>|
+|ECAS authentication|Demonstration page for authenticating with the JRC ECAS system|<a href='https://andrewcottam.github.io/web_apps/eSpecies-Client-Demo/ecasTest.html'>JRC Services no longer available</a>|
+|GeoJson converter for ESRI Javascript API|ESRI utility for converting GeoJson data into a format suitable for rendering on their Javascript API|<a href='https://andrewcottam.github.io/web_apps/eSpecies-Client-Demo/geojsonEsri.html'>Online</a>|
+|GeoJson renderers|Demo of GeoJson renderers for GitHub, Leaflet and Mapbox|<a href='https://andrewcottam.github.io/web_apps/eSpecies-Client-Demo/githubJsonClient.html'>Online (broken)</a>|
+|JSBin demo|Copy and paste into JSBin to show a fully rendered page for a protected area using only Web APIs|<a href='https://andrewcottam.github.io/web_apps/eSpecies-Client-Demo/jsbindemo.html'>Offline</a>|
+|Landcover demo|Demostration of client-side rendering to show different land-cover types as the user hovers over the legend.|<a href='https://andrewcottam.github.io/web_apps/eSpecies-Client-Demo/landcover.html'>JRC Services no longer available</a>|
+|Overlap analysis|Client-side area analysis based on a protected area and land cover classes|<a href='https://andrewcottam.github.io/web_apps/eSpecies-Client-Demo/overlay.html'>JRC Services no longer available</a>|
+|Quad-key analysis|Demonstration of analysing spatial distributions of species using quad-key indexing|<a href='https://andrewcottam.github.io/web_apps/eSpecies_quadkey_client/index.html'>JRC Services no longer available</a>|
+|ESRI Map| Simple vanilla ESRI Javascript Map|<a href='https://andrewcottam.github.io/web_apps/esri_map/index.html'>Online</a>
+|Google Earth Engine CART Renderer|Converts the explain string from Google Earth Engine Classification and Regression Trees R format into a Javascript object and renders it.|<a href='https://andrewcottam.github.io/web_apps/gee_cart_tools/index.html'>Not finished</a>|
+|Google Earth Engine Javascript client|Connects a Javascript client to Google Earth Engine|<a href='https://andrewcottam.github.io/web_apps/gee_js_api/index.html'>Not finished</a>|
+
+
+
+
+
 #### BioPAMA
 <a href='https://andrewcottam.github.io/web_apps/biopama/index.html' target='_blank'>index.html</a> - Leaflet vector tiles using L.VectorGrid and comparing sources from MapBox, OpenMapTiles, MapZen and ESRI</br>
 <a href='https://andrewcottam.github.io/web_apps/biopama/vectorTileDev.html' target='_blank'>vectorTileDev.html</a> - Leaflet vector tiles using L.VectorGrid and combining OSM and WDPA data</br>
 #### cdn
 <a href='https://andrewcottam.github.io/web_apps/cdn/index.html' target='_blank'>index.html</a> - My own Content Delivery Network - not really used</br>
-#### eSpecies-Client-Demo
-<a href='https://andrewcottam.github.io/web_apps/eSpecies-Client-Demo/apaat.html' target='_blank'>apaat.html</a></br>
-<a href='https://andrewcottam.github.io/web_apps/eSpecies-Client-Demo/canvasTest.html' target='_blank'>canvasTest.html</a></br>
-<a href='https://andrewcottam.github.io/web_apps/eSpecies-Client-Demo/ecasTest.html' target='_blank'>ecasTest.html</a></br>
-<a href='https://andrewcottam.github.io/web_apps/eSpecies-Client-Demo/geojsonEsri.html' target='_blank'>geojsonEsri.html</a></br>
-<a href='https://andrewcottam.github.io/web_apps/eSpecies-Client-Demo/githubJsonClient.html' target='_blank'>githubJsonClient.html</a></br>
-<a href='https://andrewcottam.github.io/web_apps/eSpecies-Client-Demo/jsbindemo.html' target='_blank'>jsbindemo.html</a></br>
-<a href='https://andrewcottam.github.io/web_apps/eSpecies-Client-Demo/landcover.html' target='_blank'>landcover.html</a></br>
-<a href='https://andrewcottam.github.io/web_apps/eSpecies-Client-Demo/overlay.html' target='_blank'>overlay.html</a></br>
-#### eSpecies_client_richness
-<a href='https://andrewcottam.github.io/web_apps/eSpecies_client_richness/index.html' target='_blank'>index.html</a> - Species richness canvas in Borneo</br>
-#### eSpecies_quadkey_client
-<a href='https://andrewcottam.github.io/web_apps/eSpecies_quadkey_client/index.html' target='_blank'>index.html</a> - Demo of using quadkeys in the client</br>
-#### esri_map
-<a href='https://andrewcottam.github.io/web_apps/esri_map/index.html' target='_blank'>index.html</a> - Simple vanilla ESRI map</br>
+
+
+
 #### gee_simple_client
 <a href='https://andrewcottam.github.io/web_apps/gee_simple_client/index.html?wdpaid=780' target='_blank'>index.html</a> - Mash-up of GEE imagery, Flickr and Panoramio for protected areas</br>
 #### gee_tools

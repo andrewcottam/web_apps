@@ -7,7 +7,7 @@ require({
         ]
     }, ["dojox/charting/plot2d/Lines", "dojo/_base/lang", "dojo/_base/array", "dojox/charting/StoreSeries", "dojox/charting/Chart", "dojox/charting/axis2d/Default", "dojox/charting/plot2d/Scatter", "dojox/charting/themes/Julie", "dijit/form/Button", "dijit/registry", "dijit/form/Select", "dojo/store/Memory", "widgetsPath/googleApiClient", "dojo/dom", "dojo/html", "dojo/request/script", "dojo/parser", "dojo/ready", "dijit/layout/ContentPane", "dijit/layout/BorderContainer"],
     function(Lines, lang, array, StoreSeries, Chart, Default, Scatter, Julie, Button, registry, Select, Memory, GoogleApiClient, dom, html, script, parser, ready) {
-        var geeImageServerUrl = "https://geeImageServer.appspot.com",
+        var geeImageServerUrl = "hhttps://google-earth-engine-server-ny43uciwwa-oc.a.run.app",
             columnNames = [], //simple array of column names in the fusion table
             classColumnName, //name of the column in the fusion table which has the class value
             scatterChart, //the chart widget
