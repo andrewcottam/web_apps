@@ -95,7 +95,7 @@ require(["dojo/on", "esri/map", "esri/graphic", "esri/symbols/SimpleMarkerSymbol
 	var speciesGrid;
 	var currentRow;
 	var showSpeciesImages = false;
-	var tp_field = 'total_charisma';
+	var tp_field = 'flickr_raw_sum_rank';
 	var highlightSymbol = new esri.symbol.SimpleMarkerSymbol().setColor(new dojo.Color([255, 0, 0]));
 	var defaultSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, 10, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([255, 0, 0]), 1), new Color([255, 0, 0, 0.25]));
 	// declare a timer class
