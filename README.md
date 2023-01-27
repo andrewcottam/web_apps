@@ -17,6 +17,7 @@ Mainly simple demo pages based on a range of technologies. Many no longer availa
 |ESRI Map| Simple vanilla ESRI Javascript Map|<a href='https://andrewcottam.github.io/web_apps/esri_map/index.html'>Online</a>
 |Google Earth Engine CART Renderer|Converts the explain string from Google Earth Engine Classification and Regression Trees R format into a Javascript object and renders it.|<a href='https://andrewcottam.github.io/web_apps/gee_cart_tools/index.html'>Not finished</a>|
 |Google Earth Engine Javascript client|Connects a Javascript client to Google Earth Engine|<a href='https://andrewcottam.github.io/web_apps/gee_js_api/index.html'>Not finished</a>|
+|Google Earth Engine Simple client|Combines a number of external APIs (Flickr, Panoramio) into one place for a protected area|<a href='https://andrewcottam.github.io/web_apps/gee_simple_client/index.html?wdpaid=780'>Online</a>
 
 
 
@@ -30,8 +31,6 @@ Mainly simple demo pages based on a range of technologies. Many no longer availa
 
 
 
-#### gee_simple_client
-<a href='https://andrewcottam.github.io/web_apps/gee_simple_client/index.html?wdpaid=780' target='_blank'>index.html</a> - Mash-up of GEE imagery, Flickr and Panoramio for protected areas</br>
 #### gee_tools
 <a href='https://andrewcottam.github.io/web_apps/gee_tools/index.html' target='_blank'>index.html</a>Tools used in the Global Surface Water Project (deployed)</br>
 <a href='https://61c92e42cb1042699911c485c38d52ae.vfs.cloud9.eu-west-1.amazonaws.com/_static/web_apps/gee_tools/index.html' target='_blank'>index.html</a>Tools used in the Global Surface Water Project (development}</br>
