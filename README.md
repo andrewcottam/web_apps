@@ -15,15 +15,24 @@ Mainly simple demo pages based on a range of technologies. Many no longer availa
 |Overlap analysis|Client-side area analysis based on a protected area and land cover classes|<a href='https://andrewcottam.github.io/web_apps/eSpecies-Client-Demo/overlay.html'>JRC Services no longer available</a>|
 |Quad-key analysis|Demonstration of analysing spatial distributions of species using quad-key indexing|<a href='https://andrewcottam.github.io/web_apps/eSpecies_quadkey_client/index.html'>JRC Services no longer available</a>|
 |ESRI Map| Simple vanilla ESRI Javascript Map|<a href='https://andrewcottam.github.io/web_apps/esri_map/index.html'>Online</a>
+|Spectral Library Building Tool for Google Earth Engine|Tool to create points of known land-cover types by photo interpretation, analyse their spectral properties and define spectral libraries. It also also you to interactively classify Landsat imagery with these libraries|<a href='https://andrewcottam.github.io/google-earth-engine-apps/spectral.html'>Online</a>|
+|Water validation tool for Landsat 5, 7 and 8|Tool to rapidly validate the results of a detection algorithm on a set of points.|<a href='https://andrewcottam.github.io/google-earth-engine-apps/water_validation_tool.html'>Online</a>|
+|Feng et al. Water Dataset validation tool|Tool to rapidly validate the results of a detection algorithm on a set of points from the SRTM Dataset|<a href='https://andrewcottam.github.io/google-earth-engine-apps/swdb_validation_tool.html'>Online</a>|
+|Google Earth Engine Results Analyser|Visualises the results of the validation on a global map and provides tools to create confusion matrices and to help identify methological issues|<a href='https://andrewcottam.github.io/google-earth-engine-apps/results.html'>Online</a>|
+|Joint Research Centre Global Water Dataset|Distribute the results of the classification by online download (Leaflet mapper)|<a href='https://andrewcottam.github.io/google-earth-engine-apps/water.html'>Online</a>|
 |Google Earth Engine CART Renderer|Converts the explain string from Google Earth Engine Classification and Regression Trees R format into a Javascript object and renders it.|<a href='https://andrewcottam.github.io/web_apps/gee_cart_tools/index.html'>Not finished</a>|
 |Google Earth Engine Javascript client|Connects a Javascript client to Google Earth Engine|<a href='https://andrewcottam.github.io/web_apps/gee_js_api/index.html'>Not finished</a>|
 |Google Earth Engine Simple client|Combines a number of external APIs (Flickr, Panoramio) into one place for a protected area|<a href='https://andrewcottam.github.io/web_apps/gee_simple_client/index.html?wdpaid=780'>Not finished</a>|
 |IUCN Red List Mapper|Delivery of the IUCN Red List of Threatened Species under contract in 2012|<a href='https://andrewcottam.github.io/web_apps/IUCN-Red-List-Mapper/index.html'>IUCN Services no longer available</a>|
 |IUCN Web Services|Clients and tools that use the IUCN Red List API and services|<a href='https://andrewcottam.github.io/web_apps/IUCN-Web-Services/index.html'>IUCN Services no longer available</a>|
 |JRC EO data and processing platform client|Web client for the backline services that are available from the JEODPP|<a href='https://andrewcottam.github.io/web_apps/jeodpp/index.html'>JRC Services no longer available</a>|
-
-
-
+|Leaflet Map|Simple leaflet client that includes JRC water data and Flickr images|<a href='https://andrewcottam.github.io/web_apps/leaflet_map/index.html'>Not finished</a> |
+|Leaflet References|Simple test page that renders content from the Elsevier ScienceDirect API|<a href='https://andrewcottam.github.io/web_apps/leaflet_map/references.html'>Elsevier API expired</a>|
+|Mapbox Vector Tile client|Vector tiles in MapBoxGL Javascript Client|<a href='https://andrewcottam.github.io/web_apps/mapboxGL/index.html'>Unknown</a>|
+|Mapbox Indicator Example|Indicator example for protected areas coverage under CBD target 11|<a href='https://andrewcottam.github.io/web_apps/mapboxGL/cbd11.html'>Unknown</a>|
+|Mapbox WDPA Vector tiles|World Database of Protected Areas vector tiles in MapBox|<a href='https://andrewcottam.github.io/web_apps/mapboxGL/wdpa.html'>Unknown</a>|
+|Mapbox Hosted JRC Vector tiles|Hosted JRC vector tiles in MapBox|<a href='https://andrewcottam.github.io/web_apps/mapboxGL/jrcVectorTiles.html'>Unknown</a>|
+|Mapbox ESRI OpenStreetMap|Mapbox GL Client using ESRI OpenStreetMap hosted vector tiles|<a href='https://andrewcottam.github.io/web_apps/mapboxGL/esri_vector_tiles.html'>Unknown</a>|
 
 
 #### BioPAMA
@@ -33,23 +42,6 @@ Mainly simple demo pages based on a range of technologies. Many no longer availa
 <a href='https://andrewcottam.github.io/web_apps/cdn/index.html' target='_blank'>index.html</a> - My own Content Delivery Network - not really used</br>
 
 
-
-#### gee_tools
-<a href='https://andrewcottam.github.io/web_apps/gee_tools/index.html' target='_blank'>index.html</a>Tools used in the Global Surface Water Project (deployed)</br>
-<a href='https://61c92e42cb1042699911c485c38d52ae.vfs.cloud9.eu-west-1.amazonaws.com/_static/web_apps/gee_tools/index.html' target='_blank'>index.html</a>Tools used in the Global Surface Water Project (development}</br>
-<a href='https://61c92e42cb1042699911c485c38d52ae.vfs.cloud9.eu-west-1.amazonaws.com/web_apps/gee_tools/water_validation_tool.html' target='_blank'>index.html</a>Water Validation Tool (On AWS C9)</br>
-<a href='https://andrewcottam.github.io/web_apps/gee_tools/water.html' target='_blank'>index.html</a>Global Surface Water Publishing Tool</br> 
-#### IUCN-Web-Services
-
-#### leaflet_map
-<a href='https://andrewcottam.github.io/web_apps/leaflet_map/index.html' target='_blank'>index.html</a> - test page for leaflet</br>
-<a href='https://andrewcottam.github.io/web_apps/leaflet_map/references.html' target='_blank'>references.html</a> - test page for references from the ScienceDirect API
-#### mapboxGL
-<a href='https://andrewcottam.github.io/web_apps/mapboxGL/index.html' target='_blank'>index.html</a> - Vector tiles in MapBoxGL Javascript Client</br>
-<a href='https://andrewcottam.github.io/web_apps/mapboxGL/cbd11.html' target='_blank'>cbd11.html</a> - Indicator example for protected areas coverage under CBD target 11</br>
-<a href='https://andrewcottam.github.io/web_apps/mapboxGL/wdpa.html' target='_blank'>wdpa.html</a> - Simple demo page for WDPA vector tiles</br>
-<a href='https://andrewcottam.github.io/web_apps/mapboxGL/jrcVectorTiles.html' target='_blank'>jrcVectorTiles.html</a> - Mapbox GL Client using JRC hosted vector tiles</br>
-<a href='https://andrewcottam.github.io/web_apps/mapboxGL/esri_vector_tiles.html' target='_blank'>esri_vector_tiles.html</a> - Mapbox GL Client using ESRI OpenStreetMap hosted vector tiles</br>
 #### roadless areas validation tool
 <a href='https://61c92e42cb1042699911c485c38d52ae.vfs.cloud9.eu-west-1.amazonaws.com:8080/web_apps/roadless/index.html' target='_blank'>Roadless Validation tool (AWS C9)</a>  
 <a href='https://andrewcottam.github.io/web_apps/roadless/index.html' target='_blank'>Roadless Validation tool</a>  
