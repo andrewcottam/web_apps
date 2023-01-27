@@ -31,7 +31,7 @@ require({
 		script.get(restServerUrl + "/especies/get_pa_info", {
 			query : {
 				wdpa_id : wdpa_id,
-				fields : 'name,desig'
+				_fields : 'name,desig'
 			},
 			jsonp : "callback"
 		}).then(function(response) {
