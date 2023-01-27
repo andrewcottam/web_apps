@@ -33,6 +33,7 @@ Mainly simple demo pages based on a range of technologies. Many no longer availa
 |Mapbox WDPA Vector tiles|World Database of Protected Areas vector tiles in MapBox|<a href='https://andrewcottam.github.io/web_apps/mapboxGL/wdpa.html'>Unknown</a>|
 |Mapbox Hosted JRC Vector tiles|Hosted JRC vector tiles in MapBox|<a href='https://andrewcottam.github.io/web_apps/mapboxGL/jrcVectorTiles.html'>Unknown</a>|
 |Mapbox ESRI OpenStreetMap|Mapbox GL Client using ESRI OpenStreetMap hosted vector tiles|<a href='https://andrewcottam.github.io/web_apps/mapboxGL/esri_vector_tiles.html'>Unknown</a>|
+|Roadless areas validation tool|Tool to rapidly validate the forest classifications for the Roadless areas project|<a href='https://andrewcottam.github.io/web_apps/roadless/index.html'>JRC Services no longer available</a>  
 
 
 #### BioPAMA
@@ -44,7 +45,6 @@ Mainly simple demo pages based on a range of technologies. Many no longer availa
 
 #### roadless areas validation tool
 <a href='https://61c92e42cb1042699911c485c38d52ae.vfs.cloud9.eu-west-1.amazonaws.com:8080/web_apps/roadless/index.html' target='_blank'>Roadless Validation tool (AWS C9)</a>  
-<a href='https://andrewcottam.github.io/web_apps/roadless/index.html' target='_blank'>Roadless Validation tool</a>  
 #### species_validation_tool
 <a href='https://andrewcottam.github.io/web_apps/species_validation_tool/index.html' target='_blank'>index.html</a> - Proof-of-concept tool for validating species presence within protected areas</br>
 #### ESRI Custom Story Maps
