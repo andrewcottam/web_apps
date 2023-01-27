@@ -8,7 +8,7 @@ define(["dojo/io-query", "dojo/Stateful", "dojo/dom-style", "dojo/on", "dojo/dom
 			for (n in options) {
 				this[n] = options[n];
 			}
-			this.servicesDomain = (document.domain === "ehabitat-wps.jrc.it") ? "http://geeimageserver.appspot.com/" : "http://geeimageserver.appspot.com/";
+			this.servicesDomain = (document.domain === "ehabitat-wps.jrc.it") ? "https://google-earth-engine-server-ny43uciwwa-oc.a.run.app/" : "https://google-earth-engine-server-ny43uciwwa-oc.a.run.app/";
 			//|| (document.domain === "127.0.0.1")
 			this.loaded = true;
 			this.onLoad(this);

@@ -280,7 +280,7 @@ require({
 			var select = registry.byId("dateSelect");
 			select.removeOption(select.getOptions());
 			esri.request({
-				url : "http://geeimageserver.appspot.com/getDatesForPoint",
+				url : "https://google-earth-engine-server-ny43uciwwa-oc.a.run.app/getDatesForPoint",
 				content : {
 					lat: latlng[0],
 					lng: latlng[1]
