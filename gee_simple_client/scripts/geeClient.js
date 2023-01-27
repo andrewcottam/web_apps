@@ -13,9 +13,9 @@ require({
 		if (!wdpa_id) {
 			alert('no wdpaid');
 		};
-		servicesDomain = "https://python-rest-server-ny43uciwwa-oc.a.run.app/python-rest-server/";
+		servicesDomain = "https://python-rest-server-ny43uciwwa-oc.a.run.app/python-rest-server/jrc-database/";
 		esriRequest({
-			url : servicesDomain + "services/h05ibex/especies/get_pa_bbox",
+			url : servicesDomain + "especies/get_pa_bbox",
 			content : {
 				wdpa_id : wdpa_id,
 				parseparams : false
