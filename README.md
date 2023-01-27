@@ -17,7 +17,7 @@ Mainly simple demo pages based on a range of technologies. Many no longer availa
 |ESRI Map| Simple vanilla ESRI Javascript Map|<a href='https://andrewcottam.github.io/web_apps/esri_map/index.html'>Online</a>
 |Google Earth Engine CART Renderer|Converts the explain string from Google Earth Engine Classification and Regression Trees R format into a Javascript object and renders it.|<a href='https://andrewcottam.github.io/web_apps/gee_cart_tools/index.html'>Not finished</a>|
 |Google Earth Engine Javascript client|Connects a Javascript client to Google Earth Engine|<a href='https://andrewcottam.github.io/web_apps/gee_js_api/index.html'>Not finished</a>|
-|Google Earth Engine Simple client|Combines a number of external APIs (Flickr, Panoramio) into one place for a protected area|<a href='https://andrewcottam.github.io/web_apps/gee_simple_client/index.html?wdpaid=780'>Online</a>
+|Google Earth Engine Simple client|Combines a number of external APIs (Flickr, Panoramio) into one place for a protected area|<a href='https://andrewcottam.github.io/web_apps/gee_simple_client/index.html?wdpaid=780'>Not finished</a>
 
 
 
