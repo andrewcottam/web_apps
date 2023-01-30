@@ -45,4 +45,5 @@ Mainly simple demo pages based on a range of technologies. Many no longer availa
 |Mapbox Vector Service|MapboxGL JS Client using the OpenMapTiles Service|<a href='https://andrewcottam.github.io/web_apps/vectorTileClients/openMapTiles.html'>Unknown</a>|
 |Tangram Client|Tangram Client using the Mapzen Vector Tile Services|<a href='https://andrewcottam.github.io/web_apps/vectorTileClients/tangram.html'>Unknown</a>|
 |My CDN|My own Content Delivery Network - not really used|<a href='https://andrewcottam.github.io/web_apps/cdn/index.html'>Unknown</a>
+|Restor High-Resolution Imagery|Shows the Wayback timeseries data for a site|<a href='https://andrewcottam.github.io/web_apps/restor/wayback_viewer_new.html?siteid=83630'>Online</a>|
 

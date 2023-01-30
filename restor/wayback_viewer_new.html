@@ -1,0 +1,576 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <!--
+    This is an updated version of the viewer that uses the cached version history.
+  -->
+    <title>Restor High Resolution Monitoring</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.18/esri/themes/dark/main.css" />
+
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            background-color: #444;
+        }
+
+        #loading {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            background-color: black;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+        }
+
+        #loadingContainer {
+            width: 70px;
+            height: 70px;
+            position: absolute;
+            top: 50%;
+            -ms-transform: translateY(-50%);
+            transform: translateY(-50%);
+        }
+
+        #loadingImg {
+            height: 36px;
+            margin-bottom: 5px;
+        }
+
+        #loadingText {
+            font-size: 12px;
+            color: rgb(190, 193, 200);
+            font-family: "Fira Sans Condensed", sans-serif;
+            margin-left: 9px;
+            margin-top: 2px;
+        }
+
+
+        #metadata {
+            color: rgb(209, 209, 209);
+            position: absolute;
+            right: 267px;
+            bottom: 22px;
+            background-color: black;
+            font-size: 11px;
+        }
+
+        #info {
+            color: rgb(209, 209, 209);
+            position: absolute;
+            right: 10px;
+            bottom: 22px;
+            background-color: black;
+            font-size: 11px;
+            width: 100px;
+        }
+
+        .esri-scale-bar {
+            margin-bottom: 10px !important;
+            margin-left: 10px !important;
+        }
+
+        .esri-icon-reverse {
+            background-color: black;
+        }
+
+        .esri-icon-forward {
+            background-color: black;
+        }
+
+        .esri-icon-play {
+            background-color: black;
+        }
+
+        .esri-widget--button {
+            background-color: black !important;
+        }
+
+        .esri-time-slider__animation {
+            margin: 7px;
+        }
+
+        .esri-time-slider__layout--compact .esri-time-slider__row:nth-child(2) {
+            height: inherit !important;
+        }
+
+        .esri-time-slider__slider {
+            height: 60px !important;
+            /*border-bottom: 1px solid rgb(54, 58, 64) !important;*/
+        }
+
+        .esri-time-slider__row {
+            padding: 0px !important;
+            background-color: black;
+        }
+
+        .esri-time-slider__time-extent {
+            display: none !important;
+        }
+
+        .esri-layer-list {
+            width: 310px;
+        }
+
+        .esri-ui-corner-container {
+            inset: 15px 0px 15px !important;
+        }
+
+        .esri-slider__content {
+            margin-bottom: 35px !important;
+        }
+
+        .esri-slider__track {
+            top: 34px !important;
+            height: 0px !important;
+        }
+
+        .esri-time-slider__slider {
+            background-color: black !important;
+        }
+
+        .esri-time-slider__slider .esri-slider {
+            background-color: black !important;
+        }
+
+        .esri-slider__ticks {
+            /*border-bottom: 1px solid rgb(54, 58, 64) !important;*/
+        }
+
+        .yearTics {
+            top: 1px !important;
+            height: 24px !important;
+            background-color: rgb(54, 58, 64) !important;
+        }
+
+        .yearLabels {
+            top: -30px !important;
+            font-size: 8px !important;
+        }
+
+        .timesliceTics {
+            width: 2px !important;
+            height: 14px !important;
+            color: rgb(245, 247, 250);
+            top: 7px !important;
+        }
+
+        .timesliceTicsActive {
+            width: 2px !important;
+            background: rgb(255, 222, 102) !important;
+            height: 8px !important;
+            top: 7px !important;
+        }
+
+        .esri-slider {
+            margin-top: -14px !important;
+        }
+
+        .esri-slider__thumb {
+            margin-left: 7px !important;
+            border-width: 0px !important;
+            margin-top: -6px !important;
+            width: 4px !important;
+            background: rgb(255, 222, 102) !important;
+            border-radius: 3px !important;
+            height: 16px !important;
+            cursor: ew-resize !important;
+        }
+
+        .esri-slider__thumb:hover {
+            transform: scale(1);
+        }
+
+        .esri-slider__anchor:focus .esri-slider__thumb,
+        .esri-slider__anchor:focus .esri-slider__label {
+            outline: none;
+        }
+    </style>
+
+    <script src="https://js.arcgis.com/4.18/"></script>
+
+    <script>
+        require(["dojo/ready", "esri/Map", "esri/views/MapView", "esri/layers/WebTileLayer", "esri/core/promiseUtils", "esri/widgets/TimeSlider", "esri/TimeExtent", "esri/layers/GraphicsLayer", "esri/Graphic", "esri/symbols/SimpleFillSymbol", "esri/geometry/Polygon", "dojo/dom-style", "esri/widgets/ScaleBar", "esri/layers/support/TileInfo", "dojo/window"],
+            function(ready, Map, MapView, WebTileLayer, promiseUtils, TimeSlider, TimeExtent, GraphicsLayer, Graphic, SimpleFillSymbol, Polygon, domStyle, ScaleBar, TileInfo, win) {
+                ready(function() { //fired when the dom has finished loading
+                    /*global fetch*/
+                    const ZOOM_LEVEL = 17; // The scale at which you are getting the wayback versions and the image metadata
+                    const REST_SERVER_ENDPOINT = 'https://python-rest-server-ny43uciwwa-oc.a.run.app/python-rest-server/restor/services/'; //to get the version history cache
+                    const SITES_API_ENDPOINT = "https://api-dot-restor-eco-production.oa.r.appspot.com/api/sites/"; //to get the site geometry
+                    //these scales are based on 96dpi (from this page http://server.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer) and go up to zoom level 21 (i.e. 22 levels)
+                    const WAYBACK_SCALES = [591657527.591555, 295828763.7957775, 147914381.89788875, 73957190.94894437, 36978595.47447219, 18489297.737236094, 9244648.868618047, 4622324.434309023, 2311162.2171545117, 1155581.1085772559, 577790.5542886279, 288895.27714431396, 144447.63857215698, 72223.81928607849, 36111.909643039246, 18055.954821519623, 9027.977410759811, 4513.988705379906, 2256.994353, 1128.497176, 564.248588, 282.124294];
+                    const WMS_TILE_SIZE = 256;
+                    var siteExtent, siteid, map, view, timeslider, geometry, debug, percentagePerTile, percentDone = 0,
+                        tilesToLoadCount = 0,
+                        tilesLoadedCount = 0,
+                        tilesLoaded = {},
+                        waybackLayers = [],
+                        last_zoom = 0;
+
+                    //subclass WebTileLayer to be able to intercept individual tile requests for the loading bar
+                    var WaybackLayer = WebTileLayer.createSubclass({
+                        fetchTile(level, row, column) {
+                            let promise;
+                            //call the inherited method
+                            promise = WebTileLayer.prototype.fetchTile.call(this, level, row, column);
+                            //catch when the tile is loaded
+                            promise.then(data => {
+                                //increment the tiles loaded counter
+                                tilesLoadedCount += 1;
+                                setLoadingPercentage(percentagePerTile);
+                                //get the image version/level/row/col
+                                var imgurl = data.src.substr(data.src.indexOf("/tile/") + 6);
+                                var [version, level, row, column] = imgurl.split("/");
+                                //get the versions title
+                                version = waybackLayers.filter(_v => (_v.version_number == version))[0].itemTitle + " Version:" + version;
+                                row = "Row: " + row;
+                                //add to the tiles loaded object
+                                if (!tilesLoaded.hasOwnProperty(version)) Object.assign(tilesLoaded, tilesLoaded, {
+                                    [version]: {}
+                                });
+                                if (!tilesLoaded[version].hasOwnProperty(level)) Object.assign(tilesLoaded[version], tilesLoaded[version], {
+                                    [level]: {}
+                                });
+                                if (!tilesLoaded[version][level].hasOwnProperty(row)) Object.assign(tilesLoaded[version][level], tilesLoaded[version][level], {
+                                    [row]: []
+                                });
+                                if (!tilesLoaded[version][level][row].includes(column)) tilesLoaded[version][level][row].push(column);
+                                // log(imgurl + " loaded (" + tilesLoadedCount + "/" + tilesToLoadCount + ")");
+                            }).catch(err => console.warn(err.message));
+                            return promise;
+                        }
+                    });
+                    //get the url parameters
+                    var url = new URL(document.URL);
+                    var search_params = url.searchParams;
+                    //get the siteid from the query parameters
+                    siteid = (search_params.has('siteid')) ? Number(search_params.get('siteid')) : 86271; //south africa site
+                    debug = (search_params.has('debug')) ? search_params.get('debug') : true;
+                    log("ESRI libraries loaded");
+                    setLoadingPercentage(10);
+                    //instantiate a new map
+                    map = new Map({
+                        basemap: "streets",
+                    });
+                    //create a map view 
+                    view = new MapView({
+                        container: "viewDiv",
+                        map: map
+                    });
+                    //hide the basemap
+                    view.when(_ => {
+                        //set the opacity of the basemap layer to 0
+                        map.basemap.baseLayers.forEach(layer => layer.opacity = 0);
+                    });
+                    //get the site geometry and create a graphic layer from it
+                    getSiteGeometryLayer().then(async siteLayer => {
+                        setLoadingPercentage(10);
+                        //get the site extent
+                        siteExtent = siteLayer.graphics.items[0].geometry.extent;
+                        log("Site geometry loaded. [[" + siteExtent.xmin + " " + siteExtent.ymin + "],[" + siteExtent.xmax + " " + siteExtent.ymax + "]]");
+                        //get the wayback layers
+                        waybackLayers = getWaybackLayers();
+                        //build a list of promises for 1) the view to finish loading, 2) the Wayback layers to load 
+                        const promises = [view.when(), waybackLayers];
+                        //wait for the promises to resolve
+                        const results = await promiseUtils.eachAlways(promises);
+                        //zoom the map to the site at zoom level 17 to start with
+                        view.goTo({center: siteLayer.graphics.items[0].geometry.centroid ,zoom: 17}).then(_ => {
+                            //get the resolved wayback layers
+                            const waybackLyrs = results[1].value;
+                            log('\n' + "-".repeat(150) + '\nRequesting the WMTS tiles' + '\n' + "-".repeat(150));
+                            //get the tile request count
+                            getTileRequestCount(waybackLyrs.length);
+                            //add the wayback layers
+                            waybackLyrs.forEach(layer => {
+                                map.add(layer);
+                            });
+                            //add the scale bar
+                            view.ui.add(new ScaleBar({
+                                view: view,
+                                unit: "metric"
+                            }), {
+                                position: "bottom-left"
+                            });
+                            //add the site layer
+                            map.add(siteLayer);
+                            //watch for changes in the views updating property
+                            view.watch("updating", (newValue, oldValue, propertyName, target) => {
+                                //if the view has finished updating then load the ui
+                                if (!newValue && oldValue && (timeslider === undefined)) {
+                                    //create the timeslider
+                                    createTimeSlider();
+                                    //show the map
+                                    domStyle.set("loading", "display", "none");
+                                    log("Showing the map after loading " + tilesLoadedCount + " tiles");
+                                    //fill in how many tiles have loaded within each version/level/row
+                                    for (const version in tilesLoaded) {
+                                        var v_total = 0;
+                                        for (const level in tilesLoaded[version]) {
+                                            for (const row in tilesLoaded[version][level]) {
+                                                v_total += tilesLoaded[version][level][row].length;
+                                            }
+                                        }
+                                        //rename the key to include the total number of tiles in the version
+                                        delete Object.assign(tilesLoaded, {
+                                            [version + " (" + v_total + " tiles)"]: tilesLoaded[version]
+                                        })[version];
+                                    }
+                                    // log(tilesLoaded);
+                                }
+                                if (Number.isInteger(view.zoom) && (last_zoom !== view.zoom)) {
+                                    //get the scale at this zoom level
+                                    const scale = WAYBACK_SCALES[view.zoom];
+                                    console.log('Zoom: ' + view.zoom + "\tScale: " + scale.toFixed(0) + "\tResolution: " + (scale * 0.00028).toFixed(1) + "m / pixel");
+                                    if (view.zoom !== ZOOM_LEVEL) console.log('%cThe zoom level is not the same as that which was used to get the versions (' + ZOOM_LEVEL + '). There may be missing tiles.', "color: red");
+                                    last_zoom = view.zoom;
+                                }
+                            });
+                        });
+                        //stop the map moving on keyboard events - this should only change the timeslice
+                        view.on("key-down", function(event) {
+                            event.stopPropagation();
+                        });
+                        //wire up key down event
+                        document.addEventListener('keydown', function(event) {
+                            var allowedKeys = ["ArrowRight", "ArrowLeft"];
+                            if (allowedKeys.indexOf(event.key) !== -1) {
+                                //stop the map navigation
+                                event.stopPropagation();
+                                //increment/decrement the timeslice
+                                if (event.key === "ArrowRight") {
+                                    timeslider.next();
+                                }
+                                else {
+                                    timeslider.previous();
+                                }
+                            }
+                        });
+                    });
+
+                    //sets the loading percent 
+                    function setLoadingPercentage(addPercent) {
+                        percentDone = percentDone + addPercent;
+                        //convert to an integer and cap at 100 - it can be higher if the estimated number of tiles to load is < actual number of tiles to load
+                        const percentDoneInt = percentDone > 100 ? 100 : parseInt(percentDone, 10);
+                        //show the percent done if mod 10 = 0
+                        if ((percentDoneInt % 10) === 0) document.getElementById("loadingText").innerHTML = "LOADING... " + percentDoneInt + "%";
+                    }
+
+                    //logs a message to the console if in debug mode 
+                    function log(message) {
+                        if (debug) console.log("\t" + message);
+                    }
+
+                    function getSiteGeometryLayer() {
+                        return new Promise(async resolve => {
+                            //get the sites geometry
+                            const response = await fetch(REST_SERVER_ENDPOINT + "get_site?site_id=" + siteid);
+                            if (response.status === 404) alert("Site not found");
+                            const json = await response.json();
+                            if (json.records.length > 0) {
+                                //get the geometry string
+                                geometry = json.records[0].geometry;
+                                //get the coordinate string - hacky
+                                let coord_string = geometry.substr(9,geometry.length-11);
+                                coord_string = coord_string.replaceAll(",", "],[")
+                                coord_string = coord_string.replaceAll(" ", ",")
+                                //get the coordinates
+                                const coordinates = JSON.parse("[[[" + coord_string + "]]]")
+                                console.log(coordinates)
+                                //create a polygon and the geometry in one go
+                                const polygon = new Polygon({ rings: coordinates });
+                                console.log(polygon)
+                                //add it to the map
+                                var graphic = new Graphic({ // graphic with polygon geometry
+                                    geometry: polygon,
+                                    symbol: new SimpleFillSymbol({
+                                        style: "none",
+                                        color: "none",
+                                        outline: {
+                                            color: [220, 220, 220, 1],
+                                            width: "2px"
+                                        }
+                                    })
+                                });
+                                var layer = new GraphicsLayer({
+                                    graphics: [graphic]
+                                });
+                                //return the layer as a promise
+                                resolve(layer);
+                            }
+                        });
+                    }
+
+                    function getWaybackLayers() {
+                        return new Promise(async (resolve, reject) => {
+                            //get the wayback data for the site
+                            fetch(REST_SERVER_ENDPOINT + "get_wayback_data_for_site?site_id=" + siteid + "&zoom_level=" + ZOOM_LEVEL + "&dplimit=13").then(response => {
+                                response.json().then((_json) => {
+                                    //add the WMTS endpoints for the wayback versions with local changes
+                                    waybackLayers = _json.records.map(item => {
+                                        return new WaybackLayer({
+                                            title: item.itemtitle,
+                                            urlTemplate: item.itemurl,
+                                            version_number: item.version_number,
+                                            id: item.itemid,
+                                            opacity: 0,
+                                            date: new Date(item.image_date),
+                                            resolution: item.image_resolution,
+                                            provider: item.provider,
+                                            sensor: item.sensor,
+                                            accuracy: item.accuracy,
+                                            xmin: item.xmin,
+                                            ymin: item.ymin,
+                                            xmax: item.xmax,
+                                            ymax: item.ymax
+                                        });
+                                    });
+                                    if (waybackLayers.length === 0) reject("There are no wayback layers for this site");
+                                    //console feedback
+                                    if (waybackLayers.length > 0) {
+                                        log("https://livingatlas.arcgis.com/wayback/#active=" + waybackLayers[0].version_number + "&ext=" + waybackLayers[0].xmin + "," + waybackLayers[0].ymin + "," + waybackLayers[0].xmax + "," + waybackLayers[0].ymax + "&localChangesOnly=true");
+                                    }
+                                    else {
+                                        log("There are no Wayback versions. There may be a missing version in the history.");
+                                        log("https://livingatlas.arcgis.com/wayback/#active=10&ext=" + siteExtent.xmin + "," + siteExtent.ymin + "," + siteExtent.xmax + "," + siteExtent.ymax + "&localChangesOnly=true");
+                                    }
+                                    log('\n' + "-".repeat(150) + '\nGetting Wayback version titles and image metadata with local changes for site ' + siteid + ' at zoom: ' + ZOOM_LEVEL + " (scale: " + WAYBACK_SCALES[ZOOM_LEVEL] + ") from the Wayback Cache" + '\n' + "-".repeat(150));
+                                    waybackLayers.map(_v => log("\t" + _v.version_number + ":\t" + _v.title + ":\t" + _v.date.toLocaleDateString() + "\t" + _v.provider + "\t" + _v.sensor + "\t" + _v.resolution + "\t" + _v.accuracy));
+                                    log("There are " + waybackLayers.length + " versions with local changes");
+                                    //return a value
+                                    resolve(waybackLayers);
+                                });
+                            });
+                        });
+                    }
+
+                    function getTileRequestCount(wayback_layer_count) {
+                        //calculate the number of tiles that will be requested using the viewport size and the maps zoom scale
+                        let viewport = win.getBox();
+                        //the actual number tilesize depends on the zoom scale of the map. Wayback only has 256x256 tiles down to level 17 and so at higher levels the number of tiles is less
+                        const difference_in_scale = (view.zoom - (WAYBACK_SCALES.length - 1));
+                        const multiplication_factor = (difference_in_scale > 0) ? 2 ** difference_in_scale : 1;
+                        //get the actual tile size given the maps current zoom - if it is 18 then the wayback tiles will be 512x512
+                        const tile_size = WMS_TILE_SIZE * multiplication_factor;
+                        log("Tile size at zoom " + view.zoom + " is " + tile_size + "x" + tile_size);
+                        var colCount = Math.ceil(viewport.w / tile_size) + 1;
+                        log("Viewport width: " + viewport.w + " (" + colCount + " columns)");
+                        var rowCount = Math.ceil(viewport.h / tile_size) + 1;
+                        log("Viewport height: " + viewport.h + " (" + rowCount + " rows)");
+                        tilesToLoadCount = colCount * rowCount * wayback_layer_count;
+                        log("Tiles to load: " + tilesToLoadCount);
+                        percentagePerTile = (50 / tilesToLoadCount);
+                    }
+
+                    function createTimeSlider() {
+                        //get the wayback dates
+                        let waybackDates = map.layers.map(layer => {
+                            if (layer.type === "web-tile") {
+                                return new Date(layer.date);
+                            }
+                        }).items;
+                        //filter out the nulls
+                        waybackDates = waybackDates.filter(item => { return (item !== undefined); });
+                        //get the year dates for the year tic marks
+                        const firstYear = waybackDates[0].getFullYear();
+                        const numYears = new Date().getFullYear() - firstYear;
+                        const years = Array.from({ length: numYears + 1 }, (x, i) => i + firstYear);
+                        const yearTics = years.map(year => {
+                            return new Date(year, 0, 1);
+                        });
+                        //set the time extent
+                        const timeExtent = new TimeExtent({
+                            start: new Date(firstYear, 0, 1),
+                            end: new Date()
+                        });
+                        const timesliderContainer = document.createElement("div");
+                        timesliderContainer.id = "timeslider";
+                        timeslider = new TimeSlider({
+                            view: view,
+                            container: timesliderContainer,
+                            mode: "instant",
+                            loop: true,
+                            timeVisible: false,
+                            fullTimeExtent: timeExtent,
+                            stops: { dates: waybackDates },
+                            labelFormatFunction: (value, type, element, layout) => {
+                                switch (type) {
+                                    case "min":
+                                    case "max":
+                                        element.setAttribute("style", "display: 'none'");
+                                        break;
+                                }
+                            },
+                            tickConfigs: [{
+                                mode: "position",
+                                values: waybackDates,
+                                tickCreatedFunction: function(initialValue, tickElement, labelElement) {
+                                    tickElement.classList.add("timesliceTics");
+                                }
+                            }, {
+                                mode: "position",
+                                values: yearTics,
+                                labelsVisible: true,
+                                labelFormatFunction: (value) => {
+                                    return value.getFullYear();
+                                },
+                                tickCreatedFunction: function(initialValue, tickElement, labelElement) {
+                                    tickElement.classList.add("yearTics");
+                                    labelElement.classList.add("yearLabels");
+                                }
+                            }, {
+                                mode: "position",
+                                values: waybackDates[0],
+                                tickCreatedFunction: function(initialValue, tickElement, labelElement) {
+                                    tickElement.classList.add("timesliceTicsActive");
+                                }
+                            }]
+                        });
+                        // Add the widget to the bottom-right corner of the view
+                        view.ui.add(timeslider, {
+                            position: "bottom-right"
+                        });
+                        //watch for events on the time slider
+                        timeslider.watch("timeExtent", (value) => {
+                            let resolution;
+                            //get the timeslice date 
+                            const timeslice = new Date(value.start).getTime();
+                            //update the layers visibility and get the image resolution
+                            map.layers.items.forEach(layer => {
+                                if (layer.type === "web-tile") layer.opacity = (layer.date.getTime() === timeslice) ? 1 : 0;
+                                if ((layer.type === "web-tile") && (layer.date.getTime() === timeslice)) resolution = parseInt(layer.resolution * 100, 10);
+                            });
+                            //set the date and resolution in the UI
+                            document.getElementById("metadata").innerHTML = "<div>" + new Date(value.start).toLocaleDateString() + "</div><div>" + resolution + "cm resolution</div>";
+                            //set the info box
+                            document.getElementById("info").innerHTML = "<div>Use left and right keys to change date</div>";
+                            //set the active tic 
+                            timeslider.tickConfigs[2].values = [value.start];
+                        });
+                    }
+                });
+            });
+    </script>
+</head>
+
+<body>
+    <div id="loading">
+        <div id="loadingContainer"><img src="images/loading.gif" id="loadingImg">
+            <div id="loadingText"></div>
+        </div>
+    </div>
+    <div id="viewDiv"></div>
+    <div id="metadata"></div>
+    <div id="info"></div>
+</body>
+
+</html>
