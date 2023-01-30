@@ -46,4 +46,5 @@ Mainly simple demo pages based on a range of technologies. Many no longer availa
 |Tangram Client|Tangram Client using the Mapzen Vector Tile Services|<a href='https://andrewcottam.github.io/web_apps/vectorTileClients/tangram.html'>Unknown</a>|
 |My CDN|My own Content Delivery Network - not really used|<a href='https://andrewcottam.github.io/web_apps/cdn/index.html'>Unknown</a>
 |Restor High-Resolution Imagery|Shows the Wayback timeseries data for a site|<a href='https://andrewcottam.github.io/web_apps/restor/wayback_viewer_new.html?siteid=83630'>Online</a>|
+|Restor Wayback Quality Assessment|Tool to assess the quality of the Wayback timeseries data|<a href='https://andrewcottam.github.io/web_apps/restor/wayback_quality_assessment.html?siteid=83630'>Online</a>|
 

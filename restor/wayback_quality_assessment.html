@@ -1,0 +1,1081 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <!--
+    This is an updated version of the viewer that uses the cached version history.
+  -->
+    <title>Wayback QA</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.18/esri/themes/dark/main.css" />
+
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            background-color: #444;
+        }
+
+        body {
+            font-family: "Avenir Next", Avenir, "Helvetica Neue", "sans-serif";
+        }
+
+        #loading {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            background-color: black;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+        }
+
+        #loadingContainer {
+            width: 70px;
+            height: 70px;
+            position: absolute;
+            top: 50%;
+            -ms-transform: translateY(-50%);
+            transform: translateY(-50%);
+        }
+
+        .loadingImg {
+            height: 36px;
+            margin-bottom: 5px;
+        }
+
+        #loadingText {
+            font-size: 12px;
+            color: rgb(190, 193, 200);
+            font-family: "Fira Sans Condensed", sans-serif;
+            margin-left: 9px;
+            margin-top: 2px;
+        }
+
+        #loading_icon_container {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            display: none;
+        }
+
+        #loading_icon {
+            width: 70px;
+            height: 70px;
+            position: absolute;
+            top: 50%;
+            -ms-transform: translateY(-50%);
+            transform: translateY(-50%);
+        }
+
+        #metadata {
+            color: rgb(209, 209, 209);
+            position: absolute;
+            left: 20px;
+            bottom: 5px;
+            background-color: black;
+            font-size: 11px;
+        }
+
+        #timeslider {
+            position: relative;
+        }
+
+        .esri-scale-bar {
+            margin-bottom: 10px !important;
+            margin-left: 10px !important;
+        }
+
+        #imageInfoPanelContainer {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+        }
+
+        #imageInfoPanel {
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 5px;
+            min-width: 510px;
+            position: relative;
+            width: fit-content;
+            margin: 0 auto;
+            padding-bottom: 50px;
+            color: white;
+            font-size: 32px;
+        }
+
+        .imageData {
+            padding: 6px;
+        }
+
+        .panelBorder {
+            /*border: 1px solid lightgray;*/
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.3), 0 6px 20px 0 rgba(0, 0, 0, 0.29);
+        }
+
+        .esri-widget {
+            text-align: center;
+        }
+
+        .esri-time-slider__layout--compact .esri-time-slider__row:nth-child(2) {
+            height: 10px;
+        }
+
+        .esri-time-slider__previous {
+            display: none;
+        }
+
+        .esri-time-slider__animation {
+            display: none;
+        }
+
+        .esri-time-slider__next {
+            display: none;
+        }
+
+        .esri-slider__track {
+            top: 34px !important;
+            height: 0px !important;
+        }
+
+        .yearLabels {
+            top: -30px !important;
+            font-size: 11px !important;
+        }
+
+        .timesliceTics {
+            width: 2px !important;
+            height: 14px !important;
+            color: rgb(245, 247, 250);
+            top: 7px !important;
+        }
+
+        .timesliceTicsActive {
+            width: 2px !important;
+            background: rgb(255, 222, 102) !important;
+            height: 8px !important;
+            top: 7px !important;
+        }
+
+        .esri-slider__thumb {
+            margin-left: 7px !important;
+            border-width: 0px !important;
+            margin-top: -6px !important;
+            width: 4px !important;
+            background: rgb(255, 222, 102) !important;
+            border-radius: 3px !important;
+            height: 16px !important;
+            cursor: ew-resize !important;
+        }
+
+        .esri-slider__thumb:hover {
+            transform: scale(1);
+        }
+
+        .esri-slider__anchor:focus .esri-slider__thumb,
+        .esri-slider__anchor:focus .esri-slider__label {
+            outline: none;
+        }
+
+        #image_data1 {
+            padding: 5px;
+        }
+
+        #image_data2 {
+            position: absolute;
+            font-size: 19px;
+            width: 100%;
+            padding-top: 19px;
+        }
+
+        #overviewContainer {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        #overviewDiv {
+            width: 200px;
+            height: 150px;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .cb {
+            position: absolute;
+            top: 31px;
+            right: 13px;
+        }
+
+        #links_panel {
+            background-color: rgba(255, 255, 255, 0.9);
+            font-size: 13px;
+            display: none;
+        }
+
+        #classes_panel {
+            display: none;
+            position: absolute;
+            right: 10px;
+            top: 300px;
+            background-color: rgba(0, 0, 0, 0.7);
+            font-size: 12px;
+            color: white;
+            padding: 10px;
+        }
+
+        #classes_panel table {
+            color: white;
+            font-size: 12px;
+        }
+
+        #site_classes_container {}
+
+        #image_classes_container {}
+
+        #classes_table {}
+    </style>
+
+    <script src="https://js.arcgis.com/4.18/"></script>
+
+    <script>
+        require(["dojo/_base/fx", "dojo/dom", "dojo/on", "esri/config", "esri/request", "esri/layers/BaseDynamicLayer", "esri/layers/FeatureLayer", 'esri/Graphic', "dojo/dom-construct", "dojo/ready", "esri/Map", "esri/views/MapView", "esri/layers/WebTileLayer", "esri/widgets/TimeSlider", "esri/TimeExtent", "dojo/dom-style", "esri/widgets/ScaleBar", "dojo/window"],
+            function(fx, dom, on, esriConfig, esriRequest, BaseDynamicLayer, FeatureLayer, Graphic, domConstruct, ready, Map, MapView, WebTileLayer, TimeSlider, TimeExtent, domStyle, ScaleBar, win) {
+                ready(function() { //fired when the dom has finished loading
+                    /*global fetch*/
+                    const DEFAULT_ZOOM = 17;
+                    const DEFAULT_OVERVIEW_ZOOM = 2;
+                    const ZOOM_LEVEL = 17; // The scale at which you are getting the wayback versions and the image metadata
+                    const REST_SERVER_ENDPOINT = 'https://python-rest-server-ny43uciwwa-oc.a.run.app/python-rest-server/restor/services/'; //to get the version history cache
+                    const GEE_SERVER_ENDPOINT = "https://google-earth-engine-server-ny43uciwwa-oc.a.run.app/ogc";
+                    //these scales are based on 96dpi (from this page http://server.arcgisonline.com/arcgis/rest/services/World_Topo_Map/MapServer) and go up to zoom level 21 (i.e. 22 levels)
+                    const WAYBACK_SCALES = [591657527.591555, 295828763.7957775, 147914381.89788875, 73957190.94894437, 36978595.47447219, 18489297.737236094, 9244648.868618047, 4622324.434309023, 2311162.2171545117, 1155581.1085772559, 577790.5542886279, 288895.27714431396, 144447.63857215698, 72223.81928607849, 36111.909643039246, 18055.954821519623, 9027.977410759811, 4513.988705379906, 2256.994353, 1128.497176, 564.248588, 282.124294];
+                    const WMS_TILE_SIZE = 256;
+                    const ACTIVE_SITE_MARKER_SYMBOL = { type: "simple-marker", color: [131, 179, 91, 0.8], outline: { color: [238, 238, 238, 1] }, size: 15 };
+                    var current_site, sites, position, map, view, overviewMap, overviewView, current_site_graphic, timeslider, percentagePerTile, percentDone = 0,
+                        tilesToLoadCount = 0,
+                        tilesLoadedCount = 0,
+                        tilesLoaded = {},
+                        waybackLayers = [],
+                        last_zoom = 0,
+                        timeslider_date, classes, current_site_imagery_id, siteid;
+
+                    //subclass WebTileLayer to be able to intercept individual tile requests for the loading bar
+                    const WaybackLayer = WebTileLayer.createSubclass({
+                        fetchTile(level, row, column) {
+                            let promise;
+                            //call the inherited method
+                            promise = WebTileLayer.prototype.fetchTile.call(this, level, row, column);
+                            //catch when the tile is loaded
+                            promise.then(data => {
+                                //increment the tiles loaded counter
+                                tilesLoadedCount += 1;
+                                setLoadingPercentage(percentagePerTile);
+                                //get the image version/level/row/col
+                                var imgurl = data.src.substr(data.src.indexOf("/tile/") + 6);
+                                var [version, level, row, column] = imgurl.split("/");
+                                //get the versions title
+                                version = waybackLayers.filter(_v => (_v.version_number == version))[0].itemTitle + " Version:" + version;
+                                row = "Row: " + row;
+                                //add to the tiles loaded object
+                                if (!tilesLoaded.hasOwnProperty(version)) Object.assign(tilesLoaded, tilesLoaded, {
+                                    [version]: {}
+                                });
+                                if (!tilesLoaded[version].hasOwnProperty(level)) Object.assign(tilesLoaded[version], tilesLoaded[version], {
+                                    [level]: {}
+                                });
+                                if (!tilesLoaded[version][level].hasOwnProperty(row)) Object.assign(tilesLoaded[version][level], tilesLoaded[version][level], {
+                                    [row]: []
+                                });
+                                if (!tilesLoaded[version][level][row].includes(column)) tilesLoaded[version][level][row].push(column);
+                                // log(imgurl + " loaded (" + tilesLoadedCount + "/" + tilesToLoadCount + ")");
+                            }).catch(err => console.warn(err.message));
+                            return promise;
+                        }
+                    });
+
+                    const geeLayer = BaseDynamicLayer.createSubclass({
+                        properties: {
+                            mapUrl: null,
+                            mapParameters: null
+                        },
+                        // Override the getImageUrl() method to generate URL to an image for a given extent, width, and height.
+                        getImageUrl: function(extent, width, height) {
+                            const urlVariables = this._prepareQuery(this.mapParameters, extent, width, height);
+                            const queryString = this._joinUrlVariables(urlVariables);
+                            return this.mapUrl + "?" + queryString;
+                        },
+
+                        // Prepare query parameters for the URL to an image to be generated
+                        _prepareQuery: function(queryParameters, extent, width, height) {
+                            const wkid = extent.spatialReference.isWebMercator ? 3857 : extent.spatialReference.wkid;
+                            const replacers = { width: width, height: height, wkid: wkid, xmin: extent.xmin, xmax: extent.xmax, ymin: extent.ymin, ymax: extent.ymax };
+                            const urlVariables = this._replace({}, queryParameters, replacers);
+                            return urlVariables;
+                        },
+
+                        // replace the url variables with the application provided values
+                        _replace: (urlVariables, queryParameters, replacers) => {
+                            Object.keys(queryParameters).forEach((key) => {
+                                urlVariables[key] = Object.keys(replacers).reduce((previous, replacerKey) => {
+                                        return previous.replace("{" + replacerKey + "}", replacers[replacerKey]);
+                                    },
+                                    queryParameters[key]
+                                );
+                            });
+                            return urlVariables;
+                        },
+
+                        // join the url parameters
+                        _joinUrlVariables: (urlVariables) => {
+                            return Object.keys(urlVariables).reduce((previous, key) => {
+                                return (
+                                    previous + (previous ? "&" : "") + key + "=" + urlVariables[key]);
+                            }, "");
+                        },
+
+                        //requests a thumbnail url from google earth engine
+                        fetchImageFromGEE: function(extent, width, height) {
+                            let url = this.getImageUrl(extent, width, height);
+                            // request for the image  based on the generated url  - this is no longer working as of 30/01/2023 - i tried adding a callback:'wibble' parameter on line 557 but no good
+                            return esriRequest(url).then(response => {
+                                let image_url = response.data.url;
+                                return esriRequest(image_url, { responseType: "image" }).then((response) => {
+                                    //draw the image onto the canvas - the image is an <img> html element that points to the image_url
+                                    this.context.drawImage(response.data, 0, 0, width, height);
+                                    //fire an event to say that the image has loaded
+                                    this.emit('loaded', {});
+                                    return this.canvas;
+                                });
+                            }).catch(err => {
+                                //fire an event to say that the image failed to load
+                                this.emit('load_error', {});
+                            });
+                        },
+
+                        //returns the image data from the canvas context
+                        fetchImageDataFromCache: function() {
+                            const cnx = this.canvas.getContext("2d");
+                            return cnx.getImageData(0, 0, this.canvas.width, this.canvas.height);
+                        },
+
+                        //converts the colour image that is currently on the canvas to a black and white one
+                        imageToBlackAndWhite: function() {
+                            this.get_black_and_white_image = true;
+                            const imgData = this.fetchImageDataFromCache();
+                            for (var y = 0; y < this.canvas.height; y++) {
+                                for (var x = 0; x < this.canvas.width; x++) {
+                                    var i = (y * 4) * this.canvas.width + x * 4;
+                                    var avg = (imgData.data[i] + imgData.data[i + 1] + imgData.data[i + 2]) / 3;
+                                    imgData.data[i] = avg;
+                                    imgData.data[i + 1] = avg;
+                                    imgData.data[i + 2] = avg;
+                                }
+                            }
+                            this.canvas.getContext("2d").putImageData(imgData, 0, 0);
+                            //call the fetchImage to refresh the canvas with the new black and white image
+                            this.refresh();
+                        },
+
+                        // Fetches images for given extent and size and returns the canvas
+                        fetchImage: function(extent, width, height) {
+                            //create a canvas if it doesnt already exist
+                            if (!this.canvas) {
+                                // create a canvas 
+                                this.canvas = document.createElement("canvas");
+                                this.context = this.canvas.getContext("2d");
+                                this.canvas.width = width;
+                                this.canvas.height = height;
+                            }
+                            //if we have already loaded the image from gee then the data is already on the canvas
+                            if (this.get_black_and_white_image) {
+                                return this.canvas;
+                            }
+                            else {
+                                //get the image from google earth engine
+                                return this.fetchImageFromGEE(extent, width, height);
+                            }
+                        },
+
+                    });
+
+                    //get the url parameters
+                    var url = new URL(document.URL);
+                    var search_params = url.searchParams;
+                    //get the siteid from the query parameters
+                    siteid = (search_params.has('siteid')) ? Number(search_params.get('siteid')) : undefined; //south africa site
+
+                    //add the server to the trusted servers so that the credentials and cookies are passed to the server
+                    esriConfig.request.trustedServers.push("https://labs.restor.eco:8081");
+                    esriConfig.request.trustedServers.push("https://d50eafb1ad8c430796ecbee59f964ec3.vfs.cloud9.eu-central-1.amazonaws.com:8081"); //dev server
+
+                    //get the qa classes
+                    getQaClasses().then(_ => {
+                        //get the first batch of sites
+                        getSitesBatch().then(_ => {
+                            //create the map
+                            createMap();
+                            //move to the first site (this adds the wayback layers)
+                            movePosition(1).then(_ => {
+                                //watch for changes in the views updating property - this is fired after the tiles have finished loading
+                                view.watch("updating", tilesFinishedLoading);
+                            });
+                        });
+                    });
+
+                    function getQaClasses() {
+                        return new Promise((resolve, reject) => {
+                            // if you include credentials in the request then you will get CORS errors if the the server is allowing all domains, i.e. access-control-allow-origin=*
+                            // fetch(REST_SERVER_ENDPOINT + "get_wayback_qa_classes?format=json", { credentials: 'include' }).then(response => {
+                                fetch(REST_SERVER_ENDPOINT + "get_wayback_qa_classes?format=json").then(response => {
+                                response.json().then((_json) => {
+                                    classes = _json.records;
+                                    //set them in the ui
+                                    var html = "<table id='classes_table'><body>";
+                                    classes.forEach(_class => {
+                                        html += "<tr id='row_" + _class._order + "'><td>" + _class._order + "</td><td>" + _class.short_desc + "</td></tr>";
+                                    });
+                                    dom.byId('classes').innerHTML = html + "</body></table>";
+                                    resolve();
+                                });
+                            }).catch(err => {
+                                alert(err);
+                            });
+                        });
+                    }
+
+                    //gets an array of sites 
+                    function getSitesBatch() {
+                        //set the url depending on whether the siteid has been set
+                        const url = siteid ? 'get_wayback_data_for_qa2?siteid=' + siteid : 'get_wayback_data_for_qa?records_to_get=1000';
+                        return new Promise((resolve, reject) => {
+                            fetch(REST_SERVER_ENDPOINT + url).then(response => {
+                                response.json().then((_json) => {
+                                    sites = _json.records;
+                                    //reset the position
+                                    position = -1;
+                                    resolve();
+                                });
+                            });
+                        });
+                    }
+
+                    function createMap() {
+                        //instantiate a new map
+                        map = new Map({
+                            basemap: "streets",
+                        });
+                        //create a map view 
+                        view = new MapView({
+                            container: "viewDiv",
+                            map: map
+                        });
+                        //when the view has finished loading
+                        view.when(_ => {
+                            //set the opacity of the basemap layer to 0
+                            map.basemap.baseLayers.forEach(layer => layer.opacity = 0);
+                            //add the scale bar
+                            view.ui.add(new ScaleBar({ view: view, unit: "metric" }), { position: "bottom-left" });
+                            //stop the map moving on key-down events on the view
+                            view.on("key-down", function(event) {
+                                const prohibitedKeys = ["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp"];
+                                const keyPressed = event.key;
+                                if (prohibitedKeys.indexOf(keyPressed) !== -1) {
+                                    event.stopPropagation();
+                                    event.preventDefault();
+                                }
+                            });
+                            //wire up key down event
+                            document.addEventListener('keydown', function(event) {
+                                //get the keys that are allowed for the qa classes
+                                const allowed_keys_qa = classes.map(_class => { return String(_class._order); });
+                                var allowedKeys = ["ArrowRight", "ArrowLeft", "ArrowDown", "ArrowUp"].concat(allowed_keys_qa);
+                                if (allowedKeys.indexOf(event.key) !== -1) {
+                                    //stop the map moving on key-down events on the document
+                                    event.stopPropagation();
+                                    event.preventDefault();
+                                    //increment/decrement the timeslice
+                                    switch (event.key) {
+                                        case "ArrowRight":
+                                            timeslider.next();
+                                            break;
+                                        case "ArrowLeft":
+                                            timeslider.previous();
+                                            break;
+                                        case "ArrowDown":
+                                            //save the sequence class, i.e. correct, incorrect or unknown
+                                            saveSequenceClass();
+                                            movePosition(1);
+                                            break;
+                                        case "ArrowUp":
+                                            movePosition(-1);
+                                            break;
+                                        default:
+                                            saveImageClass(event.key);
+                                            break;
+                                    }
+                                }
+                            });
+                        });
+                    }
+
+                    function addSentinelLayer() {
+                        //see if we already have a GEE layer with the same date available
+                        const matching_layers = map.layers.filter(layer => { return (layer.mapParameters && layer.mapParameters.doy === timeslider_date); });
+                        if (matching_layers.items.length > 0) {
+                            //sentinel image already available - simply hide it
+                            matching_layers.items[0].visible = true;
+                        }
+                        else {
+                            //no sentinel image already available - request it
+                            const gee_layer = new geeLayer({
+                                mapUrl: GEE_SERVER_ENDPOINT,
+                                mapParameters: {
+                                    service: "WMS",
+                                    request: "GetMap",
+                                    format: "image/png",
+                                    transparent: "TRUE",
+                                    styles: "",
+                                    version: "1.3.0",
+                                    layers: "COPERNICUS/S2",
+                                    width: "{width}",
+                                    height: "{height}",
+                                    srs: "EPSG:{wkid}",
+                                    bbox: "{xmin},{ymin},{xmax},{ymax}",
+                                    doy: timeslider_date,
+                                    cloudmax: "99"
+                                },
+                                view: view
+                            });
+                            //show the loading icon
+                            sentinelLayerLoading();
+                            //add an event listener on the layer for the loaded event
+                            on(gee_layer, 'loaded', function(event) {
+                                domStyle.set("loading_icon_container", "display", "none");
+                            });
+                            //add an event listener on the layer for the failed to load event
+                            on(gee_layer, 'load_error', function(event) {
+                                domStyle.set("loading_icon_container", "display", "none");
+                                //remove the gee_layer
+                                map.remove(gee_layer);
+                            });
+                            //add the sentinel image to the map
+                            map.add(gee_layer, map.layers.length - 1);
+                        }
+                    }
+
+                    function removeSentinelLayer() {
+                        //iterates through the map layers and either removes the sentinel image (it the current map slider date does not match) or hides it (if the current map slider date does match)
+                        map.layers.forEach(layer => {
+                            if (layer.mapUrl === "https://labs.restor.eco:8081/getWMS") {
+                                if (layer.mapParameters && layer.mapParameters.doy === timeslider_date) {
+                                    layer.visible = false;
+                                }
+                                else {
+                                    map.remove(layer);
+                                }
+                            }
+                        });
+                    }
+
+                    function sentinelLayerLoading() {
+                        domStyle.set("loading_icon_container", "display", "flex");
+                    }
+
+                    //moves to the next site
+                    function movePosition(relativePosition) {
+                        return new Promise(async resolve => {
+                            //set the ui to be in a loading status
+                            setUILoading();
+                            //set the index position
+                            position = position + relativePosition;
+                            //get the site at the current position 
+                            current_site = sites[position];
+                            //update the maps location and wayback tile layers
+                            updateMap().then(_ => {
+                                resolve();
+                                //if the timeslider has been instantiated, destroy it
+                                destroyTimeSlider();
+                            }).catch(err => {
+                                //if the site has no wayback layers move to the next site
+                                console.error(err);
+                                movePosition(1);
+                            });
+                            //update the restor link
+                            dom.byId('restor_link').innerHTML = "<a href='https://restor.eco/map/site/" + current_site.slug + "' target='_blank'>Restor</a>";
+                            //load more sites if necessary 
+                            if (position === (sites.length) - 1) getSitesBatch();
+                        });
+                    }
+
+                    function tilesFinishedLoading(newValue, oldValue, propertyName, target) {
+                        //if the view has finished updating then load the ui
+                        if (!newValue && oldValue && timeslider === undefined) setUIFinishedLoading();
+                        //log to the console if the view zoom is not the same as the level that was used to get the wayback history
+                        if (Number.isInteger(view.zoom) && (last_zoom !== view.zoom)) logZoomWarning();
+                    }
+
+                    function setUILoading() {
+                        //reset the percentDone
+                        percentDone = 0;
+                        setLoadingPercentage(0);
+                        //show the loader
+                        domStyle.set("loading", "display", "flex");
+                        //hide the imageInfoPanel
+                        domStyle.set("imageInfoPanelContainer", "display", "none");
+                        domStyle.set("overviewContainer", "display", "none");
+                        domStyle.set("classes_panel", "display", "none");
+                    }
+
+                    function setUIFinishedLoading() {
+                        //create the timeslider
+                        createTimeSlider();
+                        //show the map
+                        domStyle.set("loading", "display", "none");
+                        domStyle.set("imageInfoPanelContainer", "display", "block");
+                        domStyle.set("overviewContainer", "display", "block");
+                        domStyle.set("classes_panel", "display", "block");
+                        //fill in how many tiles have loaded within each version/level/row
+                        for (const version in tilesLoaded) {
+                            var v_total = 0;
+                            for (const level in tilesLoaded[version]) {
+                                for (const row in tilesLoaded[version][level]) {
+                                    v_total += tilesLoaded[version][level][row].length;
+                                }
+                            }
+                            //rename the key to include the total number of tiles in the version
+                            delete Object.assign(tilesLoaded, {
+                                [version + " (" + v_total + " tiles)"]: tilesLoaded[version]
+                            })[version];
+                        }
+                    }
+
+                    function logZoomWarning() {
+                        //get the scale at this zoom level
+                        const scale = WAYBACK_SCALES[view.zoom];
+                        console.log('Zoom: ' + view.zoom + "\tScale: " + scale.toFixed(0) + "\tResolution: " + (scale * 0.00028).toFixed(1) + "m / pixel");
+                        if (view.zoom !== ZOOM_LEVEL) console.log('%cThe zoom level is not the same as that which was used to get the versions (' + ZOOM_LEVEL + '). There may be missing tiles.', "color: red");
+                        last_zoom = view.zoom;
+                    }
+
+                    function updateMap() {
+                        return new Promise(async (resolve, reject) => {
+                            //update the center and zoom
+                            view.center = [current_site.lng, current_site.lat];
+                            view.zoom = DEFAULT_ZOOM;
+                            //remove the current wayback layers - removing them individually doesnt work
+                            map.removeAll();
+                            //add the new wayback layers
+                            getWaybackLayers().then(layers => {
+                                waybackLayers.forEach(layer => {
+                                    map.add(layer);
+                                });
+                                //error handling
+                                if (layers.length === 0) reject("There are no wayback layers for this site");
+                                //add the site feature layer
+                                const sitesLayer = new FeatureLayer({
+                                    url: "https://tools.restor.eco/server/rest/services/summary_map_v4_MIL1/MapServer/1"
+                                });
+                                sitesLayer.renderer = {
+                                    type: "simple", // autocasts as new SimpleRenderer()
+                                    symbol: {
+                                        type: "simple-fill", // autocasts as new SimpleFillSymbol()
+                                        color: [255, 128, 0, 0],
+                                        outline: { // autocasts as new SimpleLineSymbol()
+                                            width: 1,
+                                            color: "white",
+                                            style: "dash"
+                                        }
+                                    }
+                                };
+                                map.add(sitesLayer);
+                                //get the tile request count
+                                getTileRequestCount(layers.length);
+                                //sync the location in the overview map
+                                syncOverviewMap();
+                                resolve();
+                            });
+                        });
+                    }
+
+                    function syncOverviewMap() {
+                        if (!overviewView) {
+                            //create the overview map if it hasnt already been created
+                            createOverviewMap().then(_ => {
+                                //move to the active site
+                                moveCurrentSiteOnOverview();
+                            });
+                        }
+                        else {
+                            //move to the active site
+                            moveCurrentSiteOnOverview();
+                        }
+                    }
+
+                    function createOverviewMap() {
+                        return new Promise((resolve, reject) => {
+                            // Create another Map, to be used in the overview "view"
+                            overviewMap = new Map({
+                                basemap: "topo-vector"
+                            });
+                            // Create the MapView for overview map
+                            overviewView = new MapView({
+                                container: "overviewDiv",
+                                map: overviewMap,
+                                zoom: 2,
+                                constraints: {
+                                    rotationEnabled: false
+                                }
+                            });
+                            // Remove the default widgets
+                            overviewView.ui.components = [];
+                            //create a graphic on the overview map for the current site
+                            current_site_graphic = new Graphic({
+                                geometry: getCurrentSiteGeometry(),
+                                symbol: ACTIVE_SITE_MARKER_SYMBOL
+                            });
+                            overviewView.graphics.add(current_site_graphic);
+                            resolve();
+                        });
+                    }
+
+                    function moveCurrentSiteOnOverview() {
+                        current_site_graphic.geometry = getCurrentSiteGeometry();
+                        overviewView.center = [current_site.lng, current_site.lat];
+                        overviewView.zoom = DEFAULT_OVERVIEW_ZOOM;
+                    }
+
+                    function getCurrentSiteGeometry() {
+                        return {
+                            type: "point", // autocasts as new Point()
+                            longitude: current_site.lng,
+                            latitude: current_site.lat
+                        };
+                    }
+
+                    function getWaybackLayers() {
+                        return new Promise(async (resolve, reject) => {
+                            //get the wayback data for the site
+                            fetch(REST_SERVER_ENDPOINT + "get_wayback_data_for_site?site_id=" + current_site.site_id + "&zoom_level=" + ZOOM_LEVEL + "&dplimit=13").then(response => {
+                                response.json().then((_json) => {
+                                    //add the WMTS endpoints for the wayback versions with local changes
+                                    waybackLayers = _json.records.map(item => {
+                                        return new WaybackLayer({
+                                            title: item.itemtitle,
+                                            urlTemplate: item.itemurl,
+                                            version_number: item.version_number,
+                                            id: item.itemid,
+                                            opacity: 0,
+                                            date: new Date(item.image_date),
+                                            image_date: new Date(item.image_date).toLocaleDateString(undefined, { month: 'long', day: 'numeric' }),
+                                            resolution: (item.image_resolution) ? item.image_resolution.toFixed(2) + "m" : null,
+                                            provider: item.provider,
+                                            sensor: item.sensor,
+                                            site_imagery_id: item.site_imagery_id,
+                                            accuracy: item.accuracy,
+                                            xmin: item.xmin,
+                                            ymin: item.ymin,
+                                            xmax: item.xmax,
+                                            ymax: item.ymax
+                                        });
+                                    });
+                                    if (waybackLayers.length === 0) reject("There are no wayback layers for this site");
+                                    //console feedback
+                                    const wayback_app_link = "https://livingatlas.arcgis.com/wayback/#active=" + waybackLayers[0].version_number + "&ext=" + waybackLayers[0].xmin + "," + waybackLayers[0].ymin + "," + waybackLayers[0].xmax + "," + waybackLayers[0].ymax + "&localChangesOnly=true";
+                                    log("\n\n" + wayback_app_link);
+                                    //add the link to the wayback app
+                                    dom.byId('wayback_app_link').innerHTML = "<a href='" + wayback_app_link + "' target='_blank'>Wayback app</a>";
+                                    log('\n' + "-".repeat(150) + '\nGetting Wayback version titles and image metadata with local changes for site ' + current_site.site_id + ' at zoom: ' + ZOOM_LEVEL + " (scale: " + WAYBACK_SCALES[ZOOM_LEVEL] + ") from the Wayback Cache" + '\n' + "-".repeat(150));
+                                    waybackLayers.map(_v => log("\t" + _v.version_number + ":\t" + _v.title + ":\t" + _v.date.toLocaleDateString() + "\t" + _v.provider + "\t" + _v.sensor + "\t" + _v.resolution + "\t" + _v.accuracy));
+                                    log("There are " + waybackLayers.length + " versions with local changes");
+                                    //return a value
+                                    resolve(waybackLayers);
+                                });
+                            });
+                        });
+                    }
+
+                    //sets the loading percent 
+                    function setLoadingPercentage(addPercent) {
+                        percentDone = percentDone + addPercent;
+                        //convert to an integer and cap at 100 - it can be higher if the estimated number of tiles to load is < actual number of tiles to load
+                        const percentDoneInt = percentDone > 100 ? 100 : parseInt(percentDone, 10);
+                        //show the percent done if mod 10 = 0
+                        if ((percentDoneInt % 10) === 0) dom.byId("loadingText").innerHTML = "LOADING... " + percentDoneInt + "%";
+                    }
+
+                    //logs a message to the console if in debug mode 
+                    function log(message) {
+                        console.log("\t" + message);
+                    }
+
+                    function getTileRequestCount(wayback_layer_count) {
+                        //calculate the number of tiles that will be requested using the viewport size and the maps zoom scale
+                        let viewport = win.getBox();
+                        //the actual number tilesize depends on the zoom scale of the map. Wayback only has 256x256 tiles down to level 17 and so at higher levels the number of tiles is less
+                        const difference_in_scale = (view.zoom - (WAYBACK_SCALES.length - 1));
+                        const multiplication_factor = (difference_in_scale > 0) ? 2 ** difference_in_scale : 1;
+                        //get the actual tile size given the maps current zoom - if it is 18 then the wayback tiles will be 512x512
+                        const tile_size = WMS_TILE_SIZE * multiplication_factor;
+                        var colCount = Math.ceil(viewport.w / tile_size) + 1;
+                        var rowCount = Math.ceil(viewport.h / tile_size) + 1;
+                        tilesToLoadCount = colCount * rowCount * wayback_layer_count;
+                        percentagePerTile = (100 / tilesToLoadCount);
+                    }
+
+                    function createTimeSlider() {
+                        //create the dom
+                        domConstruct.place("<div id='imageInfoPanel'><div id='image_data1'></div><div id='image_data2'></div></div>", dom.byId('imageInfoPanelContainer'));
+                        //get the wayback dates
+                        let waybackDates = map.layers.map(layer => {
+                            if (layer.type === "web-tile") {
+                                return new Date(layer.date);
+                            }
+                        }).items;
+                        //filter out the nulls
+                        waybackDates = waybackDates.filter(item => { return (item !== undefined); });
+                        //get the year dates for the year tic marks
+                        const firstYear = waybackDates[0].getFullYear();
+                        const numYears = new Date().getFullYear() - firstYear;
+                        const years = Array.from({ length: numYears + 1 }, (x, i) => i + firstYear);
+                        const yearTics = years.map(year => {
+                            return new Date(year, 0, 1);
+                        });
+                        //set the time extent
+                        const timeExtent = new TimeExtent({
+                            start: new Date(firstYear, 0, 1),
+                            end: new Date()
+                        });
+                        timeslider = new TimeSlider({
+                            view: view,
+                            mode: "instant",
+                            container: 'imageInfoPanel',
+                            loop: true,
+                            timeVisible: false,
+                            fullTimeExtent: timeExtent,
+                            stops: { dates: waybackDates },
+                            labelFormatFunction: (value, type, element, layout) => {
+                                switch (type) {
+                                    case "min":
+                                    case "max":
+                                        element.setAttribute("style", "display: 'none'");
+                                        break;
+                                }
+                            },
+                            tickConfigs: [{
+                                mode: "position",
+                                values: waybackDates,
+                                tickCreatedFunction: function(initialValue, tickElement, labelElement) {
+                                    tickElement.classList.add("timesliceTics");
+                                }
+                            }, {
+                                mode: "position",
+                                values: yearTics,
+                                labelsVisible: true,
+                                labelFormatFunction: (value) => {
+                                    return (numYears > 12) ? String(value.getFullYear()).substr(2) : value.getFullYear();
+                                },
+                                tickCreatedFunction: function(initialValue, tickElement, labelElement) {
+                                    tickElement.classList.add("yearTics");
+                                    labelElement.classList.add("yearLabels");
+                                }
+                            }, {
+                                mode: "position",
+                                values: waybackDates[0],
+                                tickCreatedFunction: function(initialValue, tickElement, labelElement) {
+                                    tickElement.classList.add("timesliceTicsActive");
+                                }
+                            }]
+                        });
+                        // Add the widget to the bottom-right corner of the view
+                        view.ui.add(timeslider);
+                        //watch for events on the time slider
+                        timeslider.watch("timeExtent", (value) => {
+                            //set the date of the current timeslider value                            
+                            timeslider_date = value.start.toISOString();
+                            //remove any sentinel layers
+                            removeSentinelLayer();
+                            //get the timeslice date 
+                            const timeslice = new Date(value.start).getTime();
+                            //update the layers visibility and get the image resolution
+                            map.layers.items.forEach(layer => {
+                                if (layer.date && (layer.date.getTime() === timeslice)) {
+                                    //set the site_imagery_id
+                                    current_site_imagery_id = layer.site_imagery_id;
+                                    layer.opacity = 1;
+                                    var html = "";
+                                    //updates the ui with the info on the current image
+                                    ['provider', 'sensor', 'resolution'].forEach(property => {
+                                        html += "<span class='imageData'>" + layer[property] + "</span>";
+                                    });
+                                    dom.byId("image_data1").innerHTML = html;
+                                    html = "";
+                                    //updates the ui with the info on the current image
+                                    ['image_date'].forEach(property => {
+                                        html += "<span class='imageData'>" + layer[property] + "</span><span class='cb'><input type='checkbox' id='sentinel_cb' title='Show Sentinel imagery from the same date' alt='Show Sentinel imagery from the same date'></span>";
+                                    });
+                                    dom.byId("image_data2").innerHTML = html;
+                                    on(dom.byId("sentinel_cb"), "click", showHideSentinel);
+                                }
+                                else {
+                                    if (layer.title && layer.title.indexOf('Wayback') > 0) layer.opacity = 0;
+                                }
+                            });
+                            //set the active tic 
+                            timeslider.tickConfigs[2].values = [value.start];
+                        });
+                    }
+
+                    function showHideSentinel(event) {
+                        if (event.target.checked) {
+                            //add the Google Earth Engine layer - this is a Sentinel scene from the same day of the year as the Wayback image
+                            addSentinelLayer();
+                        }
+                        else {
+                            removeSentinelLayer();
+                        }
+                    }
+
+                    function destroyTimeSlider() {
+                        if (timeslider) {
+                            view.ui.remove(timeslider);
+                            timeslider.destroy();
+                            timeslider = undefined;
+                        }
+                    }
+
+                    function saveImageClass(_class) {
+                        //get the wayback_qa_classes.id from the number pressed
+                        var _class_id;                        
+                        switch (_class){
+                            case "1":
+                                _class_id = 9;
+                                break;
+                            case "2":
+                                _class_id = 10;
+                                break;
+                            case "3":
+                                _class_id = 11;
+                                break;
+                            case "4":
+                                _class_id = 12;
+                                break;
+                            case "5":
+                                _class_id = 17;
+                                break;
+                            case "6":
+                                _class_id = 18;
+                                break;
+                            case "7":
+                                _class_id = 19;
+                                break;
+                            case "8":
+                                _class_id = 20;
+                                break;
+                        }
+                        fetch(REST_SERVER_ENDPOINT + "set_wayback_data_for_qa?site_id=" + current_site.site_id + "&site_imagery_id=" + current_site_imagery_id + "&qa_class=" + _class_id, { credentials: 'include' }).then(response => {
+                            response.json().then((_json) => {
+                                if (_json.error) {
+                                    alert(_json.error);
+                                }
+                                else {
+                                    // flash the row
+                                    domStyle.set(dom.byId('row_' + _class), "color", "red");
+                                    const flash_timeout = setTimeout(_ => {
+                                        fx.animateProperty({
+                                            node: dom.byId('row_' + _class),
+                                            duration: 100,
+                                            properties: {
+                                                color: { start: "red", end: "white" },
+                                            }
+                                        }).play();
+                                        clearTimeout(flash_timeout);
+                                    }, 500);
+                                }
+                            });
+                        });
+                    }
+
+                    function saveSequenceClass() {
+                        //get the sequence class
+                        const _class = (dom.byId('correct').checked) ? 13 : (dom.byId('incorrect').checked) ? 14 : (dom.byId('unknown').checked) ? 15 : 16;
+                        fetch(REST_SERVER_ENDPOINT + "set_wayback_data_for_qa2?site_id=" + current_site.site_id + "&qa_class=" + _class, { credentials: 'include' }).then(response => {
+                            response.json().then((_json) => {
+                                if (_json.error) {
+                                    alert(_json.error);
+                                }
+                            });
+                        });
+                    }
+                });
+            });
+    </script>
+</head>
+
+<body>
+    <div id="loading">
+        <div id="loadingContainer"><img src="images/loading.gif" class="loadingImg">
+            <div id="loadingText"></div>
+        </div>
+    </div>
+    <div id='imageInfoPanelContainer'>
+    </div>
+    <div id="viewDiv"></div>
+    <div id='overviewContainer' class='panelBorder'>
+        <div id="overviewDiv" class='handcursor'>
+            <!--overview map goes here-->
+        </div>
+        <div id='links_panel'>
+            <div id='wayback_app_link'></div>
+            <div id='restor_link'></div>
+        </div>
+    </div>
+    <div id='loading_icon_container'>
+        <div id='loading_icon'>
+            <img src='./images/loading.gif' class="loadingImg" />
+        </div>
+    </div>
+    <div id='classes_panel' class='panelBorder'>
+        <div id='site_classes_container'>
+            <div id='sequence_class'>
+                <p>Image sequence:</p>
+                <div>
+                    <input type="radio" id="correct" name="sequence" value="10" checked>
+                    <label for="correct">Correct</label>
+                </div>
+                <div>
+                    <input type="radio" id="incorrect" name="sequence" value="11">
+                    <label for="incorrect">Incorrect</label>
+                </div>
+                <div>
+                    <input type="radio" id="unknown" name="sequence" value="12">
+                    <label for="unknown">Unknown</label>
+                </div>
+                <div>
+                    <input type="radio" id="good" name="sequence" value="13">
+                    <label for="good">Good example</label>
+                </div>
+            </div>
+        </div>
+        <div id='image_classes_container'>
+            <div id='classes_container'>
+                <p>Individual image:</p>
+                <div id='classes'>
+                    <!--Dynamic content goes here-->
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
