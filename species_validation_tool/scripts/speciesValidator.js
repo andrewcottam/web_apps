@@ -23,7 +23,7 @@ require({
 		if (!wdpa_id) {
 			alert('no wdpaid');
 		}
-		restServerUrl = "https://python-rest-server-ny43uciwwa-oc.a.run.app/python-rest-server/jrc-database";
+		restServerUrl = "https://python-rest-server-ny43uciwwa-oc.a.run.app/python-rest-server/joint-research-centre";
 		parser.parse();
 		setLanguage();
 		setTaxonGroup();
