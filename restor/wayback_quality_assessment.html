@@ -349,6 +349,7 @@
                             let url = this.getImageUrl(extent, width, height);
                             // request for the image  based on the generated url  - this is no longer working as of 30/01/2023 - i tried adding a callback:'wibble' parameter on line 557 but no good
                             return esriRequest(url).then(response => {
+                                console.log(response)
                                 let image_url = response.data.url;
                                 return esriRequest(image_url, { responseType: "image" }).then((response) => {
                                     //draw the image onto the canvas - the image is an <img> html element that points to the image_url
