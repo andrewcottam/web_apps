@@ -1,0 +1,382 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Wayback screening</title>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .panelBorder {
+            border: 1px solid lightgray;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.3), 0 6px 20px 0 rgba(0, 0, 0, 0.29);
+        }
+
+        #siteInfoPanel {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        #sitenameContainer {
+            border-bottom: 1px solid lightblue;
+            padding: 8px 10px 6px 10px;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 20px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        #site_table {
+            padding: 7px 10px;
+        }
+
+        #sitename {
+            font-size: 14px;
+            padding-right: 20px;
+        }
+
+        .siteData {
+            font-size: 13px;
+        }
+
+        .link {
+            right: 10px;
+            top: 7px;
+            position: absolute;
+        }
+
+        #imageInfoPanelContainer {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+        }
+
+        #imageInfoPanel {
+            position: relative;
+            width: fit-content;
+            margin: 0 auto;
+            padding: 2px;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        #settingsPanelContainer {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: none;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 20px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        #settingsPanel {
+            padding: 10px;
+        }
+
+        .imageData {
+            font-size: 14px;
+            padding: 6px;
+        }
+
+        #site_class_container {
+            position: relative;
+            width: fit-content;
+            margin: 0 auto;
+            padding: 2px;
+        }
+
+        #site_class {
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .input_box {
+            width: 40px;
+        }
+
+        .control {
+            color: rgba(118, 118, 118, 1);
+            margin: 5px;
+            cursor: hand;
+            vertical-align: middle;
+        }
+
+        .settings {
+            font-size: 14px;
+        }
+
+        #okContainer {
+            width: 100%;
+            text-align: center;
+        }
+    </style>
+    <script src="https://kit.fontawesome.com/aafa4bf049.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.22/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.22/"></script>
+    <script>
+        require(["dojo/dom-style", "esri/widgets/ScaleBar", "esri/layers/FeatureLayer", "esri/layers/WebTileLayer", "dojo/dom", "esri/geometry/Point", "dojo/ready", "dojo/keys", "dojo/on", "esri/config", "esri/Map", "esri/views/MapView"], function(domStyle, ScaleBar, FeatureLayer, WebTileLayer, dom, Point, ready, keys, on, esriConfig, Map, MapView) {
+            ready(function() { //fired when the dom has finished loading
+                /*global fetch*/
+                const REST_SERVER_ENDPOINT = 'https://python-rest-server-ny43uciwwa-oc.a.run.app/python-rest-server/restor/services/';
+                const SITES_BATCH_SIZE = 10;
+                const DEFAULT_ZOOM = 17;
+                const WAYBACK_LAYER_ID = 'wayback_layer';
+                const RESOLUTION_DISPLAY_DPS = 2; //number of decimal places to round the resolution up to
+                var position = -1;
+                var cls_position = -1;
+                var sites, map, view, current_site, classes, image_resolution;
+                //get the first batch of sites
+                getSitesBatch().then(response => {
+                    //create the map
+                    createMap();
+                    movePosition(1);
+                });
+                //get the restoration site classes
+                getSiteClasses();
+
+                //creates the map and adds the site layer
+                function createMap() {
+                    esriConfig.apiKey = "AAPKdff200ae755a4311a527537ef705f7a6Hzk48Fi1fqk_O8vRHjCZk-7nNEOOH2JHvhTW2IpLzKyKo3vnPKJDJ2P3ieiSzKP0";
+                    map = new Map({ basemap: "arcgis-light-gray" });
+                    view = new MapView({
+                        map: map,
+                        zoom: DEFAULT_ZOOM,
+                        container: "viewDiv" // Div element
+                    });
+                    //add the site feature layer
+                    const sitesLayer = new FeatureLayer({
+                        url: "https://tools.restor.eco/server/rest/services/summary_map_v4_MIL1/MapServer/1"
+                    });
+                    sitesLayer.renderer = {
+                        type: "simple", // autocasts as new SimpleRenderer()
+                        symbol: {
+                            type: "simple-fill", // autocasts as new SimpleFillSymbol()
+                            color: [255, 128, 0, 0],
+                            outline: { // autocasts as new SimpleLineSymbol()
+                                width: 1,
+                                color: "white",
+                                style: "dash"
+                            }
+                        }
+                    };
+                    map.add(sitesLayer);
+                    //add the scale bar 
+                    let scaleBar = new ScaleBar({ view: view, unit: "metric" });
+                    // Add widget to the bottom left corner of the view
+                    view.ui.add(scaleBar, { position: "bottom-left" });
+                    view.when(() => {
+                        //display the initial pixel resolution
+                        zoomChanged();
+                        //wire up the event handlers
+                        wireUpEventHandlers();
+                        //add the site class container to the view - if we add them to the page it stops the user interacting with the map
+                        view.ui.add('site_class_container');
+                    });
+                }
+
+                //wire up the event handlers for keyboard events
+                function wireUpEventHandlers() {
+                    //wire up the onkey down handler
+                    on(document, "keydown", keydown);
+                    //click on settings span
+                    on(dom.byId('settings'), "click", openSettings);
+                    on(dom.byId('close_settings'), "click", closeSettings);
+                    //set a watchable on the maps zoom
+                    view.watch('zoom', zoomChanged);
+                }
+
+                //returns the site classes from the database, e.g. Natural - open canopy, Plantation - closed canopy etc.
+                function getSiteClasses() {
+                    return new Promise((resolve, reject) => {
+                        fetch(REST_SERVER_ENDPOINT + "get_wayback_imagery_classes?format=json").then(response => {
+                            response.json().then((_json) => {
+                                classes = _json.records;
+                                //set the text of the first class
+                                changeClass(1);
+                                resolve();
+                            });
+                        });
+                    });
+                }
+
+                //gets an array of sites and their best wayback images - credentials must be passed in cloud9
+                function getSitesBatch() {
+                    const area_threshold = dom.byId('area_threshold').value;
+                    const resolution_threshold = dom.byId('resolution_threshold').value;
+                    const public_only = dom.byId('public_only').checked;
+                    return new Promise((resolve, reject) => {
+                        fetch(REST_SERVER_ENDPOINT + "get_wayback_candidates?records_to_get=" + SITES_BATCH_SIZE + "&area_threshold=" + area_threshold + "&resolution_threshold=" + resolution_threshold + "&public_only=" + public_only).then(response => {
+                            response.json().then((_json) => {
+                                sites = _json.records;
+                                //reset the position
+                                position = -1;
+                                resolve();
+                            });
+                        });
+                    });
+                }
+
+                //saves the current sites class
+                function saveData() {
+                    return new Promise((resolve, reject) => {
+                        fetch(REST_SERVER_ENDPOINT + "set_wayback_imagery_class?site_id=" + current_site.site_id + "&siteclass=" + classes[cls_position].id).then(response => {
+                            response.json().then((_json) => {
+                                resolve(_json);
+                            });
+                        });
+                    });
+                }
+                //triggered when the keyboards right arrow is pressed - moves to the next site
+                function movePosition(relativePosition) {
+                    //set the index position
+                    position = position + relativePosition;
+                    //get the site at the current position 
+                    current_site = sites[position];
+                    //update the maps location and wayback tile layers
+                    updateMap();
+                    //update the image info
+                    updateUI();
+                    //load more sites if necessary 
+                    if (position === (sites.length) - 1) getSitesBatch();
+                    //set the image resolution
+                    image_resolution = Number(current_site.resolution.substr(0, current_site.resolution.length - 1));
+                    //reset the siteclass to not suitable
+                    setSiteClass(0);
+                }
+
+                function updateMap() {
+                    //update the center and zoom
+                    view.center = [current_site.lng, current_site.lat];
+                    view.zoom = DEFAULT_ZOOM;
+                    //remove the current wayback layer
+                    const lyr = map.findLayerById(WAYBACK_LAYER_ID);
+                    if (lyr) map.remove(lyr);
+                    //update the wayback layers
+                    map.add(new WebTileLayer({ urlTemplate: current_site.itemurl, id: WAYBACK_LAYER_ID }), 0);
+                }
+
+                function updateUI() {
+                    var html = "";
+                    //add the site name and hyperlink if the site is public
+                    dom.byId("sitename").innerHTML = current_site.sitename;
+                    if (current_site.public) dom.byId("sitelink").innerHTML = "<a href='https://www.restor.eco/map/site/" + current_site.slug + "' target='_blank'><img src='images/open-window.png' class='link' alt='Open in Restor' title='Open in Restor'/></a>";
+                    //updates the ui with the info on the current site 
+                    ['Organisation', 'Country', 'Area', 'Status', 'Pre restoration', 'Intervention type', 'Post restoration', 'Year established'].forEach(property => {
+                        if (current_site[property] !== null) html += '<tr class="siteData"><td>' + property + ':</td><td>' + current_site[property] + '</td></tr>';
+                    });
+                    dom.byId('site_data').innerHTML = html;
+                    html = "";
+                    //updates the ui with the info on the current image
+                    ['provider', 'sensor', 'image_date', 'resolution'].forEach(property => {
+                        html += "<span class='imageData'>" + current_site[property] + "</span>";
+                    });
+                    dom.byId("image_data").innerHTML = html;
+                }
+
+                function keydown(event) {
+                    switch (event.keyCode) {
+                        case (keys.RIGHT_ARROW):
+                            //save the data to the database
+                            saveData();
+                            //move to the next site
+                            movePosition(1);
+                            break;
+                        case (keys.LEFT_ARROW):
+                            movePosition(-1);
+                            break;
+                        case (keys.UP_ARROW):
+                            break;
+                        case (keys.DOWN_ARROW):
+                            break;
+                        case (keys.SPACE):
+                            changeClass();
+                            break;
+                    }
+                }
+
+                function changeClass() {
+                    //move to the next class in the classes array
+                    cls_position = cls_position + 1;
+                    //if the position is more than the length of the classes, then reset
+                    if (cls_position === classes.length) cls_position = 0;
+                    //set the ui
+                    dom.byId("site_class").innerHTML = classes[cls_position].cls;
+                    setSiteClass(cls_position);
+                }
+
+                function setSiteClass(position) {
+                    //set the ui
+                    dom.byId("site_class").innerHTML = classes[position].cls;
+                    //set the class position
+                    cls_position = position;
+                }
+
+                function zoomChanged() {
+                    //get the resolution at the current zoom level
+                    dom.byId("map_resolution").innerHTML = view.resolution.toFixed(RESOLUTION_DISPLAY_DPS) + "m/pixel";
+                    //set the color to red if the map resolution is less than the image resolution, e.g. a 30cm image mapped at 15cm/pixel
+                    const res_color = (view.resolution.toFixed(RESOLUTION_DISPLAY_DPS) < image_resolution) ? 'red' : 'darkgreen';
+                    domStyle.set('map_resolution', 'color', res_color);
+                }
+
+                function openSettings(evt) {
+                    domStyle.set('settingsPanelContainer', 'display', 'block');
+                    domStyle.set('settingsPanelContainer', 'left', (evt.clientX - 100) + "px");
+                    domStyle.set('settingsPanelContainer', 'top', (evt.clientY - 122) + "px");
+                }
+
+                function closeSettings(evt) {
+                    domStyle.set('settingsPanelContainer', 'display', 'none');
+                }
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div id="viewDiv">
+        <!--main map goes here-->
+    </div>
+    <div id='imageInfoPanelContainer'>
+        <div id='imageInfoPanel' class='panelBorder'>
+            <span id='image_data'>
+                <!--dynamically generated content will go her-->
+            </span>
+            <span id='map_resolution' class='imageData'></span>
+            </span>
+            <span class='control' alt="Settings" title="Settings" id='settings'>
+                <i class="fas fa-cog"></i>
+            </span>
+        </div>
+
+    </div>
+    <div id='siteInfoPanel' class='panelBorder'>
+        <div id='sitenameContainer'><span id='sitename'></span><span id='sitelink'>
+                <!--dynamically generated content will go her-->
+        </div>
+        <table id='site_table'>
+            <tbody id='site_data'>
+                <!--dynamically generated content will go her-->
+            </tbody>
+        </table>
+    </div>
+    <div id='settingsPanelContainer'>
+        <div id='settingsPanel' class='panelBorder'>
+            <div><span class='settings'>Area threshold: </span><input id='area_threshold' value='0.1' class='input_box' /><span> Ha</span></div>
+            <div><span class='settings'>Resolution threshold: </span><input id='resolution_threshold' value='1' class='input_box' /><span> m</span></div>
+            <div><span class='settings'>Public: </span><input id='public_only' value='false' type='checkbox'/></div>
+            <div id='okContainer'><button id='close_settings'>OK</button></div>
+        </div>
+    </div>
+    <div id='site_class_container'>
+        <div id='site_class'></div>
+    </div>
+</body>
+
+</html>
