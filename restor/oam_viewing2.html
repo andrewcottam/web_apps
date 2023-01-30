@@ -1,0 +1,388 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>OpenAerialMap viewer (WorldView only)</title>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .panelBorder {
+            /*border: 1px solid lightgray;*/
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.3), 0 6px 20px 0 rgba(0, 0, 0, 0.29);
+        }
+
+        #siteInfoPanel {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        #sitenameContainer {
+            border-bottom: 1px solid lightblue;
+            padding: 8px 10px 6px 10px;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 20px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        #site_table {
+            padding: 7px 10px;
+        }
+
+        #sitename {
+            font-size: 14px;
+            padding-right: 20px;
+        }
+
+        .siteData {
+            font-size: 13px;
+        }
+
+        .link {
+            right: 10px;
+            top: 7px;
+            position: absolute;
+        }
+
+        #imageInfoPanelContainer {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+        }
+
+        #imageInfoPanel {
+            position: relative;
+            width: fit-content;
+            margin: 0 auto;
+            padding: 2px;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        #settingsPanelContainer {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.9);
+            display: none;
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1), 0 6px 20px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        #settingsPanel {
+            padding: 10px;
+        }
+
+        .imageData {
+            font-size: 14px;
+            padding: 6px;
+        }
+
+        #site_class_container {
+            position: relative;
+            width: fit-content;
+            margin: 0 auto;
+            padding: 2px;
+        }
+
+        #site_class {
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .input_box {
+            width: 40px;
+        }
+
+        .control {
+            color: rgba(118, 118, 118, 1);
+            margin: 5px;
+            cursor: hand;
+            vertical-align: middle;
+        }
+
+        .settings {
+            font-size: 14px;
+        }
+
+        #overviewContainer {
+            position: absolute;
+            bottom: 27px;
+            right: 10px;
+        }
+
+        #overviewDiv {
+            width: 259px;
+            height: 200px;
+            z-index: 1;
+            overflow: hidden;
+        }
+    </style>
+    <script src="https://kit.fontawesome.com/aafa4bf049.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.22/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.22/"></script>
+    <script>
+        require(['esri/Graphic', "dojo/dom-style", "esri/widgets/ScaleBar", "esri/layers/FeatureLayer", "esri/layers/WebTileLayer", "dojo/dom", "esri/geometry/Point", "dojo/ready", "dojo/keys", "dojo/on", "esri/config", "esri/Map", "esri/views/MapView"], function(Graphic, domStyle, ScaleBar, FeatureLayer, WebTileLayer, dom, Point, ready, keys, on, esriConfig, Map, MapView) {
+            ready(function() { //fired when the dom has finished loading
+                /*global fetch*/
+                // const REST_SERVER_ENDPOINT = 'https://python-rest-server-yx3c2ftqda-oa.a.run.app/python-rest-server/restorproduction/services/';
+                const REST_SERVER_ENDPOINT = 'https://python-rest-server-ny43uciwwa-oc.a.run.app/python-rest-server/restor/services/'; //to get the version history cache
+                const IMAGES_BATCH_SIZE = 10;
+                const DEFAULT_ZOOM = 14;
+                const OAM_LAYER_ID = 'oam_layer';
+                const RESOLUTION_DISPLAY_DPS = 2; //number of decimal places to round the resolution up to
+                const ACTIVE_SITE_MARKER_SYMBOL = { type: "simple-marker", color: [131, 179, 91, 0.8], outline: { color: [238, 238, 238, 1] }, size: 15 };
+                const OPEN_AERIAL_MAP_FEATURE_LAYER = 'https://tools.restor.eco/server/rest/services/OpenAerialMap/MapServer/21';
+                var position = -1;
+                var images, map, view, overviewMap, overviewView, current_image, current_image_graphic, image_resolution, image_id, latlng;
+
+                //get the url parameters
+                var url = new URL(document.URL);
+                var search_params = url.searchParams;
+                //get the image_id from the query parameters
+                image_id = (search_params.has('image_id')) ? search_params.get('image_id') : undefined;
+
+                //get the first batch of images
+                getImagesBatch().then(response => {
+                    //create the map
+                    createMap();
+                    movePosition(1);
+                });
+
+                //creates the map and adds the site layer
+                function createMap() {
+                    esriConfig.apiKey = "AAPKdff200ae755a4311a527537ef705f7a6Hzk48Fi1fqk_O8vRHjCZk-7nNEOOH2JHvhTW2IpLzKyKo3vnPKJDJ2P3ieiSzKP0";
+                    map = new Map({ basemap: "arcgis-light-gray" });
+                    view = new MapView({
+                        map: map,
+                        zoom: DEFAULT_ZOOM,
+                        container: "viewDiv" // Div element
+                    });
+                    //add the scale bar 
+                    let scaleBar = new ScaleBar({ view: view, unit: "metric" });
+                    // Add widget to the bottom left corner of the view
+                    view.ui.add(scaleBar, { position: "bottom-left" });
+                    view.when(() => {
+                        //display the initial pixel resolution
+                        zoomChanged();
+                        //wire up the event handlers
+                        wireUpEventHandlers();
+                    });
+                }
+
+                //wire up the event handlers for keyboard events
+                function wireUpEventHandlers() {
+                    //wire up the onkey down handler
+                    on(document, "keydown", keydown);
+                    //set a watchable on the maps zoom
+                    view.watch('zoom', zoomChanged);
+                    //mouse move
+                    view.on("pointer-move", (event) => {
+                        latlng = view.toMap(event);
+                    });
+                }
+
+                //gets an array of OAM images
+                function getImagesBatch() {
+                    var url;
+                    //set the url depending on whether the image_id has been set
+                    if (image_id) {
+                        url = 'get_oam_imagery2?image_id=' + image_id;
+                    }
+                    else {
+                        url = "get_oam_imagery_for_viewing2?records_to_get=" + IMAGES_BATCH_SIZE;
+                    }
+                    return new Promise((resolve, reject) => {
+                        fetch(REST_SERVER_ENDPOINT + url).then(response => {
+                            response.json().then((_json) => {
+                                images = _json.records;
+                                //reset the position
+                                position = -1;
+                                resolve();
+                            });
+                        });
+                    });
+                }
+
+                //triggered when the keyboards right arrow is pressed - moves to the next site
+                function movePosition(relativePosition) {
+                    //set the index position
+                    position = position + relativePosition;
+                    //get the site at the current position 
+                    current_image = images[position];
+                    //update the maps location and wayback tile layers
+                    updateMap();
+                    //update the image info
+                    updateUI();
+                    //load more images if necessary 
+                    if (position === (images.length) - 1) getImagesBatch();
+                    //set the image resolution
+                    image_resolution = Number(current_image.resolution.substr(0, current_image.resolution.length - 1));
+                }
+
+                function updateMap() {
+                    //update the center and zoom
+                    view.center = [current_image.lng, current_image.lat];
+                    view.zoom = DEFAULT_ZOOM;
+                    //remove the current oam layer
+                    const lyr = map.findLayerById(OAM_LAYER_ID);
+                    if (lyr) map.remove(lyr);
+                    //update the oam layers
+                    map.add(new WebTileLayer({ urlTemplate: current_image.itemurl, id: OAM_LAYER_ID }), map.layers.length - 1);
+                    //sync the location in the overview map
+                    syncOverviewMap();
+                }
+
+                function syncOverviewMap() {
+                    if (!overviewView) {
+                        //create the overview map if it hasnt already been created
+                        createOverviewMap().then(_ => {
+                            //move to the active site
+                            moveCurrentSiteOnOverview();
+                        });
+                    }
+                    else {
+                        //move to the active site
+                        moveCurrentSiteOnOverview();
+                    }
+                }
+
+                function createOverviewMap() {
+                    return new Promise((resolve, reject) => {
+                        // Create another Map, to be used in the overview "view"
+                        overviewMap = new Map({
+                            basemap: "topo-vector"
+                        });
+                        //add the OAM centroid feature layer
+                        const oamCentroids = new FeatureLayer({
+                            url: OPEN_AERIAL_MAP_FEATURE_LAYER
+                        });
+                        oamCentroids.renderer = {
+                            type: "simple", // autocasts as new SimpleRenderer()
+                            symbol: {
+                                type: "simple-marker", // autocasts as new SimpleMarkerSymbol()
+                                size: 3,
+                                color: "red",
+                                outline: { // autocasts as new SimpleLineSymbol()
+                                    width: 0,
+                                    color: "white"
+                                }
+                            }
+                        };
+                        overviewMap.add(oamCentroids);
+                        // Create the MapView for overview map
+                        overviewView = new MapView({
+                            container: "overviewDiv",
+                            map: overviewMap,
+                            zoom: 0,
+                            constraints: {
+                                rotationEnabled: false
+                            }
+                        });
+                        // Remove the default widgets
+                        overviewView.ui.components = [];
+                        //create a graphic on the overview map for the current site
+                        current_image_graphic = new Graphic({
+                            geometry: getCurrentSiteGeometry(),
+                            symbol: ACTIVE_SITE_MARKER_SYMBOL,
+                            attributes: { id: current_image.id }
+                        });
+                        overviewView.graphics.add(current_image_graphic);
+                        resolve();
+                        //get the statistics and render them in the imagesOverview
+                        dom.byId('imagesOverview').innerHTML = '<span>' + current_image.id + '</span>';
+                    });
+                }
+
+                function getCurrentSiteGeometry() {
+                    return {
+                        type: "point", // autocasts as new Point()
+                        longitude: current_image.lng,
+                        latitude: current_image.lat
+                    };
+                }
+
+                function moveCurrentSiteOnOverview() {
+                    current_image_graphic.geometry = getCurrentSiteGeometry();
+                }
+
+                function updateUI() {
+                    var html = "";
+                    //updates the ui with the info on the current image
+                    ['provider', 'sensor', 'date', 'resolution'].forEach(property => {
+                        const value = (property === 'provider' && (current_image[property].length > 75)) ? current_image[property].substr(0, 75) + ".." : current_image[property];
+                        html += "<span class='imageData'>" + value + "</span>";
+                    });
+                    dom.byId("image_data").innerHTML = html;
+                }
+
+                function keydown(event) {
+                    switch (event.keyCode) {
+                        case (keys.RIGHT_ARROW):
+                            //move to the next site
+                            movePosition(1);
+                            break;
+                        case (keys.LEFT_ARROW):
+                            movePosition(-1);
+                            break;
+                        case (keys.UP_ARROW):
+                            break;
+                        case (keys.DOWN_ARROW):
+                            break;
+                        case (keys.SPACE):
+                            break;
+                        case (67): //C
+                            // console.log(current_image['id'] + ' ' + latlng.longitude + ' ' + latlng.latitude);
+                            // console.log(current_image['id'] + ' ' + view.center.longitude + ' ' + view.center.latitude);
+                            var dummy = document.createElement("textarea");
+                            document.body.appendChild(dummy);
+                            dummy.value = 'lng: ' + view.center.longitude + ', lat: ' + view.center.latitude + ", wms_endpoint: '" + current_image['itemurl'] + "'";
+                            dummy.select();
+                            document.execCommand("copy");
+                            document.body.removeChild(dummy);
+                            break;
+                    }
+                }
+
+                function zoomChanged() {
+                    //get the resolution at the current zoom level
+                    dom.byId("map_resolution").innerHTML = view.resolution.toFixed(RESOLUTION_DISPLAY_DPS) + "m/pixel";
+                    //set the color to red if the map resolution is less than the image resolution, e.g. a 30cm image mapped at 15cm/pixel
+                    const res_color = (view.resolution.toFixed(RESOLUTION_DISPLAY_DPS) < image_resolution) ? 'red' : 'darkgreen';
+                    domStyle.set('map_resolution', 'color', res_color);
+                }
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <div id='imageInfoPanelContainer'>
+        <div id='location'>
+            <!--dynamically generated content will go here-->
+        </div>
+        <div id='imageInfoPanel' class='panelBorder'>
+            <span id='image_data'>
+                <!--dynamically generated content will go here-->
+            </span>
+            <span id='map_resolution' class='imageData'>
+                <!--dynamically generated content will go here-->
+            </span>
+            </span>
+        </div>
+    </div>
+    <div id='overviewContainer' class='panelBorder' alt='Click on a site to zoom to that site' title='Click on a site to zoom to that site'>
+        <div id="overviewDiv" class='handcursor'>
+            <!--overview map goes here-->
+        </div>
+    </div>
+</body>
+
+</html>
