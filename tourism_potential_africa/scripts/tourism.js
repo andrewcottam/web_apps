@@ -90,7 +90,7 @@ require(["dojo/on", "esri/map", "esri/graphic", "esri/symbols/SimpleMarkerSymbol
 		console.log('events registered');
 	});
 	var map;
-	var restServerUrl = "https://python-rest-server-ny43uciwwa-oc.a.run.apply/joint-research-centre";
+	var restServerUrl = "https://python-rest-server-ny43uciwwa-oc.a.run.app/joint-research-centre";
 	var sitesGrid;
 	var speciesGrid;
 	var currentRow;
