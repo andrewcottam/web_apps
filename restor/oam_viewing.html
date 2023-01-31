@@ -131,8 +131,8 @@
         require(['esri/Graphic', "dojo/dom-style", "esri/widgets/ScaleBar", "esri/layers/FeatureLayer", "esri/layers/WebTileLayer", "dojo/dom", "esri/geometry/Point", "dojo/ready", "dojo/keys", "dojo/on", "esri/config", "esri/Map", "esri/views/MapView"], function(Graphic, domStyle, ScaleBar, FeatureLayer, WebTileLayer, dom, Point, ready, keys, on, esriConfig, Map, MapView) {
             ready(function() { //fired when the dom has finished loading
                 /*global fetch*/
-                // const REST_SERVER_ENDPOINT = 'https://python-rest-server-yx3c2ftqda-oa.a.run.app/python-rest-server/restorproduction/services/';
-                const REST_SERVER_ENDPOINT = 'https://python-rest-server-ny43uciwwa-oc.a.run.app/python-rest-server/restor/services/'; //to get the version history cache
+                // const REST_SERVER_ENDPOINT = 'https://python-rest-server-yx3c2ftqda-oa.a.run.apply/restorproduction/services/';
+                const REST_SERVER_ENDPOINT = 'https://python-rest-server-ny43uciwwa-oc.a.run.apply/restor/services/'; //to get the version history cache
                 const IMAGES_BATCH_SIZE = 10;
                 const DEFAULT_ZOOM = 17;
                 const OAM_LAYER_ID = 'oam_layer';
