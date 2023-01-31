@@ -11,7 +11,7 @@ require({
 		parser.parse();
 		var taxongroup, language, restServerUrl, queryObject;
 		queryObject = ioQuery.queryToObject(win.doc.location.search.substring(1));
-		restServerUrl = "https://python-rest-server-ny43uciwwa-oc.a.run.apply/joint-research-centre";
+		restServerUrl = "https://python-rest-server-ny43uciwwa-oc.a.run.app/joint-research-centre";
 		setLanguage();
 		setTaxonGroup();
 		on(registry.byId("selectLanguage"), "change", function(value) {

@@ -2,7 +2,7 @@
 require(["dojox/charting/themes/PlotKit/blue", "dijit/form/HorizontalSlider", "dojox/charting/StoreSeries", "dojox/charting/axis2d/Default", "dojox/charting/plot2d/Markers", "dojox/charting/plot2d/Areas", "dojox/charting/Chart", "dojo/_base/lang", "dojo/request/script", "dojo/dom-style", "dijit/registry", "dojo/_base/array", "dojo/json", "dojo/store/Memory", "dojo/request/xhr", "dojo/dom", "dijit/form/Select", "dojo/parser", "dijit/form/HorizontalSlider", "dojo/on", "node_modules/mapbox-gl/dist/mapbox-gl.js"],
     function(blue, HorizontalSlider, StoreSeries, Default, Markers, Areas, Chart, lang, script, domStyle, registry, array, json, Memory, xhr, dom, Select, parser, HorizontalSlider, on, mapboxgl) {
         var countryStore, selectedCountry, currentYear = 2020,
-    		restServerUrl = "https://python-rest-server-ny43uciwwa-oc.a.run.apply/joint-research-centre"; //AWS C9 environment only
+    		restServerUrl = "https://python-rest-server-ny43uciwwa-oc.a.run.app/joint-research-centre"; //AWS C9 environment only
             chart, slider;
         parser.parse();
         mapboxgl.accessToken = 'pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg'; //this is my access token

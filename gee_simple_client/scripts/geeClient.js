@@ -13,7 +13,7 @@ require({
 		if (!wdpa_id) {
 			alert('no wdpaid');
 		};
-		servicesDomain = "https://python-rest-server-ny43uciwwa-oc.a.run.apply/joint-research-centre/";
+		servicesDomain = "https://python-rest-server-ny43uciwwa-oc.a.run.app/joint-research-centre/";
 		esriRequest({
 			url : servicesDomain + "especies/get_pa_bbox",
 			content : {
