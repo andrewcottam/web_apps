@@ -10,7 +10,7 @@ define(["dojo/_base/lang", "dojo/json", "dojo/request/script", "dojo/dom-style",
 			}
 		},
 		startup : function() {
-			this.restServerUrl = "https://dopa-services.jrc.ec.europa.eu/services/";
+			this.restServerUrl = "https://python-rest-server-ny43uciwwa-oc.a.run.app/joint-research-centre";
 			var boundingBoxArray, llx, lly, urx, ury, ll, ur, bounds, grid, testDate;
 			boundingBoxArray = this.boundingBox.substring(this.boundingBox.indexOf("((") + 2, this.boundingBox.indexOf("))")).split(",");
 			llx = parseFloat(boundingBoxArray[0].split(" ")[0]);
@@ -27,8 +27,9 @@ define(["dojo/_base/lang", "dojo/json", "dojo/request/script", "dojo/dom-style",
 			this.map.setView([initialy, initialx], initialzoom);
 			L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 			}).addTo(this.map);
-			script.get(this.restServerUrl + "/ibex/especies/_get_pa_geojson?wdpa_id=" + this.wdpaid, {
-				jsonp : "callback"
+			// script.get(this.restServerUrl + "/especies/_get_pa_geojson?wdpa_id=" + this.wdpaid, {
+			script.get(this.restServerUrl + "/especies/_get_pa_geojson?wdpa_id=785", {
+					jsonp : "callback"
 			}).then(lang.hitch(this, function(response) {
 				var geojson = JSON.parse(response.records[0]._get_pa_geojson);
 				var geojsonFeature = {
