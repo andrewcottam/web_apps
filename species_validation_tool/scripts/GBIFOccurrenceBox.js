@@ -25,7 +25,7 @@ define(["dojo/_base/lang", "dojo/json", "dojo/request/script", "dojo/dom-style",
 			this.map = L.map(this.mapAttachNode);
 			initialzoom = this.map.getBoundsZoom(bounds);
 			this.map.setView([initialy, initialx], initialzoom);
-			L.tileLayer('https://{s}.tiles.mapbox.com/v3/blishten.ii637man/{z}/{x}/{y}.png', {
+			L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
 			}).addTo(this.map);
 			script.get(this.restServerUrl + "/ibex/especies/_get_pa_geojson?wdpa_id=" + this.wdpaid, {
 				jsonp : "callback"
