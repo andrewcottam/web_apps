@@ -1,5 +1,5 @@
-### webb_apps  
-Mainly simple demo pages based on a range of technologies. Many no longer available. <br/><br/>
+Collection of various web applications demonstrating a range of mostly mapping technologies. Lots no longer available and the online ones will only work if the Cloud SQL instance is running. 
+
 | Name | Description | Status |
 |------|-------------|--------|
 |Attractive Species Gallery | Gallery of charismatic species based on the number of images for the species from the Flickr API | <a href='http://andrewcottam.github.io/web_apps/attractive_species_gallery/index.html'>Online</a> |
