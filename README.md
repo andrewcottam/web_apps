@@ -50,5 +50,5 @@ Mainly simple demo pages based on a range of technologies. Many no longer availa
 |Restor Wayback Quality Assessment|Tool to assess the quality of the Wayback timeseries data|<a href='https://andrewcottam.github.io/web_apps/restor/wayback_quality_assessment.html'>Online</a>|
 |Restor OpenAerialMap viewer|View all of the available drone imagery on OpenAerialMap|<a href='https://andrewcottam.github.io/web_apps/restor/oam_viewing.html'>Online</a>|
 |Restor OpenAerialMap viewer (WorldView only)|View all of the available Maxar WorldView imagery on OpenAerialMap|<a href='https://andrewcottam.github.io/web_apps/restor/oam_viewing2.html'>Online</a>|
-|Restor Tree Detection viewer|View the tree detections from the Restor tree detection model on OpenAerialMap imagery|<a href='https://andrewcottam.github.io/web_apps/tree_detection/tcd_qa.html?drone_tile_id=60d6eaa1c700c600080d5534_10_00237.tif'>Online</a>
+|Restor Tree Detection viewer|View the tree detections from the Restor tree detection model on OpenAerialMap imagery|<a href='https://andrewcottam.github.io/web_apps/tree-detection-qa/tcd_qa.html?drone_tile_id=60d6eaa1c700c600080d5534_10_00237.tif'>Online</a>
 
