@@ -16,7 +16,7 @@ class UI extends Component {
     constructor(props) {
         super(props);
         //constants
-        this.SERVER = "https://tree-detection-server-ny43uciwwa-oc.a.run.app/"; //by default the tcd server runs on port 8081 to avoid other things on 8080
+        this.SERVER = (document.location.hostname === 'localhost') ? "http://localhost:8081" : "https://tree-detection-server-ny43uciwwa-oc.a.run.app"; //gcp microservice
         this.GET_INSTANCES_IMAGE_ENDPOINT = this.SERVER + "/getInstancesImage";
         this.GET_INSTANCES_ENDPOINT = this.SERVER + "/getInstances";
         //state
