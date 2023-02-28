@@ -105,7 +105,7 @@ class UI extends Component {
         //post to the server
         axios.post(this.GET_INSTANCES_IMAGE_ENDPOINT, data, { withCredentials: true }).then(response => {
             //get the url to the classified image
-            this.classified_image_url = this.SERVER + "/static/" + response.data.instances_image;
+            this.classified_image_url = this.SERVER + "/outputs/" + response.data.instances_image;
             //set the active image is classified to true
             this.active_image_is_classified = true;
             //set the url of the <img> element
