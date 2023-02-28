@@ -19,6 +19,7 @@ class UI extends Component {
         let url = new URL(document.URL);
         let query_params = url.searchParams;
         let revision_tag = (query_params.has('model')) ? query_params.get('model') : 'cambridge';
+        let model_copyright = (revision_tag === 'cambridge') ? 'Closed-canopy CNN model source: Alejandro Coca-Castro, Matt Allen, 2021 Tree crown detection (The Enviromental AI Book). http://acocac.github.io/environmental-ai-book/forest/modelling/forest-modelling-treecrown_deepforest.html Online; accessed Mon Nov 01 2021' : 'Restor Tree Detection model 2023';
         this.SERVER = (document.location.hostname === 'localhost') ? "http://localhost:8081" : "https://" + revision_tag + "---tree-detection-server-ny43uciwwa-oc.a.run.app"; //gcp microservices
         this.GET_INSTANCES_IMAGE_ENDPOINT = this.SERVER + "/getInstancesImage";
         this.GET_INSTANCES_ENDPOINT = this.SERVER + "/getInstances";
@@ -38,6 +39,7 @@ class UI extends Component {
             score_range_value: [0, 800],
             gee_copyright: '© 2014 WWF Aerial Survey of the Congo. WWF/NASA JPL/KfW/BMUB/BMZ',
             wms_copyright: 'Imagery from OpenAerialMap. Maxar Products. WorldView2 © 2021 Maxar Technologies.',
+            model_copyright: model_copyright,
             lng: 112.84350452926209, lat: -8.054735059174224, wms_endpoint: '' 
         };
         //connect the map load event to set the state
@@ -267,7 +269,7 @@ class UI extends Component {
                                         <DownloadIcon />
                                     </IconButton>
                                     <TreeCrownMetrics mode={this.state.mode} feature_collection={this.state.feature_collection} changeCrowns={this.changeCrowns.bind(this)} changeBoxes={this.changeBoxes.bind(this)} changeMasks={this.changeMasks.bind(this)} changeScores={this.changeScores.bind(this)} changeAreas={this.changeAreas.bind(this)} show_crowns={this.state.show_crowns} show_boxes={this.state.show_boxes} show_masks={this.state.show_masks} show_scores={this.state.show_scores} show_areas={this.state.show_areas} change_area_range={this.change_area_range.bind(this)} area_range_value={this.state.area_range_value} score_range_value={this.state.score_range_value} change_score_range={this.change_score_range.bind(this)}/>
-                                    <div className={'citation'}><i>Closed-canopy CNN model source:</i><div>Alejandro Coca-Castro, Matt Allen, 2021 <b>Tree crown detection (The Enviromental AI Book)</b>. http://acocac.github.io/environmental-ai-book/forest/modelling/forest-modelling-treecrown_deepforest.html Online; accessed Mon Nov 01 2021</div></div>
+                                    <div className={'citation'}>{this.state.model_copyright}</div>
                                 </div>
                 	        </td>
                 	   </tr>
