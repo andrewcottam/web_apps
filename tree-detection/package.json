@@ -2,7 +2,7 @@
   "name": "client",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://andrewcottam.github.io/web_apps/tree-detection/build",
+  "homepage": "https://andrewcottam.github.io/web_apps/tree-detection/build/",
   "dependencies": {
     "@arcgis/core": "^4.21.2",
     "@babel/runtime": "^7.16.3",
