@@ -20,13 +20,13 @@ class GeojsonLayer extends Component {
             //load the ESRI javascript libraries
             loadModules(["esri/layers/GraphicsLayer", 'esri/Graphic', "esri/geometry/Polygon", "esri/geometry/Point"]).then(([GraphicsLayer, Graphic, Polygon, Point]) => {
                 //create a new graphics layer to add the tree crown masks onto
-                this.masks_layer = new GraphicsLayer({visible: false });
+                this.masks_layer = new GraphicsLayer({visible: false});
                 //create a new graphics layer to add the tree crown bounding boxes onto
-                this.boxes_layer = new GraphicsLayer({visible: false });
+                this.boxes_layer = new GraphicsLayer({visible: false});
                 //create a new graphics layer to add the tree crown scores onto
-                this.scores_layer = new GraphicsLayer({visible: false });
+                this.scores_layer = new GraphicsLayer({visible: false});
                 //create a new graphics layer to add the tree crown areas onto
-                this.areas_layer = new GraphicsLayer({visible: false });
+                this.areas_layer = new GraphicsLayer({visible: false});
                 //create a convenience group of layers
                 this.sub_layers = [this.masks_layer, this.boxes_layer, this.scores_layer, this.areas_layer];
                 //add the layers to the map
@@ -41,16 +41,23 @@ class GeojsonLayer extends Component {
         }
         //if the react components visible property has changed, update each of the sub-layers visible property
         if (this.props.visible !== prevProps.visible) {
-            this.sub_layers.forEach(layer => {layer.visible = this.props.visible});
+            this.sub_layers.forEach(layer => {
+                if (!this.props.visible) layer.visible = this.props.visible;
+            });
             if (this.props.visible){
                 //move the layers to the top - depending on when each class loaded, the graphics layer may not be at the top
                 this.props.map.reorder(this.masks_layer, this.props.view.allLayerViews.length - 1);
                 this.props.map.reorder(this.boxes_layer, this.props.view.allLayerViews.length - 1);
                 this.props.map.reorder(this.scores_layer, this.props.view.allLayerViews.length - 1);
                 this.props.map.reorder(this.areas_layer, this.props.view.allLayerViews.length - 1);
+                //set the layer visibility only if the show_<layer> is true
+                this.boxes_layer.visible = this.props.show_boxes;
+                this.masks_layer.visible = this.props.show_masks;
+                this.scores_layer.visible = this.props.show_scores;
+                this.areas_layer.visible = this.props.show_areas;
             }
         }
-        //filter by layer - look for changes in visibility of the box, mask, score or area individual layers
+        //individual layer visibility toggling
         if (this.props.show_boxes !== prevProps.show_boxes) this.boxes_layer.visible = this.props.show_boxes;
         if (this.props.show_masks !== prevProps.show_masks) this.masks_layer.visible = this.props.show_masks;
         if (this.props.show_scores !== prevProps.show_scores) this.scores_layer.visible = this.props.show_scores;
