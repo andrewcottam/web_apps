@@ -11,6 +11,7 @@ import GeojsonLayer from './GeojsonLayer.js'; // to hold the delineated tree cro
 import GeeLayer from './GeeLayer.js'; // for the imagery coming from google earth engine
 import WaybackLayer from './WaybackLayer.js'; // for the imagery coming from esri wayback
 import TreeCrownMetrics from './TreeCrownMetrics.js';
+import { style } from '@mui/system';
 
 class UI extends Component {
     constructor(props) {
@@ -235,9 +236,9 @@ class UI extends Component {
                             <td className={'imageCell'}>
                                 <input ref={input => this.inputElement = input} type="file" onChange={this.imageChosen.bind(this)} style={{'display':'none'}}/>
                                 <img src={this.state.image_url} className={"image"} alt='drone' style={{width:"700px",height:"700px", 'display': (this.state.image_url && this.state.mode === 'static_image') ? 'block' : 'none'}} onLoad={this.imageLoaded.bind(this)}/>
-                                <Map className={'esri_map'} onLoad={this.handleMapLoad} mapProperties={{ basemap: {portalItem: {id: "96cff8b8e48d45548833f19e29f09943"}}}} viewProperties={{center: [this.state.lng, this.state.lat], zoom: 19}}>
+                                <Map className={'esri_map'} onLoad={this.handleMapLoad} mapProperties={{ basemap: {portalItem: {id: "96cff8b8e48d45548833f19e29f09943"}}}} viewProperties={{center: [this.state.lng, this.state.lat], zoom: 19}} style={{height: this.state.mode === 'static_image' ? 1: 700}}>
                             	    <GeeLayer detecting_tree_crowns={this.state.detecting_tree_crowns} blob_set={this.blob_set.bind(this)} visible={this.state.mode==='gee_layer'} layers={'WWF/carbon-maps/raw-data/imagery'} bands={"b1,b2,b3"} copyright={this.state.gee_copyright}/>
-                            	    <WaybackLayer blob_set={this.blob_set.bind(this)} visible={this.state.mode==='webtile_layer'} urlTemplate={this.state.wms_endpoint} copyright={this.state.wms_copyright}/>
+                            	    <WaybackLayer detecting_tree_crowns={this.state.detecting_tree_crowns}  blob_set={this.blob_set.bind(this)} visible={this.state.mode==='webtile_layer'} urlTemplate={this.state.wms_endpoint} copyright={this.state.wms_copyright}/>
                             	    <GeojsonLayer feature_collection={this.state.feature_collection} visible={this.state.mode!=='static_image' && this.state.show_crowns} show_boxes={this.state.show_boxes} show_masks={this.state.show_masks} show_scores={this.state.show_scores} show_areas={this.state.show_areas} area_range_value={this.state.area_range_value} score_range_value={this.state.score_range_value}/>
                             	</Map>
                                 <div className={'imageBackground'}></div>
@@ -269,10 +270,10 @@ class UI extends Component {
                                         <DownloadIcon />
                                     </IconButton>
                                     <TreeCrownMetrics mode={this.state.mode} feature_collection={this.state.feature_collection} changeCrowns={this.changeCrowns.bind(this)} changeBoxes={this.changeBoxes.bind(this)} changeMasks={this.changeMasks.bind(this)} changeScores={this.changeScores.bind(this)} changeAreas={this.changeAreas.bind(this)} show_crowns={this.state.show_crowns} show_boxes={this.state.show_boxes} show_masks={this.state.show_masks} show_scores={this.state.show_scores} show_areas={this.state.show_areas} change_area_range={this.change_area_range.bind(this)} area_range_value={this.state.area_range_value} score_range_value={this.state.score_range_value} change_score_range={this.change_score_range.bind(this)}/>
-                                    <div className={'citation'}>{this.state.model_copyright}</div>
                                 </div>
                 	        </td>
                 	   </tr>
+                       <tr><div className={'citation'}>{this.state.model_copyright}</div></tr>
             	   </tbody>
             	</table>
             </div>
