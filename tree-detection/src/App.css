@@ -118,10 +118,9 @@
 }
 
 .citation {
-  font-size: 13px;
   position: absolute;
-  bottom: 20px;
-  padding: 10px;
+  padding: 0px 20px;
+  text-align: left;
 }
 
 .esri_map {
@@ -163,9 +162,8 @@
   display:none;
 }
 .controls_container{
-  /*margin-left:20px;*/
     margin-left: 7px;
-    margin-top: 10px;  
+    margin-top: 20px;  
 }
 .checkbox{
   
@@ -197,7 +195,13 @@
   font-size: 42px;
   color:coral;
 }
+.trees_detected_count2{
+position: relative;
+top: -15px;
+left:2px;
+}
 .trees_detected{
   font-size: 22px;
-  color:chocolate;
+  color:coral;
+  top:-10px;
 }

@@ -43,15 +43,15 @@ class TreeCrownMetrics extends Component {
             const include_histogram = this.props.feature_collection.features.length > 0 && this.props.feature_collection.features[0].hasOwnProperty('properties') && this.props.feature_collection.features[0].properties.hasOwnProperty('area');
             const tree_crowns = (include_histogram) ? this.getHistogram(this.props.feature_collection) : [];
             const bar_chart = (include_histogram) ?
-                <BarChart width={400} height={250} data={tree_crowns} margin={{ top: 5, right: 20, left: 10, bottom: 5 }} >
-                    <XAxis dataKey="area" type="number" tick={{fontSize: 10}}>
-                        <Label value="Canopy area (m2)" offset={0} position="insideBottom" style={{ fontSize: 12, fill: 'rgba(0, 0, 0, 0.87)' }}/>
+                <BarChart width={600} height={355} data={tree_crowns} margin={{ top: 5, right: 20, left: 10, bottom: 5 }} style={{left:'-32px'}}>
+                    <XAxis dataKey="area" type="number" tick={{fontSize: 14}} axisLine={{strokeWidth:2}}>
+                        <Label value="Canopy area (m2)" offset={0} position="insideBottom" style={{ fontSize: 17, fill: 'rgba(0, 0, 0, 0.87)'}}/>
                     </XAxis>
-                    <YAxis tick={{fontSize: 10}}>
-                        <Label value="Count" angle="-90" style={{ fontSize: 12, fill: 'rgba(0, 0, 0, 0.87)' }}/>
+                    <YAxis tick={{fontSize: 14}} axisLine={{strokeWidth:2}}>
+                        <Label value="Count" angle="-90" style={{ fontSize: 17, fill: 'rgba(0, 0, 0, 0.87)' }}/>
                     </YAxis>
                     <CartesianGrid stroke="#f5f5f5" />
-                    <Bar dataKey="count" barSize={10} fill="#8884d8" isAnimationActive={false}/>
+                    <Bar dataKey="count" barSize={20} fill="#1976d2" isAnimationActive={false}/>
                 </BarChart> 
                 // <LineChart width={300} height={100} data={tree_crowns}>
                 //     <Line type="monotone" dataKey="count" stroke="#8884d8" strokeWidth={1} />
@@ -70,25 +70,22 @@ class TreeCrownMetrics extends Component {
             const controls = (this.props.mode !== 'static_image' && this.props.feature_collection.features.length > 0) ? 
                 <Box sx={{ width: 200 }} className='controls_container'>
                     <FormGroup>
-                        <FormControlLabel control={<Switch checked={this.props.show_crowns} size="small" onChange={this.props.changeCrowns}/>} label="" />
+                        <FormControlLabel control={<Switch checked={this.props.show_crowns} size="small" onChange={this.props.changeCrowns}/>} label=""/>
                     </FormGroup>                                    
-                    <div className='checkbox'>
-                        <Checkbox id='show_crowns_cb' label='Crowns' checked={this.props.show_crowns} size="small" onChange={this.props.changeCrowns}/>  
-                    </div>
                     <div>
-                        <div className='checkbox_nested'>
+                        <div className='checkbox'>
                             <Checkbox id='show_boxes_cb' label='Boxes' checked={this.props.show_boxes} size="small" onChange={this.props.changeBoxes} disabled={!this.props.show_crowns}/>  
                         </div>
-                        <div className='checkbox_nested'>
+                        <div className='checkbox'>
                             <Checkbox id='show_masks_cb' label='Masks' checked={this.props.show_masks} size="small" onChange={this.props.changeMasks} disabled={!this.props.show_crowns}/>  
                         </div>
-                        <div className='checkbox_nested'>
+                        <div className='checkbox'>
                             <Checkbox id='show_scores_cb' label='Scores' checked={this.props.show_scores} size="small" onChange={this.props.changeScores} disabled={!this.props.show_crowns}/>  
                             <span className='slider_container'>
                                 <Slider value={this.props.score_range_value} onChange={this.props.change_score_range} step={0.01} valueLabelDisplay="auto" size="small" max={1} style={{display: (this.props.show_crowns && this.props.show_scores) ? 'block' : 'none', marginBottom:'0px'}}/>
                             </span>
                         </div>
-                        <div className='checkbox_nested'>
+                        <div className='checkbox'>
                             <Checkbox id='show_areas_cb' label='Areas' checked={this.props.show_areas} size="small" onChange={this.props.changeAreas} disabled={!this.props.show_crowns}/>  
                             <span className='slider_container'>
                                 <Slider value={this.props.area_range_value} onChange={this.props.change_area_range} valueLabelDisplay="auto" size="small" max={area_slider_values.max} style={{display: (this.props.show_crowns && this.props.show_areas) ? 'block' : 'none', marginBottom:'0px'}}/>
@@ -99,7 +96,10 @@ class TreeCrownMetrics extends Component {
                 : null;
             return (
                 <div className='tree_crown_outer'> 
-                    <div className='trees_detected'><div className='trees_detected_count'>{this.props.feature_collection.features.length}</div> trees detected</div>
+                    <div className='trees_detected'>
+                        <div className='trees_detected_count'>{this.props.feature_collection.features.length}</div>
+                         <span className="trees_detected_count2"> trees detected</span>
+                    </div>
                     {bar_chart}
                     <div className='center'/>
                     {controls}
