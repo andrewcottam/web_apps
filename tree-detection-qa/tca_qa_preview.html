@@ -1,0 +1,445 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>TCD QA Preview</title>
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        .panelBorder {
+            /*border: 1px solid lightgray;*/
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.3), 0 6px 20px 0 rgba(0, 0, 0, 0.29);
+        }
+
+    </style>
+    <script src="https://kit.fontawesome.com/aafa4bf049.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.22/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.22/"></script>
+    <script>
+        require(["esri/widgets/Measurement", "esri/rest/identify", "esri/widgets/Slider", "esri/widgets/Legend", 'esri/Graphic', "dojo/dom-style", "esri/widgets/ScaleBar", "esri/layers/FeatureLayer", "esri/layers/WebTileLayer", "dojo/dom", "esri/geometry/Point", "dojo/ready", "dojo/keys", "dojo/on", "esri/config", "esri/Map", "esri/views/MapView"], function(Measurement, identify, Slider, Legend, Graphic, domStyle, ScaleBar, FeatureLayer, WebTileLayer, dom, Point, ready, keys, on, esriConfig, Map, MapView) {
+            ready(function() { //fired when the dom has finished loading
+                /*global fetch*/
+                /*global history */
+                const REST_SERVER_ENDPOINT = 'https://python-rest-server-ny43uciwwa-oc.a.run.app/tree-detection/services/';
+                const IMAGES_BATCH_SIZE = 1;
+                const DEFAULT_ZOOM = 18;
+                const OAM_LAYER_ID = 'oam_layer';
+                const RESOLUTION_DISPLAY_DPS = 2; //number of decimal places to round the resolution up to
+                const ACTIVE_SITE_MARKER_SYMBOL = { type: "simple-marker", color: [131, 179, 91, 0.8], outline: { color: [238, 238, 238, 1] }, size: 15 };
+                const OPEN_AERIAL_MAP_FEATURE_LAYER = 'https://tools.restor.eco/server/rest/services/Drone_centroids/MapServer/40';
+                var position = -1;
+                var measurement, search_params, images, map, view, current_image, current_image_graphic, image_resolution, drone_tile_id, resultsLayer, predicted_tree_layer, predicted_canopy_layer, labelled_canopy_layer, labelled_tree_layer, resultsLayerView;
+
+                //get the first batch of images
+                getImagesBatch().then(response => {
+                    //create the map
+                    createMap();
+                    //get the url parameters
+                    var url = new URL(document.URL);
+                    search_params = url.searchParams;
+                    //get the drone_tile_id from the query parameters
+                    drone_tile_id = (search_params.has('drone_tile_id')) ? search_params.get('drone_tile_id') : '59e62b853d6412ef72209aa5_10_00004.tif';
+                    moveToDroneTileId();
+                });
+
+                //creates the map and adds the site layer
+                function createMap() {
+                    esriConfig.apiKey = "AAPKdff200ae755a4311a527537ef705f7a6Hzk48Fi1fqk_O8vRHjCZk-7nNEOOH2JHvhTW2IpLzKyKo3vnPKJDJ2P3ieiSzKP0";
+                    map = new Map({ basemap: "arcgis-light-gray" });
+                    view = new MapView({
+                        map: map,
+                        zoom: DEFAULT_ZOOM,
+                        container: "viewDiv"
+                    });
+                    //remove all widgets including the zoom control
+                    view.ui.components = [];
+                    // create the drone tile layer
+                    const drone_tile_layer = new FeatureLayer({
+                        url: "https://tools.restor.eco/server/rest/services/Drone_tiles/MapServer/25",
+                        outFields: ["id"],
+                        popupTemplate: {
+                            "title": "Drone tile",
+                            "content": "<b>drone_tile_id:</b> {id}"
+                        },
+                        renderer: {
+                            type: "simple", // autocasts as new SimpleRenderer()
+                            symbol: {
+                                type: "simple-line",
+                                color: "lightgray",
+                                width: "2px",
+                                style: "short-dot"
+                            }
+                        }
+                    });
+                    // create the labelled tree layer
+                    labelled_tree_layer = new FeatureLayer({
+                        url: "https://tools.restor.eco/server/rest/services/Labelled_Trees/MapServer/34",
+                        outFields: ["annotation_id"],
+                        popupTemplate: {
+                            "title": "Labelled tree",
+                            "content": "<b>annotation_id:</b> {annotation_id}"
+                        },
+                        renderer: {
+                            type: "simple",
+                            symbol: {
+                                type: "simple-line",
+                                color: "lightgreen",
+                                width: "2px",
+                                style: "solid"
+                            }
+                        },
+                        visible: false
+                    });
+                    // create the labelled canopy layer
+                    labelled_canopy_layer = new FeatureLayer({
+                        url: "https://tools.restor.eco/server/rest/services/Labelled_Canopy/MapServer/37",
+                        renderer: {
+                            type: "simple",
+                            symbol: {
+                                type: "simple-line",
+                                color: "yellow",
+                                width: "2px",
+                                style: "solid"
+                            }
+                        },
+                        visible: false
+                    });
+                    // create the predicted tree layer
+                    predicted_tree_layer = new FeatureLayer({
+                        url: "https://tools.restor.eco/server/rest/services/Predicted_trees/MapServer/2",
+                        outFields: ["score"],
+                        popupTemplate: {
+                            "title": "Predicted tree",
+                            "content": "<b>score:</b> {score}"
+                        },
+                        renderer: {
+                            type: "simple",
+                            symbol: {
+                                type: "simple-line",
+                                color: "blue",
+                                width: "2px",
+                                style: "solid"
+                            }
+                        },
+                        visible: false
+                    });
+                    // create the predicted canopy layer
+                    predicted_canopy_layer = new FeatureLayer({
+                        url: "https://tools.restor.eco/server/rest/services/Predicted_canopy/MapServer/39",
+                        renderer: {
+                            type: "simple",
+                            symbol: {
+                                type: "simple-line",
+                                color: "orange",
+                                width: "2px",
+                                style: "solid"
+                            }
+                        },
+                        visible: false
+                    });
+                    // create the results layer
+                    resultsLayer = new FeatureLayer({
+                        url: "https://tools.restor.eco/server/rest/services/Results/MapServer/0",
+                        outFields: ["score"],
+                        popupTemplate: {
+                            "title": "Results",
+                            "content": "<b>score:</b> {score}"
+                        },
+                        renderer: {
+                            type: "unique-value",
+                            field: "status",
+                            uniqueValueInfos: [{
+                                value: "Labelled only",
+                                symbol: {
+                                    type: "simple-line",
+                                    color: "red",
+                                    width: "2px",
+                                    style: "solid"
+                                }
+                            }, {
+                                value: "Predicted only",
+                                symbol: {
+                                    type: "simple-line",
+                                    color: "blue",
+                                    width: "2px",
+                                    style: "solid"
+                                }
+                            }, {
+                                value: "Labelled and predicted",
+                                symbol: {
+                                    type: "simple-line",
+                                    color: "white",
+                                    width: "2px",
+                                    style: "solid"
+                                }
+                            }]
+                        }
+                    });
+                    // get the results layerview
+                    view.whenLayerView(resultsLayer).then((layerView) => {
+                        resultsLayerView = layerView;
+                    });
+                    // add the layers
+                    map.addMany([drone_tile_layer, labelled_canopy_layer, labelled_tree_layer, predicted_canopy_layer, predicted_tree_layer, resultsLayer]);
+                    // create the slider
+                    const slider = new Slider({
+                        container: "sliderDiv",
+                        min: 0,
+                        max: 100,
+                        values: [0],
+                        snapOnClickEnabled: false,
+                        visibleElements: {
+                            labels: true,
+                            rangeLabels: true
+                        }
+                    });
+                    slider.watch('values', function(event) {
+                        const score_filter_value = (event[0] / 100);
+                        resultsLayerView.filter = {
+                            where: "score > " + score_filter_value + ' or score is null'
+                        };
+                    });
+                    view.when(() => {
+                        //display the initial pixel resolution
+                        zoomChanged();
+                        //wire up the event handlers
+                        wireUpEventHandlers();
+                        //get the stats for the current drone tile
+                        getDroneTileStats();
+                    });
+                }
+
+                function getDroneTileStats() {
+                    // get the statistics for the current tile
+                    let query = resultsLayer.createQuery();
+                    query.where = "drone_tile_id = '" + drone_tile_id + "'";
+                    query.outFields = ["status", "id"];
+                    resultsLayer.queryFeatures(query).then((response) => {
+                        // get the counts
+                        var labelled_only_count = 0,
+                            predicted_only_count = 0,
+                            labelled_and_predicted_count = 0,
+                            predicted_in_canopy_count = 0;
+                        response.features.forEach(object => {
+                            switch (object.attributes.status) {
+                                case 'Labelled only':
+                                    labelled_only_count += 1;
+                                    break;
+                                case 'Predicted only':
+                                    predicted_only_count += 1;
+                                    break;
+                                case 'Labelled and predicted':
+                                    labelled_and_predicted_count += 1;
+                                    break;
+                                case 'Predicted within canopy':
+                                    predicted_in_canopy_count += 1;
+                                    break;
+                            }
+                        });
+                        // get the omission and comission percentages
+                        var omission = (1 - (labelled_and_predicted_count / (labelled_and_predicted_count + labelled_only_count))) * 100;
+                        omission = isNaN(omission) ? 0 : Math.round(omission);
+                        var commission = (predicted_only_count / (labelled_and_predicted_count + labelled_only_count)) * 100;
+                        commission = isNaN(commission) ? 0 : Math.round(commission);
+                        dom.byId("image_stats").innerHTML = '<span class="statuses">Labelled and predicted: ' + labelled_and_predicted_count + '</span><span class="statuses labelled_only">Labelled only: ' + labelled_only_count + '</span><span class="statuses predicted_only">Predicted only: ' + predicted_only_count + "</span><span class='statuses'>" + omission + "% omission</span><span class='statuses'>" + commission + "% commission</span>";
+                    });
+                }
+
+                //wire up the event handlers for keyboard events
+                function wireUpEventHandlers() {
+                    //wire up the onkey down handler
+                    on(document, "keydown", keydown);
+                    //set a watchable on the maps zoom
+                    view.watch('zoom', zoomChanged);
+                    //layer controls
+                    on(dom.byId("predicted_tree_layer"), "click", (event) => { predicted_tree_layer.visible = event.target.checked; });
+                    on(dom.byId("predicted_canopy_layer"), "click", (event) => { predicted_canopy_layer.visible = event.target.checked; });
+                    on(dom.byId("labelled_canopy_layer"), "click", (event) => { labelled_canopy_layer.visible = event.target.checked; });
+                    on(dom.byId("labelled_tree_layer"), "click", (event) => { labelled_tree_layer.visible = event.target.checked; });
+                    on(dom.byId("results"), "click", (event) => { resultsLayer.visible = event.target.checked; });
+                }
+
+                //gets an array of OAM images
+                function getImagesBatch() {
+                    var url = "get_oam_imagery_for_review?records_to_get=" + IMAGES_BATCH_SIZE;
+                    return new Promise((resolve, reject) => {
+                        fetch(REST_SERVER_ENDPOINT + url).then(response => {
+                            response.json().then((_json) => {
+                                images = _json.records;
+                                //reset the position
+                                position = -1;
+                                resolve();
+                            });
+                        });
+                    });
+                }
+
+                //triggered when the keyboards right arrow is pressed - moves to the next site
+                function movePosition(relativePosition) {
+                    //set the index position
+                    position = position + relativePosition;
+                    newImageSelected();
+                }
+
+                function moveToDroneTileId() {
+                    // get the position of the drone tile in the images array
+                    position = images.findIndex(object => {
+                        return object.drone_tile_id === drone_tile_id;
+                    });
+                    newImageSelected();
+                }
+
+                function newImageSelected() {
+                    //get the site at the current position 
+                    current_image = images[position];
+                    //update the maps location and wayback tile layers
+                    updateMap();
+                    //update the image info
+                    updateUI();
+                    //set the image resolution
+                    image_resolution = Number(current_image.resolution.substr(0, current_image.resolution.length - 1));
+                    //set the url parameter
+                    search_params.set('drone_tile_id', current_image.drone_tile_id);
+                    history.replaceState(null, null, "?" + search_params.toString());
+                    // update the drone_tile_id
+                    drone_tile_id = current_image.drone_tile_id;
+                    // get the stats
+                    getDroneTileStats();
+                }
+
+                function updateMap() {
+                    //update the center and zoom
+                    view.center = [current_image.lng, current_image.lat];
+                    view.zoom = DEFAULT_ZOOM;
+                    //remove the current oam layer
+                    const lyr = map.findLayerById(OAM_LAYER_ID);
+                    if (lyr) map.remove(lyr);
+                    //update the oam layers
+                    map.add(new WebTileLayer({ urlTemplate: current_image.itemurl, id: OAM_LAYER_ID }), 0);
+                }
+
+
+                function getCurrentSiteGeometry() {
+                    return {
+                        type: "point", // autocasts as new Point()
+                        longitude: current_image.lng,
+                        latitude: current_image.lat
+                    };
+                }
+
+                function moveCurrentSiteOnOverview() {
+                    current_image_graphic.geometry = getCurrentSiteGeometry();
+                }
+
+                function updateUI() {
+                    var html = "";
+                    //updates the ui with the info on the current image
+                    // ['platform', 'provider', 'sensor', 'date', 'resolution'].forEach(property => {
+                    ['provider', 'sensor', 'date', 'resolution'].forEach(property => {
+                        const value = (property === 'provider' && (current_image[property].length > 75)) ? current_image[property].substr(0, 75) + ".." : current_image[property];
+                        html += "<span class='imageData'>" + value + "</span>";
+                    });
+                    dom.byId("image_data").innerHTML = html;
+                    dom.byId('darwin_image_url').innerHTML = '<a href="' + current_image['darwin_image_url'] + '" target="blank">Darwin</a>';
+                }
+
+                function keydown(event) {
+                    switch (event.keyCode) {
+                        case (keys.RIGHT_ARROW):
+                            //move to the next site
+                            movePosition(1);
+                            break;
+                        case (keys.LEFT_ARROW):
+                            movePosition(-1);
+                            break;
+                        case (keys.UP_ARROW):
+                            break;
+                        case (keys.DOWN_ARROW):
+                            break;
+                        case (keys.SPACE):
+                            break;
+                        case (77): // letter m
+                            measurement.activeTool = "distance";
+                            measurement.visible = true;
+                            break;
+                        case (keys.ESCAPE): 
+                            measurement.visible = false;
+                            break;
+                        case (83): //letter s - open google street view at the maps center
+                            window.open('http://maps.google.com/maps?q=&layer=c&cbll=' + view.center.latitude + ',' + view.center.longitude, '_blank');
+                            break;
+                    }
+                }
+
+                function zoomChanged() {
+                    //get the resolution at the current zoom level
+                    dom.byId("map_resolution").innerHTML = view.resolution.toFixed(RESOLUTION_DISPLAY_DPS) + "m/pixel";
+                    //set the color to red if the map resolution is less than the image resolution, e.g. a 30cm image mapped at 15cm/pixel
+                    const res_color = (view.resolution.toFixed(RESOLUTION_DISPLAY_DPS) < image_resolution) ? 'red' : 'darkgreen';
+                    domStyle.set('map_resolution', 'color', res_color);
+                }
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <div id='imageInfoPanelContainer'>
+        <div id='imageInfoPanel' class='panelBorder'>
+            <span id='image_data'>
+                <!--dynamically generated content will go her-->
+            </span>
+            <span id='map_resolution' class='imageData'></span>
+            <span id='darwin_image_url' class='imageData'></span>
+            </span>
+        </div>
+    </div>
+    <div id='overviewContainer' class='panelBorder' alt='Click on a site to zoom to that site' title='Click on a site to zoom to that site'>
+        <div id="overviewDiv" class='handcursor'>
+            <!--overview map goes here-->
+        </div>
+    </div>
+    <div id='controls_panel' class='panelBorder'>
+        <div class='esri-widget__heading'>Layers</div>
+        <div>
+            <input type="checkbox" id="results" checked>
+            <label for="results">Results</label>
+        </div>
+        <div>
+            <input type="checkbox" id="predicted_tree_layer">
+            <label for="predicted_tree_layer">Predicted trees</label>
+        </div>
+        <div>
+            <input type="checkbox" id="predicted_canopy_layer">
+            <label for="predicted_canopy_layer">Predicted canopy</label>
+        </div>
+        <div>
+            <input type="checkbox" id="labelled_tree_layer">
+            <label for="labelled_tree_layer">Labelled trees</label>
+        </div>
+        <div>
+            <input type="checkbox" id="labelled_canopy_layer">
+            <label for="labelled_canopy_layer">Labelled canopy</label>
+        </div>
+        <div class='esri-widget__heading top-padding'>Scores</div>
+        <div id='sliderDiv'></div>
+    </div>
+    <div id='statsPanelContainer'>
+        <div id='statsPanel' class='panelBorder'>
+            <span class='imageData' id='image_stats'>
+                <!--dynamically generated content will go her-->
+            </span>
+        </div>
+    </div>
+</body>
+
+</html>
