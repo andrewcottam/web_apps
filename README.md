@@ -1,4 +1,4 @@
-Collection of various web applications demonstrating a range of mostly mapping technologies. Lots no longer available and the online ones will only work if the Cloud SQL instance is running. 
+Collection of various web applications demonstrating a range of mostly mapping technologies and some end-user tools. Lots no longer available and the online ones will only work if the Cloud SQL instance is running and the microservices are started. 
 
 | Name | Description | Status |
 |------|-------------|--------|
