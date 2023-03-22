@@ -1,0 +1,328 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>TCD QA Summary</title>
+
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+
+        #control_panel_container {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            margin-left: -199px;
+        }
+
+        #control_panel {
+            width: 388px;
+            padding: 5px;
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .slider_container {
+            padding-top: 17px;
+            padding-bottom: 6px;
+            text-align: right;
+            padding-right: 10px;
+        }
+
+        .slider_div_container {
+            display: inline-block;
+            height: 22px;
+        }
+
+        #statsPanelContainer {
+            display: none;
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            margin-left: -350px;
+        }
+
+        #statsPanel {
+            width: 700px;
+            padding-top: 3px;
+            padding-bottom: 3px;
+            text-align: center;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .imageData {
+            font-size: 14px;
+            padding: 6px;
+        }
+
+        .detailed_link {
+            font-size: 11px;
+        }
+
+        .panelBorder {
+            /*border: 1px solid lightgray;*/
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .esri-legend {
+            box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.2) !important;
+        }
+
+        .esri-slider {
+            margin: 0px !important;
+            font-size: 10px !important;
+            width: 250px !important;
+            background-color: rgba(0, 0, 0, 0.2) !important;
+        }
+
+        /* .esri-popup {
+            width:400px !important;
+        } */
+
+        .esri-feature {
+            width: 320px !important;
+        }
+
+        .esri-popup__content {
+            width: 320px !important;
+            height: 400px !important;
+        }
+
+        .esri-popup__main-container {
+            max-height: 425px !important;
+            width: 335px !important;
+        }
+
+        iframe {
+            width: 305px;
+            height: 250px;
+            border-style: none !important;
+        }
+
+        .preview_div {
+            padding-top: 10px;
+        }
+
+        .link_div {
+            padding-top: 10px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.24/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.24/"></script>
+    <script>
+        require(["esri/renderers/ClassBreaksRenderer", "esri/layers/VectorTileLayer", "esri/Basemap", "esri/widgets/Home", "esri/widgets/Slider", "esri/widgets/Legend", "esri/layers/FeatureLayer", "esri/config", "esri/Map", "esri/views/MapView"], function(ClassBreaksRenderer, VectorTileLayer, Basemap, Home, Slider, Legend, FeatureLayer, esriConfig, Map, MapView) {
+            esriConfig.apiKey = "AAPKdff200ae755a4311a527537ef705f7a6Hzk48Fi1fqk_O8vRHjCZk-7nNEOOH2JHvhTW2IpLzKyKo3vnPKJDJ2P3ieiSzKP0";
+            var summary_layer_view;
+            //light gray vector tile basemap
+            let basemap = new Basemap({
+                baseLayers: [
+                    new VectorTileLayer({
+                        url: "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+                        style: 'https://www.arcgis.com/sharing/rest/content/items/291da5eab3a0412593b66d384379f89f/resources/styles/root.json?f=pjson'
+                    })
+                ],
+                title: "basemap",
+                id: "basemap"
+            });
+            const map = new Map({ basemap: basemap });
+            const view = new MapView({
+                map: map,
+                center: [0, 20], // Longitude, latitude
+                zoom: 2, // Zoom level
+                container: "viewDiv" // Div element
+            });
+            // Add the Legend widget to the top right
+            let legend = new Legend({
+                view: view
+            });
+            let homeWidget = new Home({
+                view: view
+            });
+            // adds the home widget to the top left corner of the MapView
+            view.ui.add(homeWidget, "top-left");
+            // create the omission_slider
+            const omission_slider = new Slider({
+                container: "omission_slider_div",
+                min: 0,
+                max: 100,
+                values: [0, 100],
+                snapOnClickEnabled: false,
+                visibleElements: {
+                    labels: true,
+                    rangeLabels: true
+                },
+                labelFormatFunction: function(value, type) {
+                    return (type === "value") ? value.toFixed(0) : value;
+                }
+            });
+            // watch the omission_slider values
+            omission_slider.watch('values', (event) => {
+                summary_layer_view.filter = {
+                    where: "omission >= " + event[0] + " and omission <= " + event[1]
+                };
+            });
+            // create the commission_slider
+            const commission_slider = new Slider({
+                container: "commission_slider_div",
+                min: 0,
+                max: 10000,
+                values: [0, 10000],
+                snapOnClickEnabled: false,
+                visibleElements: {
+                    labels: true,
+                    rangeLabels: true
+                },
+                labelFormatFunction: (value, type) => {
+                    return (type === "value") ? value.toFixed(0) : value;
+                }
+            });
+            // watch the commission_slider values
+            commission_slider.watch('values', function(event) {
+                summary_layer_view.filter = {
+                    where: "commission >= " + event[0] + " and commission <= " + event[1]
+                };
+            });
+            // intercept the zoom in on the popup
+            view.popup.on("trigger-action", function(event) {
+                if (event.action.id === "zoom-to-feature") {
+                    if (view.popup.features.length > 0) {
+                        // zoom to the extent of the features
+                        view.goTo({
+                            target: view.popup.features,
+                            zoom: 14
+                        });
+                        view.popup.close();
+                    }
+                }
+            });
+            // create the graticule layer
+            let graticule_layer = new FeatureLayer({
+                url: "https://services.arcgis.com/nGt4QxSblgDfeJn9/arcgis/rest/services/Graticule/FeatureServer/5",
+                minScale: 10000000,
+            });
+            //create the label vector layer
+            let labels_layer = new VectorTileLayer({
+                url: "https://basemaps.arcgis.com/arcgis/rest/services/World_Basemap_v2/VectorTileServer",
+                style: 'https://www.arcgis.com/sharing/rest/content/items/1768e8369a214dfab4e2167d5c5f2454/resources/styles/root.json?f=pjson'
+            });
+            view.ui.add(legend, "top-right");
+            // create the drone footprint layer
+            const drone_footprint_layer = new FeatureLayer({
+                url: 'https://tools.restor.eco/server/rest/services/Drone_footprint/MapServer/28',
+                minScale: 1000000,
+                renderer: {
+                    type: "simple",
+                    symbol: {
+                        type: "simple-fill",
+                        color: [153, 127, 34, 1],
+                        style: "backward-diagonal",
+                        outline: {
+                            color: [153, 127, 34, 1],
+                            width: 1
+                        }
+                    }
+                }
+            });
+            // create the drone tile layer
+            const drone_tile_layer = new FeatureLayer({
+                url: "https://tools.restor.eco/server/rest/services/Drone_tiles/MapServer/25",
+                minScale: 500000,
+                renderer: {
+                    type: "simple",
+                    symbol: {
+                        type: "simple-line",
+                        color: "darkgray",
+                        width: "2px",
+                        style: "short-dot"
+                    }
+                }
+            });
+            // create the summary layer
+            const summary_layer = new FeatureLayer({
+                url: "https://tools.restor.eco/server/rest/services/Summary/MapServer/1",
+                outFields: ['omission', 'commission', 'drone_tile_id'],
+                popupTemplate: {
+                    "title": "Summary",
+                    content: function(feature) {
+                        const div = document.createElement('div');
+                        div.innerHTML = "Omission: " + feature.graphic.attributes.omission + "%<br>Commission: " + feature.graphic.attributes.commission + "%<div class='preview_div'><div class='iframediv'><iframe src='tcd_qa_preview.html?drone_tile_id=" + feature.graphic.attributes.drone_tile_id + "' title='Detailed View'></iframe></div><div class='link_div'><a href='tcd_qa.html?drone_tile_id=" + feature.graphic.attributes.drone_tile_id + "' target='_blank' alt='Open in the detailed view' title='Open in the detailed view' class='detailed_link'>" + feature.graphic.attributes.drone_tile_id + "</a></div></div>";
+                        return div;
+                    }
+                },
+                renderer: {
+                    type: "class-breaks",
+                    field: "omission",
+                    classBreakInfos: [{
+                        minValue: 0,
+                        maxValue: 10,
+                        symbol: {
+                            type: "simple-marker",
+                            size: 6,
+                            color: "black",
+                            outline: {
+                                width: 0.5,
+                                color: "white"
+                            }
+                        },
+                        label: "0 - 10"
+                    }, {
+                        minValue: 10,
+                        maxValue: 100,
+                        symbol: {
+                            type: "simple-marker",
+                            size: 6,
+                            color: "red",
+                            outline: {
+                                width: 0.5,
+                                color: "white"
+                            }
+                        },
+                        label: "10 - 100"
+                    }]
+                }
+            });
+            view.whenLayerView(summary_layer).then((layerView) => {
+                summary_layer_view = layerView;
+                //move the layer to the top above the labels
+            }); // add the layers
+            map.addMany([labels_layer, graticule_layer, drone_footprint_layer, drone_tile_layer, summary_layer]);
+        });
+    </script>
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+    <div id='control_panel_container'>
+        <div id='control_panel'>
+            <div class='slider_container'>
+                <span class='imageData'>Omission (%):</span>
+                <span class='slider_div_container'>
+                    <span id='omission_slider_div'></span>
+                </span>
+            </div>
+            <div class='slider_container'>
+                <span class='imageData'>Commission (%):</span>
+                <span class='slider_div_container'>
+                    <span id='commission_slider_div'></span>
+                </span>
+            </div>
+        </div>
+    </div>
+    <div id='statsPanelContainer'>
+        <div id='statsPanel' class='panelBorder'>
+            <span class='imageData' id='image_stats'>
+                biggedy biggedy bong
+                <!--dynamically generated content will go her-->
+            </span>
+        </div>
+    </div>
+</body>
+
+</html>
