@@ -118,11 +118,16 @@
 }
 
 .citation {
-  position: absolute;
+  /* position: absolute; */
   padding: 0px 20px;
   text-align: left;
 }
 
+.model{
+  text-align: left;
+  padding: 0px 15px;
+  line-height: 16px;
+}
 .esri_map {
   width: 700px;
   height: 700px;
@@ -141,7 +146,7 @@
 }
 
 .tree_crown_outer {
-  margin-top: 50px;
+  margin-top: 10px;
 }
 
 .status_box {

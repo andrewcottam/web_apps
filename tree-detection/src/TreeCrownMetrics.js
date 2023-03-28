@@ -1,6 +1,6 @@
 import { Component } from 'react';
 import { BarChart, Bar, XAxis, CartesianGrid, Label, YAxis } from 'recharts';
-import { AreaChart, Area, LineChart, Line, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+// import { AreaChart, Area, LineChart, Line, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 import { histogram } from "./Helpers.js";
 import Box from '@mui/material/Box';
@@ -38,7 +38,7 @@ class TreeCrownMetrics extends Component {
             //get the min/max values for the area slider and the marks
             const area_slider_values = this.get_slider_values(this.props.feature_collection.features, 'area', 'Tree crown area', "m2");
             //get the min/max values for the score slider and the marks
-            const score_slider_values = this.get_slider_values(this.props.feature_collection.features, 'score', 'Score','');
+            // const score_slider_values = this.get_slider_values(this.props.feature_collection.features, 'score', 'Score','');
             //see if we have area data for the tree crowns
             const include_histogram = this.props.feature_collection.features.length > 0 && this.props.feature_collection.features[0].hasOwnProperty('properties') && this.props.feature_collection.features[0].properties.hasOwnProperty('area');
             const tree_crowns = (include_histogram) ? this.getHistogram(this.props.feature_collection) : [];
