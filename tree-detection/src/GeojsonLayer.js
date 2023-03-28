@@ -11,6 +11,8 @@ import { loadModules } from 'esri-loader';
 class GeojsonLayer extends Component {
     constructor(props) {
         super(props);
+        // set a default value for the area threshold - this is used to filter out especially large inference polygons
+        this.defaultProps = { area_threshold: 1000 };
         this.state = { feature_collection: null };
     }
 
@@ -20,13 +22,13 @@ class GeojsonLayer extends Component {
             //load the ESRI javascript libraries
             loadModules(["esri/layers/GraphicsLayer", 'esri/Graphic', "esri/geometry/Polygon", "esri/geometry/Point"]).then(([GraphicsLayer, Graphic, Polygon, Point]) => {
                 //create a new graphics layer to add the tree crown masks onto
-                this.masks_layer = new GraphicsLayer({visible: false});
+                this.masks_layer = new GraphicsLayer({ visible: false });
                 //create a new graphics layer to add the tree crown bounding boxes onto
-                this.boxes_layer = new GraphicsLayer({visible: false});
+                this.boxes_layer = new GraphicsLayer({ visible: false });
                 //create a new graphics layer to add the tree crown scores onto
-                this.scores_layer = new GraphicsLayer({visible: false});
+                this.scores_layer = new GraphicsLayer({ visible: false });
                 //create a new graphics layer to add the tree crown areas onto
-                this.areas_layer = new GraphicsLayer({visible: false});
+                this.areas_layer = new GraphicsLayer({ visible: false });
                 //create a convenience group of layers
                 this.sub_layers = [this.masks_layer, this.boxes_layer, this.scores_layer, this.areas_layer];
                 //add the layers to the map
@@ -44,7 +46,7 @@ class GeojsonLayer extends Component {
             this.sub_layers.forEach(layer => {
                 if (!this.props.visible) layer.visible = this.props.visible;
             });
-            if (this.props.visible){
+            if (this.props.visible) {
                 //move the layers to the top - depending on when each class loaded, the graphics layer may not be at the top
                 this.props.map.reorder(this.masks_layer, this.props.view.allLayerViews.length - 1);
                 this.props.map.reorder(this.boxes_layer, this.props.view.allLayerViews.length - 1);
@@ -75,7 +77,7 @@ class GeojsonLayer extends Component {
     }
 
     //filters all graphics by the features property
-    filter(features, feature_property, min, max){
+    filter(features, feature_property, min, max) {
         // get the ids of the features that are within the range
         const filtered_features = features.filter(feature => {
             return (feature.properties[feature_property] >= min && feature.properties[feature_property] <= max);
@@ -93,7 +95,7 @@ class GeojsonLayer extends Component {
             });
         });
     }
-    
+
     //creates a polygon geometry from the coordinates
     createPolygon(coordinates) {
         const polygon = { type: "polygon", rings: coordinates };
@@ -111,7 +113,7 @@ class GeojsonLayer extends Component {
         //create the polygon from the features geometry
         const polygon = this.createPolygon(coordinates);
         //create the graphic from the polygon
-        const graphic = new this.Graphic({id: feature.properties.id, geometry: polygon, symbol: fillSymbol });
+        const graphic = new this.Graphic({ id: feature.properties.id, geometry: polygon, symbol: fillSymbol });
         return graphic;
     }
 
@@ -128,7 +130,7 @@ class GeojsonLayer extends Component {
         const polygon = this.createPolygon(feature.geometry.coordinates);
         //get the bounding box coordinates
         const extent = polygon.extent;
-        const bbox = [[extent.xmin, extent.ymin],[extent.xmin, extent.ymax],[extent.xmax, extent.ymax],[extent.xmax, extent.ymin],[extent.xmin, extent.ymin]];
+        const bbox = [[extent.xmin, extent.ymin], [extent.xmin, extent.ymax], [extent.xmax, extent.ymax], [extent.xmax, extent.ymin], [extent.xmin, extent.ymin]];
         //create the graphic for the bounding box with an outline transparency of 0.5, a fill transparency of 0 and a width of 2
         const graphic = this.createPolygonGraphic(feature, bbox, color, 0.5, 0, 2);
         return graphic;
@@ -157,10 +159,10 @@ class GeojsonLayer extends Component {
             case 'lr':
                 break;
             default:
-                // code
+            // code
         }
         let textSymbol = { type: "text", color: color, haloColor: "black", haloSize: "4px", text: text, xoffset: xoffset, yoffset: yoffset, font: { size: 8 } };
-        const graphic = new this.Graphic({id: feature.properties.id, geometry: point, symbol: textSymbol });
+        const graphic = new this.Graphic({ id: feature.properties.id, geometry: point, symbol: textSymbol });
         return graphic;
     }
 
@@ -177,7 +179,7 @@ class GeojsonLayer extends Component {
         //add the bounding box to the boxes graphics layer
         this.boxes_layer.add(bbox);
         //create the score graphic
-        color = [255,255,255];
+        color = [255, 255, 255];
         const score = this.createTextGraphic(feature, bbox, color, parseFloat(feature.properties.score.toFixed(2)) + "%", 'ul');
         //add the score to the scores graphics layer
         this.scores_layer.add(score);
@@ -191,10 +193,13 @@ class GeojsonLayer extends Component {
     addFeaturesAsGraphics(features) {
         //set a local pointer to the features
         this.features = features;
-        if (!this.already_rendered){
+        if (!this.already_rendered) {
             //iterate through the features and create all the graphics for each one
             features.forEach(feature => {
-                this.createAllGraphics(feature);
+                // filter the feature on the area - features with areas > area_threshold will not be rendered
+                if (feature.properties.area < this.props.area_threshold) {
+                    this.createAllGraphics(feature);
+                }
             });
             this.already_rendered = true;
         }
@@ -203,7 +208,7 @@ class GeojsonLayer extends Component {
     //removes all the graphics
     removeAllGraphics() {
         //iterate through the sub-layers and remove the graphics
-        if (this.sub_layers) this.sub_layers.forEach(layer => {layer.removeAll()});
+        if (this.sub_layers) this.sub_layers.forEach(layer => { layer.removeAll() });
         this.already_rendered = false;
     }
 
@@ -214,7 +219,7 @@ class GeojsonLayer extends Component {
         //if there are features with geometries then add them as graphics
         if (fc && fc.features && fc.features.length > 0 && fc.features[0].hasOwnProperty('geometry') && this.Graphic) this.addFeaturesAsGraphics(fc.features);
         return (
-            <div/>
+            <div />
         );
     }
 }
