@@ -36,6 +36,8 @@ class UI extends Component {
         };
         //connect the map load event to set the state
         this.handleMapLoad = this.handleMapLoad.bind(this);
+        //set a default value for the area threshold - this is used to filter out especially large inference polygon features
+        this.area_threshold = 1000;
     }
 
     setModel(model) {
@@ -123,8 +125,10 @@ class UI extends Component {
             this.active_image_is_classified = true;
             //set the url of the <img> element
             this.setState({ image_url: this.classified_image_url });
+            //filter the features by area
+            const feature_collection = this.filterFeatures(response.data.feature_collection);
             //set a local variable to the feature collection that will actually be updated when the classified image loads
-            this.fc = response.data.feature_collection;
+            this.fc = feature_collection;
         });
     }
 
@@ -172,13 +176,20 @@ class UI extends Component {
             data.append('lr', lr);
             //post to the server
             axios.post(this.GET_INSTANCES_ENDPOINT, data, { withCredentials: true, headers: { 'Content-Type': 'multipart/form-data' } }).then(response => {
+                //filter the features by area
+                const feature_collection = this.filterFeatures(response.data.instances_geojson);
                 //set the feature collection - this will draw the tree crowns
-                this.setState({ feature_collection: response.data.instances_geojson, detecting_tree_crowns: false });
+                this.setState({ feature_collection: feature_collection, detecting_tree_crowns: false });
                 resolve(response);
             });
         });
     }
 
+    filterFeatures(featurecollection) {
+        // filter the feature on the area - features with areas > area_threshold will not be rendered
+        featurecollection.features = featurecollection.features.filter(feature => (feature.properties.area < this.area_threshold));
+        return featurecollection;
+    }
     downloadInstances() {
         const file = new File([JSON.stringify(this.state.feature_collection)], 'tree_crowns.geojson', {
             type: 'text/plain',
