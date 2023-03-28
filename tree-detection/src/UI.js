@@ -11,6 +11,7 @@ import GeojsonLayer from './GeojsonLayer.js'; // to hold the delineated tree cro
 import GeeLayer from './GeeLayer.js'; // for the imagery coming from google earth engine
 import WaybackLayer from './WaybackLayer.js'; // for the imagery coming from esri wayback
 import TreeCrownMetrics from './TreeCrownMetrics.js';
+import Search from "@arcgis/core/widgets/Search.js";
 // import { style } from '@mui/system';
 
 class UI extends Component {
@@ -64,6 +65,15 @@ class UI extends Component {
             if (view.extent) {
                 this.ul = [view.extent.xmin, view.extent.ymax];
                 this.lr = [view.extent.xmax, view.extent.ymin];
+            }
+            if (!this.searchWidget) {
+                this.searchWidget = new Search({
+                    view: view
+                });
+                view.ui.add(this.searchWidget, {
+                    position: "top-right",
+                    index: 2
+                });
             }
         });
     }
