@@ -135,10 +135,8 @@ class UI extends Component {
             this.active_image_is_classified = true;
             //set the url of the <img> element
             this.setState({ image_url: this.classified_image_url });
-            //filter the features by area
-            const feature_collection = this.filterFeatures(response.data.feature_collection);
             //set a local variable to the feature collection that will actually be updated when the classified image loads
-            this.fc = feature_collection;
+            this.fc = response.data.instances_geojson;
         });
     }
 
@@ -251,6 +249,8 @@ class UI extends Component {
 
     //fired when the model changes
     changeModel(value) {
+        //reset the input file value
+        this.inputElement.value = '';
         this.setModel(value);
     }
     render() {
