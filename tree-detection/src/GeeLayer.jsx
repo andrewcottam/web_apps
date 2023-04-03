@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import BaseDynamicLayer from "@arcgis/core/layers/BaseDynamicLayer.js";
-import { when } from '@arcgis/core/core/reactiveUtils';
+// esri components
 import esriRequest from "@arcgis/core/request";
+import { when } from '@arcgis/core/core/reactiveUtils';
+import BaseDynamicLayer from "@arcgis/core/layers/BaseDynamicLayer.js";
 
-export default function GeeLayer(props) {
+export default function GEELayer(props) {
 
     const geeLayer = BaseDynamicLayer.createSubclass({
         properties: {

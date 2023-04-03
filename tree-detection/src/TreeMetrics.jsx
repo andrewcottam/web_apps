@@ -1,16 +1,18 @@
 import { Component } from 'react';
+// recharts components
 import { BarChart, Bar, XAxis, CartesianGrid, Label, YAxis } from 'recharts';
 // import { AreaChart, Area, LineChart, Line, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-
-import { histogram } from "./Helpers";
+// material-ui components
+import Switch from '@mui/material/Switch';
 import Box from '@mui/material/Box';
-import Checkbox from './Checkbox';
 import Slider from '@mui/material/Slider';
 import FormGroup from '@mui/material/FormGroup';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import Switch from '@mui/material/Switch';
+// custom components
+import Checkbox from './Checkbox';
+import { histogram } from "./Helpers";
 
-class TreeCrownMetrics extends Component {
+class TreeMetrics extends Component {
 
     //gets a histogram of the tree canopy area data
     getHistogram(feature_collection) {
@@ -112,4 +114,4 @@ class TreeCrownMetrics extends Component {
     }
 }
 
-export default TreeCrownMetrics;
+export default TreeMetrics;

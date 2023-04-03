@@ -1,7 +1,8 @@
 import React, { useRef, useEffect, useState } from "react";
+// esri components
 import MapView from "@arcgis/core/views/MapView";
 import Map from "@arcgis/core/Map.js";
-
+//styles
 import "./App.css";
 
 export default function ESRIMap(props) {

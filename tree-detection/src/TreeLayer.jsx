@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
+// esri components
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer.js";
 import Graphic from "@arcgis/core/Graphic.js";
-import Polygon from "@arcgis/core/geometry/Polygon.js";
 import Point from "@arcgis/core/geometry/Point.js";
+import Polygon from "@arcgis/core/geometry/Polygon.js";
 
 //converts an hue/saturation/value value into red/green/blue
 // input: h in [0,360] and s,v in [0,1] - output: r,g,b in [0,1]
