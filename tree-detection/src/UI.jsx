@@ -10,11 +10,11 @@ import Search from "@arcgis/core/widgets/Search.js";
 import { when } from '@arcgis/core/core/reactiveUtils';
 import { xyToLngLat } from "@arcgis/core/geometry/support/webMercatorUtils.js";
 // custom components
-import ESRIMap from './ESRIMap'
-import GEELayer from './GEELayer'; // for the imagery coming from google earth engine
-import WMTSLayer from './WMTSLayer'; // for the imagery coming from openaerialmap and esri wayback
-import TreeLayer from './TreeLayer'; // to hold the detected tree crowns
-import TreeMetrics from './TreeMetrics';
+import ESRIMap from './components/ESRIMap'
+import GEELayer from './components/GEELayer'; // for the imagery coming from google earth engine
+import WMTSLayer from './components/WMTSLayer'; // for the imagery coming from openaerialmap and esri wayback
+import TreeLayer from './components/TreeLayer'; // to hold the detected tree crowns
+import TreeMetrics from './components/TreeMetrics';
 
 class UI extends Component {
     constructor(props) {
@@ -221,6 +221,10 @@ class UI extends Component {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //ui events////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //fired when the user clicks on the show crowns checkbox
     changeCrowns(evt) {
