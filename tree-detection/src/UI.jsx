@@ -8,13 +8,13 @@ import DownloadIcon from '@mui/icons-material/Download';
 // esri components
 import Search from "@arcgis/core/widgets/Search.js";
 import { when } from '@arcgis/core/core/reactiveUtils';
-import * as webMercatorUtils from "@arcgis/core/geometry/support/webMercatorUtils.js";
+import { xyToLngLat } from "@arcgis/core/geometry/support/webMercatorUtils.js";
 // custom components
 import ESRIMap from './ESRIMap'
-import GeeLayer from './GeeLayer'; // for the imagery coming from google earth engine
+import GEELayer from './GEELayer'; // for the imagery coming from google earth engine
 import WMTSLayer from './WMTSLayer'; // for the imagery coming from openaerialmap and esri wayback
-import TreeLayer from './TreeLayer'; // to hold the delineated tree crowns
-import TreeCrownMetrics from './TreeCrownMetrics';
+import TreeLayer from './TreeLayer'; // to hold the detected tree crowns
+import TreeMetrics from './TreeMetrics';
 
 class UI extends Component {
     constructor(props) {
@@ -103,7 +103,10 @@ class UI extends Component {
         this.setState({ detecting_tree_crowns: true });
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //static image functions////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     //called when the user clicks on the drone button
     openFilePicker(e) {
         this.setState({ mode: 'static_image' });
@@ -154,7 +157,10 @@ class UI extends Component {
         this.active_image_is_classified = !this.active_image_is_classified;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //dynamic image functions////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     //fired when a dynamic image has been created/cleared and the blob data has been saved in the layer
     blob_set(blob) {
         const dynamic_image_state = (blob) ? false : true;
@@ -170,13 +176,9 @@ class UI extends Component {
             const data = new FormData();
             //add the image binary data to the request
             data.append('data', this.blob);
-            //get the upper right coordinate as a lat/long point
-            const ul = webMercatorUtils.xyToLngLat(this.state.view.extent.xmin, this.state.view.extent.ymax);
-            //get the lower left coordinate from the map extent
-            const lr = webMercatorUtils.xyToLngLat(this.state.view.extent.xmax, this.state.view.extent.ymin);
             //add the upper left and lower right coordinates to the request
-            data.append('ul', ul);
-            data.append('lr', lr);
+            data.append('ul', xyToLngLat(this.state.view.extent.xmin, this.state.view.extent.ymax));
+            data.append('lr', xyToLngLat(this.state.view.extent.xmax, this.state.view.extent.ymin));
             //post to the server
             axios.post(this.GET_INSTANCES_ENDPOINT, data, { withCredentials: true, headers: { 'Content-Type': 'multipart/form-data' } }).then(response => {
                 //filter the features by area - this is to remove any inferences that are greater than the area threshold
@@ -272,7 +274,7 @@ class UI extends Component {
                                 <input ref={input => this.inputElement = input} type="file" onChange={this.imageChosen.bind(this)} style={{ 'display': 'none' }} />
                                 <img src={this.state.image_url} className={"image"} alt='drone' style={{ width: "700px", height: "700px", 'display': (this.state.image_url && this.state.mode === 'static_image') ? 'block' : 'none' }} onLoad={this.imageLoaded.bind(this)} />
                                 <ESRIMap onLoad={this.handleMapLoad} mapProperties={{ basemap: { portalItem: { id: "96cff8b8e48d45548833f19e29f09943" } } }} viewProperties={{ center: [this.state.lng, this.state.lat], zoom: 19 }} style={{ height: this.state.mode === 'static_image' ? 1 : 700 }}>
-                                    <GeeLayer detecting_tree_crowns={this.state.detecting_tree_crowns} blob_set={this.blob_set.bind(this)} visible={this.state.mode === 'gee_layer'} layers={'WWF/carbon-maps/raw-data/imagery'} bands={"b1,b2,b3"} copyright={this.state.gee_copyright} />
+                                    <GEELayer detecting_tree_crowns={this.state.detecting_tree_crowns} blob_set={this.blob_set.bind(this)} visible={this.state.mode === 'gee_layer'} layers={'WWF/carbon-maps/raw-data/imagery'} bands={"b1,b2,b3"} copyright={this.state.gee_copyright} />
                                     <WMTSLayer detecting_tree_crowns={this.state.detecting_tree_crowns} blob_set={this.blob_set.bind(this)} visible={this.state.mode === 'webtile_layer'} urlTemplate={this.state.wms_endpoint} copyright={this.state.wms_copyright} />
                                     <TreeLayer feature_collection={this.state.feature_collection} visible={this.state.mode !== 'static_image' && this.state.show_crowns} show_boxes={this.state.show_boxes} show_masks={this.state.show_masks} show_scores={this.state.show_scores} show_areas={this.state.show_areas} area_range_value={this.state.area_range_value} score_range_value={this.state.score_range_value} />
                                 </ESRIMap>
@@ -304,7 +306,7 @@ class UI extends Component {
                                     <IconButton aria-label="delete" color="primary" onClick={this.downloadInstances.bind(this)} disabled={!this.state.feature_collection} title='Download the detected trees as Geojson'>
                                         <DownloadIcon />
                                     </IconButton>
-                                    <TreeCrownMetrics mode={this.state.mode} feature_collection={this.state.feature_collection} changeCrowns={this.changeCrowns.bind(this)} changeBoxes={this.changeBoxes.bind(this)} changeMasks={this.changeMasks.bind(this)} changeScores={this.changeScores.bind(this)} changeAreas={this.changeAreas.bind(this)} show_crowns={this.state.show_crowns} show_boxes={this.state.show_boxes} show_masks={this.state.show_masks} show_scores={this.state.show_scores} show_areas={this.state.show_areas} change_area_range={this.change_area_range.bind(this)} area_range_value={this.state.area_range_value} score_range_value={this.state.score_range_value} change_score_range={this.change_score_range.bind(this)} />
+                                    <TreeMetrics mode={this.state.mode} feature_collection={this.state.feature_collection} changeCrowns={this.changeCrowns.bind(this)} changeBoxes={this.changeBoxes.bind(this)} changeMasks={this.changeMasks.bind(this)} changeScores={this.changeScores.bind(this)} changeAreas={this.changeAreas.bind(this)} show_crowns={this.state.show_crowns} show_boxes={this.state.show_boxes} show_masks={this.state.show_masks} show_scores={this.state.show_scores} show_areas={this.state.show_areas} change_area_range={this.change_area_range.bind(this)} area_range_value={this.state.area_range_value} score_range_value={this.state.score_range_value} change_score_range={this.change_score_range.bind(this)} />
                                 </div>
                             </td>
                         </tr>

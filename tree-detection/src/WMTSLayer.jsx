@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import WebTileLayer from "@arcgis/core/layers/WebTileLayer.js";
+// esri components
 import { when } from '@arcgis/core/core/reactiveUtils';
+import WebTileLayer from "@arcgis/core/layers/WebTileLayer.js";
 
 export default function WMTSLayer(props) {
 
