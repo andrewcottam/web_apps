@@ -13,7 +13,7 @@ import * as webMercatorUtils from "@arcgis/core/geometry/support/webMercatorUtil
 import ESRIMap from './ESRIMap'
 import GeeLayer from './GeeLayer'; // for the imagery coming from google earth engine
 import WMTSLayer from './WMTSLayer'; // for the imagery coming from openaerialmap and esri wayback
-import TreeDetectionLayer from './TreeDetectionLayer'; // to hold the delineated tree crowns
+import TreeLayer from './TreeLayer'; // to hold the delineated tree crowns
 import TreeCrownMetrics from './TreeCrownMetrics';
 
 class UI extends Component {
@@ -43,6 +43,11 @@ class UI extends Component {
         this.area_threshold = 1000;
     }
 
+    componentDidMount() {
+        // set the initial model
+        this.setModel('cambridge');
+    }
+
     setModel(model) {
         // get the Cloud Run endpoint depending on which model is being specified
         let model_copyright = (model === 'cambridge') ? 'Alejandro Coca-Castro, Matt Allen, 2021 Tree crown detection (The Enviromental AI Book). http://acocac.github.io/environmental-ai-book/forest/modelling/forest-modelling-treecrown_deepforest.html Online; accessed Mon Nov 01 2021' : 'Restor Tree Detection model 2023';
@@ -51,11 +56,6 @@ class UI extends Component {
         this.GET_INSTANCES_IMAGE_ENDPOINT = this.SERVER + "/getInstancesImage";
         this.GET_INSTANCES_ENDPOINT = this.SERVER + "/getInstances";
     }
-    componentDidMount() {
-        // set the initial model
-        this.setModel('cambridge');
-    }
-
     handleMapLoad(map, view) {
         this.setState({ map, view });
         when(() => view.stationary === true, () => {
@@ -274,7 +274,7 @@ class UI extends Component {
                                 <ESRIMap onLoad={this.handleMapLoad} mapProperties={{ basemap: { portalItem: { id: "96cff8b8e48d45548833f19e29f09943" } } }} viewProperties={{ center: [this.state.lng, this.state.lat], zoom: 19 }} style={{ height: this.state.mode === 'static_image' ? 1 : 700 }}>
                                     <GeeLayer detecting_tree_crowns={this.state.detecting_tree_crowns} blob_set={this.blob_set.bind(this)} visible={this.state.mode === 'gee_layer'} layers={'WWF/carbon-maps/raw-data/imagery'} bands={"b1,b2,b3"} copyright={this.state.gee_copyright} />
                                     <WMTSLayer detecting_tree_crowns={this.state.detecting_tree_crowns} blob_set={this.blob_set.bind(this)} visible={this.state.mode === 'webtile_layer'} urlTemplate={this.state.wms_endpoint} copyright={this.state.wms_copyright} />
-                                    <TreeDetectionLayer feature_collection={this.state.feature_collection} visible={this.state.mode !== 'static_image' && this.state.show_crowns} show_boxes={this.state.show_boxes} show_masks={this.state.show_masks} show_scores={this.state.show_scores} show_areas={this.state.show_areas} area_range_value={this.state.area_range_value} score_range_value={this.state.score_range_value} />
+                                    <TreeLayer feature_collection={this.state.feature_collection} visible={this.state.mode !== 'static_image' && this.state.show_crowns} show_boxes={this.state.show_boxes} show_masks={this.state.show_masks} show_scores={this.state.show_scores} show_areas={this.state.show_areas} area_range_value={this.state.area_range_value} score_range_value={this.state.score_range_value} />
                                 </ESRIMap>
                                 <div className={'imageBackground'}></div>
                                 {/* Detecting trees spinner */}

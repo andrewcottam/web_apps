@@ -11,7 +11,7 @@ import Point from "@arcgis/core/geometry/Point.js";
 //     return [f(5) * 255, f(3) * 255, f(1) * 255];
 // }
 
-export default function TreeDetectionLayer(props) {
+export default function TreeLayer(props) {
 
     //filters all graphics by the area and score
     function filterTrees(features, minArea, maxArea, minScore, maxScore) {
@@ -189,16 +189,16 @@ export default function TreeDetectionLayer(props) {
         if (props.map && !sub_layers) createLayers(props);
         if (props.feature_collection) {
             const trees = props.feature_collection.features;
-            // create the graphics for all of the features
+            // create the graphics for all of the trees
             createTreeGraphics(trees);
             // set the visibility of layers
             setLayerVisibility(props);
-            //filter the trees by area and score
+            // filter the trees by area and score
             filterTrees(trees, props.area_range_value[0], props.area_range_value[1], props.score_range_value[0], props.score_range_value[1]);
-        }else{
-            //remove all the trees
+        } else {
+            // remove all the trees
             removeTreeGraphics();
-            //reinitialise the trees_created array
+            // reinitialise the trees_created array
             setTrees_created([]);
         }
     }, [props.map, props.feature_collection, props.visible, props.show_masks, props.show_boxes, props.show_scores, props.show_areas, props.area_range_value, props.score_range_value]);
