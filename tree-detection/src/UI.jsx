@@ -7,7 +7,6 @@ import IconButton from '@mui/material/IconButton';
 import DownloadIcon from '@mui/icons-material/Download';
 // esri components
 import Search from "@arcgis/core/widgets/Search.js";
-import { when } from '@arcgis/core/core/reactiveUtils';
 import { xyToLngLat } from "@arcgis/core/geometry/support/webMercatorUtils.js";
 // custom components
 import ESRIMap from './components/ESRIMap'
@@ -37,8 +36,6 @@ class UI extends Component {
             wms_copyright: 'Imagery from OpenAerialMap. Maxar Products. WorldView2 © 2021 Maxar Technologies.',
             lng: 112.84350452926209, lat: -8.054735059174224, wms_endpoint: ''
         };
-        //connect the map load event to set the state
-        this.handleMapLoad = this.handleMapLoad.bind(this);
         //set a default value for the area threshold - this is used to filter out especially large inference polygon features
         this.area_threshold = 1000;
     }
@@ -58,21 +55,15 @@ class UI extends Component {
     }
     handleMapLoad(map, view) {
         this.setState({ map, view });
-        when(() => view.stationary === true, () => {
-            if (view.extent) {
-                this.ul = [view.extent.xmin, view.extent.ymax];
-                this.lr = [view.extent.xmax, view.extent.ymin];
-            }
-            if (!this.searchWidget) {
-                this.searchWidget = new Search({
-                    view: view
-                });
-                view.ui.add(this.searchWidget, {
-                    position: "top-right",
-                    index: 2
-                });
-            }
-        });
+        if (!this.searchWidget) {
+            this.searchWidget = new Search({
+                view: view
+            });
+            view.ui.add(this.searchWidget, {
+                position: "top-right",
+                index: 2
+            });
+        }
     }
 
     changeToGeeImage() {
@@ -109,12 +100,12 @@ class UI extends Component {
 
     //called when the user clicks on the drone button
     openFilePicker(e) {
-        this.setState({ mode: 'static_image' });
         this.inputElement.click();
     }
 
     //sets the properties of the image that the user has selected for TCD
     imageChosen(e) {
+        this.setState({ mode: 'static_image' });
         this.raw_image_url = URL.createObjectURL(e.target.files[0]);
         this.selectedFile = e.target.files[0];
         //once the state has been set, send the image for processing
@@ -276,12 +267,12 @@ class UI extends Component {
                         <tr>
                             <td className={'imageCell'}>
                                 <input ref={input => this.inputElement = input} type="file" onChange={this.imageChosen.bind(this)} style={{ 'display': 'none' }} />
-                                <img src={this.state.image_url} className={"image"} alt='drone' style={{ width: "700px", height: "700px", 'display': (this.state.image_url && this.state.mode === 'static_image') ? 'block' : 'none' }} onLoad={this.imageLoaded.bind(this)} />
-                                <ESRIMap onLoad={this.handleMapLoad} mapProperties={{ basemap: { portalItem: { id: "96cff8b8e48d45548833f19e29f09943" } } }} viewProperties={{ center: [this.state.lng, this.state.lat], zoom: 19 }} style={{ height: this.state.mode === 'static_image' ? 1 : 700 }}>
+                                <ESRIMap onLoad={this.handleMapLoad.bind(this)} mapProperties={{ basemap: { portalItem: { id: "96cff8b8e48d45548833f19e29f09943" } } }} viewProperties={{ center: [this.state.lng, this.state.lat], zoom: 19 }}>
                                     <GEELayer detecting_tree_crowns={this.state.detecting_tree_crowns} blob_set={this.blob_set.bind(this)} visible={this.state.mode === 'gee_layer'} layers={'WWF/carbon-maps/raw-data/imagery'} bands={"b1,b2,b3"} copyright={this.state.gee_copyright} />
                                     <WMTSLayer detecting_tree_crowns={this.state.detecting_tree_crowns} blob_set={this.blob_set.bind(this)} visible={this.state.mode === 'webtile_layer'} urlTemplate={this.state.wms_endpoint} copyright={this.state.wms_copyright} />
                                     <TreeLayer feature_collection={this.state.feature_collection} visible={this.state.mode !== 'static_image' && this.state.show_crowns} show_boxes={this.state.show_boxes} show_masks={this.state.show_masks} show_scores={this.state.show_scores} show_areas={this.state.show_areas} area_range_value={this.state.area_range_value} score_range_value={this.state.score_range_value} />
                                 </ESRIMap>
+                                <img src={this.state.image_url} className={"image"} alt='drone' style={{ width: "700px", height: "700px", 'display': (this.state.image_url && this.state.mode === 'static_image') ? 'block' : 'none' }} onLoad={this.imageLoaded.bind(this)} />
                                 <div className={'imageBackground'}></div>
                                 {/* Detecting trees spinner */}
                                 <div className="status_box" style={{ display: this.state.detecting_tree_crowns ? "block" : "none" }} >
