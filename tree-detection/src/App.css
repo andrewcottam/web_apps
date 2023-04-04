@@ -86,7 +86,9 @@
 }
 
 .image {
-  margin: 10px;
+  position: absolute;
+  top: 14px;
+  left: 12px;
 }
 
 .classified_image {
@@ -98,6 +100,7 @@
 .imageCell {
   width: 722px;
   height: 722px;
+  padding-left:10px
 }
 
 .buttonCell {
@@ -112,9 +115,9 @@
   border: 1px solid lightgray;
   position: absolute;
   left: 9px;
-  top: 9px;
+  top: 11px;
   color: lightgray;
-  z-index: -1;
+  /* z-index: -1; */
 }
 
 .citation {
@@ -131,7 +134,9 @@
 .esri_map {
   width: 700px;
   height: 700px;
-  margin-left: 10px;
+  /* position: absolute;
+  left: 12px;
+  top: 12px;   */
 }
 
 .span {
