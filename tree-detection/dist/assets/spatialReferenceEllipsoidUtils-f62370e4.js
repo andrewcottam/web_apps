@@ -1,0 +1,1 @@
+import{b2 as a,g6 as o,g7 as r,g8 as t,g9 as w,f$ as c,ax as n,g0 as m}from"./index-4a807205.js";const $=new a(o),f=new a(r),g=new a(t);new a(w);function p(s){return s&&(c(s)||n(s,f))?f:s&&(m(s)||n(s,g))?g:$}export{p as c};
