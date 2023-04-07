@@ -4,7 +4,7 @@
 To start the React front end, start the Vite development server:
 ```
 cd tree-detection
-npm run start
+npm run dev
 ```
 
 ## Start the tree-detection-server microservice
