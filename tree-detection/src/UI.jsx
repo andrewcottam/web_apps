@@ -9,11 +9,12 @@ import DownloadIcon from '@mui/icons-material/Download';
 import Search from "@arcgis/core/widgets/Search.js";
 import { xyToLngLat } from "@arcgis/core/geometry/support/webMercatorUtils.js";
 // custom components
-import ESRIMap from './components/ESRIMap'
+import ESRIMap from './components/ESRIMap'; // React wrapper around the ESRI Map component 
 import GEELayer from './components/GEELayer'; // for the imagery coming from google earth engine
 import WMTSLayer from './components/WMTSLayer'; // for the imagery coming from openaerialmap and esri wayback
-import TreeLayer from './components/TreeLayer'; // to hold the detected tree crowns
-import TreeMetrics from './components/TreeMetrics';
+import TreeLayer from './components/TreeLayer'; // to render the detected tree crowns as a layer on the map
+import TreeMetrics from './components/TreeMetrics'; // to show the metrics for the detected tree crowns
+import RGBPixelPlot from './components/RGBPixelPlot';
 
 class UI extends Component {
     constructor(props) {
@@ -34,7 +35,7 @@ class UI extends Component {
             score_range_value: [0.08, 1],
             gee_copyright: '© 2014 WWF Aerial Survey of the Congo. WWF/NASA JPL/KfW/BMUB/BMZ',
             wms_copyright: 'Imagery from OpenAerialMap. Maxar Products. WorldView2 © 2021 Maxar Technologies.',
-            lng: 112.84350452926209, lat: -8.054735059174224, wms_endpoint: ''
+            lng: 112.84350452926209, lat: -8.054735059174224, wms_endpoint: '', b_and_w: false, canvas: undefined
         };
         //set a default value for the area threshold - this is used to filter out especially large inference polygon features
         this.area_threshold = 1000;
@@ -149,15 +150,17 @@ class UI extends Component {
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //dynamic image functions////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //dynamic image functions///////////////////////x/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //fired when a dynamic image has been created/cleared and the blob data has been saved in the layer
-    blob_set(blob) {
-        const dynamic_image_state = (blob) ? false : true;
+    // fired when a canvas has been rendered or cleared in a layer
+    canvas_set(canvas) {
         //set the state of the getting_dynamic_image
-        this.setState({ getting_dynamic_image: dynamic_image_state });
-        this.blob = blob;
+        this.setState({ getting_dynamic_image: (canvas) ? false : true,  canvas: canvas});
+        // save the canvas image data as a blob suitable for sending to the server for tcd
+        if (canvas) canvas.toBlob(blob => {
+            this.blob = blob;
+        });
     }
 
     //sends the dynamic image blob to the server to do tcd on it
@@ -177,7 +180,7 @@ class UI extends Component {
                 //merge the returned features with any existing features
                 const merged_feature_collection = this.mergeFeatureCollections(feature_collection)
                 //set the feature collection - this will draw the tree crowns
-                this.setState({ feature_collection: merged_feature_collection, detecting_tree_crowns: false });
+                this.setState({ feature_collection: merged_feature_collection, detecting_tree_crowns: false, b_and_w: true });
                 resolve(response);
             });
         });
@@ -267,13 +270,13 @@ class UI extends Component {
                         <tr>
                             <td className={'imageCell'}>
                                 <input ref={input => this.inputElement = input} type="file" onChange={this.imageChosen.bind(this)} style={{ 'display': 'none' }} />
+                                <div className={'imageBackground'}></div>
                                 <ESRIMap onLoad={this.handleMapLoad.bind(this)} mapProperties={{ basemap: { portalItem: { id: "96cff8b8e48d45548833f19e29f09943" } } }} viewProperties={{ center: [this.state.lng, this.state.lat], zoom: 19 }}>
-                                    <GEELayer detecting_tree_crowns={this.state.detecting_tree_crowns} blob_set={this.blob_set.bind(this)} visible={this.state.mode === 'gee_layer'} layers={'WWF/carbon-maps/raw-data/imagery'} bands={"b1,b2,b3"} copyright={this.state.gee_copyright} />
-                                    <WMTSLayer detecting_tree_crowns={this.state.detecting_tree_crowns} blob_set={this.blob_set.bind(this)} visible={this.state.mode === 'webtile_layer'} urlTemplate={this.state.wms_endpoint} copyright={this.state.wms_copyright} />
+                                    <GEELayer detecting_tree_crowns={this.state.detecting_tree_crowns} canvas_set={this.canvas_set.bind(this)} visible={this.state.mode === 'gee_layer'} layers={'WWF/carbon-maps/raw-data/imagery'} bands={"b1,b2,b3"} copyright={this.state.gee_copyright} />
+                                    <WMTSLayer detecting_tree_crowns={this.state.detecting_tree_crowns} canvas_set={this.canvas_set.bind(this)} visible={this.state.mode === 'webtile_layer'} urlTemplate={this.state.wms_endpoint} copyright={this.state.wms_copyright} />
                                     <TreeLayer feature_collection={this.state.feature_collection} visible={this.state.mode !== 'static_image' && this.state.show_crowns} show_boxes={this.state.show_boxes} show_masks={this.state.show_masks} show_scores={this.state.show_scores} show_areas={this.state.show_areas} area_range_value={this.state.area_range_value} score_range_value={this.state.score_range_value} />
                                 </ESRIMap>
                                 <img src={this.state.image_url} className={"image"} alt='drone' style={{ width: "700px", height: "700px", 'display': (this.state.image_url && this.state.mode === 'static_image') ? 'block' : 'none' }} onLoad={this.imageLoaded.bind(this)} />
-                                <div className={'imageBackground'}></div>
                                 {/* Detecting trees spinner */}
                                 <div className="status_box" style={{ display: this.state.detecting_tree_crowns ? "block" : "none" }} >
                                     <Sync sx={{ fontSize: 60 }} className={"spin"} />
@@ -302,6 +305,7 @@ class UI extends Component {
                                         <DownloadIcon />
                                     </IconButton>
                                     <TreeMetrics mode={this.state.mode} feature_collection={this.state.feature_collection} changeCrowns={this.changeCrowns.bind(this)} changeBoxes={this.changeBoxes.bind(this)} changeMasks={this.changeMasks.bind(this)} changeScores={this.changeScores.bind(this)} changeAreas={this.changeAreas.bind(this)} show_crowns={this.state.show_crowns} show_boxes={this.state.show_boxes} show_masks={this.state.show_masks} show_scores={this.state.show_scores} show_areas={this.state.show_areas} change_area_range={this.change_area_range.bind(this)} area_range_value={this.state.area_range_value} score_range_value={this.state.score_range_value} change_score_range={this.change_score_range.bind(this)} />
+                                    <RGBPixelPlot canvas={this.state.canvas} />
                                 </div>
                             </td>
                         </tr>

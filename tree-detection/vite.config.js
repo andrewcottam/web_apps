@@ -5,4 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   base: "/web_apps/tree-detection/dist",
   plugins: [react()],
+  server: {
+    open: '/web_apps/tree-detection/dist',
+  },  
 })
