@@ -16,8 +16,8 @@ export default function GEELayer(props) {
         constructor: function (props) {
             // when the view is stationary
             when(() => props.view.stationary === true, () => {
-                //reset the blob data
-                if (this.visible) this.set_blob(undefined);
+                //reset the canvas
+                if (this.visible) this._canvas_set(undefined);
             });
         },
 
@@ -56,33 +56,26 @@ export default function GEELayer(props) {
             }, "");
         },
 
-        //save the image data as a blob suitable for sending to the server for tcd
-        set_blob(blob) {
-            this.blob = blob;
-            //call the blob_set method - this is a hook for clients to get the value of the blob
-            if (this.blob_set) this.blob_set(blob);
+        // when the canvas has been set, lift the state up to clients that use the image data
+        _canvas_set() {
+            if (this.canvas_set) this.canvas_set(this.canvas);
         },
 
         //makes a request for an image from google earth engine using the url generated from getImageUrl
         fetchImageFromGEE: function (extent, width, height) {
             let url = this.getImageUrl(extent, width, height);
             return esriRequest(url, { responseType: "image" }).then((response) => {
-                //draw the image onto the canvas - the image is an <img> html element that points to the image_url
+                // draw the image onto the canvas - the image is an <img> html element that points to the image_url
                 this.context.drawImage(response.data, 0, 0, width, height);
-                //save the image data as a blob suitable for sending to the server for tcd
-                this.canvas.toBlob(blob => {
-                    this.set_blob(blob);
-                });
+                // call the canvas method to indicate that the canvas has been rendered
+                this._canvas_set();
                 return this.canvas;
             });
         },
 
         //returns the image data from the canvas context
         fetchImageDataFromCache: function () {
-            if (this.canvas) {
-                const cnx = this.canvas.getContext("2d");
-                return cnx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-            }
+            if (this.canvas) return this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
         },
 
         //converts the colour image that is currently on the canvas to a black and white one
@@ -145,7 +138,7 @@ export default function GEELayer(props) {
                 bands: props.bands
             },
             view: props.view,
-            blob_set: props.blob_set,
+            canvas_set: props.canvas_set,
             visible: false,
             copyright: props.copyright
         });
@@ -158,7 +151,8 @@ export default function GEELayer(props) {
     useEffect(() => {
         if (props.map && !layer) createLayer(props);
         if (layer) layer.visible = props.visible;
-    }, [props.map, props.visible]);
+        if (layer && props.b_and_w) layer.imageToBlackAndWhite();
+    }, [props.map, props.visible, props.b_and_w]);
 
     return <div></div>;
 }

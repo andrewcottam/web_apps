@@ -1,7 +1,7 @@
 # Testing locally
 
 ## Start the front end
-To start the React front end, start the development server:
+To start the React front end, start the Vite development server:
 ```
 cd tree-detection
 npm run start
@@ -14,10 +14,10 @@ docker run --rm -it -v /Users/andrewcottam/Documents/GitHub/tree-detection-serve
 ```
 
 # Deploying
-There are issues with building and Git ignoring some of the build files. So do this to deploy:
+Web_apps is deployed on GitHub on the gh-pages branch which is build automatically on a push. First, you have to build the code for deployment (using Vite):
 
 ```
 cd tree-detection
 npm run build
 ```
-And then commit and push
+Then commit and push

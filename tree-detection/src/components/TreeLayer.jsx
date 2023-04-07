@@ -58,8 +58,8 @@ export default function TreeLayer(props) {
 
     //creates the mask graphic
     function createMaskGraphic(feature, color) {
-        //create the graphic for the polygon with an outline transparency of 0.5, a fill transparency of 0.4 and a width of 0.5
-        const graphic = createPolygonGraphic(feature, feature.geometry.coordinates, color, 0.5, 0.3, 0.5);
+        //create the graphic for the polygon with an outline transparency of 0.5, a fill transparency of 0.3 and a width of 1
+        const graphic = createPolygonGraphic(feature, feature.geometry.coordinates, color, 0.5, 0.3, 1);
         return graphic;
     }
 
