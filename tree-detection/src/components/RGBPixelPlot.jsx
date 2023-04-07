@@ -7,5 +7,5 @@ export default function RGBPixelPlot(props) {
         console.log(image_data);
     }
 
-    return <div>wibble</div>;
+    return <div></div>;
 }
