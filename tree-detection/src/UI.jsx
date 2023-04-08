@@ -154,9 +154,20 @@ class UI extends Component {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // fired when a canvas has been rendered or cleared in a layer
-    canvas_set(canvas) {
+    canvas_set(canvas) { 
+        // get the data to send to the RGBPixelPlot
+        let data = []
+        if (canvas){
+            const context = canvas.getContext("2d");
+            // get the image pixel data as a 1 dimensional array (Uint8ClampedArray)
+            const d = context.getImageData(0, 0, canvas.width, canvas.height).data;
+            // create the point cloud data
+            for (var i = 0; i < d.length; i += 4) {
+                data.push({ position: d.slice(i, i + 3), normal: [0, 0, 0], color: d.slice(i, i + 3) });
+            }    
+        }
         //set the state of the getting_dynamic_image
-        this.setState({ getting_dynamic_image: (canvas) ? false : true,  canvas: canvas});
+        this.setState({ getting_dynamic_image: (canvas) ? false : true,  data: data});
         // save the canvas image data as a blob suitable for sending to the server for tcd
         if (canvas) canvas.toBlob(blob => {
             this.blob = blob;
@@ -305,7 +316,7 @@ class UI extends Component {
                                         <DownloadIcon />
                                     </IconButton>
                                     <TreeMetrics mode={this.state.mode} feature_collection={this.state.feature_collection} changeCrowns={this.changeCrowns.bind(this)} changeBoxes={this.changeBoxes.bind(this)} changeMasks={this.changeMasks.bind(this)} changeScores={this.changeScores.bind(this)} changeAreas={this.changeAreas.bind(this)} show_crowns={this.state.show_crowns} show_boxes={this.state.show_boxes} show_masks={this.state.show_masks} show_scores={this.state.show_scores} show_areas={this.state.show_areas} change_area_range={this.change_area_range.bind(this)} area_range_value={this.state.area_range_value} score_range_value={this.state.score_range_value} change_score_range={this.change_score_range.bind(this)} />
-                                    <RGBPixelPlot canvas={this.state.canvas} />
+                                    <RGBPixelPlot data={this.state.data} />
                                 </div>
                             </td>
                         </tr>
