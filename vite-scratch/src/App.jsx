@@ -1,21 +1,21 @@
 import DeckGL from '@deck.gl/react';
-import { PointCloudLayer } from '@deck.gl/layers';
-import { OrbitView, COORDINATE_SYSTEM } from '@deck.gl/core';
+import {GeoJsonLayer} from '@deck.gl/layers';
 
-export default function App({ data, viewState }) {
-  
-  const INITIAL_VIEW_STATE = {
-    target: [0, 0, 0],
-    zoom: 4,
-    rotationOrbit: 0,
-    rotationX: 0,
-    minRotationX: -90,
-    maxRotationX: 90,
-    minZoom: -10,
-    maxZoom: 10
-  }
+const DATA_URL = {
+  POWER_LINES: "https://raw.githubusercontent.com/andrewcottam/general/master/open%20street%20map%20power%20lines%20in%20england.geojson"
+};
 
-  return <DeckGL initialViewState={INITIAL_VIEW_STATE} views={[new OrbitView()]} controller={true}>
-    <PointCloudLayer data={data} coordinateSystem={COORDINATE_SYSTEM.CARTESIAN} pointSize={4} getPosition={d => d.position} getNormal={d => d.normal} getColor={d => d.color} />
+const INITIAL_VIEW_STATE = {
+  latitude: 54,
+  longitude: 0,
+  zoom: 7,
+  minZoom: 2,
+  maxZoom: 18
+};
+
+export default function App({data=DATA_URL.POWER_LINES }) {
+
+  return <DeckGL initialViewState={INITIAL_VIEW_STATE} controller={true}>
+    <GeoJsonLayer data={data} lineWidthMinPixels={0.5}/>
   </DeckGL>;
 }
