@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
 import DeckGL from '@deck.gl/react';
-import { GeoJsonLayer } from '@deck.gl/layers';
-import { TripsLayer } from '@deck.gl/geo-layers';
-import PowerLineExtension from './components/PowerLineExtension';
-import PowerLineLayer from './components/PowerLineLayer';
+import ElectricLine from './components/ElectricLine';
 
 const DATA_URL = {
   POWER_LINES: "https://raw.githubusercontent.com/andrewcottam/general/master/pwr.geojson"
@@ -26,10 +23,12 @@ export default function App({ running }) {
   const loopLength = 250;
   const [time, setTime] = useState(0);
   const [animation] = useState({});
+
   const animate = () => {
     setTime(t => (t + step) % loopLength);
     animation.id = window.requestAnimationFrame(animate); // draw next frame
   };
+
   useEffect(() => {
     if (!running) {
       window.cancelAnimationFrame(animation.id);
@@ -64,13 +63,14 @@ export default function App({ running }) {
             })
             output_features.push({ waypoints: waypoints });
           })
+          // console.log(output_features)
           resolve(output_features);
         });
     })
   }
 
   return <DeckGL initialViewState={INITIAL_VIEW_STATE} controller={true}>
-    <TripsLayer
+    <ElectricLine
       data={getData(DATA_URL.POWER_LINES)}
       getPath={d => d.waypoints.map(p => p.coordinates)}
       // deduct start timestamp from each data point to avoid overflow
