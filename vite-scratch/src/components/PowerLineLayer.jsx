@@ -1,4 +1,4 @@
-import { LineLayer } from '@deck.gl/layers';
+import { PathLayer } from '@deck.gl/layers';
 
 const defaultProps = {
     // Length of power line
@@ -13,40 +13,41 @@ const defaultProps = {
 
 // Shader definitions
 const vsDeclaration = `
-attribute float instanceFrequency;
-varying float vArcLength;
-varying float vFrequency;
+// attribute float instanceFrequency;
+// varying float vArcLength;
+// varying float vFrequency;
 `
 
 const vsMain = `
-//this length depends on the zoom level and can be greater than 1
-vArcLength = distance(source, target);
-vFrequency = instanceFrequency;
+// //this length depends on the zoom level and can be greater than 1
+// vArcLength = distance(source, target);
+// vFrequency = instanceFrequency;
 `
 
 const fsDeclaration = `
-uniform float tailLength;
-uniform float timestamp;
-uniform float animationSpeed;
-varying float vArcLength;
-varying float vFrequency;
+// uniform float tailLength;
+// uniform float timestamp;
+// uniform float animationSpeed;
+// varying float vArcLength;
+// varying float vFrequency;
 `
 
 const fsColorFilter = `
-//if vArcLength < 1 then tripDuration will be < 0.5 
-float tripDuration = vArcLength / animationSpeed;
-float flightInterval = 1.0 / vFrequency;
-float r = mod(geometry.uv.x, flightInterval);
-float rMax = mod(fract(timestamp / tripDuration), flightInterval);
-float rMin = rMax - tailLength / vArcLength;
-float alpha = (r > rMax ? 0.0 : smoothstep(rMin, rMax, r)) + smoothstep(rMin + flightInterval, rMax + flightInterval, r);
-if (alpha == 0.0) {
-  discard;
-}
-color.a *= alpha;
+// //if vArcLength < 1 then tripDuration will be < 0.5 
+// float tripDuration = vArcLength / animationSpeed;
+// float flightInterval = 1.0 / vFrequency;
+// float r = mod(geometry.uv.x, flightInterval);
+// float rMax = mod(fract(timestamp / tripDuration), flightInterval);
+// float rMin = rMax - tailLength / vArcLength;
+// float alpha = (r > rMax ? 0.0 : smoothstep(rMin, rMax, r)) + smoothstep(rMin + flightInterval, rMax + flightInterval, r);
+// if (alpha == 0.0) {
+//   discard;
+// }
+// color.a *= alpha;
+color.a *= 1.0;
 `
 
-export default class PowerLineLayer extends LineLayer {
+export default class PowerLineLayer extends PathLayer {
 
     initializeState(params) {
         super.initializeState(params);
