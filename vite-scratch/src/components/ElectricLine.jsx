@@ -11,6 +11,8 @@ export default class ElectricLine extends PathLayer {
 
     getShaders() {
         const shaders = super.getShaders();
+        const speed = this.props.speed / 200;
+        const w = this.props.wavelength.toFixed(1);
         shaders.inject = {
             'vs:#decl': `\
                 attribute float instanceTimestamps;
@@ -25,9 +27,10 @@ export default class ElectricLine extends PathLayer {
                 uniform float currentTime;
                 varying float vTime;
             `,
-            // Fade the color (currentTime - 100%, end of trail - 0%)
+            // Convert the time values to a sine wave that moves with the current time
             'fs:DECKGL_FILTER_COLOR': `\
-                color.a = (mod(vTime + currentTime, 5.0)/4.0);
+                // color.a = ((abs(5.0 - mod(vTime + currentTime*speed, 10.0)))/4.0)+0.3;
+                color.a = ((abs(` + w + ` - mod(vTime + currentTime*` + speed + `, ` + (w*2).toFixed(1) + `)))/` + (w-1).toFixed(1) + `)+` + this.props.alphaFloor + `;
             `
         };
         return shaders;

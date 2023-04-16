@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import DeckGL from '@deck.gl/react';
+import StaticMap from 'react-map-gl';
 import ElectricLine from './components/ElectricLine';
 
 const DATA_URL = {
@@ -13,19 +14,20 @@ const INITIAL_VIEW_STATE = {
   minZoom: 2,
   maxZoom: 25
 };
+const MAP_STYLE = 'mapbox://styles/andrewcottam/clcsxyxcu002914qrsk95xyud';
+const MAPBOX_TOKEN = 'pk.eyJ1IjoiYW5kcmV3Y290dGFtIiwiYSI6ImNsY3N4aHM5czB1YjkzbmxoNzN1NHk3aGYifQ.LzpyM7lJ5-f0vjshJoaNXg';
 
-// How many units of length are animated in 1 second
-const ANIMATION_RATE = 0.002;
+// How many units of length are animated in 1 second - controls the number of blobs per second - the higher the number the longer the blobs
+const ANIMATION_RATE = 0.0006;
 
 export default function App({ running }) {
   // variables
   const step = 1;
-  const loopLength = 250;
   const [time, setTime] = useState(0);
   const [animation] = useState({});
 
   const animate = () => {
-    setTime(t => (t + step) % loopLength);
+    setTime(t => (t + step));
     animation.id = window.requestAnimationFrame(animate); // draw next frame
   };
 
@@ -71,18 +73,17 @@ export default function App({ running }) {
 
   return <DeckGL initialViewState={INITIAL_VIEW_STATE} controller={true}>
     <ElectricLine
-      data={getData(DATA_URL.POWER_LINES)}
-      getPath={d => d.waypoints.map(p => p.coordinates)}
-      // deduct start timestamp from each data point to avoid overflow
       getTimestamps={d => d.waypoints.map(p => p.timestamp)}
+      getPath={d => d.waypoints.map(p => p.coordinates)}
+      data={getData(DATA_URL.POWER_LINES)}
       getColor={[253, 128, 93]}
-      opacity={0.8}
-      widthMinPixels={6}
-      jointRounded={true}
-      capRounded={true}
-      fadeTrail={true}
-      trailLength={100}
       currentTime={time}
+      widthMinPixels={4}
+      capRounded={true}
+      alphaFloor={0.3}
+      wavelength={5}
+      speed={50}
     />
+    <StaticMap mapStyle={MAP_STYLE} mapboxAccessToken={MAPBOX_TOKEN}/>
   </DeckGL>;
 }
