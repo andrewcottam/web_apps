@@ -38,6 +38,9 @@ export default class ElectricLine extends PathLayer {
 
     initializeState() {
         super.initializeState();
+        super.dataTransform = function(data, previousdata){
+            console.log('wibble')
+        }
         const attributeManager = this.getAttributeManager();
         attributeManager.addInstanced({
             timestamps: {
