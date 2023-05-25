@@ -55,3 +55,5 @@ Collection of various web applications demonstrating a range of mostly mapping t
 |Restor Live Tree Detection|View the tree detections live on drone data, aerial and satellite imagery using the Restor or the Cambridge tree detection model|<a href='https://andrewcottam.github.io/web_apps/tree-detection/dist/index.html'>Online</a>
 |Tree Detection in Ghana|Results of tree detection in Northern Ghana using the RestorTCD Deep Learning model|<a href='https://arcg.is/0KymfP'>Online</a>
 |Marxan Systematic Conservation Planning|Protected area network design tool repurposed for the web developed with The Nature Conservancy (currently Firefox only)|<a href='https://app.marxanweb.org/'>Online</a>
+|Power Lines in Cambridgeshire|OSM power lines data rendered as animated lines for Cambridgeshire using Deck.gl|<a href='https://andrewcottam.github.io/web_apps/vite-scratch/dist/index.html'>Online</a>
+|OSM Power Lines|OSM power lines data rendered from ESRI Vector Tile Services using Deck.gl|<a href='https://andrewcottam.github.io/web_apps/osm-power-lines/dist/index.html'>Online</a>

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import DeckGL from '@deck.gl/react';
 import StaticMap from 'react-map-gl';
 import PowerLineLayer from './components/PowerLineLayer';
