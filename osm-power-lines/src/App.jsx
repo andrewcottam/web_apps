@@ -17,13 +17,15 @@ const INITIAL_VIEW_STATE = {
 export default function App({ running }) {
 
   return <DeckGL initialViewState={INITIAL_VIEW_STATE} controller={true} getTooltip={(feature) => {
-    // if (feature.hasOwnProperty('object')) {
-    //   if (feature.object.geometry.type === 'MultiLineString') console.log(feature.object.properties)
-    //   if (feature.object.geometry.type === 'MultiPoint') console.log(feature.object.properties)
-    // }
+    if (feature.hasOwnProperty('object')) {
+      console.log('Object under mouse: ' + feature.object.properties.layerName + ' ' + feature.object.geometry.type + ' ' + feature.object.properties._label_class)
+      // if (feature.object.geometry.type === 'MultiLineString') console.log(feature.object.properties)
+      // if (feature.object.geometry.type === 'MultiPoint') console.log(feature.object.properties)
+    }
   }}>
     <MVTLayer data={"https://basemaps.arcgis.com/arcgis/rest/services/OpenStreetMap_v2/VectorTileServer/tile/{z}/{y}/{x}.pbf"}
       getFillColor={(f) => {
+        console.log('Polygon object from layer: ' + ' ' + f.properties.layerName)
         switch (f.properties.layerName) {
           case 'power pole':
             return [255, 0, 0];
@@ -34,6 +36,7 @@ export default function App({ running }) {
         }
       }}
       getLineColor={(f) => {
+        console.log('Line object from layer: ' + ' ' + f.properties.layerName)
         switch (f.properties.layerName) {
           case 'power line':
             return [0, 0, 255];
@@ -46,6 +49,7 @@ export default function App({ running }) {
         }
       }}
       getLineWidth={(f) => {
+        // console.log('getLineWidth' + ' ' + f.properties.layerName)
         switch (f.properties.layerName) {
           case 'power line':
             return 6;
@@ -58,6 +62,7 @@ export default function App({ running }) {
         }
       }}
       getPointRadius={(f) => {
+        console.log('Point object from layer: ' + ' ' + f.properties.layerName)
         switch (f.properties.layerName) {
           case 'power tower':
             return 6;
