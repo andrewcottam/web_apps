@@ -1,6 +1,6 @@
 To run in development:
 ```
-npm run dev
+npx vite
 ```
 To build using vite:
 ```
