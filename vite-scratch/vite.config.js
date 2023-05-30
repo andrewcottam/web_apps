@@ -8,4 +8,5 @@ export default defineConfig({
   server: {
     open: '/web_apps/vite-scratch/dist',
   },  
+  assetsInclude: ['**/*.laz'],
 })
