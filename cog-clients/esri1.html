@@ -1,0 +1,55 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>ESRI ImageryTileLayer client for COG file</title>
+
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.27/"></script>
+
+    <script>
+        require(["esri/config", "esri/Map", "esri/views/MapView", "esri/layers/ImageryTileLayer"], function (esriConfig, Map, MapView, ImageryTileLayer) {
+
+            esriConfig.apiKey = "AAPK50f1c51e23f84ce9aa73dbeba8125558zzA8xJi51laFe0nHJIWiEuAnMSqXLHVyHSuo1pUEadLbyrLtOVJbMi9FdxLKReN1";
+
+            const map = new Map({
+                basemap: "arcgis-topographic" // Basemap layer service
+            });
+
+            const view = new MapView({
+                map: map,
+                // center: [8.619060, 45.910430], // Longitude, latitude for sentinel 2
+                // zoom: 14, // Zoom level for sentinel 2
+                center: [-91.9939, 46.8425], // Longitude, latitude for drone image of brighton, usa
+                zoom: 21, // Zoom level for drone image in brighton, usa
+                container: "viewDiv" // Div element
+            });
+            const layer = new ImageryTileLayer({
+                // url: "https://storage.googleapis.com/gainforest-public/S2A_32TMR_20231003_0_L2A_TrueColor.tif" //sentinel2 cog
+                // url: "https://storage.googleapis.com/gainforest-public/odm_orthophoto.tif" //odm cog
+                url: "https://storage.googleapis.com/drone-imagery-opendronemap-output/e493087e-1c88-4597-a635-e9aa96ce370f/lightning-results/odm_orthophoto/odm_orthophoto.tif" //gainforest output
+            });
+
+            map.add(layer);
+        });
+    </script>
+
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+</body>
+
+</html>

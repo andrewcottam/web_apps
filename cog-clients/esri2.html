@@ -1,0 +1,51 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>ESRI WebTileLayer client for TiTilerr</title>
+
+    <style>
+        html,
+        body,
+        #viewDiv {
+            padding: 0;
+            margin: 0;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.27/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.27/"></script>
+
+    <script>
+        require(["esri/config", "esri/Map", "esri/views/MapView", "esri/layers/WebTileLayer"], function (esriConfig, Map, MapView, WebTileLayer) {
+
+            esriConfig.apiKey = "AAPK50f1c51e23f84ce9aa73dbeba8125558zzA8xJi51laFe0nHJIWiEuAnMSqXLHVyHSuo1pUEadLbyrLtOVJbMi9FdxLKReN1";
+
+            const map = new Map({
+                basemap: "arcgis-topographic" // Basemap layer service
+            });
+
+            const view = new MapView({
+                map: map,
+                center: [8.619060, 45.910430], // Longitude, latitude
+                zoom: 14, // Zoom level
+                container: "viewDiv" // Div element
+            });
+            const layer = new WebTileLayer({
+                urlTemplate: "https://titiler-3yw6fbexpq-oa.a.run.app/cog/tiles/{z}/{x}/{y}?&url=https://storage.googleapis.com/gainforest-public/S2A_32TMR_20231003_0_L2A_TrueColor.tif"
+            });
+
+            map.add(layer);
+        });
+    </script>
+
+</head>
+
+<body>
+    <div id="viewDiv"></div>
+</body>
+
+</html>
