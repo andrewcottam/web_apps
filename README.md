@@ -3,7 +3,8 @@ Collection of various web applications demonstrating a range of mostly mapping t
 | Org | Name | Description | Status |
 |-----|------|-------------|--------|
 |Birdlife|Marine IBA Mapper|Website developed for Birdlife International under contract in 2012|<a href='https://andrewcottam.github.io/web_apps/BirdlifeMarineIBAMapper/default.html'>Birdlife ArcGIS Server Services no longer available</a>|
-|Gainforest|Cloud-optimsed Geotiff example|Simple ESRI Javascript viewer pointing to a Sentinel 2 COG image in the north of Italy|<a href='https://andrewcottam.github.io/web_apps/cog-clients/esri.html'>Online</a>|
+|Gainforest|Cloud-optimsed Geotiff example|Map viewer using the ESRI ImageryTileLayer class to show a Sentinel 2 COG image in the north of Italy|<a href='https://andrewcottam.github.io/web_apps/cog-clients/esri2.html'>Online</a>|
+|Gainforest|Cloud-optimsed Geotiff example|Map viewer using the ESRI WebTileLayer class to show a TiTiler service of a Sentinel 2 COG image in the north of Italy|<a href='https://andrewcottam.github.io/web_apps/cog-clients/esri2.html'>Online</a>|
 |IUCN|Red List Mapper|Delivery of the IUCN Red List of Threatened Species under contract in 2012|<a href='https://andrewcottam.github.io/web_apps/IUCN-Red-List-Mapper/index.html'>IUCN Services no longer available</a>|
 |IUCN|IUCN Web Services|Clients and tools that use the IUCN Red List API and services|<a href='https://andrewcottam.github.io/web_apps/IUCN-Web-Services/index.html'>IUCN Services no longer available</a>|
 |JRC|Attractive Species Gallery | Gallery of charismatic species based on the number of images for the species from the Flickr API | <a href='http://andrewcottam.github.io/web_apps/attractive_species_gallery/index.html'>Online</a> |
