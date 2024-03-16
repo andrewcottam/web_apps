@@ -5,6 +5,7 @@ import Button from '@mui/material/Button';
 import Sync from '@mui/icons-material/Sync';
 import IconButton from '@mui/material/IconButton';
 import DownloadIcon from '@mui/icons-material/Download';
+import DownhillSkiing from '@mui/icons-material/DownhillSkiing';
 // esri components
 import Search from "@arcgis/core/widgets/Search.js";
 import { xyToLngLat } from "@arcgis/core/geometry/support/webMercatorUtils.js";
@@ -119,17 +120,18 @@ class UI extends Component {
         const data = new FormData();
         //add the image binary data
         data.append('data', this.selectedFile);
-        //post to the server
-        axios.post(this.GET_INSTANCES_IMAGE_ENDPOINT, data, { withCredentials: true }).then(response => {
-            //get the url to the classified image
-            this.classified_image_url = this.SERVER + "/outputs/" + response.data.instances_image;
-            //set the active image is classified to true
-            this.active_image_is_classified = true;
-            //set the url of the <img> element
-            this.setState({ image_url: this.classified_image_url });
-            //set a local variable to the feature collection that will actually be updated when the classified image loads
-            this.fc = response.data.instances_geojson;
-        });
+        this.testWebSockets(data);
+        // //post to the server
+        // axios.post(this.GET_INSTANCES_IMAGE_ENDPOINT, data, { withCredentials: true }).then(response => {
+        //     //get the url to the classified image
+        //     this.classified_image_url = this.SERVER + "/outputs/" + response.data.instances_image;
+        //     //set the active image is classified to true
+        //     this.active_image_is_classified = true;
+        //     //set the url of the <img> element
+        //     this.setState({ image_url: this.classified_image_url });
+        //     //set a local variable to the feature collection that will actually be updated when the classified image loads
+        //     this.fc = response.data.instances_geojson;
+        // });
     }
 
     //called when the image (raw or classified) has been loaded into the html <img> element
@@ -227,6 +229,44 @@ class UI extends Component {
         window.URL.revokeObjectURL(url);
     }
 
+    testWebSockets(data){
+        return new Promise((resolve, reject) => {
+            let ws = new WebSocket('ws://localhost:8081/sockets/test');
+            ws.binaryType = "arraybuffer";
+            //get the message and pass it to the msgCallback function
+            ws.onmessage = (evt) => {
+                let message = JSON.parse(evt.data);
+                console.log(message)
+                if (message.status === "Finished") {
+                    resolve(message);
+                }
+            };
+            ws.onopen = (evt) => {
+                console.log(data);
+                var reader = new FileReader();
+                var rawData = new ArrayBuffer();            
+                reader.loadend = () => {
+                    console.log('loadend');
+                }
+                reader.onload = (e) => {
+                    rawData = e.target.result;
+                    ws.send(rawData);
+                    alert("the File has been transferred.")
+                }
+                reader.readAsArrayBuffer(this.selectedFile);        
+                console.log('ws opened')
+            };
+            ws.onerror = (evt) => {
+                console.log('ws error')
+                reject(evt);
+            };
+            ws.onclose = (evt) => {
+                console.log('ws close')
+                reject(evt);
+            }
+        });
+    };
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //ui events////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -314,6 +354,9 @@ class UI extends Component {
                                     <span className='span'></span>
                                     <IconButton aria-label="delete" color="primary" onClick={this.downloadInstances.bind(this)} disabled={!this.state.feature_collection} title='Download the detected trees as Geojson'>
                                         <DownloadIcon />
+                                    </IconButton>
+                                    <IconButton aria-label="test" color="primary" onClick={this.testWebSockets.bind(this)} title='Test WebSocket'>
+                                        <DownhillSkiing />
                                     </IconButton>
                                     <TreeMetrics mode={this.state.mode} feature_collection={this.state.feature_collection} changeCrowns={this.changeCrowns.bind(this)} changeBoxes={this.changeBoxes.bind(this)} changeMasks={this.changeMasks.bind(this)} changeScores={this.changeScores.bind(this)} changeAreas={this.changeAreas.bind(this)} show_crowns={this.state.show_crowns} show_boxes={this.state.show_boxes} show_masks={this.state.show_masks} show_scores={this.state.show_scores} show_areas={this.state.show_areas} change_area_range={this.change_area_range.bind(this)} area_range_value={this.state.area_range_value} score_range_value={this.state.score_range_value} change_score_range={this.change_score_range.bind(this)} />
                                     {/* <RGBPixelPlot data={this.state.data} /> */}
