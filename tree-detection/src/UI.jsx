@@ -120,18 +120,18 @@ class UI extends Component {
         const data = new FormData();
         //add the image binary data
         data.append('data', this.selectedFile);
-        this.testWebSockets(data);
-        // //post to the server
-        // axios.post(this.GET_INSTANCES_IMAGE_ENDPOINT, data, { withCredentials: true }).then(response => {
-        //     //get the url to the classified image
-        //     this.classified_image_url = this.SERVER + "/outputs/" + response.data.instances_image;
-        //     //set the active image is classified to true
-        //     this.active_image_is_classified = true;
-        //     //set the url of the <img> element
-        //     this.setState({ image_url: this.classified_image_url });
-        //     //set a local variable to the feature collection that will actually be updated when the classified image loads
-        //     this.fc = response.data.instances_geojson;
-        // });
+        // this.testWebSockets(data);
+        //post to the server
+        axios.post(this.GET_INSTANCES_IMAGE_ENDPOINT, data, { withCredentials: true }).then(response => {
+            //get the url to the classified image
+            this.classified_image_url = this.SERVER + "/outputs/" + response.data.instances_image;
+            //set the active image is classified to true
+            this.active_image_is_classified = true;
+            //set the url of the <img> element
+            this.setState({ image_url: this.classified_image_url });
+            //set a local variable to the feature collection that will actually be updated when the classified image loads
+            this.fc = response.data.instances_geojson;
+        });
     }
 
     //called when the image (raw or classified) has been loaded into the html <img> element
@@ -242,7 +242,6 @@ class UI extends Component {
                 }
             };
             ws.onopen = (evt) => {
-                console.log(data);
                 var reader = new FileReader();
                 var rawData = new ArrayBuffer();            
                 reader.loadend = () => {
@@ -251,7 +250,6 @@ class UI extends Component {
                 reader.onload = (e) => {
                     rawData = e.target.result;
                     ws.send(rawData);
-                    alert("the File has been transferred.")
                 }
                 reader.readAsArrayBuffer(this.selectedFile);        
                 console.log('ws opened')
@@ -355,9 +353,9 @@ class UI extends Component {
                                     <IconButton aria-label="delete" color="primary" onClick={this.downloadInstances.bind(this)} disabled={!this.state.feature_collection} title='Download the detected trees as Geojson'>
                                         <DownloadIcon />
                                     </IconButton>
-                                    <IconButton aria-label="test" color="primary" onClick={this.testWebSockets.bind(this)} title='Test WebSocket'>
+                                    {/* <IconButton aria-label="test" color="primary" onClick={this.testWebSockets.bind(this)} title='Test WebSocket'>
                                         <DownhillSkiing />
-                                    </IconButton>
+                                    </IconButton> */}
                                     <TreeMetrics mode={this.state.mode} feature_collection={this.state.feature_collection} changeCrowns={this.changeCrowns.bind(this)} changeBoxes={this.changeBoxes.bind(this)} changeMasks={this.changeMasks.bind(this)} changeScores={this.changeScores.bind(this)} changeAreas={this.changeAreas.bind(this)} show_crowns={this.state.show_crowns} show_boxes={this.state.show_boxes} show_masks={this.state.show_masks} show_scores={this.state.show_scores} show_areas={this.state.show_areas} change_area_range={this.change_area_range.bind(this)} area_range_value={this.state.area_range_value} score_range_value={this.state.score_range_value} change_score_range={this.change_score_range.bind(this)} />
                                     {/* <RGBPixelPlot data={this.state.data} /> */}
                                 </div>
