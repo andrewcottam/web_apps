@@ -24,3 +24,4 @@ dist-ssr
 *.sw?
 
 src/test.laz
+src/test.copc.laz
