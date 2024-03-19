@@ -1,5 +1,8 @@
 import { Component } from 'react';
 import axios from 'axios';
+// Firebase stuff - link to the CDNs for now
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js';
+import {getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut} from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js';
 // material-ui components
 import Button from '@mui/material/Button';
 import Sync from '@mui/icons-material/Sync';
@@ -17,7 +20,39 @@ import TreeLayer from './components/TreeLayer'; // to render the detected tree c
 import TreeMetrics from './components/TreeMetrics'; // to show the metrics for the detected tree crowns
 import RGBPixelPlot from './components/RGBPixelPlot';
 
+// Initialise the Firebase App
+const firebaseApp = initializeApp({
+    apiKey: "AIzaSyDGDYcNR36coda2CsEe1sENnZVJ6HhM7xQ",
+    authDomain: "tree-detection-app.firebaseapp.com",
+    projectId: "tree-detection-app",
+    storageBucket: "tree-detection-app.appspot.com",
+    messagingSenderId: "837959614002",
+    appId: "1:837959614002:web:c4b3c6152767981220c62b"
+})
+
+// Connect to Firebase authentication
+const auth = getAuth(firebaseApp);
+
+// Initialise the Google auth provider
+const provider = new GoogleAuthProvider();
+
+onAuthStateChanged(auth, user => {
+    if (user!=null){
+        console.log('logged in');
+    }else{
+        console.log('No user');
+    }
+})
+
+signOut(auth).then(() => {
+    // Sign-out successful.
+  }).catch((error) => {
+    // An error happened.
+  });
+  
+
 class UI extends Component {
+    
     constructor(props) {
         super(props);
         //state
@@ -229,6 +264,28 @@ class UI extends Component {
         window.URL.revokeObjectURL(url);
     }
 
+    loginbtn(){
+        signInWithPopup(auth, provider)
+        .then((result) => {
+          // This gives you a Google Access Token. You can use it to access the Google API.
+          const credential = GoogleAuthProvider.credentialFromResult(result);
+          const token = credential.accessToken;
+          // The signed-in user info.
+          const user = result.user;
+          // IdP data available using getAdditionalUserInfo(result)
+          // ...
+        }).catch((error) => {
+          // Handle Errors here.
+          const errorCode = error.code;
+          const errorMessage = error.message;
+          // The email of the user's account used.
+          const email = error.customData.email;
+          // The AuthCredential type that was used.
+          const credential = GoogleAuthProvider.credentialFromError(error);
+          // ...
+        });              
+    }
+    
     testWebSockets(data){
         return new Promise((resolve, reject) => {
             let ws = new WebSocket('ws://localhost:8081/sockets/test');
@@ -353,9 +410,9 @@ class UI extends Component {
                                     <IconButton aria-label="delete" color="primary" onClick={this.downloadInstances.bind(this)} disabled={!this.state.feature_collection} title='Download the detected trees as Geojson'>
                                         <DownloadIcon />
                                     </IconButton>
-                                    {/* <IconButton aria-label="test" color="primary" onClick={this.testWebSockets.bind(this)} title='Test WebSocket'>
+                                    <IconButton aria-label="test" color="primary" onClick={this.loginbtn.bind(this)} title='Test WebSocket'>
                                         <DownhillSkiing />
-                                    </IconButton> */}
+                                    </IconButton>
                                     <TreeMetrics mode={this.state.mode} feature_collection={this.state.feature_collection} changeCrowns={this.changeCrowns.bind(this)} changeBoxes={this.changeBoxes.bind(this)} changeMasks={this.changeMasks.bind(this)} changeScores={this.changeScores.bind(this)} changeAreas={this.changeAreas.bind(this)} show_crowns={this.state.show_crowns} show_boxes={this.state.show_boxes} show_masks={this.state.show_masks} show_scores={this.state.show_scores} show_areas={this.state.show_areas} change_area_range={this.change_area_range.bind(this)} area_range_value={this.state.area_range_value} score_range_value={this.state.score_range_value} change_score_range={this.change_score_range.bind(this)} />
                                     {/* <RGBPixelPlot data={this.state.data} /> */}
                                 </div>
