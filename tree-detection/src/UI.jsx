@@ -1,14 +1,17 @@
+import CONSTANTS from "./constants";
 import { Component } from 'react';
 import axios from 'axios';
 // Firebase stuff - link to the CDNs for now
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js';
 import {getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut} from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js';
+import {getStorage, ref, uploadBytes, uploadBytesResumable} from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js';
+
 // material-ui components
+import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
 import Sync from '@mui/icons-material/Sync';
 import IconButton from '@mui/material/IconButton';
 import DownloadIcon from '@mui/icons-material/Download';
-import DownhillSkiing from '@mui/icons-material/DownhillSkiing';
 // esri components
 import Search from "@arcgis/core/widgets/Search.js";
 import { xyToLngLat } from "@arcgis/core/geometry/support/webMercatorUtils.js";
@@ -18,7 +21,12 @@ import GEELayer from './components/GEELayer'; // for the imagery coming from goo
 import WMTSLayer from './components/WMTSLayer'; // for the imagery coming from openaerialmap and esri wayback
 import TreeLayer from './components/TreeLayer'; // to render the detected tree crowns as a layer on the map
 import TreeMetrics from './components/TreeMetrics'; // to show the metrics for the detected tree crowns
+import UploadProgress from './components/UploadProgress'; // to show the progress of a file update
 import RGBPixelPlot from './components/RGBPixelPlot';
+
+// constants
+
+// Firebase ///////
 
 // Initialise the Firebase App
 const firebaseApp = initializeApp({
@@ -30,6 +38,7 @@ const firebaseApp = initializeApp({
     appId: "1:837959614002:web:c4b3c6152767981220c62b"
 })
 
+// Firebase authentication///////
 // Connect to Firebase authentication
 const auth = getAuth(firebaseApp);
 
@@ -50,6 +59,9 @@ signOut(auth).then(() => {
     // An error happened.
   });
   
+// Firebase storage///////
+// Get a reference to the storage service, which is used to create references in your storage bucket
+const storage = getStorage();
 
 class UI extends Component {
     
@@ -71,7 +83,13 @@ class UI extends Component {
             score_range_value: [0.08, 1],
             gee_copyright: '© 2014 WWF Aerial Survey of the Congo. WWF/NASA JPL/KfW/BMUB/BMZ',
             wms_copyright: 'Imagery from OpenAerialMap. Maxar Products. WorldView2 © 2021 Maxar Technologies.',
-            lng: 112.84350452926209, lat: -8.054735059174224, wms_endpoint: '', b_and_w: false, canvas: undefined
+            lng: 112.84350452926209, 
+            lat: -8.054735059174224, 
+            wms_endpoint: '', 
+            b_and_w: false, 
+            canvas: undefined,
+            user_photo_url: '',
+            upload_progress_open: false
         };
         //set a default value for the area threshold - this is used to filter out especially large inference polygon features
         this.area_threshold = 1000;
@@ -143,10 +161,49 @@ class UI extends Component {
     //sets the properties of the image that the user has selected for TCD
     imageChosen(e) {
         this.setState({ mode: 'static_image' });
-        this.raw_image_url = URL.createObjectURL(e.target.files[0]);
+        // get the web.api.file object
         this.selectedFile = e.target.files[0];
-        //once the state has been set, send the image for processing
-        this.setState({ image_url: this.raw_image_url }, this.processImage);
+        // check the size
+        if (this.selectedFile.size > CONSTANTS.UPLOAD_FILESIZE_THRESHOLD) {
+            alert('To upload files > '.concat(CONSTANTS.UPLOAD_FILESIZE_THRESHOLD, 'B you must log in') )
+            return
+        }
+        this.raw_image_url = URL.createObjectURL(this.selectedFile);
+        // Create a storage reference from our storage service
+        const storageRef = ref(storage, 'images/wibble.png');
+        // Create an upload task
+        const uploadTask = uploadBytesResumable(storageRef, this.selectedFile);
+        uploadTask.on('state_changed', 
+        (snapshot) => {
+          // Observe state change events such as progress, pause, and resume
+          // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log('Upload is ' + progress + '% done');
+          switch (snapshot.state) {
+            case 'paused':
+              console.log('Upload is paused');
+              break;
+            case 'running':
+              console.log('Upload is running');
+              break;
+          }
+        }, 
+        (error) => {
+          // Handle unsuccessful uploads
+        }, 
+        () => {
+          // Handle successful uploads on complete
+          // For instance, get the download URL: https://firebasestorage.googleapis.com/...
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            console.log('File available at', downloadURL);
+          });
+        }
+      );        
+        // uploadBytes(storageRef, this.selectedFile).then((snapshot) => {
+        //     console.log('Uploaded a blob or file!');
+        //   });          
+        //once the state has been set, send the image for processing and show the upload progress dialog
+        this.setState({ image_url: this.raw_image_url, upload_progress_open: true }, this.processImage);
     }
 
     //posts the image data to the server for TCD
@@ -264,7 +321,7 @@ class UI extends Component {
         window.URL.revokeObjectURL(url);
     }
 
-    loginbtn(){
+    login_clicked(){
         signInWithPopup(auth, provider)
         .then((result) => {
           // This gives you a Google Access Token. You can use it to access the Google API.
@@ -273,7 +330,7 @@ class UI extends Component {
           // The signed-in user info.
           const user = result.user;
           // IdP data available using getAdditionalUserInfo(result)
-          // ...
+          this.setState({'user_photo_url': user.photoURL})
         }).catch((error) => {
           // Handle Errors here.
           const errorCode = error.code;
@@ -285,7 +342,7 @@ class UI extends Component {
           // ...
         });              
     }
-    
+
     testWebSockets(data){
         return new Promise((resolve, reject) => {
             let ws = new WebSocket('ws://localhost:8081/sockets/test');
@@ -410,8 +467,8 @@ class UI extends Component {
                                     <IconButton aria-label="delete" color="primary" onClick={this.downloadInstances.bind(this)} disabled={!this.state.feature_collection} title='Download the detected trees as Geojson'>
                                         <DownloadIcon />
                                     </IconButton>
-                                    <IconButton aria-label="test" color="primary" onClick={this.loginbtn.bind(this)} title='Test WebSocket'>
-                                        <DownhillSkiing />
+                                    <IconButton onClick={this.login_clicked.bind(this)}>
+                                        <Avatar alt="Google Photo" src={this.state.user_photo_url} />
                                     </IconButton>
                                     <TreeMetrics mode={this.state.mode} feature_collection={this.state.feature_collection} changeCrowns={this.changeCrowns.bind(this)} changeBoxes={this.changeBoxes.bind(this)} changeMasks={this.changeMasks.bind(this)} changeScores={this.changeScores.bind(this)} changeAreas={this.changeAreas.bind(this)} show_crowns={this.state.show_crowns} show_boxes={this.state.show_boxes} show_masks={this.state.show_masks} show_scores={this.state.show_scores} show_areas={this.state.show_areas} change_area_range={this.change_area_range.bind(this)} area_range_value={this.state.area_range_value} score_range_value={this.state.score_range_value} change_score_range={this.change_score_range.bind(this)} />
                                     {/* <RGBPixelPlot data={this.state.data} /> */}
@@ -430,6 +487,7 @@ class UI extends Component {
                     </span>
                     <span className={'citation'}>{this.state.model_copyright}</span>
                 </div>
+                <UploadProgress open={this.state.upload_progress_open}/>
             </div>
         )
     }
