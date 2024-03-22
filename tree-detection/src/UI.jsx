@@ -2,9 +2,9 @@ import CONSTANTS from "./constants";
 import { Component } from 'react';
 import axios from 'axios';
 // Firebase stuff - link to the CDNs for now
-import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js';
-import {getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut} from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js';
-import {getStorage, ref, uploadBytes, uploadBytesResumable} from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js';
+import { getStorage, ref, uploadBytes, uploadBytesResumable } from 'https://www.gstatic.com/firebasejs/10.9.0/firebase-storage.js';
 
 // material-ui components
 import Avatar from '@mui/material/Avatar';
@@ -46,25 +46,25 @@ const auth = getAuth(firebaseApp);
 const provider = new GoogleAuthProvider();
 
 onAuthStateChanged(auth, user => {
-    if (user!=null){
+    if (user != null) {
         console.log('logged in');
-    }else{
+    } else {
         console.log('No user');
     }
 })
 
 signOut(auth).then(() => {
     // Sign-out successful.
-  }).catch((error) => {
+}).catch((error) => {
     // An error happened.
-  });
-  
+});
+
 // Firebase storage///////
 // Get a reference to the storage service, which is used to create references in your storage bucket
 const storage = getStorage();
 
 class UI extends Component {
-    
+
     constructor(props) {
         super(props);
         //state
@@ -83,13 +83,15 @@ class UI extends Component {
             score_range_value: [0.08, 1],
             gee_copyright: '© 2014 WWF Aerial Survey of the Congo. WWF/NASA JPL/KfW/BMUB/BMZ',
             wms_copyright: 'Imagery from OpenAerialMap. Maxar Products. WorldView2 © 2021 Maxar Technologies.',
-            lng: 112.84350452926209, 
-            lat: -8.054735059174224, 
-            wms_endpoint: '', 
-            b_and_w: false, 
+            lng: 112.84350452926209,
+            lat: -8.054735059174224,
+            wms_endpoint: '',
+            b_and_w: false,
             canvas: undefined,
             user_photo_url: '',
-            upload_progress_open: false
+            upload_progress_open: false,
+            uploading: true,
+            logged_in: false
         };
         //set a default value for the area threshold - this is used to filter out especially large inference polygon features
         this.area_threshold = 1000;
@@ -165,47 +167,79 @@ class UI extends Component {
         this.selectedFile = e.target.files[0];
         // check the size
         if (this.selectedFile.size > CONSTANTS.UPLOAD_FILESIZE_THRESHOLD) {
-            alert('To upload files > '.concat(CONSTANTS.UPLOAD_FILESIZE_THRESHOLD, 'B you must log in') )
-            return
-        }
-        this.raw_image_url = URL.createObjectURL(this.selectedFile);
+            if (this.state.logged_in) {
+                this.setState({ upload_progress_open: true });    
+                this.uploadFile();
+            } else {
+                alert('To upload files > '.concat(CONSTANTS.UPLOAD_FILESIZE_THRESHOLD, 'B you must log in'))
+                return
+            };
+        } else {
+            this.raw_image_url = URL.createObjectURL(this.selectedFile);
+            //once the state has been set, send the image for processing and show the upload progress dialog
+            this.setState({ image_url: this.raw_image_url }, this.processImage);    
+        };
+    }
+
+    pause_upload(e) {
+        // Pause the upload
+        this.uploadTask.pause();
+    }
+
+    resume_upload(e) {
+        // Resum the upload
+        this.uploadTask.resume();
+    }
+
+    cancel(e) {
+        // Cancel the upload
+        this.uploadTask.cancel();
+        // Update ui state
+        this.setState({ upload_progress_open: false, detecting_tree_crowns: false });
+    }
+
+    uploadFile() {
         // Create a storage reference from our storage service
         const storageRef = ref(storage, 'images/wibble.png');
         // Create an upload task
-        const uploadTask = uploadBytesResumable(storageRef, this.selectedFile);
-        uploadTask.on('state_changed', 
-        (snapshot) => {
-          // Observe state change events such as progress, pause, and resume
-          // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          console.log('Upload is ' + progress + '% done');
-          switch (snapshot.state) {
-            case 'paused':
-              console.log('Upload is paused');
-              break;
-            case 'running':
-              console.log('Upload is running');
-              break;
-          }
-        }, 
-        (error) => {
-          // Handle unsuccessful uploads
-        }, 
-        () => {
-          // Handle successful uploads on complete
-          // For instance, get the download URL: https://firebasestorage.googleapis.com/...
-          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            console.log('File available at', downloadURL);
-          });
-        }
-      );        
-        // uploadBytes(storageRef, this.selectedFile).then((snapshot) => {
-        //     console.log('Uploaded a blob or file!');
-        //   });          
-        //once the state has been set, send the image for processing and show the upload progress dialog
-        this.setState({ image_url: this.raw_image_url, upload_progress_open: true }, this.processImage);
+        this.uploadTask = uploadBytesResumable(storageRef, this.selectedFile);
+        this.uploadTask.on('state_changed',
+            (snapshot) => {
+                // Observe state change events such as progress, pause, and resume
+                // Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                if (progress === 100) {
+                    // this.setState({ upload_progress_open: false });
+                }
+                this.setState({ upload_progress: progress });
+                console.log('Upload is ' + progress + '% done');
+                switch (snapshot.state) {
+                    case 'paused':
+                        console.log('Upload is paused');
+                        this.setState({ uploading: false });
+                        break;
+                    case 'running':
+                        console.log('Upload is running');
+                        this.setState({ uploading: true });
+                        break;
+                }
+            },
+            (error) => {
+                // Handle unsuccessful uploads
+            },
+            () => {
+                // Handle successful uploads on complete
+                // For instance, get the download URL: https://firebasestorage.googleapis.com/...
+                getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+                    console.log('File available at', downloadURL);
+                });
+            }
+        );
+        uploadBytes(storageRef, this.selectedFile).then((snapshot) => {
+            console.log('Uploaded a blob or file!');
+            this.setState({ upload_progress_open: false });
+        });
     }
-
     //posts the image data to the server for TCD
     processImage(response) {
         this.startTCD();
@@ -248,20 +282,20 @@ class UI extends Component {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // fired when a canvas has been rendered or cleared in a layer
-    canvas_set(canvas) { 
+    canvas_set(canvas) {
         // get the data to send to the RGBPixelPlot
         let data = []
-        if (canvas){
+        if (canvas) {
             const context = canvas.getContext("2d");
             // get the image pixel data as a 1 dimensional array (Uint8ClampedArray)
             const d = context.getImageData(0, 0, canvas.width, canvas.height).data;
             // create the point cloud data
             for (var i = 0; i < d.length; i += 4) {
                 data.push({ position: d.slice(i, i + 3), normal: [0, 0, 0], color: d.slice(i, i + 3) });
-            }    
+            }
         }
         //set the state of the getting_dynamic_image
-        this.setState({ getting_dynamic_image: (canvas) ? false : true,  data: data});
+        this.setState({ getting_dynamic_image: (canvas) ? false : true, data: data });
         // save the canvas image data as a blob suitable for sending to the server for tcd
         if (canvas) canvas.toBlob(blob => {
             this.blob = blob;
@@ -321,29 +355,29 @@ class UI extends Component {
         window.URL.revokeObjectURL(url);
     }
 
-    login_clicked(){
+    login_clicked() {
         signInWithPopup(auth, provider)
-        .then((result) => {
-          // This gives you a Google Access Token. You can use it to access the Google API.
-          const credential = GoogleAuthProvider.credentialFromResult(result);
-          const token = credential.accessToken;
-          // The signed-in user info.
-          const user = result.user;
-          // IdP data available using getAdditionalUserInfo(result)
-          this.setState({'user_photo_url': user.photoURL})
-        }).catch((error) => {
-          // Handle Errors here.
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          // The email of the user's account used.
-          const email = error.customData.email;
-          // The AuthCredential type that was used.
-          const credential = GoogleAuthProvider.credentialFromError(error);
-          // ...
-        });              
+            .then((result) => {
+                // This gives you a Google Access Token. You can use it to access the Google API.
+                const credential = GoogleAuthProvider.credentialFromResult(result);
+                const token = credential.accessToken;
+                // The signed-in user info.
+                const user = result.user;
+                // IdP data available using getAdditionalUserInfo(result)
+                this.setState({logged_in: true,  'user_photo_url': user.photoURL })
+            }).catch((error) => {
+                // Handle Errors here.
+                const errorCode = error.code;
+                const errorMessage = error.message;
+                // The email of the user's account used.
+                const email = error.customData.email;
+                // The AuthCredential type that was used.
+                const credential = GoogleAuthProvider.credentialFromError(error);
+                // ...
+            });
     }
 
-    testWebSockets(data){
+    testWebSockets(data) {
         return new Promise((resolve, reject) => {
             let ws = new WebSocket('ws://localhost:8081/sockets/test');
             ws.binaryType = "arraybuffer";
@@ -357,7 +391,7 @@ class UI extends Component {
             };
             ws.onopen = (evt) => {
                 var reader = new FileReader();
-                var rawData = new ArrayBuffer();            
+                var rawData = new ArrayBuffer();
                 reader.loadend = () => {
                     console.log('loadend');
                 }
@@ -365,7 +399,7 @@ class UI extends Component {
                     rawData = e.target.result;
                     ws.send(rawData);
                 }
-                reader.readAsArrayBuffer(this.selectedFile);        
+                reader.readAsArrayBuffer(this.selectedFile);
                 console.log('ws opened')
             };
             ws.onerror = (evt) => {
@@ -487,7 +521,7 @@ class UI extends Component {
                     </span>
                     <span className={'citation'}>{this.state.model_copyright}</span>
                 </div>
-                <UploadProgress open={this.state.upload_progress_open}/>
+                <UploadProgress open={this.state.upload_progress_open} upload_progress={this.state.upload_progress} pause={this.pause_upload.bind(this)} resume={this.resume_upload.bind(this)} cancel={this.cancel.bind(this)} uploading={this.state.uploading} />
             </div>
         )
     }
