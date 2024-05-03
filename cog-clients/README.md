@@ -12,6 +12,7 @@ ArcGIS Maps SDK for Javascript client which uses a simple [WebTileLayer](https:/
 ### index.html
 OpenLayers COG demo. Start with:
 ```
+cd cog-clients
 npm install
 npm run start
 ```
