@@ -5,18 +5,18 @@ import OSM from 'ol/source/OSM';
 import { Stroke } from 'ol/style';
 import Style from 'ol/style/Style';
 import { useGeographic } from "ol/proj";
-import {register} from 'ol/proj/proj4.js';
+import { fromEPSGCode, register } from 'ol/proj/proj4.js';
 import TileLayer from 'ol/layer/WebGLTile';
 import GeoTIFF from 'ol/source/GeoTIFF.js';
 import VectorTileLayer from 'ol/layer/VectorTile';
 import VectorTileSource from 'ol/source/VectorTile';
 
 useGeographic();
-proj4.defs("EPSG:32615","+proj=utm +zone=15 +datum=WGS84 +units=m +no_defs +type=crs");
 register(proj4);
 
 // COG sources
 const source = new GeoTIFF({ sources: [{ projection: "EPGS:32615", url: 'https://storage.googleapis.com/imagery-opendronemap-output/andrew@gainforest.net/NFjmpJ21YorJTJEXXnE7/lightning-results/odm_orthophoto/odm_orthophoto.tif' }] });
+source.getView().then((viewConfig) => fromEPSGCode(viewConfig.projection.getCode())) // gets the custom projection information (in this case EPSG:32615) from the epsg.io website and registers this definition for use with proj4
 
 // Vector tile sources
 const _style = new Style({ stroke: new Stroke({ color: [0, 153, 255, 1], width: 2 }) });
