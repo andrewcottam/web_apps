@@ -1,6 +1,6 @@
 # Running
 ```
-cd openlayers_cog
+cd openlayers/vector_tiles
 npm install
 npx vite
 ```
