@@ -166,19 +166,19 @@ class UI extends Component {
         // get the web.api.file object
         this.selectedFile = e.target.files[0];
         // check the size
-        if (this.selectedFile.size > CONSTANTS.UPLOAD_FILESIZE_THRESHOLD) {
-            if (this.state.logged_in) {
-                this.setState({ upload_progress_open: true });    
-                this.uploadFile();
-            } else {
-                alert('To upload files > '.concat(CONSTANTS.UPLOAD_FILESIZE_THRESHOLD, 'B you must log in'))
-                return
-            };
-        } else {
+        // if (this.selectedFile.size > CONSTANTS.UPLOAD_FILESIZE_THRESHOLD) {
+        //     if (this.state.logged_in) {
+        //         this.setState({ upload_progress_open: true });    
+        //         this.uploadFile();
+        //     } else {
+        //         alert('To upload files > '.concat(CONSTANTS.UPLOAD_FILESIZE_THRESHOLD, 'B you must log in'))
+        //         return
+        //     };
+        // } else {
             this.raw_image_url = URL.createObjectURL(this.selectedFile);
             //once the state has been set, send the image for processing and show the upload progress dialog
             this.setState({ image_url: this.raw_image_url }, this.processImage);    
-        };
+        // };
     }
 
     pause_upload(e) {
@@ -501,9 +501,9 @@ class UI extends Component {
                                     <IconButton aria-label="delete" color="primary" onClick={this.downloadInstances.bind(this)} disabled={!this.state.feature_collection} title='Download the detected trees as Geojson'>
                                         <DownloadIcon />
                                     </IconButton>
-                                    <IconButton onClick={this.login_clicked.bind(this)}>
+                                    {/* <IconButton onClick={this.login_clicked.bind(this)}>
                                         <Avatar alt="Google Photo" src={this.state.user_photo_url} />
-                                    </IconButton>
+                                    </IconButton> */}
                                     <TreeMetrics mode={this.state.mode} feature_collection={this.state.feature_collection} changeCrowns={this.changeCrowns.bind(this)} changeBoxes={this.changeBoxes.bind(this)} changeMasks={this.changeMasks.bind(this)} changeScores={this.changeScores.bind(this)} changeAreas={this.changeAreas.bind(this)} show_crowns={this.state.show_crowns} show_boxes={this.state.show_boxes} show_masks={this.state.show_masks} show_scores={this.state.show_scores} show_areas={this.state.show_areas} change_area_range={this.change_area_range.bind(this)} area_range_value={this.state.area_range_value} score_range_value={this.state.score_range_value} change_score_range={this.change_score_range.bind(this)} />
                                     {/* <RGBPixelPlot data={this.state.data} /> */}
                                 </div>
