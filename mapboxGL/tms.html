@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Gainforest TMS tiles</title>
+    <script src='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v1.12.0/mapbox-gl.css' rel='stylesheet' />
+</head>
+
+<body>
+    <div id='map' style='position: absolute; top: 0; bottom: 0; width: 100%;'></div> 
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYmxpc2h0ZW4iLCJhIjoiMEZrNzFqRSJ9.0QBRA2HxTb8YHErUFRMPZg';
+        var map = new mapboxgl.Map({
+            container: 'map',
+            zoom: 19,
+            center: [-60.645301,-2.951214],
+            style: {"version":8,"name":"Blank","center":[-60.645301,-2.951214],"zoom":20,"sources":{},"sprite":"file://roblabs.com/sprite","glyphs":"file://roblabs.com/fonts/mapbox/{fontstack}/{range}.pbf","layers":[{"id":"background","type":"background","paint":{"background-color":"rgba(255,255,255,1)"}}],"id":"blank"}
+        });
+        map.on('load', function() {
+            map.addLayer({
+                'id': 'gainforest_tms_tiles',
+                'type': 'raster',
+                'source': {
+                    type: 'raster',
+                    scheme: "tms",
+                    tiles: ['https://storage.googleapis.com/imagery-tms/andrew%40gainforest.net/manaus/{z}/{x}/{y}.png'],
+                    tileSize: 256
+                }
+            });
+        });
+    </script>
+
+</body>
+
+</html>
