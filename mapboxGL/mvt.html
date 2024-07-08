@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Add a third party vector tile source</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet">
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        #map {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="map"></div>
+    <script>
+        mapboxgl.accessToken = 'pk.eyJ1IjoiYW5kcmV3Y290dGFtIiwiYSI6ImNsY3N4aHM5czB1YjkzbmxoNzN1NHk3aGYifQ.LzpyM7lJ5-f0vjshJoaNXg';
+        const map = new mapboxgl.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/light-v11',
+            zoom: 19,
+            center: [-60.645301, -2.951214]
+        });
+
+        //            'https://storage.googleapis.com/tree-detection-vector-tiles/andrew@gainforest.net/manaus/odm_orthophoto/2400/{z}/{x}/{y}.pbf'
+        //             http://127.0.0.1:1234/static/tree-detection-vector-tiles/ogr2ogr_mvt_tiles/5/10/16.pbf   // these are produced with ogr2ogr locally
+
+        map.on('load', () => {
+            // Add a new vector tile source with ID 'mapillary'.
+            map.addSource('vector-tiles-source', {
+                type: 'vector',
+                tiles: [
+                    'http://127.0.0.1:1234/static/tree-detection-vector-tiles/mvt_tiles/{z}/{x}/{y}.pbf'
+                ],
+            });
+            map.addLayer(
+                {
+                    id: 'vector-tiles-layer',
+                    type: 'line',
+                    source: 'vector-tiles-source',
+                    'source-layer': 'trees',
+                    paint: {
+                        'line-color': 'blue',
+                        'line-width':20
+                    },
+                }
+            );
+        });
+        map.addControl(new mapboxgl.NavigationControl());
+    </script>
+
+</body>
+
+</html>
