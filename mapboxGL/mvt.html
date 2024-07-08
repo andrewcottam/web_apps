@@ -32,16 +32,12 @@
             zoom: 19,
             center: [-60.645301, -2.951214]
         });
-
-        //            'https://storage.googleapis.com/tree-detection-vector-tiles/andrew@gainforest.net/manaus/odm_orthophoto/2400/{z}/{x}/{y}.pbf'
-        //             http://127.0.0.1:1234/static/tree-detection-vector-tiles/ogr2ogr_mvt_tiles/5/10/16.pbf   // these are produced with ogr2ogr locally
-
         map.on('load', () => {
-            // Add a new vector tile source with ID 'mapillary'.
+            // Add a new vector tile source with ID 'vector-tiles-source'
             map.addSource('vector-tiles-source', {
                 type: 'vector',
                 tiles: [
-                    'http://127.0.0.1:1234/static/tree-detection-vector-tiles/mvt_tiles/{z}/{x}/{y}.pbf'
+                    'https://storage.googleapis.com/tree-detection-vector-tiles/andrew@gainforest.net/manaus/odm_orthophoto/2400/{z}/{x}/{y}.pbf'
                 ],
             });
             map.addLayer(
@@ -49,15 +45,14 @@
                     id: 'vector-tiles-layer',
                     type: 'line',
                     source: 'vector-tiles-source',
-                    'source-layer': 'trees',
+                    'source-layer': 'mvt_tiles',
                     paint: {
                         'line-color': 'blue',
-                        'line-width':20
+                        'line-width': 2
                     },
                 }
             );
         });
-        map.addControl(new mapboxgl.NavigationControl());
     </script>
 
 </body>
