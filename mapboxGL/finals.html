@@ -40,6 +40,16 @@
                     'https://storage.googleapis.com/tree-detection-vector-tiles/andrew%40gainforest.net/finals/ortho/1000/{z}/{x}/{y}.pbf'
                 ],
             });
+            map.addLayer({
+                'id': 'gainforest_tms_tiles',
+                'type': 'raster',
+                'source': {
+                    type: 'raster',
+                    scheme: "tms",
+                    tiles: ['https://storage.googleapis.com/imagery-tms/andrew@gainforest.net/finals/ortho_100/{z}/{x}/{y}.png'],
+                    tileSize: 256
+                }
+            });
             map.addLayer(
                 {
                     id: 'vector-tiles-layer',
@@ -47,8 +57,8 @@
                     source: 'vector-tiles-source',
                     'source-layer': 'mvt_tiles',
                     paint: {
-                        'line-color': 'blue',
-                        'line-width': 2
+                        'line-color': 'red',
+                        'line-width': 1.5
                     },
                 }
             );
