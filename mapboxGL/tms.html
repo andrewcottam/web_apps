@@ -14,10 +14,28 @@
         var map = new mapboxgl.Map({
             container: 'map',
             zoom: 19,
-            center: [-60.645301,-2.951214],
-            style: {"version":8,"name":"Blank","center":[-60.645301,-2.951214],"zoom":20,"sources":{},"sprite":"file://roblabs.com/sprite","glyphs":"file://roblabs.com/fonts/mapbox/{fontstack}/{range}.pbf","layers":[{"id":"background","type":"background","paint":{"background-color":"rgba(255,255,255,1)"}}],"id":"blank"}
+            center: [-60.740448,-2.96065],
+            style: {"version":8,"name":"Blank","center":[-60.740448,-2.96065],"zoom":20,"sources":{},"sprite":"file://roblabs.com/sprite","glyphs":"file://roblabs.com/fonts/mapbox/{fontstack}/{range}.pbf","layers":[{"id":"background","type":"background","paint":{"background-color":"rgba(255,255,255,1)"}}],"id":"blank"}
         });
         map.on('load', function() {
+            map.addSource('vector-tiles-source', {
+                type: 'vector',
+                tiles: [
+                    'https://storage.googleapis.com/tree-detection-vector-tiles/andrew%40gainforest.net/finals/ortho/1200/{z}/{x}/{y}.pbf'
+                ],
+            });
+            map.addLayer(
+                {
+                    id: 'vector-tiles-layer',
+                    type: 'line',
+                    source: 'vector-tiles-source',
+                    'source-layer': 'mvt_tiles',
+                    paint: {
+                        'line-color': 'blue',
+                        'line-width': 2
+                    },
+                }
+            );
             map.addLayer({
                 'id': 'gainforest_tms_tiles',
                 'type': 'raster',
