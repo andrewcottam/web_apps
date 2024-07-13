@@ -83,7 +83,7 @@ map.on('click', function (e) {
 // Define a vector source to hold the GeoJSON data
 var vectorSource = new Vector({
     format: new GeoJSON(),
-    url: 'https://storage.googleapis.com/tree-detection-vector-tiles/finals_235_crowns.geojson',
+    url: 'https://storage.googleapis.com/tree-detection-vector-tiles/finals_291_crowns.geojson',
     projection: 'EPSG:4326'
 });
 
