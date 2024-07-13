@@ -20,9 +20,10 @@ import { transform } from "ol/proj";
 useGeographic();
 
 // Endpoints
-// const HOST = 'https://storage.googleapis.com'
-const HOST = 'http://127.0.0.1:1234/static'
-const PREFIX = 'finals/ortho'
+const HOST = 'https://storage.googleapis.com'
+// const HOST = 'http://127.0.0.1:1234/static'
+// const PREFIX = 'finals/ortho'
+const PREFIX = 'andrew%40gainforest.net/finals/ortho'
 const TILE_SIZE = 1000
 const TMS_ENDPOINT = `${HOST}/imagery-tms/${PREFIX}_100/{z}/{x}/{-y}.png`;
 const MVT_ENDPOINT = `${HOST}/tree-detection-vector-tiles/${PREFIX}/${TILE_SIZE}/{z}/{x}/{y}.pbf`;
@@ -136,7 +137,7 @@ function downloadGeoJSON() {
 // add a listener to download
 document.addEventListener('keydown', function (event) {
     // Your code here
-    console.log(`Key pressed: ${event.key}`);
+    // console.log(`Key pressed: ${event.key}`);
     if (event.key === 'd') {
         downloadGeoJSON();
     }
