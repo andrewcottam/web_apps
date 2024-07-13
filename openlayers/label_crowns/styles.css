@@ -1,0 +1,24 @@
+#map{
+    height: 780px;
+}
+
+#imageFrame{
+    position: absolute;
+    left: 45px;
+    top:20px;
+    border: 1px gray solid;
+}
+
+#species_entry{
+    position: absolute;
+    left: 350px;
+    top: 250px;
+    padding: 10px;
+    background-color: white;
+    display: none;
+}
+
+.shadowed-div {
+    background-color: #fff; /* Background color of the div */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Horizontal offset, vertical offset, blur radius, color */
+}

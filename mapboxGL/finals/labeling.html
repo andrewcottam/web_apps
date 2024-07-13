@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Gainforest Tree Crowns</title>
+    <title>Schefflera morototoni</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
@@ -29,7 +29,7 @@
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/light-v11',
-            zoom: 19,
+            zoom: 20,
             center: [-60.740448, -2.96065]
         });
         map.on('load', () => {
@@ -37,7 +37,9 @@
             map.addSource('vector-tiles-source', {
                 type: 'vector',
                 tiles: [
-                    'https://storage.googleapis.com/tree-detection-vector-tiles/andrew%40gainforest.net/finals/ortho/1000/{z}/{x}/{y}.pbf'
+                    //'https://storage.googleapis.com/tree-detection-vector-tiles/finals/with_predictions/{z}/{x}/{y}.pbf'
+                    //'http://127.0.0.1:1234/static/tree-detection-vector-tiles/finals/with_predictions/{z}/{x}/{y}.pbf'
+                    'http://127.0.0.1:1234/static/tree-detection-vector-tiles/finals/ortho/1000/{z}/{x}/{y}.pbf'
                 ],
             });
             map.addLayer({
@@ -47,7 +49,10 @@
                 'source': {
                     type: 'raster',
                     scheme: "tms",
-                    tiles: ['https://storage.googleapis.com/imagery-tms/andrew@gainforest.net/finals/ortho_100/{z}/{x}/{y}.png'],
+                    tiles: [
+                        'https://storage.googleapis.com/imagery-tms/andrew@gainforest.net/finals/ortho_100/{z}/{x}/{y}.png'
+                        //'http://127.0.0.1:1234/static/imagery-tms/finals/ortho_100/{z}/{x}/{y}.png'
+                    ],
                     tileSize: 256
                 }
             });
@@ -62,7 +67,6 @@
             );
         });
     </script>
-
 </body>
 
 </html>

@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Gainforest Tree Crowns</title>
+    <title>Schefflera morototoni</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
@@ -37,7 +37,8 @@
             map.addSource('vector-tiles-source', {
                 type: 'vector',
                 tiles: [
-                    'https://storage.googleapis.com/tree-detection-vector-tiles/andrew%40gainforest.net/finals/ortho/1000/{z}/{x}/{y}.pbf'
+                    //'https://storage.googleapis.com/tree-detection-vector-tiles/finals/with_predictions/{z}/{x}/{y}.pbf'
+                    'http://127.0.0.1:1234/static/tree-detection-vector-tiles/finals/with_predictions/{z}/{x}/{y}.pbf'
                 ],
             });
             map.addLayer({
@@ -51,6 +52,8 @@
                     tileSize: 256
                 }
             });
+            var url = window.location.pathname;
+            var filename = url.substring(url.lastIndexOf('/')+1).replace(/\.[^/.]+$/, "");
             map.addLayer(
                 {
                     id: 'vector-tiles-layer',
@@ -60,6 +63,8 @@
                     paint: { 'line-color': 'red', 'line-width': 1.5 },
                 }
             );
+            //map.setFilter('vector-tiles-layer', ['==', 'species', filename]);
+            map.setFilter('vector-tiles-layer', ['==', 'species', 'Attalea_maripa']);
         });
     </script>
 
