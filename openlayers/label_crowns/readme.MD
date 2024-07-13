@@ -9,3 +9,4 @@ npx vite
  - Add nice icons for photos and species determinations
  - Add help panel - must click within the crown!
  - Sort close up image size issue
+ - When saving only save the features where we have species

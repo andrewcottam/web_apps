@@ -64,8 +64,11 @@ map.on('click', function (e) {
         const filename = feature.getProperties().filename;
         const filename_no_ext = getFilenameWithoutExtension(filename);
         const url = `https://storage.googleapis.com/drone-canopy-images/${filename_no_ext} Large.jpeg`
-        var iframe = document.getElementById('imageFrame');
-        iframe.src = url;
+        // var iframe = document.getElementById('imageFrame');
+        // iframe.src = url;
+        const newWindow = window.open('', '_blank', "width=1280,height=960");
+        newWindow.document.write(`<html><body><img src="${url}" alt="Image" /></body></html>`);
+        newWindow.document.close(); // Optional: close the document for better performance
     });
     if (photo_clicked == false) {
         //set the clicked coordinate
