@@ -138,7 +138,7 @@ function downloadGeoJSON() {
 document.addEventListener('keydown', function (event) {
     // Your code here
     // console.log(`Key pressed: ${event.key}`);
-    if (event.key === 'd') {
+    if (event.key === 'Backspace') {
         downloadGeoJSON();
     }
     if (event.key === 'Enter') {
