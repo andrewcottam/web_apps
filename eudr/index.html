@@ -50,7 +50,8 @@
 </head>
 <body>
     <div class="form-container">
-        <h3>Create a Due Diligence Statement for an Area of Interest (AOI)</h3>
+        <h3>Regulation on Deforestation Free Products (EUDR) (EU) 2023/1115</h3>
+        <h4>Create a Due Diligence Statement for an Area of Interest (AOI)</h4>
         <form id="myForm">
             <!-- Name Input -->
             <div class="form-group">
@@ -61,13 +62,13 @@
                 <label for="commodity">Commodity:</label>
                 <select id="commodity" name="commodity" required>
                     <option value="">Select the commodity under EU 2023/1115</option>
-                    <option value="cattle">Cattle</option>
-                    <option value="cocoa">Cocoa</option>
-                    <option value="coffee">Coffee</option>
-                    <option value="palm-oil">Palm oil</option>
-                    <option value="soya">Soya</option>
-                    <option value="timber">Timber</option>
-                    <option value="rubber">Rubber</option>
+                    <option value="Cattle">Cattle</option>
+                    <option value="Cocoa">Cocoa</option>
+                    <option value="Coffee">Coffee</option>
+                    <option value="Palm oil">Palm oil</option>
+                    <option value="Soya">Soya</option>
+                    <option value="Timber">Timber</option>
+                    <option value="Rubber">Rubber</option>
                 </select>
             </div>
             <div class="form-group">
@@ -128,7 +129,8 @@
 
             try {
                 // Send the form data using fetch
-                const response = await fetch('https://eudr-server-ny43uciwwa-oc.a.run.app/getDueDiligenceStatement', {
+                //const response = await fetch('https://eudr-server-ny43uciwwa-oc.a.run.app/getDueDiligenceStatement', {
+                const response = await fetch('http://127.0.0.1:1234/getDueDiligenceStatement', {
                     method: 'POST',
                     body: formData
                 });
