@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DDS for the EUDR</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .form-container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .form-group button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .form-group button:hover {
+            background-color: #45a049;
+        }
+        .response {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h3>Create a Due Diligence Statement for an Area of Interest (AOI)</h3>
+        <form id="myForm">
+            <!-- Name Input -->
+            <div class="form-group">
+                <label for="name">Name:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <div class="form-group">
+                <label for="commodity">Commodity:</label>
+                <select id="commodity" name="commodity" required>
+                    <option value="">Select the commodity under EU 2023/1115</option>
+                    <option value="cattle">Cattle</option>
+                    <option value="cocoa">Cocoa</option>
+                    <option value="coffee">Coffee</option>
+                    <option value="palm-oil">Palm oil</option>
+                    <option value="soya">Soya</option>
+                    <option value="timber">Timber</option>
+                    <option value="rubber">Rubber</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="file-upload">Upload the boundary for the AOI:</label>
+                <input type="file" id="file-upload" name="data">
+            </div>
+
+            <!-- Submit Button -->
+            <div class="form-group">
+                <button type="submit">Create</button>
+            </div>
+        </form>
+
+        <!-- Response Message -->
+        <div id="response" class="response"></div>
+    </div>
+
+    <script>
+        document.getElementById('myForm').addEventListener('submit', async function(event) {
+            document.body.style.cursor = 'wait';
+            event.preventDefault(); // Prevent default form submission
+
+            const formData = new FormData(this); // Create a FormData object from the form
+            const responseElement = document.getElementById('response'); // Element to show the response
+
+            try {
+                // Send the form data using fetch
+                const response = await fetch('https://eudr-server-ny43uciwwa-oc.a.run.app/getDueDiligenceStatement', {
+                    method: 'POST',
+                    body: formData
+                });
+                document.body.style.cursor = 'default';
+                // Check if the request was successful
+                if (response.ok) {
+                    const result = await response.json(); // Parse JSON response
+                    window.open(result.pdf_url, '_blank');
+                } else {
+                    responseElement.textContent = 'Error: Something went wrong.';
+                }
+            } catch (error) {
+                document.body.style.cursor = 'default';
+                responseElement.textContent = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>
