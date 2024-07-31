@@ -78,7 +78,7 @@
 
             <!-- Submit Button -->
             <div class="form-group">
-                <button type="submit">Create</button>
+                <button type="submit" id="myButton">Create</button>
             </div>
         </form>
 
@@ -123,7 +123,9 @@
         document.getElementById('myForm').addEventListener('submit', async function(event) {
             document.body.style.cursor = 'wait';
             event.preventDefault(); // Prevent default form submission
-
+            const button = document.getElementById('myButton');
+            button.disabled = true;
+            button.style.backgroundColor = 'lightgray';
             const formData = new FormData(this); // Create a FormData object from the form
             const responseElement = document.getElementById('response'); // Element to show the response
 
@@ -139,7 +141,9 @@
                 if (response.ok) {
                     const result = await response.json(); // Parse JSON response
                     //window.open(result.pdf_url, '_blank');
-                    downloadFile(result.pdf_url, 'DDS Example.pdf')
+                    downloadFile(result.pdf_url, 'DDS Example.pdf');
+                    button.disabled = false;
+                    button.style.backgroundColor = '#4CAF50';
                 } else {
                     responseElement.textContent = 'Error: Something went wrong.';
                 }
