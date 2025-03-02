@@ -12,13 +12,17 @@ useGeographic();
 
 // Vector tile sources
 const _style = new Style({ stroke: new Stroke({ color: [0, 153, 255, 1], width: 2 }) });
-const vector_tiles_endpoint = 'https://storage.googleapis.com/tree-detection-vector-tiles/andrew@gainforest.net/3GP2bDcLy7vDgnPvU3Vn/mvt_tiles/{z}/{x}/{y}.pbf';
+const vector_tiles_endpoint = 'https://storage.googleapis.com/restor_default/vector_tiles/sites/2025_03_02j/mvt_tiles/{z}/{x}/{y}.pbf'; // restor sites
+
 const vector_tile_source = new VectorTileSource({ format: new MVT(), url: vector_tiles_endpoint, maxZoom: 20 });
+const mvt_layer_style = new Style({ stroke: new Stroke({ color: [255, 0, 0, 1], width: 2 }) });
+// Create the vector tile layer 
+const vector_tile_layer = new VectorTileLayer({ source: vector_tile_source, style: mvt_layer_style});
 
 const map = new Map({
     target: 'map',
-    layers: [new TileLayer({ source: new OSM() }), new VectorTileLayer({ source: vector_tile_source, style: _style })],
-    view: new View({ center: [-91.993929, 46.842557], zoom: 18 }) //maps projection is set to EPSG:3857 by default
+    layers: [new TileLayer({ source: new OSM() }), vector_tile_layer],
+    view: new View({ center: [0,0], zoom: 0 }) 
 });
 
 map.on('singleclick', function (evt) {
