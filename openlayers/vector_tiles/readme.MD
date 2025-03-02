@@ -13,4 +13,4 @@ npm run build
 
 # Live site
 Is available at 
-https://andrewcottam.github.io/web_apps/vector_tiles/dist/index.html
+https://andrewcottam.github.io/web_apps/open_layers/vector_tiles/dist/index.html
