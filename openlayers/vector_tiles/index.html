@@ -1,19 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <title>Cloud Optimized GeoTIFF (COG)</title>
-    <link rel="stylesheet" href="node_modules/ol/ol.css">
-    <style>
-      .map {
-        width: 100%;
-        height: 400px;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="map" class="map"></div>
 
-    <script type="module" src="main.js"></script>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <title>Restor Sites as Vector Tiles</title>
+  <link rel="stylesheet" href="node_modules/ol/ol.css">
+  <style>
+    .map {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: lightblue;
+    }
+
+    .map_container {
+      width: 100%;
+      height: 100%;
+    }
+
+    #slider-container {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    #popup {
+      background-color: white;
+      opacity: 0.95;
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: 300px;
+    }
+
+    td {
+      max-width: 150px;
+      /* Set a maximum width */
+      white-space: nowrap;
+      /* Prevent text from wrapping */
+      overflow: hidden;
+      /* Hide overflow content */
+      text-overflow: ellipsis;
+      /* Show ellipsis (...) when text overflows */
+    }
+
+    .lightbox2 {
+      font-size: 14px;
+      color: gray;
+      background: white;
+      padding: 10px;
+      border-radius: 10px;
+      /* Optional: smooth corners */
+      box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
+      /* Soft light shadow */
+      transition: box-shadow 0.3s ease-in-out;
+      /* Smooth effect */
+    }
+    .lightbox {
+      width: 300px;
+      /* Adjust as needed */
+      height: 235px;
+      background: white;
+      padding: 10px;
+      border-radius: 10px;
+      /* Optional: smooth corners */
+      box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
+      /* Soft light shadow */
+      transition: box-shadow 0.3s ease-in-out;
+      /* Smooth effect */
+    }
+
+    /* Optional: Add a hover effect for a more interactive look */
+    .lightbox:hover {
+      box-shadow: 0px 15px 40px rgba(0, 0, 0, 0.25);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="map_container">
+    <div id="map" class="map"></div>
+  </div>
+  <div id="slider-container" class="lightbox2">
+    <label for="slider">Site area threshold in Km2</label>
+    <input type="range" id="slider" min="0" max="1000000" value="2000">
+    <span id="slider-value">2000</span>
+  </div>
+  <div id="popup" class="lightbox">
+  </div>
+  <script type="module" src="main.js"></script>
+</body>
+<!-- Use Option + SHIFT to rotate -->
+
 </html>
