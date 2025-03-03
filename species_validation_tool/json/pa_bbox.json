@@ -1,0 +1,23 @@
+{
+ "metadata": {
+  "duration": "0:00:00.007983",
+  "error": null,
+  "idProperty": "get_pa_bbox",
+  "successProperty": "success",
+  "totalProperty": "recordCount",
+  "success": true,
+  "recordCount": 1,
+  "root": "records",
+  "fields": [
+   {
+    "name": "get_pa_bbox",
+    "type": "string"
+   }
+  ]
+ },
+ "records": [
+  {
+   "get_pa_bbox": "POLYGON((116.45909211300011 6.006174531000056,116.45909211300011 6.494857425000021,116.75668829800009 6.494857425000021,116.75668829800009 6.006174531000056,116.45909211300011 6.006174531000056))"
+  }
+ ]
+}

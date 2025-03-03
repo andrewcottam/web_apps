@@ -1,0 +1,1359 @@
+{
+ "metadata": {
+  "duration": "0:00:00.044654",
+  "error": null,
+  "idProperty": "iucn_species_id",
+  "successProperty": "success",
+  "totalProperty": "recordCount",
+  "success": true,
+  "recordCount": 189,
+  "root": "records",
+  "fields": [
+   {
+    "name": "iucn_species_id",
+    "type": "integer"
+   },
+   {
+    "name": "taxon",
+    "type": "string"
+   },
+   {
+    "name": "commonname",
+    "type": "string"
+   },
+   {
+    "name": "status",
+    "type": "string"
+   },
+   {
+    "name": "validated",
+    "type": "boolean"
+   }
+  ]
+ },
+ "records": [
+  {
+   "iucn_species_id": 22693150,
+   "taxon": "Limosa limosa",
+   "commonname": "Black tailed Godwit",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22693190,
+   "taxon": "Numenius arquata",
+   "commonname": "Curlew",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 17975,
+   "taxon": "Pongo pygmaeus",
+   "commonname": "Bornean Orangutan",
+   "status": "EN",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 44166,
+   "taxon": "Aonyx cinerea",
+   "commonname": "Asian Small clawed Otter",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22696712,
+   "taxon": "Anhinga melanogaster",
+   "commonname": "African Darter",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 14352,
+   "taxon": "Nasalis larvatus",
+   "commonname": "Long nosed Monkey",
+   "status": "EN",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 9760,
+   "taxon": "Helarctos malayanus",
+   "commonname": "Malayan Sun Bear",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 177540,
+   "taxon": "Ophiophagus hannah",
+   "commonname": "Hamadryad",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22725006,
+   "taxon": "Argusianus argus",
+   "commonname": "Great Argus",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 18766,
+   "taxon": "Pteropus vampyrus",
+   "commonname": "Large Flying Fox",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22697713,
+   "taxon": "Leptoptilos javanicus",
+   "commonname": "Lesser Adjutant",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 12555,
+   "taxon": "Macaca nemestrina",
+   "commonname": "Pig tailed Macaque",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22682450,
+   "taxon": "Buceros rhinoceros",
+   "commonname": "Rhinoceros Hornbill",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 41790,
+   "taxon": "Rusa unicolor",
+   "commonname": "Sambar",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22679106,
+   "taxon": "Rollulus rouloul",
+   "commonname": "Crested Partridge",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22698735,
+   "taxon": "Eurylaimus ochromalus",
+   "commonname": "Black and yellow Broadbill",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22035,
+   "taxon": "Trachypithecus cristatus",
+   "commonname": "Silvered Langur",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22693199,
+   "taxon": "Numenius madagascariensis",
+   "commonname": "Eastern Curlew",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22693359,
+   "taxon": "Calidris tenuirostris",
+   "commonname": "Great Knot",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 41690,
+   "taxon": "Arctictis binturong",
+   "commonname": "Bearcat",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22696977,
+   "taxon": "Egretta eulophotes",
+   "commonname": "Chinese Egret",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 41772,
+   "taxon": "Sus barbatus",
+   "commonname": "Bearded Pig",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22693836,
+   "taxon": "Charadrius peronii",
+   "commonname": "Malaysian Plover",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22727431,
+   "taxon": "Lophura ignita",
+   "commonname": "Crested Fireback",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22682848,
+   "taxon": "Harpactes duvaucelii",
+   "commonname": "Scarlet rumped Trogon",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22698750,
+   "taxon": "Calyptomena viridis",
+   "commonname": "Asian Green Broadbill",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22683532,
+   "taxon": "Actenoides concretus",
+   "commonname": "Rufous collared Kingfisher",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22684095,
+   "taxon": "Phaenicophaeus sumatranus",
+   "commonname": "Chestnut bellied Malkoha",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22685513,
+   "taxon": "Psittacula longicauda",
+   "commonname": "Long tailed Parakeet",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22682833,
+   "taxon": "Harpactes kasumba",
+   "commonname": "Red naped Trogon",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22682441,
+   "taxon": "Anthracoceros malayanus",
+   "commonname": "Black Hornbill",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58806,
+   "taxon": "Nyctixalus pictus",
+   "commonname": "White spotted Tree Frog",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22697685,
+   "taxon": "Ciconia stormi",
+   "commonname": "Storm s Stork",
+   "status": "EN",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22682836,
+   "taxon": "Harpactes diardii",
+   "commonname": "Diard s Trogon",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 10551,
+   "taxon": "Hylobates muelleri",
+   "commonname": "Bornean Gibbon",
+   "status": "EN",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22712603,
+   "taxon": "Pycnonotus zeylanicus",
+   "commonname": "Straw crowned Bulbul",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22704953,
+   "taxon": "Chloropsis cyanopogon",
+   "commonname": "Lesser Green Leafbird",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22713170,
+   "taxon": "Iole olivacea",
+   "commonname": "Buff vented Bulbul",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22706336,
+   "taxon": "Pityriasis gymnocephala",
+   "commonname": "Bornean Bristlehead",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 21488,
+   "taxon": "Tarsius bancanus",
+   "commonname": "Horsfield's Tarsier",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22712628,
+   "taxon": "Pycnonotus squamatus",
+   "commonname": "Scaly breasted Bulbul",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22684092,
+   "taxon": "Phaenicophaeus diardi",
+   "commonname": "Black bellied Malkoha",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22707440,
+   "taxon": "Aegithina viridissima",
+   "commonname": "Green Iora",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 12763,
+   "taxon": "Manis javanica",
+   "commonname": "Malayan Pangolin",
+   "status": "CR",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22710129,
+   "taxon": "Enicurus ruficapillus",
+   "commonname": "Chestnut naped Forktail",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22712631,
+   "taxon": "Pycnonotus cyaniventris",
+   "commonname": "Gray bellied Bulbul",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 8437,
+   "taxon": "Exilisciurus exilis",
+   "commonname": "Least Pygmy Squirrel",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22681562,
+   "taxon": "Meiglyptes tukki",
+   "commonname": "Buff necked Woodpecker",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22715834,
+   "taxon": "Malacocincla malaccensis",
+   "commonname": "Short tailed Babbler",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22705602,
+   "taxon": "Platylophus galericulatus",
+   "commonname": "Crested Jay",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 19376,
+   "taxon": "Ratufa affinis",
+   "commonname": "Cream coloured Giant Squirrel",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 54469,
+   "taxon": "Ansonia hanitschi",
+   "commonname": null,
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58990,
+   "taxon": "Rhacophorus dulitensis",
+   "commonname": "Jade tree frog",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 136603,
+   "taxon": "Neofelis diardi",
+   "commonname": "Enkuli Clouded Leopard",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22706744,
+   "taxon": "Pericrocotus igneus",
+   "commonname": "Fiery Minivet",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22733677,
+   "taxon": "Zoothera interpres",
+   "commonname": "Chestnut capped Thrush",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22705605,
+   "taxon": "Platysmurus leucopterus",
+   "commonname": "Black Magpie",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22713198,
+   "taxon": "Ixos malaccensis",
+   "commonname": "Streaked Bulbul",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 18128,
+   "taxon": "Presbytis hosei",
+   "commonname": "Gray Leaf Monkey",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58341,
+   "taxon": "Limnonectes ingeri",
+   "commonname": null,
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22679278,
+   "taxon": "Lophura bulweri",
+   "commonname": "Bulwer s Pheasant",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22681493,
+   "taxon": "Dinopium rafflesii",
+   "commonname": "Olive backed Woodpecker",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22681585,
+   "taxon": "Mulleripicus pulverulentus",
+   "commonname": "Great Slaty Woodpecker",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22696330,
+   "taxon": "Microhierax latifrons",
+   "commonname": "Bornean Falconet",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22706369,
+   "taxon": "Oriolus xanthonotus",
+   "commonname": "Dark throated Oriole",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22727599,
+   "taxon": "Psittinus cyanurus",
+   "commonname": "Blue rumped Parrot",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22682842,
+   "taxon": "Harpactes whiteheadi",
+   "commonname": "Whitehead s Trogon",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22713137,
+   "taxon": "Alophoixus finschii",
+   "commonname": "Finsch s Bulbul",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22732662,
+   "taxon": "Pitta ussheri",
+   "commonname": "Black headed Pitta",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58363,
+   "taxon": "Limnonectes paramacrodon",
+   "commonname": "Lesser Swamp Frog",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58992,
+   "taxon": "Philautus everetti",
+   "commonname": null,
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22689591,
+   "taxon": "Batrachostomus auritus",
+   "commonname": "Large Frogmouth",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22698631,
+   "taxon": "Pitta baudii",
+   "commonname": "Blue headed Pitta",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22705375,
+   "taxon": "Eupetes macrocerus",
+   "commonname": "Malaysian Rail babbler",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58997,
+   "taxon": "Rhacophorus harrissoni",
+   "commonname": null,
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22682464,
+   "taxon": "Rhinoplax vigil",
+   "commonname": "Helmeted Hornbill",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22689600,
+   "taxon": "Batrachostomus stellatus",
+   "commonname": "Gould s Frogmouth",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22696186,
+   "taxon": "Nisaetus nanus",
+   "commonname": "Wallace s Hawk Eagle",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22713158,
+   "taxon": "Setornis criniger",
+   "commonname": "Hook billed Bulbul",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 54473,
+   "taxon": "Ansonia longidigita",
+   "commonname": null,
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58824,
+   "taxon": "Philautus bunitus",
+   "commonname": null,
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 170393,
+   "taxon": "Draco cornutus",
+   "commonname": null,
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 54870,
+   "taxon": "Pelophryne misera",
+   "commonname": null,
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 57579,
+   "taxon": "Megophrys kobayashii",
+   "commonname": "Kobayashi s Horned Frog",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58371,
+   "taxon": "Meristogenys kinabaluensis",
+   "commonname": "Kiau Borneo Frog",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22698614,
+   "taxon": "Pitta caerulea",
+   "commonname": "Giant Pitta",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22716630,
+   "taxon": "Alcippe brunneicauda",
+   "commonname": "Brown Fulvetta",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 41689,
+   "taxon": "Hemigalus derbyanus",
+   "commonname": "Banded Civet",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 57564,
+   "taxon": "Leptolalax dringi",
+   "commonname": null,
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 57631,
+   "taxon": "Xenophrys baluensis",
+   "commonname": "Kinabalu Horned Frog",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58406,
+   "taxon": "Occidozyga baluensis",
+   "commonname": "Seep Frog",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58970,
+   "taxon": "Rhacophorus angulirostris",
+   "commonname": null,
+   "status": "EN",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22679094,
+   "taxon": "Caloperdix oculeus",
+   "commonname": "Ferruginous Partridge",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22688554,
+   "taxon": "Otus rufescens",
+   "commonname": "Reddish Scops Owl",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22709156,
+   "taxon": "Rhinomyias umbratilis",
+   "commonname": "Grey chested Jungle Flycatcher",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 10975,
+   "taxon": "Kerivoula intermedia",
+   "commonname": "Small Woolly Bat",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 12421,
+   "taxon": "Lutra sumatrana",
+   "commonname": "Hairy nosed Otter",
+   "status": "EN",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 12904,
+   "taxon": "Maxomys rajah",
+   "commonname": "Rajah Spiny Rat",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 16218,
+   "taxon": "Pardofelis marmorata",
+   "commonname": "Marbled Cat",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 39760,
+   "taxon": "Nycticebus menagensis",
+   "commonname": "Bornean Slow Loris",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 54466,
+   "taxon": "Ansonia fuliginea",
+   "commonname": null,
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 54468,
+   "taxon": "Ansonia guibei",
+   "commonname": null,
+   "status": "EN",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 57552,
+   "taxon": "Leptobrachium gunungense",
+   "commonname": null,
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 57833,
+   "taxon": "Kalophrynus baluensis",
+   "commonname": null,
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58995,
+   "taxon": "Rhacophorus gauni",
+   "commonname": null,
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 178639,
+   "taxon": "Sphenomorphus cyanolaemus",
+   "commonname": null,
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22691127,
+   "taxon": "Treron fulvicollis",
+   "commonname": "Cinnamon headed Green Pigeon",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22695306,
+   "taxon": "Spilornis kinabaluensis",
+   "commonname": "Kinabalu Serpent eagle",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22709558,
+   "taxon": "Cyornis caerulatus",
+   "commonname": "Large billed Blue Flycatcher",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22712702,
+   "taxon": "Pycnonotus eutilotus",
+   "commonname": "Puff backed Bulbul",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22716268,
+   "taxon": "Stachyris leucotis",
+   "commonname": "White necked Babbler",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 556,
+   "taxon": "Aeromys tephromelas",
+   "commonname": "Black Flying Squirrel",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 4682,
+   "taxon": "Chiropodomys major",
+   "commonname": "Greater Pencil tailed Tree Mouse",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 10978,
+   "taxon": "Kerivoula minuta",
+   "commonname": "Least Woolly Bat",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 10983,
+   "taxon": "Kerivoula pellucida",
+   "commonname": "Clear winged Woolly Bat",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 14937,
+   "taxon": "Nycteris tragata",
+   "commonname": "Malayan Slit Faced Bat",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 19565,
+   "taxon": "Rhinolophus sedulus",
+   "commonname": "Lesser Woolly Horseshoe Bat",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 21155,
+   "taxon": "Sundasciurus hippurus",
+   "commonname": "Horse tailed Squirrel",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 54483,
+   "taxon": "Ansonia spinulifer",
+   "commonname": null,
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 57562,
+   "taxon": "Leptolalax arayai",
+   "commonname": null,
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 57569,
+   "taxon": "Leptolalax maurus",
+   "commonname": null,
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 57889,
+   "taxon": "Microhyla petrigena",
+   "commonname": null,
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58851,
+   "taxon": "Philautus gunungensis",
+   "commonname": null,
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58977,
+   "taxon": "Rhacophorus baluensis",
+   "commonname": null,
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22679393,
+   "taxon": "Polyplectron schleiermacheri",
+   "commonname": "Bornean Peacock Pheasant",
+   "status": "EN",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22691198,
+   "taxon": "Treron capellei",
+   "commonname": "Large Green Pigeon",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22707998,
+   "taxon": "Philentoma velata",
+   "commonname": "Maroon breasted Philentoma",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22710012,
+   "taxon": "Trichixos pyrropygus",
+   "commonname": "Rufous tailed Shama",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22712616,
+   "taxon": "Pycnonotus melanoleucos",
+   "commonname": "Black and white Bulbul",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22715882,
+   "taxon": "Malacopteron magnum",
+   "commonname": "Rufous crowned Babbler",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22716010,
+   "taxon": "Ptilocichla leucogrammica",
+   "commonname": "Bornean Wren Babbler",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22717466,
+   "taxon": "Prionochilus thoracicus",
+   "commonname": "Scarlet breasted Flowerpecker",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 557,
+   "taxon": "Aeromys thomasi",
+   "commonname": "Thomas s Flying Squirrel",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 3591,
+   "taxon": "Callosciurus adamsi",
+   "commonname": "Ear spot Squirrel",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 4648,
+   "taxon": "Chimarrogale phaeura",
+   "commonname": "Bornean Water Shrew",
+   "status": "EN",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 4683,
+   "taxon": "Chiropodomys muroides",
+   "commonname": "Gray bellied Pencil tailed Tree Mouse",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 4684,
+   "taxon": "Chiropodomys pusillus",
+   "commonname": "Lesser Pencil tailed Tree Mouse",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 6082,
+   "taxon": "Cynogale bennettii",
+   "commonname": "Otter Civet",
+   "status": "EN",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 6405,
+   "taxon": "Dendrogale melanura",
+   "commonname": "Bornean Smooth Tailed Treeshrew",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 6635,
+   "taxon": "Diplogale hosei",
+   "commonname": "Hose s palm civet",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 7786,
+   "taxon": "Eonycteris major",
+   "commonname": "Greater Dawn Bat",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 9283,
+   "taxon": "Glyphotes simus",
+   "commonname": "Sculptor Squirrel",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 9632,
+   "taxon": "Haeromys pusillus",
+   "commonname": "Lesser Ranee Mouse",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 10108,
+   "taxon": "Hipposideros ridleyi",
+   "commonname": "Ridley s Leaf nosed Bat",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 10130,
+   "taxon": "Hipposideros doriae",
+   "commonname": "Bornean Leaf nosed Bat",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 10603,
+   "taxon": "Hylopetes lepidus",
+   "commonname": "Gray cheeked Flying Squirrel",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 11304,
+   "taxon": "Lariscus hosei",
+   "commonname": "Four striped Ground Squirrel",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 12892,
+   "taxon": "Maxomys baeodon",
+   "commonname": "Small Bornean Maxomys",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 12901,
+   "taxon": "Maxomys ochraceiventer",
+   "commonname": "Chestnut bellied Spiny Rat",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 12907,
+   "taxon": "Maxomys whiteheadi",
+   "commonname": "Whitehead s Spiny Rat",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 13110,
+   "taxon": "Melogale everetti",
+   "commonname": "Bornean Ferret Badger",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 13936,
+   "taxon": "Murina aenea",
+   "commonname": "Bronze Tube Nosed Bat",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 13945,
+   "taxon": "Murina rozendaali",
+   "commonname": "Gilded Tube nosed Bat",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 14194,
+   "taxon": "Myotis ridleyi",
+   "commonname": "Ridley s bat",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 14816,
+   "taxon": "Niviventer cremoriventer",
+   "commonname": "Dark tailed Tree Rat",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 16715,
+   "taxon": "Petaurillus hosei",
+   "commonname": "Hose s Pygmy Flying Squirrel",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 16735,
+   "taxon": "Petinomys genibarbis",
+   "commonname": "Whiskered Flying Squirrel",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 16739,
+   "taxon": "Petinomys setosus",
+   "commonname": "Temminck s Flying Squirrel",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 17359,
+   "taxon": "Falsistrellus petersi",
+   "commonname": "North Wallacean Pipistrelle",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 18703,
+   "taxon": "Pteromyscus pulverulentus",
+   "commonname": "Smoky Flying Squirrel",
+   "status": "EN",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 19474,
+   "taxon": "Rheithrosciurus macrotis",
+   "commonname": "Tufted Ground Squirrel",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 21141,
+   "taxon": "Suncus ater",
+   "commonname": "Black Shrew",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 41493,
+   "taxon": "Tupaia dorsalis",
+   "commonname": "Striped Tree Shrew",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 41616,
+   "taxon": "Herpestes semitorquatus",
+   "commonname": "Collared Mongoose",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 42460,
+   "taxon": "Rhinosciurus laticaudatus",
+   "commonname": "Shrew faced Squirrel",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 54480,
+   "taxon": "Ansonia platysoma",
+   "commonname": null,
+   "status": "EN",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 54861,
+   "taxon": "Pedostibes everetti",
+   "commonname": null,
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 54864,
+   "taxon": "Pedostibes rugosus",
+   "commonname": null,
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 57542,
+   "taxon": "Leptobrachella baluensis",
+   "commonname": null,
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 57573,
+   "taxon": "Leptolalax pictus",
+   "commonname": null,
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58369,
+   "taxon": "Meristogenys amoropalamus",
+   "commonname": null,
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58376,
+   "taxon": "Meristogenys whiteheadi",
+   "commonname": null,
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58763,
+   "taxon": "Staurois tuberilinguis",
+   "commonname": null,
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58814,
+   "taxon": "Philautus amoenus",
+   "commonname": null,
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58818,
+   "taxon": "Philautus aurantium",
+   "commonname": null,
+   "status": "EN",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58865,
+   "taxon": "Philautus longicrus",
+   "commonname": null,
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 58899,
+   "taxon": "Philautus saueri",
+   "commonname": null,
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 136726,
+   "taxon": "Crocidura baluensis",
+   "commonname": "Kinabalu Shrew",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 178498,
+   "taxon": "Xenophidion acanthognathus",
+   "commonname": null,
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 178723,
+   "taxon": "Ptychozoon horsfieldii",
+   "commonname": "Horsfield's Flying Gecko",
+   "status": "DD",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22678934,
+   "taxon": "Melanoperdix niger",
+   "commonname": "Bianca Partridge",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22680620,
+   "taxon": "Indicator archipelagicus",
+   "commonname": "Malaysian Honeyguide",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22682845,
+   "taxon": "Harpactes orrhophaeus",
+   "commonname": "Cinnamon rumped Trogon",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22684222,
+   "taxon": "Centropus rectunguis",
+   "commonname": "Short toed Coucal",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22689613,
+   "taxon": "Batrachostomus mixtus",
+   "commonname": "Bornean Frogmouth",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22689993,
+   "taxon": "Caprimulgus concretus",
+   "commonname": "Bonaparte s Nightjar",
+   "status": "VU",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22698754,
+   "taxon": "Calyptomena hosii",
+   "commonname": "Hose s Broadbill",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22708378,
+   "taxon": "Zoothera everetti",
+   "commonname": "Everett s Thrush",
+   "status": "NT",
+   "validated": true
+  },
+  {
+   "iucn_species_id": 22709364,
+   "taxon": "Ficedula dumetoria",
+   "commonname": "Rufous chested Flycatcher",
+   "status": "NT",
+   "validated": true
+  }
+ ]
+}

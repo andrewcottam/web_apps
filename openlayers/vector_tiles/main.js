@@ -15,16 +15,20 @@ useGeographic();
 // Vector tile sources
 const vector_tiles_endpoint = 'https://storage.googleapis.com/restor_default/vector_tiles/sites/2025_03_02/mvt_tiles/{z}/{x}/{y}.pbf'; // restor sites
 const vector_tile_source = new VectorTileSource({ format: new MVT(), url: vector_tiles_endpoint, maxZoom: 20 });
-const mvt_layer_style = new Style({ stroke: new Stroke({ color: [255, 0, 0, 1], width: 1 }) });
-const mvt_highlight_style = new Style({ fill: new Fill({ color: 'rgba(255, 255, 255, 0)', }), stroke: new Stroke({ color: 'rgba(255, 255, 255, 1)', width: 3 }) });
+const mvt_layer_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)', }), stroke: new Stroke({ color: [99,148,69,0.3], width: 1 }) });
+const mvt_highlight_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.4)', }), stroke: new Stroke({ color: 'rgba(255, 255, 255, 1)', width: 2 }) });
+
+// variables
+var visibility = 'PUBLIC';
 
 // Create the sites vector tile layer 
 const vector_tile_layer = new VectorTileLayer({
     source: vector_tile_source, style: mvt_layer_style,
     style: function (feature) {
         const threshold = parseFloat(document.getElementById('slider').value);
-        const featureValue = feature.get('area_km2'); // Replace with the actual property name
-        return featureValue <= threshold ? mvt_layer_style : null; // Hide features that do not meet the threshold
+        const featureValue = feature.get('area_km2'); 
+        const vis = feature.get('visibility');
+        return (featureValue <= threshold && vis==visibility)? mvt_layer_style : null; // Hide features that do not meet the threshold
     }
 });
 // Create the map
@@ -37,7 +41,8 @@ const map = new Map({
 
 // Apply the MapTiler style
 // const styleJson = `https://api.maptiler.com/maps/backdrop/style.json?key=67VOA297U9cciigsJVvm`;
-const styleJson = 'https://api.maptiler.com/maps/dataviz/style.json?key=67VOA297U9cciigsJVvm'
+// const styleJson = 'https://api.maptiler.com/maps/dataviz/style.json?key=67VOA297U9cciigsJVvm'; // dataviz with green forests
+const styleJson = 'https://api.maptiler.com/maps/a1d2f17b-d57a-45ba-b7c6-4af845f758fb/style.json?key=67VOA297U9cciigsJVvm'; // forests 0% opacity
 apply(map, styleJson).then(() => {
     map.addLayer(vector_tile_layer);
     // Add the layer to the map
@@ -65,6 +70,13 @@ function getText(str) {
     var ret = (str !== undefined) ? str : '';
     return ret;
 }
+
+function handleRadioClick(event) {
+    // set the visibility
+    visibility = event.target.value;
+    vector_tile_layer.setStyle(vector_tile_layer.getStyle());
+}
+
 // Add the mouse move event
 map.on(['pointermove'], function (mapEvent) {
     // Get the features which are under the mouse
@@ -152,4 +164,12 @@ map.on(['pointermove'], function (mapEvent) {
 document.getElementById('slider').addEventListener('input', function () {
     document.getElementById('slider-value').innerText = this.value;
     vector_tile_layer.setStyle(vector_tile_layer.getStyle());
+});
+
+// Ensure the script runs after the DOM is fully loaded
+document.addEventListener("DOMContentLoaded", function () {
+    let radioButtons = document.querySelectorAll("input[name='options']");
+    radioButtons.forEach(radio => {
+        radio.addEventListener("click", handleRadioClick);
+    });
 });

@@ -1,0 +1,27 @@
+{"metadata": {
+  "duration": "0:00:00.004540",
+  "error": null,
+  "idProperty": "name",
+  "successProperty": "success",
+  "totalProperty": "recordCount",
+  "success": true,
+  "recordCount": 1,
+  "root": "records",
+  "fields": [
+   {
+    "name": "name",
+    "type": "string"
+   },
+   {
+    "name": "desig",
+    "type": "string"
+   }
+  ]
+ },
+ "records": [
+  {
+   "name": "Kinabalu Park",
+   "desig": "State Park"
+  }
+ ]
+}

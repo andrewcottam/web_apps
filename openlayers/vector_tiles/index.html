@@ -61,6 +61,7 @@
       transition: box-shadow 0.3s ease-in-out;
       /* Smooth effect */
     }
+
     .lightbox {
       width: 300px;
       /* Adjust as needed */
@@ -90,6 +91,11 @@
     <label for="slider">Site area threshold in Km2</label>
     <input type="range" id="slider" min="0" max="1000000" value="2000">
     <span id="slider-value">2000</span>
+    <div>
+      <span></span>
+      <label><input type="radio" name="options" value="PRIVATE">Private</label>
+      <label><input type="radio" name="options" value="PUBLIC" checked>Public</label><br></span>
+    </div>
   </div>
   <div id="popup" class="lightbox">
   </div>
