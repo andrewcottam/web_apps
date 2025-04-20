@@ -1,0 +1,29 @@
+h1 {
+    font-size: 54px;
+}
+
+input {
+    width: 1ch;
+    box-sizing: content-box;
+    height: 2ch;
+    margin: 3px;
+}
+.firstline{
+    font-size:40px;
+}
+.secondline{
+    font-size:30px;
+    margin:20px;
+}
+.inputboxes{
+    margin:20px;
+}
+.title{
+    font-size:65px;
+}
+.location{
+    font-size:30px;
+}
+.welldone{
+    font-size:30px;
+}

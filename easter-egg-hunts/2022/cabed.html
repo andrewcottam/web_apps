@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Question 3</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="firstline">Question 3</div>
+  <div class="welldone">Well done! Correct!</div>
+  <div class="location">You will find question 3 in the wellies</div>
+  <div class="secondline">Enter your answers in order and click Go to get to your next question:</div>
+  <div class="inputboxes"><span><input type="text" id="l1"></span>
+    <span><input type="text" id="l2"></span>
+    <span><input type="text" id="l3"></span>
+    <span><input type="text" id="l4"></span>
+    <span><input type="text" id="l5"></span>
+  </div>
+  <button id='btn'>Go</button>
+
+  <script>
+    document.getElementById("btn").addEventListener("click", function() {
+      window.location.href = document.getElementById("l1").value.toLowerCase() + document.getElementById("l2").value.toLowerCase() + document.getElementById("l3").value.toLowerCase() + document.getElementById("l4").value.toLowerCase() + document.getElementById("l5").value.toLowerCase() + ".html";
+    });
+  </script>
+
+</body>
+
+</html>
