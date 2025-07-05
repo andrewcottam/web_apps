@@ -119,7 +119,6 @@ const App: React.FC = () => {
         const polygon = event.feature.getGeometry() as Polygon;
         const coords = polygon.getCoordinates();
 
-
         if (userRef.current) {
           const idToken = await userRef.current.getIdToken();
           const response = await fetch("https://europe-west6-restor-poc-apps-b3414.cloudfunctions.net/verify_site", {
@@ -128,7 +127,7 @@ const App: React.FC = () => {
               Authorization: `Bearer ${idToken}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ someData: "hello cloud function", geometry: coords, }),
+            body: JSON.stringify({ someData: "hello cloud function", geometry: [coords], }),
           });
           const data = await response.json();
           setData(data);
