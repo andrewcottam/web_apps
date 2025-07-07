@@ -40,3 +40,33 @@
 .read-the-docs {
   color: #888;
 }
+
+.json-viewer {
+  max-width: 400px;
+  margin: 1rem auto;
+  padding: 1rem;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+}
+
+.json-row {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #eee;
+  padding: 0.5rem 0;
+}
+
+.json-row:last-child {
+  border-bottom: none;
+}
+
+.json-key {
+  font-weight: bold;
+  color: #333;
+}
+
+.json-value {
+  color: #555;
+}

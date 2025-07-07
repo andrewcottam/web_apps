@@ -85,3 +85,8 @@ h2 {
   left: 1000px;
   top: 20px
 }
+
+th{
+  font-weight: normal;
+  text-align: left;
+}

@@ -20,6 +20,9 @@ import { getFirestore, getDoc, doc, collection } from "firebase/firestore";
 import IconButton from "@mui/material/IconButton";
 import Avatar from '@mui/material/Avatar';
 
+// custom components
+import JsonViewer from "./JsonViewer";
+
 // Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyAzrhJkckakoJLnRThTDvNRwyE29k7DDGQ",
@@ -41,7 +44,7 @@ const App: React.FC = () => {
 
   const [user, setUser] = useState<UserCredential["user"]>();
   const [logged_in, setLoggedIn] = useState(false);
-  const [data,setData] = useState<string>("");
+  const [data, setData] = useState<Record<string, any>>({});
 
   // ref to always hold the latest user
   const userRef = useRef<typeof user>(undefined);
@@ -130,7 +133,7 @@ const App: React.FC = () => {
             body: JSON.stringify({ someData: "hello cloud function", geometry: [coords], }),
           });
           const data = await response.json();
-          setData(data);
+          setData(data.results);
         } else {
           console.warn("No user logged in, cannot get data");
         }
@@ -164,7 +167,9 @@ const App: React.FC = () => {
         <div style={{ display: logged_in ? "block" : "none" }}>
           <h1>Site Verification Sandbox</h1>
           <h2>Draw a polygon on the map</h2>
-          <div>{JSON.stringify(data)}</div>
+          <div>
+            <JsonViewer data={data} />
+          </div>
         </div>
       </div>
     </div>
