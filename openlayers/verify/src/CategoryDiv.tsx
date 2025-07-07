@@ -52,7 +52,8 @@ const CategoryDiv: React.FC<Props> = ({ data, use_prop, thresholds }) => {
         padding: '10px 16px',
         borderRadius: '8px',
         width: 'fit-content',
-        fontWeight: 'bold'
+        fontWeight: 'bold',
+        display: isNaN(value) ? 'none' : 'block'
       }}
     >
       {category}
