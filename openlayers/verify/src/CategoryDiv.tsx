@@ -37,9 +37,9 @@ const getCategoryColor = (category: string): string => {
 const CategoryDiv: React.FC<Props> = ({ data, use_prop, thresholds }) => {
   const value = Number(data[use_prop]);
 
-  if (isNaN(value)) {
-    return <div style={{ color: 'red' }}>Invalid property: {use_prop}</div>;
-  }
+//   if (isNaN(value)) {
+//     return <div style={{ color: 'red' }}>Invalid property: {use_prop}</div>;
+//   }
 
   const category = classify_value(value, thresholds);
   const backgroundColor = getCategoryColor(category);
