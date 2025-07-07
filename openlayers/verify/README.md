@@ -5,6 +5,7 @@ npm install @mui/material @emotion/react @emotion/styled
 
 # Running 
 ```
+cd openlayers/verify
 npm run dev
 ```
 

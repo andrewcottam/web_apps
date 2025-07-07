@@ -22,6 +22,12 @@ import Avatar from '@mui/material/Avatar';
 
 // custom components
 import JsonViewer from "./JsonViewer";
+import CategoryDiv from './CategoryDiv';
+
+const thresholds = {
+  validMax: 500,
+  needsReviewMax: 1200
+};
 
 // Firebase config
 const firebaseConfig = {
@@ -169,6 +175,7 @@ const App: React.FC = () => {
           <h2>Draw a polygon on the map</h2>
           <div>
             <JsonViewer data={data} />
+            <CategoryDiv data={data} use_prop={'average_segment_length'} thresholds={thresholds}/>
           </div>
         </div>
       </div>
