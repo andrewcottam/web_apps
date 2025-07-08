@@ -78,14 +78,14 @@ const ClassificationCheck: React.FC<Props> = ({
             }}>
               {formatKey(prop_name)}
             </th>
-            <td style={{ padding: '4px 8px' }}>
+            <td style={{ padding: '2px 4px' }}>
               <div
                 style={{
                   backgroundColor,
                   color: 'white',
-                  padding: '6px 12px',
-                  borderRadius: '8px',
-                  fontWeight: 'bold',
+                  padding: '3px 6px',
+                  borderRadius: '4px',
+                  fontWeight: 'normal',
                   width: 'fit-content'
                 }}
                 title={use_prop + '=' + value.toString()}

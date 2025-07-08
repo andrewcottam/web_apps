@@ -71,9 +71,9 @@ const ThresholdCheck: React.FC<Props> = ({
                 style={{
                   backgroundColor,
                   color: 'white',
-                  padding: '6px 12px',
-                  borderRadius: '8px',
-                  fontWeight: 'bold',
+                  padding: '3px 6px',
+                  borderRadius: '4px',
+                  fontWeight: 'normal',
                   width: 'fit-content'
                 }}
                 title={`${use_prop} ${isValid ? '' : ' is not '} ${above ? '>' : '<'} ${threshold}% of the site`}

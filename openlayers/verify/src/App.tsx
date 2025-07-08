@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import osmtogeojson from "osmtogeojson";
 
 // OpenLayers
 import "ol/ol.css";
@@ -7,6 +8,7 @@ import View from "ol/View";
 import Polygon from "ol/geom/Polygon";
 import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
+import GeoJSON from "ol/format/GeoJSON";
 import { transform } from 'ol/proj';
 import { Draw } from "ol/interaction";
 import { fromLonLat } from "ol/proj";
@@ -54,12 +56,14 @@ const firestore = getFirestore(app);
 
 const App: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
+  const drawnFeatureRef = useRef<any>(null);
 
   const [user, setUser] = useState<UserCredential["user"]>();
   const [logged_in, setLoggedIn] = useState(false);
   const [data, setData] = useState<Record<string, any>>({});
   const [selectedTab, setSelectedTab] = useState("Properties");
   const [checkStatuses, setCheckStatuses] = useState<Record<string, CheckStatus>>({});
+  const osmLayerRef = useRef<VectorLayer | null>(null);
 
   const userRef = useRef<typeof user>(undefined);
 
@@ -77,6 +81,30 @@ const App: React.FC = () => {
     : Object.values(checkStatuses).includes(CheckStatus.NeedsReview)
       ? CheckStatus.NeedsReview
       : CheckStatus.Valid;
+
+  useEffect(() => {
+    if (!drawnFeatureRef.current) return;
+
+    const getColor = () => {
+      switch (overallStatus) {
+        case CheckStatus.Valid:
+          return "rgba(0, 255, 0, 0.4)"; // Green
+        case CheckStatus.NeedsReview:
+          return "rgba(255, 165, 0, 0.4)"; // Orange
+        case CheckStatus.Invalid:
+          return "rgba(255, 0, 0, 0.4)"; // Red
+        default:
+          return "rgba(255, 255, 255, 0.4)"; // Default white
+      }
+    };
+
+    drawnFeatureRef.current.setStyle(
+      new Style({
+        fill: new Fill({ color: getColor() }),
+        stroke: new Stroke({ color: "#888", width: 2 }),
+      })
+    );
+  }, [overallStatus]);
 
   function logout() {
     setLoggedIn(false);
@@ -124,7 +152,26 @@ const App: React.FC = () => {
       }),
       layers: [],
     });
+    const addGeoJSONToMap = (map: Map, geojsonData: any) => {
+      const features = new GeoJSON().readFeatures(geojsonData, {
+        featureProjection: "EPSG:3857",
+      });
 
+      const vectorSource = new VectorSource({ features });
+
+      const vectorLayer = new VectorLayer({
+        source: vectorSource,
+        style: new Style({
+          fill: new Fill({ color: "rgba(0, 0, 255, 0.1)" }),
+          stroke: new Stroke({ color: "#0000ff", width: 2 }),
+        }),
+      });
+
+      map.addLayer(vectorLayer);
+
+      // Store reference to OSM layer so we can remove it later
+      osmLayerRef.current = vectorLayer;
+    };
     const styleJson = "https://api.maptiler.com/maps/a1d2f17b-d57a-45ba-b7c6-4af845f758fb/style.json?key=67VOA297U9cciigsJVvm";
 
     apply(map, styleJson).then(() => {
@@ -135,9 +182,22 @@ const App: React.FC = () => {
         type: "Polygon",
       });
       map.addInteraction(draw);
+      draw.on("drawstart", () => {
+        // Remove OSM layer when a new polygon starts
+        if (osmLayerRef.current) {
+          map.removeLayer(osmLayerRef.current);
+          osmLayerRef.current = null;
+        }
+
+        // Also clear previous check statuses if needed
+        setCheckStatuses({});
+      });
 
       draw.on("drawend", async (event) => {
-        const polygon = event.feature.getGeometry() as Polygon;
+        const feature = event.feature;
+        drawnFeatureRef.current = feature;  // Store reference for later styling
+
+        const polygon = feature.getGeometry() as Polygon;
         const coords3857 = polygon.getCoordinates();
         const coords4326 = coords3857[0].map(([x, y]) =>
           transform([x, y], 'EPSG:3857', 'EPSG:4326')
@@ -161,7 +221,33 @@ const App: React.FC = () => {
 
           const result = await response.json();
           setCheckStatuses({}); // Clear previous results
-          setData(result.results); // <- confirm this matches your function response shape
+          setData(result.results);
+          // See if we have a OSM relation
+          const osm_relations = result.results.osm_relations ?? [];
+
+          if (osm_relations.length > 0) {
+            const overpassQuery = osm_relations
+              .map((rel: { osm_type: string; osm_id: number }) => `${rel.osm_type}(${rel.osm_id});`)
+              .join("\n");
+
+            const fullQuery = `
+    [out:json];
+    (
+      ${overpassQuery}
+    );
+    out geom;
+  `;
+
+            fetch("https://overpass-api.de/api/interpreter", {
+              method: "POST",
+              body: fullQuery.trim(),
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                const geojson = osmtogeojson(data);
+                addGeoJSONToMap(map, geojson);
+              });
+          }
         }
       });
     });
@@ -199,25 +285,24 @@ const App: React.FC = () => {
               <>
                 {/* Tabs */}
                 <div style={{ display: "flex", borderBottom: "1px solid #ccc", backgroundColor: "#f1f1f1" }}>
-                  {["Properties", "Land Cover Classes", "Checks"].map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setSelectedTab(tab)}
-                      style={{
-                        padding: "0.75rem 1.5rem",
-                        border: "1px solid #ccc",
-                        borderBottom: selectedTab === tab ? "none" : "1px solid #ccc",
-                        borderTopLeftRadius: "0.5rem",
-                        borderTopRightRadius: "0.5rem",
-                        backgroundColor: selectedTab === tab ? "#ffffff" : "#f1f1f1",
-                        fontWeight: selectedTab === tab ? "bold" : "normal",
-                        cursor: "pointer",
-                        outline: "none",
-                        marginRight: "0.25rem",
-                      }}
-                    >
-                      {tab}
-                    </button>
+                  {["Properties", "Land Cover Classes", "Checks", "OSM"].map((tab) => (<button
+                    key={tab}
+                    onClick={() => setSelectedTab(tab)}
+                    style={{
+                      padding: "0.75rem 1.5rem",
+                      border: "1px solid #ccc",
+                      borderBottom: selectedTab === tab ? "none" : "1px solid #ccc",
+                      borderTopLeftRadius: "0.5rem",
+                      borderTopRightRadius: "0.5rem",
+                      backgroundColor: selectedTab === tab ? "#ffffff" : "#f1f1f1",
+                      fontWeight: selectedTab === tab ? "bold" : "normal",
+                      cursor: "pointer",
+                      outline: "none",
+                      marginRight: "0.25rem",
+                    }}
+                  >
+                    {tab}
+                  </button>
                   ))}
                 </div>
 
@@ -240,6 +325,25 @@ const App: React.FC = () => {
                     <JsonViewer data={data.landcover} />
                   )}
 
+                  {selectedTab === "OSM" && data.osm_relations && (
+                    <div>
+                      <h3>OpenStreetMap Relations</h3>
+                      <ul>
+                        {data.osm_relations.map((rel: { osm_type: string; osm_id: number }) => (
+                          <li key={rel.osm_id}>
+                            <a
+                              href={`https://www.openstreetmap.org/${rel.osm_type}/${rel.osm_id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              {rel.osm_type} ID: {rel.osm_id}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                   {/* Always render the checks, but conditionally show them */}
                   <div style={{ display: selectedTab === "Checks" ? "block" : "none" }} key={JSON.stringify(data)}>
                     <ClassificationCheck
@@ -259,7 +363,7 @@ const App: React.FC = () => {
                       data={data.landcover}
                       use_prop={"built_area"}
                       prop_name="Urban"
-                      threshold={2}
+                      threshold={90}
                       above={false}
                       onCheckResult={handleCheckResult}
                     />
@@ -267,7 +371,7 @@ const App: React.FC = () => {
                       data={data.landcover}
                       use_prop={"water"}
                       prop_name="Water"
-                      threshold={2}
+                      threshold={90}
                       above={false}
                       onCheckResult={handleCheckResult}
                     />
