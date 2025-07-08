@@ -1,53 +1,45 @@
-import React from 'react';
-
-type Thresholds = {
-  validMax: number;
-  needsReviewMax: number;
-};
+import React, { useEffect, useRef } from 'react';
+import { CheckStatus } from "../types/Enums";
 
 type Props = {
   data: Record<string, any>;
-  use_prop: string;           // The key to extract from the data
-  prop_name: string;          // A human-readable name to display
-  thresholds: Thresholds;
+  use_prop: string;
+  prop_name: string;
+  onCheckResult?: (key: string, status: CheckStatus) => void;
 };
 
-const classify_value = (
-  value: number,
-  thresholds: Thresholds
-): 'Valid' | 'Needs Review' | 'Invalid' => {
-  if (value <= thresholds.validMax) return 'Valid';
-  if (value <= thresholds.needsReviewMax) return 'Needs Review';
-  return 'Invalid';
-};
-
-const getCategoryColor = (category: string): string => {
+const getCategoryColor = (category: CheckStatus): string => {
   switch (category) {
-    case 'Valid':
+    case CheckStatus.Valid:
       return 'green';
-    case 'Needs Review':
-      return 'orange';
-    case 'Invalid':
+    case CheckStatus.Invalid:
       return 'red';
     default:
       return 'gray';
   }
 };
 
-// Optional: format the label like "Prop Name"
 const formatKey = (key: string): string => {
   return key
     .replace(/_/g, " ")
     .replace(/\w\S*/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase());
 };
 
-const CategoryDiv: React.FC<Props> = ({ data, use_prop, prop_name, thresholds }) => {
-  const value = Number(data[use_prop]);
+const BooleanCheck: React.FC<Props> = ({ data, use_prop, prop_name, onCheckResult }) => {
+  const rawValue = data[use_prop];
+  const isValid = Boolean(rawValue);
+  const status = isValid ? CheckStatus.Valid : CheckStatus.Invalid;
 
-  if (isNaN(value)) return null;
+  const prevStatusRef = useRef<CheckStatus | null>(null);
 
-  const category = classify_value(value, thresholds);
-  const backgroundColor = getCategoryColor(category);
+  useEffect(() => {
+    if (onCheckResult && prevStatusRef.current !== status) {
+      onCheckResult(use_prop, status);
+      prevStatusRef.current = status;
+    }
+  }, [onCheckResult, use_prop, status]);
+
+  const backgroundColor = getCategoryColor(status);
 
   return (
     <div className="category-table">
@@ -73,7 +65,7 @@ const CategoryDiv: React.FC<Props> = ({ data, use_prop, prop_name, thresholds })
                   width: 'fit-content'
                 }}
               >
-                {category}
+                {status}
               </div>
             </td>
           </tr>
@@ -83,4 +75,4 @@ const CategoryDiv: React.FC<Props> = ({ data, use_prop, prop_name, thresholds })
   );
 };
 
-export default CategoryDiv;
+export default BooleanCheck;
