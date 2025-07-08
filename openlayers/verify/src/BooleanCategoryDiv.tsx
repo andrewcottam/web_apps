@@ -1,32 +1,15 @@
 import React from 'react';
 
-type Thresholds = {
-  validMax: number;
-  needsReviewMax: number;
-};
-
 type Props = {
   data: Record<string, any>;
-  use_prop: string;           // The key to extract from the data
-  prop_name: string;          // A human-readable name to display
-  thresholds: Thresholds;
-};
-
-const classify_value = (
-  value: number,
-  thresholds: Thresholds
-): 'Valid' | 'Needs Review' | 'Invalid' => {
-  if (value <= thresholds.validMax) return 'Valid';
-  if (value <= thresholds.needsReviewMax) return 'Needs Review';
-  return 'Invalid';
+  use_prop: string;     // The key to extract from the data
+  prop_name: string;    // A human-readable name to display
 };
 
 const getCategoryColor = (category: string): string => {
   switch (category) {
     case 'Valid':
       return 'green';
-    case 'Needs Review':
-      return 'orange';
     case 'Invalid':
       return 'red';
     default:
@@ -41,12 +24,11 @@ const formatKey = (key: string): string => {
     .replace(/\w\S*/g, w => w[0].toUpperCase() + w.slice(1).toLowerCase());
 };
 
-const CategoryDiv: React.FC<Props> = ({ data, use_prop, prop_name, thresholds }) => {
-  const value = Number(data[use_prop]);
+const BooleanCategoryDiv: React.FC<Props> = ({ data, use_prop, prop_name }) => {
+  const rawValue = data[use_prop];
+  const isValid = Boolean(rawValue);
 
-  if (isNaN(value)) return null;
-
-  const category = classify_value(value, thresholds);
+  const category = isValid ? 'Valid' : 'Invalid';
   const backgroundColor = getCategoryColor(category);
 
   return (
@@ -83,4 +65,4 @@ const CategoryDiv: React.FC<Props> = ({ data, use_prop, prop_name, thresholds })
   );
 };
 
-export default CategoryDiv;
+export default BooleanCategoryDiv;

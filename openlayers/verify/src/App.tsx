@@ -23,6 +23,7 @@ import Avatar from '@mui/material/Avatar';
 // custom components
 import JsonViewer from "./JsonViewer";
 import CategoryDiv from './CategoryDiv';
+import BooleanCategoryDiv from "./BooleanCategoryDiv";
 
 const thresholds = {
   validMax: 500,
@@ -130,7 +131,7 @@ const App: React.FC = () => {
 
         if (userRef.current) {
           const idToken = await userRef.current.getIdToken();
-          const response = await fetch("https://europe-west6-restor-poc-apps-b3414.cloudfunctions.net/verify_site", {
+          const response = await fetch("https://europe-west6-restor-gis.cloudfunctions.net/verify_site", {
             method: "POST",
             headers: {
               Authorization: `Bearer ${idToken}`,
@@ -174,12 +175,19 @@ const App: React.FC = () => {
           <h1>Site Verification Sandbox</h1>
           <h2>Draw a polygon on the map</h2>
           <div>
-            <JsonViewer data={data} />
-            <CategoryDiv data={data} use_prop={'average_segment_length'} thresholds={thresholds}/>
+            <div style={{ display: (Object.keys(data).length === 0) ? "none" : "block" }}>
+              <h3 >Site properties:</h3>
+              <JsonViewer data={data} />
+            </div>
+            <div style={{ display: (Object.keys(data).length === 0) ? "none" : "block" }}>
+              <h3>Site verification:</h3>
+              <CategoryDiv data={data} use_prop={'average_segment_length'} thresholds={thresholds} prop_name="Shape" />
+              <BooleanCategoryDiv data={data} use_prop={'first_polygon_is_valid'} prop_name="Valid geometry" />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

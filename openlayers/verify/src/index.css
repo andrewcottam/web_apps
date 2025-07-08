@@ -72,12 +72,14 @@ button:focus-visible {
   }
 }
 
-h1 {
-  font-size: medium
+h1{
+  font-size: large;
 }
-
-h2 {
-  font-size: small
+h2{
+  font-size: medium;
+}
+h3{
+  font-size: small;
 }
 
 .panel {
@@ -89,4 +91,25 @@ h2 {
 th{
   font-weight: normal;
   text-align: left;
+}
+
+.json-viewer {
+  font-size: 0.9rem;
+}
+
+.json-viewer table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.json-viewer th {
+  background-color: #f0f0f0; /* light grey */
+  padding: 4px 8px;
+  text-align: left;
+  vertical-align: top;
+  width: 30%;
+}
+
+.json-viewer td {
+  padding: 4px 8px;
 }
