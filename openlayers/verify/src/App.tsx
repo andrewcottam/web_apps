@@ -207,18 +207,18 @@ const App: React.FC = () => {
               Authorization: `Bearer ${idToken}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ geometry: [[coords4326]], include_gee: true, include_checks: true }),
+            body: JSON.stringify({ geometry: [[coords4326]], include_gee: true, include_checks: true, include_osm: true }),
           });
 
           const result = await response.json();
           setCheckStatuses({}); // Clear previous results
           setData(result.results);
           // See if we have a OSM relation
-          const osm_relations = result.results.osm_relations ?? [];
+          const osm_relations = result.results.osm.features ?? [];
 
           if (osm_relations.length > 0) {
             const overpassQuery = osm_relations
-              .map((rel: { osm_type: string; osm_id: number }) => `${rel.osm_type}(${rel.osm_id});`)
+              .map((rel: { type: string; id: number }) => `${rel.type}(${rel.id});`)
               .join("\n");
 
             const fullQuery = `
@@ -228,7 +228,6 @@ const App: React.FC = () => {
     );
     out geom;
   `;
-
             fetch("https://overpass-api.de/api/interpreter", {
               method: "POST",
               body: fullQuery.trim(),
@@ -338,7 +337,7 @@ const App: React.FC = () => {
                   {/* Always render the checks, but conditionally show them */}
                   <div style={{ display: selectedTab === "Checks" ? "block" : "none" }} key={JSON.stringify(data)}>
                     {data.checks.items.map((check: Check) => (
-                      <CheckDiv
+                      <CheckDiv key={check.name}
                         check={check}
                       />
                     ))}
@@ -361,7 +360,7 @@ const App: React.FC = () => {
                 )}
                 <div>
                   {data.checks && data.checks.summary && Object.keys(data.checks.summary).map((key: string) => (
-                    <div>{key}: {data.checks.summary[key]}</div>
+                    <div key={key}>{key}: {data.checks.summary[key]}</div>
                   ))}
                 </div>
               </>
