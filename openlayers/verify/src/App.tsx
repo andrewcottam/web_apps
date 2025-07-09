@@ -27,17 +27,11 @@ import Avatar from '@mui/material/Avatar';
 
 // Components
 import JsonViewer from "./components/JsonViewer";
-import ClassificationCheck from './components/ClassificationCheck';
-import BooleanCheck from "./components/BooleanCheck";
-import ThresholdCheck from "./components/ThresholdCheck";
 
 // Types
 import { CheckStatus } from "./types/Enums";
-
-const thresholds = {
-  validMax: 500,
-  needsReviewMax: 1200
-};
+import CheckDiv from "./components/CheckDiv";
+import type { Check } from "./types/Check";
 
 // Firebase config
 const firebaseConfig = {
@@ -70,11 +64,6 @@ const App: React.FC = () => {
   useEffect(() => {
     userRef.current = user;
   }, [user]);
-
-  const handleCheckResult = (key: string, status: CheckStatus) => {
-    // console.log(key, status);
-    setCheckStatuses(prev => ({ ...prev, [key]: status }));
-  };
 
   const overallStatus: CheckStatus = Object.values(checkStatuses).includes(CheckStatus.Invalid)
     ? CheckStatus.Invalid
@@ -183,6 +172,8 @@ const App: React.FC = () => {
       });
       map.addInteraction(draw);
       draw.on("drawstart", () => {
+        // reset the data
+        setData({});
         // Remove OSM layer when a new polygon starts
         if (osmLayerRef.current) {
           map.removeLayer(osmLayerRef.current);
@@ -216,7 +207,7 @@ const App: React.FC = () => {
               Authorization: `Bearer ${idToken}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ geometry: [[coords4326]] }),
+            body: JSON.stringify({ geometry: [[coords4326]], include_gee: true, include_checks: true }),
           });
 
           const result = await response.json();
@@ -321,22 +312,22 @@ const App: React.FC = () => {
                     <JsonViewer data={data.geometric} />
                   )}
 
-                  {selectedTab === "Land Cover Classes" && data.landcover && (
-                    <JsonViewer data={data.landcover} />
+                  {selectedTab === "Land Cover Classes" && data.gee.landcover && (
+                    <JsonViewer data={data.gee.landcover} />
                   )}
 
-                  {selectedTab === "OSM" && data.osm_relations && (
+                  {selectedTab === "OSM" && data.osm && data.osm.features && (
                     <div>
                       <h3>OpenStreetMap Relations</h3>
                       <ul>
-                        {data.osm_relations.map((rel: { osm_type: string; osm_id: number }) => (
-                          <li key={rel.osm_id}>
+                        {data.osm.features.map((rel: { type: string; id: number }) => (
+                          <li key={rel.id}>
                             <a
-                              href={`https://www.openstreetmap.org/${rel.osm_type}/${rel.osm_id}`}
+                              href={`https://www.openstreetmap.org/${rel.type}/${rel.id}`}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
-                              {rel.osm_type} ID: {rel.osm_id}
+                              {rel.type} ID: {rel.id}
                             </a>
                           </li>
                         ))}
@@ -346,52 +337,33 @@ const App: React.FC = () => {
 
                   {/* Always render the checks, but conditionally show them */}
                   <div style={{ display: selectedTab === "Checks" ? "block" : "none" }} key={JSON.stringify(data)}>
-                    <ClassificationCheck
-                      data={data.geometric}
-                      use_prop={"average_segment_length"}
-                      thresholds={thresholds}
-                      prop_name="Shape"
-                      onCheckResult={handleCheckResult}
-                    />
-                    <BooleanCheck
-                      data={data.geometric}
-                      use_prop={"first_polygon_is_valid"}
-                      prop_name="Valid geometry"
-                      onCheckResult={handleCheckResult}
-                    />
-                    <ThresholdCheck
-                      data={data.landcover}
-                      use_prop={"built_area"}
-                      prop_name="Urban"
-                      threshold={90}
-                      above={false}
-                      onCheckResult={handleCheckResult}
-                    />
-                    <ThresholdCheck
-                      data={data.landcover}
-                      use_prop={"water"}
-                      prop_name="Water"
-                      threshold={90}
-                      above={false}
-                      onCheckResult={handleCheckResult}
-                    />
+                    {data.checks.items.map((check: Check) => (
+                      <CheckDiv
+                        check={check}
+                      />
+                    ))}
                   </div>
                 </div>
 
                 {/* Overall status display */}
-                {Object.keys(checkStatuses).length > 0 && (
+                {data.checks && data.checks.overall_status && (
                   <div style={{
                     marginTop: "1rem",
                     fontWeight: "bold",
-                    color: overallStatus === CheckStatus.Valid
+                    color: data.checks.overall_status === CheckStatus.Valid
                       ? "green"
-                      : overallStatus === CheckStatus.NeedsReview
+                      : data.checks.overall_status === CheckStatus.NeedsReview
                         ? "orange"
                         : "red"
                   }}>
-                    Overall Status: {overallStatus}
+                    Overall Status: {data.checks.overall_status}
                   </div>
                 )}
+                <div>
+                  {data.checks && data.checks.summary && Object.keys(data.checks.summary).map((key: string) => (
+                    <div>{key}: {data.checks.summary[key]}</div>
+                  ))}
+                </div>
               </>
             )}
           </>

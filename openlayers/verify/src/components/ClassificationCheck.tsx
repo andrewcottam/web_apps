@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { CheckStatus } from "../types/Enums";
-
+// This component expects a set of values, a use_prop and thresholds to render the data as valid, needs review and invalid 
 type Thresholds = {
   validMax: number;
   needsReviewMax: number;

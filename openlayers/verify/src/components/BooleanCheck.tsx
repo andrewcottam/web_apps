@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { CheckStatus } from "../types/Enums";
+// This component expects a boolean and a use_prop to render the data as valid or invalid
 
 type Props = {
   data: Record<string, any>;
