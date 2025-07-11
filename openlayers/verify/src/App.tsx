@@ -207,7 +207,7 @@ const App: React.FC = () => {
               Authorization: `Bearer ${idToken}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ geometry: [[coords4326]], include_gee: true, include_checks: true, include_osm: true }),
+            body: JSON.stringify({ geometry: [[coords4326]], include_landcover: 'ESRI', include_checks: true, include_osm: true }),
           });
 
           const result = await response.json();
@@ -311,8 +311,8 @@ const App: React.FC = () => {
                     <JsonViewer data={data.geometric} />
                   )}
 
-                  {selectedTab === "Land Cover Classes" && data.gee.landcover && (
-                    <JsonViewer data={data.gee.landcover} />
+                  {selectedTab === "Land Cover Classes" && data.landcover && (
+                    <JsonViewer data={data.landcover} />
                   )}
 
                   {selectedTab === "OSM" && data.osm && data.osm.features && (
