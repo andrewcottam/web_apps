@@ -4,6 +4,7 @@ import OSM from 'ol/source/OSM.js';
 import GeoTIFF from 'ol/source/GeoTIFF.js';
 import TileLayer from 'ol/layer/WebGLTile.js';
 import { fromEPSGCode, register } from 'ol/proj/proj4.js';
+import { transform } from 'ol/proj';
 
 register(proj4);
 
@@ -17,5 +18,8 @@ const map = new Map({
 });
 
 map.on('singleclick', function (evt) {
-    console.log(map.getView())
+    const coordinate = evt.coordinate;
+    const projection = map.getView().getProjection().getCode();
+    const lonLat = transform(coordinate, projection, 'EPSG:4326');
+    console.log(`Clicked at longitude: ${lonLat[0]}, latitude: ${lonLat[1]}`);
 });
