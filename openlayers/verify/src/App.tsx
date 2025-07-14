@@ -58,7 +58,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<UserCredential["user"]>();
   const [logged_in, setLoggedIn] = useState(false);
   const [data, setData] = useState<Record<string, any>>({});
-  const [selectedTab, setSelectedTab] = useState("Properties");
+  const [selectedTab, setSelectedTab] = useState("Checks");
   const [checkStatuses, setCheckStatuses] = useState<Record<string, CheckStatus>>({});
   const osmLayerRef = useRef<VectorLayer | null>(null);
 
