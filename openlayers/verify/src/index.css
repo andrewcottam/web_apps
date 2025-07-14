@@ -37,12 +37,10 @@ h1 {
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
+  border: 1px solid transparent #ccc;
+  padding: 5px;
   font-family: inherit;
+  font-size: 14px;
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
@@ -55,6 +53,15 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+.content_box {
+  border: 1px solid #ccc;
+  border-top: none;
+  padding: 8px;
+  background-color: #fff;
+  font-size: 14px;
+
 }
 
 @media (prefers-color-scheme: light) {
@@ -72,44 +79,61 @@ button:focus-visible {
   }
 }
 
-h1{
+h1 {
   font-size: large;
 }
-h2{
+
+h2 {
   font-size: medium;
 }
-h3{
+
+h3 {
   font-size: small;
 }
 
 .panel {
   position: absolute;
   left: 1000px;
-  top: 20px
+  top: 20px;
+  width: 400px;
+  overflow: hidden;
 }
 
-th{
+.overall {
+  margin: 20px;
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+.checks {
+  font-weight: normal;
+}
+
+th {
   font-weight: normal;
   text-align: left;
 }
 
-.json-viewer {
-  font-size: 0.9rem;
-}
-
-.json-viewer table {
+table {
   border-collapse: collapse;
   width: 100%;
 }
 
-.json-viewer th {
-  background-color: #f0f0f0; /* light grey */
+th {
+  background-color: #f0f0f0;
+  border-bottom: 1px solid #cccccc;
   padding: 4px 8px;
   text-align: left;
   vertical-align: top;
-  width: 30%;
+  width: 200px;
 }
 
 .json-viewer td {
   padding: 4px 8px;
+}
+
+tr:not(:last-child) th {}
+
+.osm {
+  margin-left: 10px;
 }

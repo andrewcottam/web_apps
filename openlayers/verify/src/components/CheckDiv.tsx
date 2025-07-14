@@ -35,20 +35,14 @@ const CheckDiv: React.FC<Props> = ({ check }) => {
       <table>
         <tbody>
           <tr>
-            <th
-              style={{
-                backgroundColor: '#f0f0f0',
-                padding: '4px 8px',
-                textAlign: 'left',
-                width: '30%',
-              }}
-            >
+            <th>
               {formatKey(check.name)}
             </th>
-            <td style={{ padding: '2px 4px' }}>
+            <td>
               <div
                 style={{
                   backgroundColor,
+                  marginLeft:10,
                   color: 'white',
                   padding: '3px 6px',
                   borderRadius: '4px',

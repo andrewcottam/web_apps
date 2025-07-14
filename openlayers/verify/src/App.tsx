@@ -13,7 +13,10 @@ import { transform } from 'ol/proj';
 import { Draw } from "ol/interaction";
 import { fromLonLat } from "ol/proj";
 import { apply } from "ol-mapbox-style";
-import { Style, Fill, Stroke } from "ol/style";
+import { Style, Circle as CircleStyle, Fill, Stroke } from "ol/style";
+import VectorTileLayer from 'ol/layer/VectorTile';
+import VectorTileSource from 'ol/source/VectorTile';
+import MVT from 'ol/format/MVT';
 
 // Firebase
 import { initializeApp } from "firebase/app";
@@ -166,6 +169,14 @@ const App: React.FC = () => {
     apply(map, styleJson).then(() => {
       map.addLayer(vectorLayer);
 
+      // Add the WDPA boundaries
+      const vector_tiles_endpoint = 'https://storage.googleapis.com/restor_default/vector_tiles/wdpa/{z}/{x}/{y}.pbf'; // protected area boundaries
+      const vector_tile_source = new VectorTileSource({ format: new MVT({ layerName: 'wdpa' }), url: vector_tiles_endpoint, maxZoom: 20 });
+      const mvt_layer_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)', }), stroke: new Stroke({ color: [99, 148, 69, 0.3], width: 100 }) });
+      // const mvt_layer_style = new Style({image: new CircleStyle({radius: 10, fill: new Fill({ color: 'Red' }),stroke: new Stroke({ color: 'Red', width: 2 })})});
+      const vector_tile_layer = new VectorTileLayer({ source: vector_tile_source, style: mvt_layer_style });
+      map.addLayer(vector_tile_layer)
+
       const draw = new Draw({
         source: vectorSource,
         type: "Polygon",
@@ -274,18 +285,14 @@ const App: React.FC = () => {
             {Object.keys(data).length > 0 && (
               <>
                 {/* Tabs */}
-                <div style={{ display: "flex", borderBottom: "1px solid #ccc", backgroundColor: "#f1f1f1" }}>
-                  {["Properties", "Land Cover Classes", "Checks", "OSM"].map((tab) => (<button
+                <div style={{ display: "flex", borderBottom: "1px solid #ccc", marginTop: "25px" }}>
+                  {["Checks", "Geometric", "Land Cover Classes", "OSM"].map((tab) => (<button
                     key={tab}
                     onClick={() => setSelectedTab(tab)}
                     style={{
-                      padding: "0.75rem 1.5rem",
                       border: "1px solid #ccc",
-                      borderBottom: selectedTab === tab ? "none" : "1px solid #ccc",
-                      borderTopLeftRadius: "0.5rem",
-                      borderTopRightRadius: "0.5rem",
+                      borderBottom: selectedTab === tab ? "none" : "0px solid #ccc",
                       backgroundColor: selectedTab === tab ? "#ffffff" : "#f1f1f1",
-                      fontWeight: selectedTab === tab ? "bold" : "normal",
                       cursor: "pointer",
                       outline: "none",
                       marginRight: "0.25rem",
@@ -298,16 +305,9 @@ const App: React.FC = () => {
 
                 {/* Content Box */}
                 <div
-                  style={{
-                    border: "1px solid #ccc",
-                    borderTop: "none",
-                    padding: "1rem",
-                    backgroundColor: "#fff",
-                    borderBottomLeftRadius: "5px",
-                    borderBottomRightRadius: "5px",
-                  }}
+                  className="content_box"
                 >
-                  {selectedTab === "Properties" && data.geometric && (
+                  {selectedTab === "Geometric" && data.geometric && (
                     <JsonViewer data={data.geometric} />
                   )}
 
@@ -317,10 +317,9 @@ const App: React.FC = () => {
 
                   {selectedTab === "OSM" && data.osm && data.osm.features && (
                     <div>
-                      <h3>OpenStreetMap Relations</h3>
-                      <ul>
+                      <div>
                         {data.osm.features.map((rel: { type: string; id: number }) => (
-                          <li key={rel.id}>
+                          <div key={rel.id} className="osm">
                             <a
                               href={`https://www.openstreetmap.org/${rel.type}/${rel.id}`}
                               target="_blank"
@@ -328,9 +327,9 @@ const App: React.FC = () => {
                             >
                               {rel.type} ID: {rel.id}
                             </a>
-                          </li>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     </div>
                   )}
 
@@ -346,23 +345,17 @@ const App: React.FC = () => {
 
                 {/* Overall status display */}
                 {data.checks && data.checks.overall_status && (
-                  <div style={{
-                    marginTop: "1rem",
-                    fontWeight: "bold",
-                    color: data.checks.overall_status === CheckStatus.Valid
-                      ? "green"
-                      : data.checks.overall_status === CheckStatus.NeedsReview
-                        ? "orange"
-                        : "red"
-                  }}>
-                    Overall Status: {data.checks.overall_status}
+                  <div className="overall">
+                    <div style={{ color: data.checks.overall_status === CheckStatus.Valid ? "green" : data.checks.overall_status === CheckStatus.NeedsReview ? "orange" : "red" }}>
+                      Overall Status: {data.checks.overall_status}
+                    </div>
+                    <div className="checks">
+                      {data.checks && data.checks.summary && Object.keys(data.checks.summary).map((key: string) => (
+                        <div key={key}>{key}: {data.checks.summary[key]}</div>
+                      ))}
+                    </div>
                   </div>
                 )}
-                <div>
-                  {data.checks && data.checks.summary && Object.keys(data.checks.summary).map((key: string) => (
-                    <div key={key}>{key}: {data.checks.summary[key]}</div>
-                  ))}
-                </div>
               </>
             )}
           </>
