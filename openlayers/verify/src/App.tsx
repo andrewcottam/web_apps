@@ -17,6 +17,11 @@ import { Style, Circle as CircleStyle, Fill, Stroke } from "ol/style";
 import VectorTileLayer from 'ol/layer/VectorTile';
 import VectorTileSource from 'ol/source/VectorTile';
 import MVT from 'ol/format/MVT';
+import WKT from 'ol/format/WKT';
+import TileLayer from 'ol/layer/Tile';
+import TileDebug from 'ol/source/TileDebug';
+import { toLonLat } from 'ol/proj';
+import { MapBrowserEvent } from 'ol';
 
 // Firebase
 import { initializeApp } from "firebase/app";
@@ -144,6 +149,14 @@ const App: React.FC = () => {
       }),
       layers: [],
     });
+
+    const coordsDiv = document.getElementById('coords') as HTMLDivElement;
+
+    map.on('pointermove', (evt: MapBrowserEvent) => {
+      const lonLat = toLonLat(evt.coordinate);
+      coordsDiv.innerText = `Lon: ${lonLat[0].toFixed(4)}, Lat: ${lonLat[1].toFixed(4)}`;
+    });
+
     const addGeoJSONToMap = (map: Map, geojsonData: any) => {
       const features = new GeoJSON().readFeatures(geojsonData, {
         featureProjection: "EPSG:3857",
@@ -172,10 +185,15 @@ const App: React.FC = () => {
       // Add the WDPA boundaries
       const vector_tiles_endpoint = 'https://storage.googleapis.com/restor_default/vector_tiles/wdpa/{z}/{x}/{y}.pbf'; // protected area boundaries
       const vector_tile_source = new VectorTileSource({ format: new MVT({ layerName: 'wdpa' }), url: vector_tiles_endpoint, maxZoom: 20 });
-      const mvt_layer_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)', }), stroke: new Stroke({ color: [99, 148, 69, 0.3], width: 100 }) });
+      const mvt_layer_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)', }), stroke: new Stroke({ color: [99, 148, 69, 0.3], width: 1 }) });
       // const mvt_layer_style = new Style({image: new CircleStyle({radius: 10, fill: new Fill({ color: 'Red' }),stroke: new Stroke({ color: 'Red', width: 2 })})});
       const vector_tile_layer = new VectorTileLayer({ source: vector_tile_source, style: mvt_layer_style });
       map.addLayer(vector_tile_layer)
+
+      // Tile boundaries - debug only
+      // Debug tile boundaries
+      const debug_Layer = new TileLayer({ source: new TileDebug({ projection: 'EPSG:3857' }) });
+      map.addLayer(debug_Layer);
 
       const draw = new Draw({
         source: vectorSource,
@@ -198,13 +216,11 @@ const App: React.FC = () => {
       draw.on("drawend", async (event) => {
         const feature = event.feature;
         drawnFeatureRef.current = feature;  // Store reference for later styling
-
-        const polygon = feature.getGeometry() as Polygon;
-        const coords3857 = polygon.getCoordinates();
-        const coords4326 = coords3857[0].map(([x, y]) =>
-          transform([x, y], 'EPSG:3857', 'EPSG:4326')
-        );
-
+        // Transform geometry to EPSG:4326
+        const geometry = feature.getGeometry() as Polygon;
+        const geometry4326 = geometry.clone().transform('EPSG:3857', 'EPSG:4326');
+        // Convert to WKT
+        const wkt = new WKT().writeGeometry(geometry4326);
         if (userRef.current) {
           const idToken = await userRef.current.getIdToken();
           const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
@@ -218,7 +234,7 @@ const App: React.FC = () => {
               Authorization: `Bearer ${idToken}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ geometry: [[coords4326]], include_landcover: 'ESRI', include_checks: true, include_osm: true }),
+            body: JSON.stringify({site_data: { wkt: wkt }, config: {include_landcover: 'ESRI', include_checks: true, include_osm: false, include_wdpa: true}}),
           });
 
           const result = await response.json();
@@ -264,6 +280,7 @@ const App: React.FC = () => {
         ref={mapRef}
         style={{ position: "absolute", top: 20, left: 20, bottom: 20, right: 500 }}
       />
+      <div id="coords">Move cursor to see coordinates</div>
 
       <div className="panel">
         <div id="fixed-column">

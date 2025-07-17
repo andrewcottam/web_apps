@@ -137,3 +137,13 @@ tr:not(:last-child) th {}
 .osm {
   margin-left: 10px;
 }
+    #coords {
+      padding: 10px;
+      background: white;
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      font-family: monospace;
+      border: 1px solid #ccc;
+      z-index: 1;
+    }
