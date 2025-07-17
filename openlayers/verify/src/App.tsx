@@ -234,7 +234,7 @@ const App: React.FC = () => {
               Authorization: `Bearer ${idToken}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({site_data: { geometry: wkt }, config: {include_landcover: 'ESRI', include_checks: true, include_osm: false, include_wdpa: true}}),
+            body: JSON.stringify({site_data: { geometry: wkt }, config: {include_landcover: 'ESRI', include_osm: true, include_wdpa: true}}),
           });
 
           const result = await response.json();
@@ -366,11 +366,14 @@ const App: React.FC = () => {
                     <div style={{ color: data.checks.overall_status === CheckStatus.Valid ? "green" : data.checks.overall_status === CheckStatus.NeedsReview ? "orange" : "red" }}>
                       Overall Status: {data.checks.overall_status}
                     </div>
-                    <div className="checks">
+                    <div className="message" style={{ display: data.checks.overall_status === "Valid" ? "none" : "block" }}>
+                     {data.checks.max_status_message}
+                    </div>
+                {/*     <div className="checks">
                       {data.checks && data.checks.summary && Object.keys(data.checks.summary).map((key: string) => (
                         <div key={key}>{key}: {data.checks.summary[key]}</div>
                       ))}
-                    </div>
+                    </div>*/}
                   </div>
                 )}
               </>

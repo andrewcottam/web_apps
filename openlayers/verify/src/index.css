@@ -147,3 +147,7 @@ tr:not(:last-child) th {}
       border: 1px solid #ccc;
       z-index: 1;
     }
+
+    .message{
+      font-weight: 300;
+    }
