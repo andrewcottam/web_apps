@@ -234,7 +234,7 @@ const App: React.FC = () => {
               Authorization: `Bearer ${idToken}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({site_data: { wkt: wkt }, config: {include_landcover: 'ESRI', include_checks: true, include_osm: false, include_wdpa: true}}),
+            body: JSON.stringify({site_data: { geometry: wkt }, config: {include_landcover: 'ESRI', include_checks: true, include_osm: false, include_wdpa: true}}),
           });
 
           const result = await response.json();
