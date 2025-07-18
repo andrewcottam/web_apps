@@ -74,8 +74,9 @@ button:focus-visible {
     color: #747bff;
   }
 
-  button {
+  #fixed-column>button {
     background-color: #f9f9f9;
+    margin: 2px;
   }
 }
 
@@ -97,12 +98,6 @@ h3 {
   top: 20px;
   width: 400px;
   overflow: hidden;
-}
-
-.overall {
-  margin: 20px;
-  font-weight: bold;
-  margin-top: 20px;
 }
 
 .checks {
@@ -137,17 +132,34 @@ tr:not(:last-child) th {}
 .osm {
   margin-left: 10px;
 }
-    #coords {
-      padding: 10px;
-      background: white;
-      position: absolute;
-      bottom: 10px;
-      right: 10px;
-      font-family: monospace;
-      border: 1px solid #ccc;
-      z-index: 1;
-    }
 
-    .message{
-      font-weight: 300;
-    }
+#coords {
+  padding: 10px;
+  background: white;
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  font-family: monospace;
+  border: 1px solid #ccc;
+  z-index: 1;
+}
+
+.message {
+  font-weight: 300;
+}
+
+.overall {
+  position: absolute;
+  bottom: 100px;
+  left: 1000px;
+  width: 400px;
+  font-weight: bold;
+}
+
+
+.checkboxes {
+  position: absolute;
+  font-size: 13px;
+  bottom: 10px;
+  left: 1000px;
+}

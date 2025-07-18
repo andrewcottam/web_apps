@@ -64,8 +64,29 @@ const App: React.FC = () => {
   const [logged_in, setLoggedIn] = useState(false);
   const [data, setData] = useState<Record<string, any>>({});
   const [selectedTab, setSelectedTab] = useState("Checks");
+  const [includeLandCover, setIncludeLandCover] = useState(true);
+  const [includeOSM, setIncludeOSM] = useState(true);
+  const [includeWDPA, setIncludeWDPA] = useState(true);
   const [checkStatuses, setCheckStatuses] = useState<Record<string, CheckStatus>>({});
   const osmLayerRef = useRef<VectorLayer | null>(null);
+  const includeLandCoverRef = useRef(includeLandCover);
+  const includeOSMRef = useRef(includeOSM);
+  const includeWDPARef = useRef(includeWDPA);
+  useEffect(() => {
+    includeLandCoverRef.current = includeLandCover;
+    includeOSMRef.current = includeOSM;
+    includeWDPARef.current = includeWDPA;
+  }, [includeLandCover, includeOSM, includeWDPA]);
+  useEffect(() => {
+    // If the selected tab is now hidden due to checkbox changes, revert to "Checks"
+    if (
+      (selectedTab === "Land Cover" && !includeLandCover) ||
+      (selectedTab === "OSM" && !includeOSM) ||
+      (selectedTab === "WDPA" && !includeWDPA)
+    ) {
+      setSelectedTab("Checks");
+    }
+  }, [includeLandCover, includeOSM, includeWDPA]);
 
   const userRef = useRef<typeof user>(undefined);
 
@@ -193,7 +214,7 @@ const App: React.FC = () => {
       // Tile boundaries - debug only
       // Debug tile boundaries
       const debug_Layer = new TileLayer({ source: new TileDebug({ projection: 'EPSG:3857' }) });
-      map.addLayer(debug_Layer);
+      // map.addLayer(debug_Layer);
 
       const draw = new Draw({
         source: vectorSource,
@@ -234,7 +255,14 @@ const App: React.FC = () => {
               Authorization: `Bearer ${idToken}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({site_data: { geometry: wkt }, config: {include_landcover: 'ESRI', include_osm: true, include_wdpa: true}}),
+            body: JSON.stringify({
+              site_data: { geometry: wkt },
+              config: {
+                include_landcover: includeLandCoverRef.current ? 'ESRI' : 'None',
+                include_osm: includeOSMRef.current,
+                include_wdpa: includeWDPARef.current
+              }
+            }),
           });
 
           const result = await response.json();
@@ -302,22 +330,88 @@ const App: React.FC = () => {
             {Object.keys(data).length > 0 && (
               <>
                 {/* Tabs */}
+                {/* Tabs */}
                 <div style={{ display: "flex", borderBottom: "1px solid #ccc", marginTop: "25px" }}>
-                  {["Checks", "Geometric", "Land Cover Classes", "OSM"].map((tab) => (<button
-                    key={tab}
-                    onClick={() => setSelectedTab(tab)}
+                  <button
+                    key="Checks"
+                    onClick={() => setSelectedTab("Checks")}
                     style={{
                       border: "1px solid #ccc",
-                      borderBottom: selectedTab === tab ? "none" : "0px solid #ccc",
-                      backgroundColor: selectedTab === tab ? "#ffffff" : "#f1f1f1",
+                      borderBottom: selectedTab === "Checks" ? "none" : "0px solid #ccc",
+                      backgroundColor: selectedTab === "Checks" ? "#ffffff" : "#f1f1f1",
                       cursor: "pointer",
                       outline: "none",
                       marginRight: "0.25rem",
                     }}
                   >
-                    {tab}
+                    Checks
                   </button>
-                  ))}
+
+                  <button
+                    key="Geometric"
+                    onClick={() => setSelectedTab("Geometric")}
+                    style={{
+                      border: "1px solid #ccc",
+                      borderBottom: selectedTab === "Geometric" ? "none" : "0px solid #ccc",
+                      backgroundColor: selectedTab === "Geometric" ? "#ffffff" : "#f1f1f1",
+                      cursor: "pointer",
+                      outline: "none",
+                      marginRight: "0.25rem",
+                    }}
+                  >
+                    Geometric
+                  </button>
+
+                  {includeLandCover && (
+                    <button
+                      key="Land Cover"
+                      onClick={() => setSelectedTab("Land Cover")}
+                      style={{
+                        border: "1px solid #ccc",
+                        borderBottom: selectedTab === "Land Cover" ? "none" : "0px solid #ccc",
+                        backgroundColor: selectedTab === "Land Cover" ? "#ffffff" : "#f1f1f1",
+                        cursor: "pointer",
+                        outline: "none",
+                        marginRight: "0.25rem",
+                      }}
+                    >
+                      Land Cover
+                    </button>
+                  )}
+
+                  {includeOSM && (
+                    <button
+                      key="OSM"
+                      onClick={() => setSelectedTab("OSM")}
+                      style={{
+                        border: "1px solid #ccc",
+                        borderBottom: selectedTab === "OSM" ? "none" : "0px solid #ccc",
+                        backgroundColor: selectedTab === "OSM" ? "#ffffff" : "#f1f1f1",
+                        cursor: "pointer",
+                        outline: "none",
+                        marginRight: "0.25rem",
+                      }}
+                    >
+                      OSM
+                    </button>
+                  )}
+
+                  {includeWDPA && (
+                    <button
+                      key="WDPA"
+                      onClick={() => setSelectedTab("WDPA")}
+                      style={{
+                        border: "1px solid #ccc",
+                        borderBottom: selectedTab === "WDPA" ? "none" : "0px solid #ccc",
+                        backgroundColor: selectedTab === "WDPA" ? "#ffffff" : "#f1f1f1",
+                        cursor: "pointer",
+                        outline: "none",
+                        marginRight: "0.25rem",
+                      }}
+                    >
+                      WDPA
+                    </button>
+                  )}
                 </div>
 
                 {/* Content Box */}
@@ -328,7 +422,7 @@ const App: React.FC = () => {
                     <JsonViewer data={data.geometric} />
                   )}
 
-                  {selectedTab === "Land Cover Classes" && data.landcover && (
+                  {selectedTab === "Land Cover" && data.landcover && (
                     <JsonViewer data={data.landcover} />
                   )}
 
@@ -349,7 +443,26 @@ const App: React.FC = () => {
                       </div>
                     </div>
                   )}
-
+                  {selectedTab === "WDPA" && data.wdpa && data.wdpa.items && (
+                    <div>
+                      {data.wdpa.items.map((feature: any) => {
+                        const wdpaid = feature?.wdpaid;
+                        return (
+                          wdpaid && (
+                            <div key={wdpaid} className="wdpa">
+                              <a
+                                href={`https://www.protectedplanet.net/${wdpaid}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                {feature.name}
+                              </a>
+                            </div>
+                          )
+                        );
+                      })}
+                    </div>
+                  )}
                   {/* Always render the checks, but conditionally show them */}
                   <div style={{ display: selectedTab === "Checks" ? "block" : "none" }} key={JSON.stringify(data)}>
                     {data.checks.items.map((check: Check) => (
@@ -360,26 +473,32 @@ const App: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Overall status display */}
-                {data.checks && data.checks.overall_status && (
-                  <div className="overall">
-                    <div style={{ color: data.checks.overall_status === CheckStatus.Valid ? "green" : data.checks.overall_status === CheckStatus.NeedsReview ? "orange" : "red" }}>
-                      Overall Status: {data.checks.overall_status}
-                    </div>
-                    <div className="message" style={{ display: data.checks.overall_status === "Valid" ? "none" : "block" }}>
-                     {data.checks.max_status_message}
-                    </div>
-                {/*     <div className="checks">
-                      {data.checks && data.checks.summary && Object.keys(data.checks.summary).map((key: string) => (
-                        <div key={key}>{key}: {data.checks.summary[key]}</div>
-                      ))}
-                    </div>*/}
-                  </div>
-                )}
               </>
             )}
           </>
         )}
+      </div>
+      {/* Overall status display */}
+      {data.checks && data.checks.overall_status && (
+        <div className="overall">
+          <div style={{ color: data.checks.overall_status === CheckStatus.Valid ? "green" : data.checks.overall_status === CheckStatus.NeedsReview ? "orange" : "red" }}>
+            Overall Status: {data.checks.overall_status}
+          </div>
+          <div className="message" style={{ display: data.checks.overall_status === "Valid" ? "none" : "block" }}>
+            {data.checks.max_status_message}
+          </div>
+          {/*     <div className="checks">
+                      {data.checks && data.checks.summary && Object.keys(data.checks.summary).map((key: string) => (
+                        <div key={key}>{key}: {data.checks.summary[key]}</div>
+                      ))}
+                    </div>*/}
+        </div>
+      )}
+      {/* Checkbox controls */}
+      <div style={{ display: logged_in ? "block" : "none" }} className="checkboxes">
+        <div><label><input type="checkbox" checked={includeLandCover} onChange={e => setIncludeLandCover(e.target.checked)} /> Include Land Cover</label></div>
+        <div><label><input type="checkbox" checked={includeOSM} onChange={e => setIncludeOSM(e.target.checked)} /> Include OSM</label></div>
+        <div><label><input type="checkbox" checked={includeWDPA} onChange={e => setIncludeWDPA(e.target.checked)} /> Include WDPA</label></div>
       </div>
     </div>
   );
