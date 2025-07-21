@@ -206,11 +206,11 @@ const App: React.FC = () => {
       // Add the WDPA boundaries
       // const vector_tiles_endpoint = 'https://storage.googleapis.com/restor_default/vector_tiles/wdpa/{z}/{x}/{y}.pbf'; // prebuilt MVT protected area boundaries 
       // const vector_tiles_endpoint = 'http://127.0.0.1:5000/tiles/{z}/{x}/{y}.pbf'; // protected area boundaries // local mvt_server
-      const vector_tiles_endpoint = 'https://mvt-server-468041596913.europe-west6.run.app/tiles/{z}/{x}/{y}.pbf'; // protected area boundaries // Cloud Run mvt_server
-      const vector_tile_source = new VectorTileSource({ format: new MVT(), url: vector_tiles_endpoint, maxZoom: 20 });
+      const vector_tiles_endpoint = 'https://mvt-server-468041596913.europe-west6.run.app/tiles/{z}/{x}/{y}.pbf'; // Cloud Run mvt_server
+      const vector_tile_source = new VectorTileSource({ format: new MVT(), url: vector_tiles_endpoint });
       const mvt_layer_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)', }), stroke: new Stroke({ color: [99, 148, 69, 0.3], width: 1 }) });
       // const mvt_layer_style = new Style({image: new CircleStyle({radius: 10, fill: new Fill({ color: 'Red' }),stroke: new Stroke({ color: 'Red', width: 2 })})});
-      const vector_tile_layer = new VectorTileLayer({ source: vector_tile_source, style: mvt_layer_style });
+      const vector_tile_layer = new VectorTileLayer({ source: vector_tile_source, style: mvt_layer_style , minZoom:10});
       map.addLayer(vector_tile_layer)
 
       // Tile boundaries - debug only
