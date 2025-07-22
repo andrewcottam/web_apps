@@ -101,6 +101,11 @@ const App: React.FC = () => {
     }
   }, [includeWDPA]);
 
+  useEffect(() => {
+    if (osmLayerRef.current) {
+      osmLayerRef.current.setVisible(includeOSM);
+    }
+  }, [includeOSM]);
   const overallStatus: CheckStatus = Object.values(checkStatuses).includes(CheckStatus.Invalid)
     ? CheckStatus.Invalid
     : Object.values(checkStatuses).includes(CheckStatus.NeedsReview)
