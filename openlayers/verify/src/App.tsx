@@ -205,10 +205,9 @@ const App: React.FC = () => {
 
       // Add the WDPA boundaries
       // const vector_tiles_endpoint = 'https://storage.googleapis.com/restor_default/vector_tiles/wdpa/{z}/{x}/{y}.pbf'; // prebuilt MVT protected area boundaries 
-      // const vector_tiles_endpoint = 'http://127.0.0.1:5000/tiles/{z}/{x}/{y}.pbf'; // protected area boundaries // local mvt_server
-      const vector_tiles_endpoint = 'https://mvt-server-468041596913.europe-west6.run.app/tiles/{z}/{x}/{y}.pbf'; // Cloud Run mvt_server
-      const tileGrid = createXYZ({ tileSize: 256, extent: [-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244], maxZoom: 22 });
-      const vector_tile_source = new VectorTileSource({ format: new MVT(), tileGrid: tileGrid, url: vector_tiles_endpoint });
+      const vector_tiles_endpoint = 'http://127.0.0.1:5000/tiles/{z}/{x}/{y}.pbf'; // protected area boundaries // local mvt_server
+      // const vector_tiles_endpoint = 'https://mvt-server-468041596913.europe-west6.run.app/tiles/{z}/{x}/{y}.pbf'; // Cloud Run mvt_server
+      const vector_tile_source = new VectorTileSource({ format: new MVT(), url: vector_tiles_endpoint });
       const mvt_layer_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)', }), stroke: new Stroke({ color: [99, 148, 69, 0.3], width: 1 }) });
       // const mvt_layer_style = new Style({image: new CircleStyle({radius: 10, fill: new Fill({ color: 'Red' }),stroke: new Stroke({ color: 'Red', width: 2 })})});
       const vector_tile_layer = new VectorTileLayer({ source: vector_tile_source, style: mvt_layer_style, minZoom: 10 });
@@ -216,7 +215,8 @@ const App: React.FC = () => {
 
       // Tile boundaries - debug only
       // Debug tile boundaries
-      const debug_Layer = new TileLayer({ source: new TileDebug({ projection: 'EPSG:3857' }) });
+      const tileGrid = createXYZ({tileSize: 512, maxZoom: 22});
+      const debug_Layer = new TileLayer({ source: new TileDebug({ projection: 'EPSG:3857', zDirection: 1, tileGrid: tileGrid }) });
       // map.addLayer(debug_Layer);
 
       const draw = new Draw({
