@@ -9,7 +9,6 @@ import Polygon from "ol/geom/Polygon";
 import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
 import GeoJSON from "ol/format/GeoJSON";
-import { transform } from 'ol/proj';
 import { Draw } from "ol/interaction";
 import { fromLonLat } from "ol/proj";
 import { apply } from "ol-mapbox-style";
@@ -22,6 +21,7 @@ import TileLayer from 'ol/layer/Tile';
 import TileDebug from 'ol/source/TileDebug';
 import { toLonLat } from 'ol/proj';
 import { MapBrowserEvent } from 'ol';
+import { createXYZ } from 'ol/tilegrid';
 
 // Firebase
 import { initializeApp } from "firebase/app";
@@ -207,10 +207,11 @@ const App: React.FC = () => {
       // const vector_tiles_endpoint = 'https://storage.googleapis.com/restor_default/vector_tiles/wdpa/{z}/{x}/{y}.pbf'; // prebuilt MVT protected area boundaries 
       // const vector_tiles_endpoint = 'http://127.0.0.1:5000/tiles/{z}/{x}/{y}.pbf'; // protected area boundaries // local mvt_server
       const vector_tiles_endpoint = 'https://mvt-server-468041596913.europe-west6.run.app/tiles/{z}/{x}/{y}.pbf'; // Cloud Run mvt_server
-      const vector_tile_source = new VectorTileSource({ format: new MVT(), url: vector_tiles_endpoint });
+      const tileGrid = createXYZ({ tileSize: 256, extent: [-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244], maxZoom: 22 });
+      const vector_tile_source = new VectorTileSource({ format: new MVT(), tileGrid: tileGrid, url: vector_tiles_endpoint });
       const mvt_layer_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)', }), stroke: new Stroke({ color: [99, 148, 69, 0.3], width: 1 }) });
       // const mvt_layer_style = new Style({image: new CircleStyle({radius: 10, fill: new Fill({ color: 'Red' }),stroke: new Stroke({ color: 'Red', width: 2 })})});
-      const vector_tile_layer = new VectorTileLayer({ source: vector_tile_source, style: mvt_layer_style , minZoom:10});
+      const vector_tile_layer = new VectorTileLayer({ source: vector_tile_source, style: mvt_layer_style, minZoom: 10 });
       map.addLayer(vector_tile_layer)
 
       // Tile boundaries - debug only
