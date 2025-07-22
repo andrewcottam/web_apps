@@ -201,7 +201,7 @@ const App: React.FC = () => {
         source: vectorSource,
         style: new Style({
           fill: new Fill({ color: "rgba(0, 0, 255, 0.1)" }),
-          stroke: new Stroke({ color: "#0000ff", width: 2 }),
+          stroke: new Stroke({ color: "rgba(0, 0, 255, 0.3)", width: 1 }),
         }),
       });
 
