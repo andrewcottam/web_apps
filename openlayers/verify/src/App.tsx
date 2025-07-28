@@ -69,6 +69,7 @@ const App: React.FC = () => {
   const [includeOSM, setIncludeOSM] = useState(false);
   const [includeWDPA, setIncludeWDPA] = useState(true);
   const [checkStatuses, setCheckStatuses] = useState<Record<string, CheckStatus>>({});
+  const drawSourceRef = useRef<VectorSource | null>(null);
   const osmLayerRef = useRef<VectorLayer | null>(null);
   const wdpaLayerRef = useRef<VectorTileLayer | null>(null);
   const includeLandCoverRef = useRef(includeLandCover);
@@ -156,6 +157,20 @@ const App: React.FC = () => {
   function logout() {
     setLoggedIn(false);
     setUser(undefined);
+    // Clear drawn features
+    if (drawSourceRef.current) {
+      drawSourceRef.current.clear();
+    }
+
+    // Also clear OSM overlays if they exist
+    if (osmLayerRef.current && mapInstanceRef.current) {
+      mapInstanceRef.current.removeLayer(osmLayerRef.current);
+      osmLayerRef.current = null;
+    }
+
+    setData({});
+    setCheckStatuses({});
+    drawnFeatureRef.current = null;
   }
 
   async function login_clicked() {
@@ -183,6 +198,7 @@ const App: React.FC = () => {
     if (!mapRef.current) return;
 
     const vectorSource = new VectorSource();
+    drawSourceRef.current = vectorSource;
     const vectorLayer = new VectorLayer({
       source: vectorSource,
       style: new Style({
@@ -445,7 +461,7 @@ const App: React.FC = () => {
                   className="content_box"
                 >
                   {selectedTab === "Geometric" && data.geometric && (
-                    <JsonViewer data={{Area: data.geometric.area_str, 'Average Segment Length': data.geometric.average_segment_length_str, 'Is valid': data.geometric.first_polygon_is_valid, Perimeter: data.geometric.perimeter_str, Vertices: data.geometric.points}} />
+                    <JsonViewer data={{ Area: data.geometric.area_str, 'Average Segment Length': data.geometric.average_segment_length_str, 'Is valid': data.geometric.first_polygon_is_valid, Perimeter: data.geometric.perimeter_str, Vertices: data.geometric.points }} />
                   )}
 
                   {selectedTab === "Land Cover" && data.landcover && (
