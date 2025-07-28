@@ -73,6 +73,9 @@ const App: React.FC = () => {
   const includeLandCoverRef = useRef(includeLandCover);
   const includeOSMRef = useRef(includeOSM);
   const includeWDPARef = useRef(includeWDPA);
+  const drawInteractionRef = useRef<Draw | null>(null);
+  const mapInstanceRef = useRef<Map | null>(null);
+
   useEffect(() => {
     includeLandCoverRef.current = includeLandCover;
     includeOSMRef.current = includeOSM;
@@ -135,6 +138,19 @@ const App: React.FC = () => {
       })
     );
   }, [overallStatus]);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    const draw = drawInteractionRef.current;
+
+    if (!map || !draw) return;
+
+    if (logged_in) {
+      map.addInteraction(draw);
+    } else {
+      map.removeInteraction(draw);
+    }
+  }, [logged_in]);
 
   function logout() {
     setLoggedIn(false);
@@ -222,7 +238,7 @@ const App: React.FC = () => {
       const wdpa_endpoint = isLocalhost
         ? "http://127.0.0.1:5000/tiles/{z}/{x}/{y}.pbf"
         : "https://mvt-server-468041596913.europe-west6.run.app/tiles/{z}/{x}/{y}.pbf";
-              const wdpa_source = new VectorTileSource({ format: new MVT(), url: wdpa_endpoint });
+      const wdpa_source = new VectorTileSource({ format: new MVT(), url: wdpa_endpoint });
       const wdpa_layer = new VectorTileLayer({ source: wdpa_source, style: wdpa_style, minZoom: 10 });
       map.addLayer(wdpa_layer);
       // Set the useRef to point to the wdpa_layer
@@ -231,85 +247,74 @@ const App: React.FC = () => {
       const debug_Layer = new TileLayer({ source: new TileDebug({ projection: 'EPSG:3857', zDirection: 1, tileGrid: createXYZ({ tileSize: 512, maxZoom: 22 }) }) });
       // map.addLayer(debug_Layer);
 
-      const draw = new Draw({
-        source: vectorSource,
-        type: "Polygon",
-      });
-      map.addInteraction(draw);
-      draw.on("drawstart", () => {
-        // reset the data
-        setData({});
-        // Remove OSM layer when a new polygon starts
-        if (osmLayerRef.current) {
-          map.removeLayer(osmLayerRef.current);
-          osmLayerRef.current = null;
-        }
+    });
 
-        // Also clear previous check statuses if needed
-        setCheckStatuses({});
-      });
+    mapInstanceRef.current = map;  // Save reference for later
 
-      draw.on("drawend", async (event) => {
-        const feature = event.feature;
-        drawnFeatureRef.current = feature;  // Store reference for later styling
-        // Transform geometry to EPSG:4326
-        const geometry = feature.getGeometry() as Polygon;
-        const geometry4326 = geometry.clone().transform('EPSG:3857', 'EPSG:4326');
-        // Convert to WKT
-        const wkt = new WKT().writeGeometry(geometry4326);
-        if (userRef.current) {
-          const idToken = await userRef.current.getIdToken();
-          const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-          const endpoint = isLocalhost
-            ? "http://localhost:8080"
-            : "https://europe-west6-restor-gis.cloudfunctions.net/verify_site";
+    // Create the draw interaction but don't add it yet
+    drawInteractionRef.current = new Draw({
+      source: vectorSource,
+      type: "Polygon",
+    });
 
-          const response = await fetch(endpoint, {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${idToken}`,
-              "Content-Type": "application/json",
+    drawInteractionRef.current.on("drawstart", () => {
+      setData({});
+      if (osmLayerRef.current) {
+        map.removeLayer(osmLayerRef.current);
+        osmLayerRef.current = null;
+      }
+      setCheckStatuses({});
+    });
+
+    drawInteractionRef.current.on("drawend", async (event) => {
+      const feature = event.feature;
+      drawnFeatureRef.current = feature;
+      const geometry = feature.getGeometry() as Polygon;
+      const geometry4326 = geometry.clone().transform("EPSG:3857", "EPSG:4326");
+      const wkt = new WKT().writeGeometry(geometry4326);
+
+      if (userRef.current) {
+        const idToken = await userRef.current.getIdToken();
+        const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+        const endpoint = isLocalhost
+          ? "http://localhost:8080"
+          : "https://europe-west6-restor-gis.cloudfunctions.net/verify_site";
+
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            site_data: { geometry: wkt },
+            config: {
+              include_landcover: includeLandCoverRef.current ? "ESRI" : "None",
+              include_osm: includeOSMRef.current,
+              include_wdpa: includeWDPARef.current,
             },
-            body: JSON.stringify({
-              site_data: { geometry: wkt },
-              config: {
-                include_landcover: includeLandCoverRef.current ? 'ESRI' : 'None',
-                include_osm: includeOSMRef.current,
-                include_wdpa: includeWDPARef.current
-              }
-            }),
-          });
+          }),
+        });
 
-          const result = await response.json();
-          setCheckStatuses({}); // Clear previous results
-          setData(result.results);
-          // See if we have a OSM relation
-          const osm_relations = result.results.osm.features ?? [];
+        const result = await response.json();
+        setCheckStatuses({});
+        setData(result.results);
 
-          if (osm_relations.length > 0) {
-            const overpassQuery = osm_relations
-              .map((rel: { type: string; id: number }) => `${rel.type}(${rel.id});`)
-              .join("\n");
-
-            const fullQuery = `
-    [out:json];
-    (
-      ${overpassQuery}
-    );
-    out geom;
-  `;
-            fetch("https://overpass-api.de/api/interpreter", {
-              method: "POST",
-              body: fullQuery.trim(),
-            })
-              .then((res) => res.json())
-              .then((data) => {
-                const geojson = osmtogeojson(data);
-                addGeoJSONToMap(map, geojson);
-              });
-          }
+        const osm_relations = result.results.osm.features ?? [];
+        if (osm_relations.length > 0) {
+          const overpassQuery = osm_relations.map((rel: { type: string; id: number }) => `${rel.type}(${rel.id});`).join("\n");
+          const fullQuery = `[out:json];(${overpassQuery});out geom;`;
+          fetch("https://overpass-api.de/api/interpreter", {
+            method: "POST",
+            body: fullQuery.trim(),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              const geojson = osmtogeojson(data);
+              addGeoJSONToMap(map, geojson);
+            });
         }
-      });
+      }
     });
 
     return () => {
