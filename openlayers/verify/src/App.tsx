@@ -66,7 +66,7 @@ const App: React.FC = () => {
   const [data, setData] = useState<Record<string, any>>({});
   const [selectedTab, setSelectedTab] = useState("Checks");
   const [includeLandCover, setIncludeLandCover] = useState(true);
-  const [includeOSM, setIncludeOSM] = useState(true);
+  const [includeOSM, setIncludeOSM] = useState(false);
   const [includeWDPA, setIncludeWDPA] = useState(true);
   const [checkStatuses, setCheckStatuses] = useState<Record<string, CheckStatus>>({});
   const osmLayerRef = useRef<VectorLayer | null>(null);
