@@ -22,6 +22,7 @@ import TileDebug from 'ol/source/TileDebug';
 import { toLonLat } from 'ol/proj';
 import { MapBrowserEvent } from 'ol';
 import { createXYZ } from 'ol/tilegrid';
+import { ScaleLine, defaults as defaultControls } from 'ol/control';
 
 // Firebase
 import { initializeApp } from "firebase/app";
@@ -190,12 +191,17 @@ const App: React.FC = () => {
       }),
     });
 
+    const scaleLineControl = new ScaleLine({
+      units: 'metric', // 'imperial' for feet/miles, 'nautical' also supported
+    });
+
     const map = new Map({
       target: mapRef.current,
       view: new View({
         center: fromLonLat([118.293, 5.5296]),
         zoom: 13,
       }),
+      controls: defaultControls().extend([scaleLineControl]),
       layers: [],
     });
 
@@ -439,7 +445,7 @@ const App: React.FC = () => {
                   className="content_box"
                 >
                   {selectedTab === "Geometric" && data.geometric && (
-                    <JsonViewer data={data.geometric} />
+                    <JsonViewer data={{Area: data.geometric.area_str, 'Average Segment Length': data.geometric.average_segment_length_str, Centroid: data.geometric.centroid, 'Is valid': data.geometric.first_polygon_is_valid, Perimeter: data.geometric.perimeter_str, Vertices: data.geometric.points}} />
                   )}
 
                   {selectedTab === "Land Cover" && data.landcover && (
