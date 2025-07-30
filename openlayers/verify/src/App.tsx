@@ -183,7 +183,7 @@ const App: React.FC = () => {
       const whitelistSnap = await getDoc(whitelistRef);
       const whitelisted = Object.keys(whitelistSnap.data() || {});
 
-      if (!whitelisted.includes(result.user.email!)) {
+      if ((!whitelisted.includes(result.user.email!)) && (!result.user.email?.endsWith('restor.eco'))){
         alert("Access Denied: Your email is not whitelisted.");
         logout();
         return;
