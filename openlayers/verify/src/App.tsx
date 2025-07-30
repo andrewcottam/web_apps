@@ -461,7 +461,7 @@ const App: React.FC = () => {
                   className="content_box"
                 >
                   {selectedTab === "Geometric" && data.geometric && (
-                    <JsonViewer data={{ Area: data.geometric.area_str, 'Average Segment Length': data.geometric.average_segment_length_str, 'Is valid': data.geometric.first_polygon_is_valid, Perimeter: data.geometric.perimeter_str, Vertices: data.geometric.points }} />
+                    <JsonViewer data={{ Area: data.geometric.area_str, 'Average Segment Length': data.geometric.average_segment_length_str, 'Is valid': data.geometric.is_valid, Perimeter: data.geometric.perimeter_str, Vertices: data.geometric.points }} />
                   )}
 
                   {selectedTab === "Land Cover" && data.landcover && (
