@@ -336,6 +336,7 @@ const App: React.FC = () => {
               include_landcover: includeLandCoverRef.current ? "ESRI" : "None",
               include_osm: includeOSMRef.current,
               include_wdpa: includeWDPARef.current,
+              include_sites: includeSitesRef.current,
             },
           }),
         });
