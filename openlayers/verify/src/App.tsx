@@ -68,13 +68,16 @@ const App: React.FC = () => {
   const [includeLandCover, setIncludeLandCover] = useState(true);
   const [includeOSM, setIncludeOSM] = useState(false);
   const [includeWDPA, setIncludeWDPA] = useState(true);
+  const [includeSites, setIncludeSites] = useState(true);
   const [checkStatuses, setCheckStatuses] = useState<Record<string, CheckStatus>>({});
   const drawSourceRef = useRef<VectorSource | null>(null);
   const osmLayerRef = useRef<VectorLayer | null>(null);
   const wdpaLayerRef = useRef<VectorTileLayer | null>(null);
+  const sitesLayerRef = useRef<VectorTileLayer | null>(null);
   const includeLandCoverRef = useRef(includeLandCover);
   const includeOSMRef = useRef(includeOSM);
   const includeWDPARef = useRef(includeWDPA);
+  const includeSitesRef = useRef(includeSites);
   const drawInteractionRef = useRef<Draw | null>(null);
   const mapInstanceRef = useRef<Map | null>(null);
 
@@ -82,17 +85,19 @@ const App: React.FC = () => {
     includeLandCoverRef.current = includeLandCover;
     includeOSMRef.current = includeOSM;
     includeWDPARef.current = includeWDPA;
-  }, [includeLandCover, includeOSM, includeWDPA]);
+    includeSitesRef.current = includeSites;
+  }, [includeLandCover, includeOSM, includeWDPA, includeSites]);
   useEffect(() => {
     // If the selected tab is now hidden due to checkbox changes, revert to "Checks"
     if (
       (selectedTab === "Land Cover" && !includeLandCover) ||
       (selectedTab === "OSM" && !includeOSM) ||
-      (selectedTab === "WDPA" && !includeWDPA)
+      (selectedTab === "WDPA" && !includeWDPA) ||
+      (selectedTab === "Sites" && !includeSites)
     ) {
       setSelectedTab("Checks");
     }
-  }, [includeLandCover, includeOSM, includeWDPA]);
+  }, [includeLandCover, includeOSM, includeWDPA, includeSites]);
 
   const userRef = useRef<typeof user>(undefined);
 
@@ -107,10 +112,17 @@ const App: React.FC = () => {
   }, [includeWDPA]);
 
   useEffect(() => {
+    if (sitesLayerRef.current) {
+      sitesLayerRef.current.setVisible(includeSites);
+    }
+  }, [includeSites]);
+
+  useEffect(() => {
     if (osmLayerRef.current) {
       osmLayerRef.current.setVisible(includeOSM);
     }
   }, [includeOSM]);
+
   const overallStatus: CheckStatus = Object.values(checkStatuses).includes(CheckStatus.Invalid)
     ? CheckStatus.Invalid
     : Object.values(checkStatuses).includes(CheckStatus.NeedsReview)
@@ -183,7 +195,7 @@ const App: React.FC = () => {
       const whitelistSnap = await getDoc(whitelistRef);
       const whitelisted = Object.keys(whitelistSnap.data() || {});
 
-      if ((!whitelisted.includes(result.user.email!)) && (!result.user.email?.endsWith('restor.eco'))){
+      if ((!whitelisted.includes(result.user.email!)) && (!result.user.email?.endsWith('restor.eco'))) {
         alert("Access Denied: Your email is not whitelisted.");
         logout();
         return;
@@ -256,7 +268,8 @@ const App: React.FC = () => {
       // Add the WDPA boundaries
       const wdpa_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)', }), stroke: new Stroke({ color: [99, 148, 69, 0.3], width: 1 }) });
       // const wdpa_endpoint = 'https://storage.googleapis.com/restor_default/vector_tiles/wdpa/{z}/{x}/{y}.pbf'; // prebuilt MVT protected area boundaries 
-      const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      // const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      const isLocalhost = false;
       const wdpa_endpoint = isLocalhost
         ? "http://127.0.0.1:5000/tiles/{z}/{x}/{y}.pbf"
         : "https://mvt-server-468041596913.europe-west6.run.app/tiles/{z}/{x}/{y}.pbf";
@@ -265,6 +278,15 @@ const App: React.FC = () => {
       map.addLayer(wdpa_layer);
       // Set the useRef to point to the wdpa_layer
       wdpaLayerRef.current = wdpa_layer;
+      const sites_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.0)', }), stroke: new Stroke({ color: [255, 0, 0, 0.3], width: 2 }) });
+      const sites_endpoint = isLocalhost
+        ? "http://127.0.0.1:5000/tiles/{z}/{x}/{y}.pbf"
+        : "https://mvt-server-sites-468041596913.europe-west6.run.app/tiles/{z}/{x}/{y}.pbf";
+      const sites_source = new VectorTileSource({ format: new MVT(), url: sites_endpoint });
+      const sites_layer = new VectorTileLayer({ source: sites_source, style: sites_style, minZoom: 10 });
+      map.addLayer(sites_layer);
+      // Set the useRef to point to the sites_layer
+      sitesLayerRef.current = sites_layer;
       // Tile boundaries - debug only
       const debug_Layer = new TileLayer({ source: new TileDebug({ projection: 'EPSG:3857', zDirection: 1, tileGrid: createXYZ({ tileSize: 512, maxZoom: 22 }) }) });
       // map.addLayer(debug_Layer);
@@ -404,6 +426,22 @@ const App: React.FC = () => {
                     Geometric
                   </button>
 
+                  {includeSites && (
+                    <button
+                      key="Sites"
+                      onClick={() => setSelectedTab("Sites")}
+                      style={{
+                        border: "1px solid #ccc",
+                        borderBottom: selectedTab === "Sites" ? "none" : "0px solid #ccc",
+                        backgroundColor: selectedTab === "Sites" ? "#ffffff" : "#f1f1f1",
+                        cursor: "pointer",
+                        outline: "none",
+                        marginRight: "0.25rem",
+                      }}
+                    >
+                      Sites
+                    </button>
+                  )}
                   {includeLandCover && (
                     <button
                       key="Land Cover"
@@ -505,6 +543,24 @@ const App: React.FC = () => {
                       })}
                     </div>
                   )}
+                  {selectedTab === "Sites" && data.sites && data.sites.items && (
+                    <div>
+                      {data.sites.items.map((feature: any) => {
+                        const siteId = feature?.id;
+                        return (
+                          siteId && (
+                            <div key={siteId} className="site">
+                              {feature.site_visibility=='PUBLIC' ? (
+                                <span><a href={`https://restor.eco/sites/${siteId}`} target="_blank" rel="noopener noreferrer" >{feature.name}</a></span>
+                              ) : (
+                                <span className="private">{feature.name}</span>
+                              )}
+                            </div>
+                          )
+                        );
+                      })}
+                    </div>
+                  )}
                   {/* Always render the checks, but conditionally show them */}
                   <div style={{ display: selectedTab === "Checks" ? "block" : "none" }} key={JSON.stringify(data)}>
                     {data.checks.items.map((check: Check) => (
@@ -538,9 +594,10 @@ const App: React.FC = () => {
       )}
       {/* Checkbox controls */}
       <div style={{ display: logged_in ? "block" : "none" }} className="checkboxes">
+        <div><label><input type="checkbox" checked={includeSites} onChange={e => setIncludeSites(e.target.checked)} /> Include Sites</label></div>
         <div><label><input type="checkbox" checked={includeLandCover} onChange={e => setIncludeLandCover(e.target.checked)} /> Include Land Cover</label></div>
-        <div><label><input type="checkbox" checked={includeOSM} onChange={e => setIncludeOSM(e.target.checked)} /> Include OSM</label></div>
         <div><label><input type="checkbox" checked={includeWDPA} onChange={e => setIncludeWDPA(e.target.checked)} /> Include WDPA</label></div>
+        <div><label><input type="checkbox" checked={includeOSM} onChange={e => setIncludeOSM(e.target.checked)} /> Include OSM</label></div>
       </div>
     </div>
   );

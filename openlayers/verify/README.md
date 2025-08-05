@@ -11,6 +11,7 @@ npm run dev
 
 # Building
 ```
+cd openlayers/verify
 npx vite build
 ```
 
