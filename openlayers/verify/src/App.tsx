@@ -349,15 +349,16 @@ const App: React.FC = () => {
         if (osm_relations.length > 0) {
           const overpassQuery = osm_relations.map((rel: { type: string; id: number }) => `${rel.type}(${rel.id});`).join("\n");
           const fullQuery = `[out:json];(${overpassQuery});out geom;`;
-          fetch("https://overpass-api.de/api/interpreter", {
-            method: "POST",
-            body: fullQuery.trim(),
-          })
-            .then((res) => res.json())
-            .then((data) => {
-              const geojson = osmtogeojson(data);
-              addGeoJSONToMap(map, geojson);
-            });
+          // Uncomment the following to fetch the features from Overpass API if needed
+          // fetch("https://overpass-api.de/api/interpreter", {
+          //   method: "POST",
+          //   body: fullQuery.trim(),
+          // })
+          //   .then((res) => res.json())
+          //   .then((data) => {
+          //     const geojson = osmtogeojson(data);
+          //     addGeoJSONToMap(map, geojson);
+          //   });
         }
       }
     });
