@@ -272,7 +272,8 @@ const App: React.FC = () => {
       const isLocalhost = false;
       const wdpa_endpoint = isLocalhost
         ? "http://127.0.0.1:5000/tiles/{z}/{x}/{y}.pbf"
-        : "https://mvt-server-468041596913.europe-west6.run.app/tiles/{z}/{x}/{y}.pbf";
+        // : "https://mvt-server-468041596913.europe-west6.run.app/tiles/{z}/{x}/{y}.pbf";
+        : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server/tiles/{z}/{x}/{y}.pbf";
       const wdpa_source = new VectorTileSource({ format: new MVT(), url: wdpa_endpoint });
       const wdpa_layer = new VectorTileLayer({ source: wdpa_source, style: wdpa_style, minZoom: 10 });
       map.addLayer(wdpa_layer);
