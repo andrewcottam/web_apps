@@ -345,7 +345,7 @@ const App: React.FC = () => {
         setCheckStatuses({});
         setData(result.results);
 
-        const osm_relations = result.results.osm.features ?? [];
+        const osm_relations = (result?.osm && result.results.osm.features) ?? [];
         if (osm_relations.length > 0) {
           const overpassQuery = osm_relations.map((rel: { type: string; id: number }) => `${rel.type}(${rel.id});`).join("\n");
           const fullQuery = `[out:json];(${overpassQuery});out geom;`;
