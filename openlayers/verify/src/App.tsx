@@ -329,6 +329,19 @@ const App: React.FC = () => {
           ? "http://localhost:8080"
           : "https://europe-west6-restor-gis.cloudfunctions.net/verify_site";
 
+        const configList = [];
+        if (includeLandCoverRef.current) {
+          configList.push("landcover");
+        }
+        if (includeOSMRef.current) {
+          configList.push("osm");
+        }
+        if (includeWDPARef.current) {
+          configList.push("wdpa");
+        }
+        if (includeSitesRef.current) {
+          configList.push("sites");
+        }
         const response = await fetch(endpoint, {
           method: "POST",
           headers: {
@@ -338,10 +351,7 @@ const App: React.FC = () => {
           body: JSON.stringify({
             site_data: { geometry: wkt },
             config: {
-              include_landcover: includeLandCoverRef.current ? "ESRI" : "None",
-              include_osm: includeOSMRef.current,
-              include_wdpa: includeWDPARef.current,
-              include_sites: includeSitesRef.current,
+              optional_metrics: configList,
             },
           }),
         });
