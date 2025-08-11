@@ -302,6 +302,11 @@ const App: React.FC = () => {
     });
 
     drawInteractionRef.current.on("drawstart", () => {
+      // Clear previously drawn features
+      if (drawSourceRef.current) {
+        drawSourceRef.current.clear();
+      }
+
       setData({});
       if (osmLayerRef.current) {
         map.removeLayer(osmLayerRef.current);
@@ -552,7 +557,7 @@ const App: React.FC = () => {
                         return (
                           siteId && (
                             <div key={siteId} className="site">
-                              {feature.site_visibility=='PUBLIC' ? (
+                              {feature.site_visibility == 'PUBLIC' ? (
                                 <span><a href={`https://restor.eco/sites/${siteId}`} target="_blank" rel="noopener noreferrer" >{feature.name}</a></span>
                               ) : (
                                 <span className="private">{feature.name}</span>
