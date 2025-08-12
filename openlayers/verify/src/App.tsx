@@ -41,6 +41,7 @@ import JsonViewer from "./components/JsonViewer";
 import { CheckStatus } from "./types/Enums";
 import CheckDiv from "./components/CheckDiv";
 import type { Check } from "./types/Check";
+import type { FeatureLike } from "ol/Feature";
 
 // Firebase config
 const firebaseConfig = {
@@ -250,8 +251,8 @@ const App: React.FC = () => {
       const vectorLayer = new VectorLayer({
         source: vectorSource,
         style: new Style({
-          fill: new Fill({ color: "rgba(0, 0, 255, 0.1)" }),
-          stroke: new Stroke({ color: "rgba(0, 0, 255, 0.3)", width: 1 }),
+            stroke: new Stroke({ color: 'rgba(0,0,200,0.9)', width: 1, lineDash: [2, 6] }),
+            fill: new Fill({ color: 'rgba(97,97,97,0)' }),
         }),
       });
 
@@ -278,14 +279,50 @@ const App: React.FC = () => {
       map.addLayer(wdpa_layer);
       // Set the useRef to point to the wdpa_layer
       wdpaLayerRef.current = wdpa_layer;
-      const sites_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.0)', }), stroke: new Stroke({ color: [255, 0, 0, 0.3], width: 2 }) });
       const sites_endpoint = isLocalhost
         ? "http://127.0.0.1:5000/tiles/{z}/{x}/{y}.pbf"
         : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf";
+
       const sites_source = new VectorTileSource({ format: new MVT(), url: sites_endpoint });
-      const sites_layer = new VectorTileLayer({ source: sites_source, style: sites_style, minZoom: 10 });
-      map.addLayer(sites_layer);
-      // Set the useRef to point to the sites_layer
+
+      // style cache for performance
+      const styleCache: Record<string, Style> = Object.create(null);
+
+      function styleForVisibility(feature: FeatureLike): Style | undefined {
+        const area = Number(feature.get('surface_area_km2'));
+        if (Number.isFinite(area) && area > 1000) return undefined;
+
+        const key = String(feature.get('site_visibility') ?? 'unknown').toLowerCase();
+        if (styleCache[key]) return styleCache[key];
+
+        const styles = {
+          public: {
+            stroke: new Stroke({ color: 'rgba(244,97,97,0.9)', width: 2}),
+            fill: new Fill({ color: 'rgba(97,97,97,0.05)' }),
+          },
+          private: {
+            stroke: new Stroke({ color: 'rgba(244,97,97,0.9)', width: 2, lineDash: [2, 6] }),
+            fill: new Fill({ color: 'rgba(97,97,97,0.05)' }),
+          },
+          unknown: {
+            stroke: new Stroke({ color: 'rgba(244,67,54,0.6)', width: 2 }),
+            fill: new Fill({ color: 'rgba(244,67,54,0.05)' }),
+          },
+        } as const;
+
+        const def = styles[key as keyof typeof styles] ?? styles.unknown;
+        const style = new Style({ stroke: def.stroke, fill: def.fill });
+        styleCache[key] = style;
+        return style;
+      }
+
+      const sites_layer = new VectorTileLayer({
+        source: sites_source,
+        minZoom: 10,
+        style: (feature) => styleForVisibility(feature),
+      });
+
+      map.addLayer(sites_layer);      // Set the useRef to point to the sites_layer
       sitesLayerRef.current = sites_layer;
       // Tile boundaries - debug only
       const debug_Layer = new TileLayer({ source: new TileDebug({ projection: 'EPSG:3857', zDirection: 1, tileGrid: createXYZ({ tileSize: 512, maxZoom: 22 }) }) });
@@ -360,21 +397,36 @@ const App: React.FC = () => {
         setCheckStatuses({});
         setData(result.results);
 
-        const osm_relations = (result?.osm && result.results.osm.features) ?? [];
-        if (osm_relations.length > 0) {
-          const overpassQuery = osm_relations.map((rel: { type: string; id: number }) => `${rel.type}(${rel.id});`).join("\n");
+        const best_feature = (result.results.osm && result.results.osm.features && result.results.osm.best_feature) ?? [];
+        if (best_feature) {
+          const overpassQuery = `${best_feature.type}(${best_feature.id});`;
           const fullQuery = `[out:json];(${overpassQuery});out geom;`;
-          // Uncomment the following to fetch the features from Overpass API if needed
-          // fetch("https://overpass-api.de/api/interpreter", {
-          //   method: "POST",
-          //   body: fullQuery.trim(),
-          // })
-          //   .then((res) => res.json())
-          //   .then((data) => {
-          //     const geojson = osmtogeojson(data);
-          //     addGeoJSONToMap(map, geojson);
-          //   });
+          fetch("https://overpass-api.de/api/interpreter", {
+            method: "POST",
+            body: fullQuery.trim(),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              const geojson = osmtogeojson(data);
+              addGeoJSONToMap(map, geojson);
+            });
         }
+
+        // const osm_relations = (result.results.osm && result.results.osm.features) ?? [];
+        // if (osm_relations.length > 0) {
+        //   const overpassQuery = osm_relations.map((rel: { type: string; id: number }) => `${rel.type}(${rel.id});`).join("\n");
+        //   const fullQuery = `[out:json];(${overpassQuery});out geom;`;
+        //   // Uncomment the following to fetch the features from Overpass API if needed
+        //   fetch("https://overpass-api.de/api/interpreter", {
+        //     method: "POST",
+        //     body: fullQuery.trim(),
+        //   })
+        //     .then((res) => res.json())
+        //     .then((data) => {
+        //       const geojson = osmtogeojson(data);
+        //       addGeoJSONToMap(map, geojson);
+        //     });
+        // }
       }
     });
 
@@ -405,7 +457,7 @@ const App: React.FC = () => {
 
         {logged_in && (
           <>
-            <h1>Site Verification Sandbox</h1>
+            <h1>Site Verification Playground</h1>
             <h2>Draw a polygon on the map</h2>
 
             {Object.keys(data).length > 0 && (
