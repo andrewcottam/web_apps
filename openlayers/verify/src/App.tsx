@@ -251,8 +251,8 @@ const App: React.FC = () => {
       const vectorLayer = new VectorLayer({
         source: vectorSource,
         style: new Style({
-            stroke: new Stroke({ color: 'rgba(0,0,200,0.9)', width: 1, lineDash: [2, 6] }),
-            fill: new Fill({ color: 'rgba(97,97,97,0)' }),
+          stroke: new Stroke({ color: 'rgba(0,0,200,0.9)', width: 1, lineDash: [2, 6] }),
+          fill: new Fill({ color: 'rgba(97,97,97,0)' }),
         }),
       });
 
@@ -297,7 +297,7 @@ const App: React.FC = () => {
 
         const styles = {
           public: {
-            stroke: new Stroke({ color: 'rgba(244,97,97,0.9)', width: 2}),
+            stroke: new Stroke({ color: 'rgba(244,97,97,0.9)', width: 2 }),
             fill: new Fill({ color: 'rgba(97,97,97,0.05)' }),
           },
           private: {
@@ -397,19 +397,21 @@ const App: React.FC = () => {
         setCheckStatuses({});
         setData(result.results);
 
-        const best_feature = (result.results.osm && result.results.osm.features && result.results.osm.best_feature) ?? [];
-        if (best_feature) {
-          const overpassQuery = `${best_feature.type}(${best_feature.id});`;
-          const fullQuery = `[out:json];(${overpassQuery});out geom;`;
-          fetch("https://overpass-api.de/api/interpreter", {
-            method: "POST",
-            body: fullQuery.trim(),
-          })
-            .then((res) => res.json())
-            .then((data) => {
-              const geojson = osmtogeojson(data);
-              addGeoJSONToMap(map, geojson);
-            });
+        if (includeOSMRef.current){
+          const best_feature = (result.results.osm && result.results.osm.features && result.results.osm.best_feature) ?? [];
+          if (best_feature) {
+            const overpassQuery = `${best_feature.type}(${best_feature.id});`;
+            const fullQuery = `[out:json];(${overpassQuery});out geom;`;
+            fetch("https://overpass-api.de/api/interpreter", {
+              method: "POST",
+              body: fullQuery.trim(),
+            })
+              .then((res) => res.json())
+              .then((data) => {
+                const geojson = osmtogeojson(data);
+                addGeoJSONToMap(map, geojson);
+              });
+          }
         }
 
         // const osm_relations = (result.results.osm && result.results.osm.features) ?? [];
