@@ -397,7 +397,7 @@ const App: React.FC = () => {
         setData(result.results);
 
         if (includeOSMRef.current){
-          const best_feature = (result.results.osm && result.results.osm.features && result.results.osm.best_feature) ?? [];
+          const best_feature = (result.results.osm && result.results.osm.features && result.results.osm.best_feature);
           if (best_feature) {
             const overpassQuery = `${best_feature.type}(${best_feature.id});`;
             const fullQuery = `[out:json];(${overpassQuery});out geom;`;
