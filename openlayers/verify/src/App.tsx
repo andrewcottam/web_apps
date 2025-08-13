@@ -269,19 +269,18 @@ const App: React.FC = () => {
       // Add the WDPA boundaries
       const wdpa_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)', }), stroke: new Stroke({ color: [99, 148, 69, 0.3], width: 1 }) });
       // const wdpa_endpoint = 'https://storage.googleapis.com/restor_default/vector_tiles/wdpa/{z}/{x}/{y}.pbf'; // prebuilt MVT protected area boundaries 
-      // const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-      const isLocalhost = false;
+      const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
       const wdpa_endpoint = isLocalhost
-        ? "http://127.0.0.1:5000/tiles/{z}/{x}/{y}.pbf"
-        : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server/tiles/{z}/{x}/{y}.pbf";
+        ? "http://127.0.0.1:8080/tiles/{z}/{x}/{y}.pbf?source=wdpa"
+        : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server/tiles/{z}/{x}/{y}.pbf?source=wdpa";
       const wdpa_source = new VectorTileSource({ format: new MVT(), url: wdpa_endpoint });
       const wdpa_layer = new VectorTileLayer({ source: wdpa_source, style: wdpa_style, minZoom: 10 });
       map.addLayer(wdpa_layer);
       // Set the useRef to point to the wdpa_layer
       wdpaLayerRef.current = wdpa_layer;
       const sites_endpoint = isLocalhost
-        ? "http://127.0.0.1:5000/tiles/{z}/{x}/{y}.pbf"
-        : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf";
+        ? "http://127.0.0.1:8080/tiles/{z}/{x}/{y}.pbf?source=sites"
+        : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=sites";
 
       const sites_source = new VectorTileSource({ format: new MVT(), url: sites_endpoint });
 
