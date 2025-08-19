@@ -35,6 +35,6 @@ npx vite build
 ```
 
 # Deploying
-Build then commit your changes and push. GitHub will build the pages and then the app will be available at:
+Remove the dist folder from .gitignore then build then commit your changes and push. GitHub will build the pages and then the app will be available at:
 
 https://andrewcottam.github.io/web_apps/openlayers/verify_reports/dist/index.html
