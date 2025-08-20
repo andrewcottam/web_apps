@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 
 // Firebase
 import { initializeApp } from "firebase/app";
@@ -12,6 +12,7 @@ import Avatar from '@mui/material/Avatar';
 
 // Other
 import DateForm from './DateForm';
+import OrganisationForm from './OrganisationForm';
 
 import './App.css'
 
@@ -32,10 +33,14 @@ const provider = new GoogleAuthProvider();
 const firestore = getFirestore(app);
 
 function App() {
-
   const [logged_in, setLoggedIn] = useState(false);
   const [user, setUser] = useState<UserCredential["user"]>();
   const userRef = useRef<typeof user>(undefined);
+
+  // shared UI state
+  const [busy, setBusy] = useState<null | "date" | "org">(null);
+  const [orgUrl, setOrgUrl] = useState<string | null>(null);
+  const [dateUrl, setDateUrl] = useState<string | null>(null);
 
   useEffect(() => {
     userRef.current = user;
@@ -47,7 +52,7 @@ function App() {
     } else {
       const result = await signInWithPopup(auth, provider);
 
-      const whitelistRef = doc(collection(firestore, "site-verify"), "whitelisted_emails");
+      const whitelistRef = doc(collection(firestore, "site-verification-reports"), "whitelisted_emails");
       const whitelistSnap = await getDoc(whitelistRef);
       const whitelisted = Object.keys(whitelistSnap.data() || {});
 
@@ -67,55 +72,80 @@ function App() {
     setUser(undefined);
   }
 
-  const handleSubmit = async (startDate: string, endDate: string): Promise<string | null> => {
-    // Convert to Date objects
+  async function submitToEndpoint(payload: Record<string, any>, idToken: string): Promise<string | null> {
+    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    const endpoint = isLocalhost
+      ? "http://localhost:8080"
+      : "https://europe-west4-restor-gis.cloudfunctions.net/site_verification_reports";
+
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.url;
+    } catch (error) {
+      console.error("Submission failed:", error);
+      return null;
+    }
+  }
+
+  const handleOrgSubmit = async (organizationName: string): Promise<string | null> => {
+    if (!userRef.current) return null;
+    try {
+      setBusy("org");
+      // clear old links
+      setOrgUrl(null);
+      setDateUrl(null);
+
+      const idToken = await userRef.current.getIdToken();
+      const url = await submitToEndpoint({ organizationName }, idToken);
+      setOrgUrl(url);
+      return url;
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handleDateSubmit = async (startDate: string, endDate: string): Promise<string | null> => {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    // Check if either date is invalid
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       alert("Invalid date format.");
       return null;
     }
 
-    // Calculate the difference in milliseconds and convert to days
-    const diffInMs = end.getTime() - start.getTime();
-    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
-
-    // Show error if more than 14 days
+    const diffInDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
     if (diffInDays > 14) {
       alert("Error: The date range cannot exceed 2 weeks.");
       return null;
     }
 
-    if (userRef.current) {
+    if (!userRef.current) return null;
+    try {
+      setBusy("date");
+      // clear old links
+      setOrgUrl(null);
+      setDateUrl(null);
+
       const idToken = await userRef.current.getIdToken();
-      const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-      const endpoint = isLocalhost
-        ? "http://localhost:8080"
-        : "https://europe-west4-restor-gis.cloudfunctions.net/site_verification_reports";
-      try {
-        const response = await fetch(endpoint, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${idToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ startDate, endDate }),
-        });
-        if (!response.ok) {
-          throw new Error(`Error ${response.status}`);
-        }
-
-        const data = await response.json();
-        return data.url;
-      } catch (error) {
-        console.error('Submission failed:', error);
-        return null;
-      }
+      const url = await submitToEndpoint({ startDate, endDate }, idToken);
+      setDateUrl(url);
+      return url;
+    } finally {
+      setBusy(null);
     }
-
-    return null;
   };
 
   return (
@@ -135,12 +165,49 @@ function App() {
         {logged_in && (
           <>
             <h1>Site Verification Reports</h1>
-            <div style={{
-              padding: '2rem', display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-            }}>
-              <DateForm onSubmit={handleSubmit} />
+            <div
+              style={{
+                padding: '2rem',
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'flex-start',
+                gap: '2rem',
+                flexWrap: 'wrap',
+              }}
+            >
+              {/* Date Panel */}
+              <div
+                style={{
+                  flex: '1 1 0',
+                  minWidth: '300px',
+                  border: '1px solid #ccc',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                }}
+              >
+                <h2>Select Dates</h2>
+                <DateForm onSubmit={handleDateSubmit} disabled={busy === "org"} />
+                {dateUrl && (
+                  <div style={{ marginTop: '0.75rem' }}>
+                    <a href={dateUrl} target="_blank" rel="noreferrer">Open generated sheet</a>
+                  </div>
+                )}
+              </div>
+
+              {/* Organisation Panel */}
+              <div
+                style={{
+                  flex: '1 1 0',
+                  minWidth: '300px',
+                  border: '1px solid #ccc',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                }}
+              >
+                <h2>Organisation name</h2>
+                <OrganisationForm onSubmit={handleOrgSubmit} disabled={busy === "date"} url={orgUrl} />
+              </div>
             </div>
           </>
         )}

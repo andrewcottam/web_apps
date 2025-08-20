@@ -1,85 +1,79 @@
-import React, { useState } from 'react';
+// DateForm.tsx
+import React, { useMemo, useState, useEffect } from "react";
 
-export interface DateFormProps {
-  onSubmit: (startDate: string, endDate: string) => Promise<string | null>;
+interface Props {
+  onSubmit: (startDate: string, endDate: string) => Promise<string | null> | Promise<void>;
+  disabled?: boolean;
+  /** Optional defaults. If not provided, uses [today-7d, today] in local time. */
+  defaultStart?: string; // "YYYY-MM-DD"
+  defaultEnd?: string;   // "YYYY-MM-DD"
 }
 
-const formatDate = (date: Date): string =>
-  date.toISOString().slice(0, 10); // "YYYY-MM-DD"
+// Format a Date to "YYYY-MM-DD" in **local** time (avoids UTC shift issues)
+function toLocalDateInputValue(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
 
-const DateForm: React.FC<DateFormProps> = ({ onSubmit }) => {
-  const today = new Date();
-  const oneWeekAgo = new Date();
-  oneWeekAgo.setDate(today.getDate() - 7);
+const DateForm: React.FC<Props> = ({ onSubmit, disabled = false, defaultStart, defaultEnd }) => {
+  // Compute sensible defaults once
+  const { startDefault, endDefault } = useMemo(() => {
+    const end = defaultEnd ?? toLocalDateInputValue(new Date());
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+    const start = defaultStart ?? toLocalDateInputValue(startDate);
+    return { startDefault: start, endDefault: end };
+  }, [defaultStart, defaultEnd]);
 
-  const [startDate, setStartDate] = useState(formatDate(oneWeekAgo));
-  const [endDate, setEndDate] = useState(formatDate(today));
-  const [resultUrl, setResultUrl] = useState<string | null>(null);
+  const [start, setStart] = useState(startDefault);
+  const [end, setEnd] = useState(endDefault);
   const [loading, setLoading] = useState(false);
 
-  const handleClick = async () => {
-    if (!startDate || !endDate) {
-      alert('Please enter both dates');
-      return;
-    }
+  // If the default props change (unlikely), sync state
+  useEffect(() => setStart(startDefault), [startDefault]);
+  useEffect(() => setEnd(endDefault), [endDefault]);
 
-    setLoading(true);
-    const url = await onSubmit(startDate, endDate);
-    setResultUrl(url);
-    setLoading(false);
+  const handle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      await onSubmit(start, end);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const isDisabled = disabled || loading;
+
   return (
-    <div
-      style={{
-        padding: '2rem',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-      }}
+    <form
+      onSubmit={handle}
+      style={{ display: "flex", flexDirection: "column", gap: "1rem", maxWidth: 300, width: "100%" }}
     >
-      <h2>Select Dates</h2>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '1rem',
-          maxWidth: '300px',
-          width: '100%',
-        }}
-      >
-        <label>
-          Start Date:
-          <input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-          />
-        </label>
-
-        <label>
-          End Date:
-          <input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-        </label>
-
-        <button onClick={handleClick} disabled={loading}>
-          {loading ? 'Submitting…' : 'Submit'}
-        </button>
-
-        {resultUrl && (
-          <div style={{ marginTop: '1rem', wordBreak: 'break-all' }}>
-            Sheet created: <br />
-            <a href={resultUrl} target="_blank" rel="noopener noreferrer">
-              {resultUrl}
-            </a>
-          </div>
-        )}
-      </div>
-    </div>
+      <label>
+        Start Date:
+        <input
+          type="date"
+          value={start}
+          onChange={(e) => setStart(e.target.value)}
+          disabled={isDisabled}
+        />
+      </label>
+      <label>
+        End Date:
+        <input
+          type="date"
+          value={end}
+          onChange={(e) => setEnd(e.target.value)}
+          disabled={isDisabled}
+        />
+      </label>
+      <button type="submit" disabled={isDisabled}>
+        {loading ? "Submitting…" : "Submit"}
+      </button>
+    </form>
   );
 };
 
