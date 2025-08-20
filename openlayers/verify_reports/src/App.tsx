@@ -93,7 +93,7 @@ function App() {
       const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
       const endpoint = isLocalhost
         ? "http://localhost:8080"
-        : "https://europe-west4-restor-gis.cloudfunctions.net/sites_verification_report";
+        : "https://europe-west4-restor-gis.cloudfunctions.net/site_verification_reports";
       try {
         const response = await fetch(endpoint, {
           method: "POST",

@@ -25,6 +25,12 @@ npm install @mui/material @emotion/react @emotion/styled
 npm install @mui/icons-material
 ```
 
+# Local dev
+```
+cd openlayers/verify_reports 
+npm run dev
+```
+
 ## Develop the app
 Copy the various components from somewhere else, e.g login buttons
 
