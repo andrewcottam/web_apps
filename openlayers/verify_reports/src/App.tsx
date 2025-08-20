@@ -68,6 +68,25 @@ function App() {
   }
 
   const handleSubmit = async (startDate: string, endDate: string): Promise<string | null> => {
+    // Convert to Date objects
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    // Check if either date is invalid
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      alert("Invalid date format.");
+      return null;
+    }
+
+    // Calculate the difference in milliseconds and convert to days
+    const diffInMs = end.getTime() - start.getTime();
+    const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+
+    // Show error if more than 14 days
+    if (diffInDays > 14) {
+      alert("Error: The date range cannot exceed 2 weeks.");
+      return null;
+    }
 
     if (userRef.current) {
       const idToken = await userRef.current.getIdToken();
@@ -94,7 +113,8 @@ function App() {
         console.error('Submission failed:', error);
         return null;
       }
-    };
+    }
+
     return null;
   };
 

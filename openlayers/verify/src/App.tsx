@@ -396,7 +396,7 @@ const App: React.FC = () => {
         setCheckStatuses({});
         setData(result.results);
 
-        if (includeOSMRef.current){
+        if (includeOSMRef.current) {
           const best_feature = (result.results.osm && result.results.osm.features && result.results.osm.best_feature);
           if (best_feature) {
             const overpassQuery = `${best_feature.type}(${best_feature.id});`;
@@ -573,9 +573,15 @@ const App: React.FC = () => {
                   )}
 
                   {selectedTab === "Land Cover" && data.landcover && (
-                    <JsonViewer data={data.landcover} />
+                    <JsonViewer
+                      data={Object.fromEntries(
+                        Object.entries(data.landcover).map(([key, value]) => [
+                          key,
+                          typeof value === "number" ? `${(value * 100).toFixed(0)}%` : value
+                        ])
+                      )}
+                    />
                   )}
-
                   {selectedTab === "OSM" && data.osm && data.osm.features && (
                     <div>
                       <div>
