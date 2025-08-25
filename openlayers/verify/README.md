@@ -4,6 +4,7 @@ npm install @mui/material @emotion/react @emotion/styled
 ```
 
 # Running 
+Start the restor-servers/mvt_tile_server_secure (for the MVT tiles) or the site_verify server locally
 ```
 cd openlayers/verify
 npm run dev

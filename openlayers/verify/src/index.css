@@ -163,3 +163,10 @@ tr:not(:last-child) th {}
   bottom: 10px;
   left: 1000px;
 }
+
+#popup{
+  font-size: 10px;
+}
+#popup a{
+  color: gray;
+}

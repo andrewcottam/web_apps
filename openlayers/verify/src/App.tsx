@@ -269,7 +269,8 @@ const App: React.FC = () => {
       // Add the WDPA boundaries
       const wdpa_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)', }), stroke: new Stroke({ color: [99, 148, 69, 0.3], width: 1 }) });
       // const wdpa_endpoint = 'https://storage.googleapis.com/restor_default/vector_tiles/wdpa/{z}/{x}/{y}.pbf'; // prebuilt MVT protected area boundaries 
-      const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      var isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      // isLocalhost = false;
       const wdpa_endpoint = isLocalhost
         ? "http://127.0.0.1:8080/tiles/{z}/{x}/{y}.pbf?source=wdpa"
         : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=wdpa";
@@ -278,6 +279,41 @@ const App: React.FC = () => {
       map.addLayer(wdpa_layer);
       // Set the useRef to point to the wdpa_layer
       wdpaLayerRef.current = wdpa_layer;
+
+      const popup = document.getElementById('popup') as HTMLDivElement;
+
+      map.on('pointermove', function (evt) {
+        if (!includeWDPARef.current && !includeSitesRef.current) {
+          popup.style.display = 'none';
+          return;
+        }
+
+        let found = false;
+        map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
+          const props = feature.getProperties() || {};
+          const isWdpa = layer === wdpa_layer && props.NAME;
+          const isSite = layer === sites_layer && props.name;
+
+          if (isWdpa || isSite) {
+            const name = isWdpa ? props.NAME : props.name;
+            const color = isWdpa ? 'rgb(99, 148, 69)' : 'rgb(244,97,97)';
+            const html = isWdpa && props.WDPAID
+              ? `<a href="https://www.protectedplanet.net/${props.WDPAID}" target="_blank" style="color:${color};text-decoration:none;">${name}</a>`
+              : `<span style="color:${color}">${name}</span>`;
+            popup.innerHTML = html;
+            popup.style.left = `${evt.pixel[0] + 30}px`;
+            popup.style.top = `${evt.pixel[1] + 30}px`;
+            popup.style.display = 'block';
+            found = true;
+            return true; // Stop iteration
+          }
+        });
+
+        if (!found) {
+          popup.style.display = 'none';
+        }
+      });
+
       const sites_endpoint = isLocalhost
         ? "http://127.0.0.1:8080/tiles/{z}/{x}/{y}.pbf?source=sites"
         : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=sites";
@@ -443,6 +479,20 @@ const App: React.FC = () => {
         style={{ position: "absolute", top: 20, left: 20, bottom: 20, right: 500 }}
       />
       <div id="coords">Move cursor to see coordinates</div>
+
+      <div
+        id="popup"
+        style={{
+          position: "absolute",
+          backgroundColor: "#fffd",
+          padding: "4px 8px",
+          border: "1px solid #ccc",
+          borderRadius: "4px",
+          display: "none",
+          pointerEvents: "none",
+          zIndex: 1000
+        }}
+      ></div>
 
       <div className="panel">
         <div id="fixed-column">
