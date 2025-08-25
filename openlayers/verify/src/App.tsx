@@ -113,6 +113,86 @@ const App: React.FC = () => {
   }, [includeWDPA]);
 
   useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    // Remove layers if they already exist
+    if (wdpaLayerRef.current) {
+      map.removeLayer(wdpaLayerRef.current);
+      wdpaLayerRef.current = null;
+    }
+    if (sitesLayerRef.current) {
+      map.removeLayer(sitesLayerRef.current);
+      sitesLayerRef.current = null;
+    }
+
+    if (!logged_in) return;
+
+    var isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+    isLocalhost = false;
+    // ----- WDPA LAYER -----
+    const wdpa_endpoint = isLocalhost
+      ? "http://127.0.0.1:8080/tiles/{z}/{x}/{y}.pbf?source=wdpa"
+      : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=wdpa";
+
+    const wdpa_style = new Style({
+      fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)' }),
+      stroke: new Stroke({ color: [99, 148, 69, 0.3], width: 1 }),
+    });
+
+    const wdpa_source = new VectorTileSource({ format: new MVT(), url: wdpa_endpoint });
+    const wdpa_layer = new VectorTileLayer({ source: wdpa_source, style: wdpa_style, minZoom: 10 });
+    map.addLayer(wdpa_layer);
+    wdpaLayerRef.current = wdpa_layer;
+
+    // ----- SITES LAYER -----
+    const sites_endpoint = isLocalhost
+      ? "http://127.0.0.1:8080/tiles/{z}/{x}/{y}.pbf?source=sites"
+      : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=sites";
+
+    const sites_source = new VectorTileSource({ format: new MVT(), url: sites_endpoint });
+
+    const styleCache: Record<string, Style> = Object.create(null);
+    function styleForVisibility(feature: FeatureLike): Style | undefined {
+      const area = Number(feature.get('surface_area_km2'));
+      if (Number.isFinite(area) && area > 1000) return undefined;
+
+      const key = String(feature.get('site_visibility') ?? 'unknown').toLowerCase();
+      if (styleCache[key]) return styleCache[key];
+
+      const styles = {
+        public: {
+          stroke: new Stroke({ color: 'rgba(244,97,97,0.9)', width: 2 }),
+          fill: new Fill({ color: 'rgba(97,97,97,0.05)' }),
+        },
+        private: {
+          stroke: new Stroke({ color: 'rgba(244,97,97,0.9)', width: 2, lineDash: [2, 6] }),
+          fill: new Fill({ color: 'rgba(97,97,97,0.05)' }),
+        },
+        unknown: {
+          stroke: new Stroke({ color: 'rgba(244,67,54,0.6)', width: 2 }),
+          fill: new Fill({ color: 'rgba(244,67,54,0.05)' }),
+        },
+      } as const;
+
+      const def = styles[key as keyof typeof styles] ?? styles.unknown;
+      const style = new Style({ stroke: def.stroke, fill: def.fill });
+      styleCache[key] = style;
+      return style;
+    }
+
+    const sites_layer = new VectorTileLayer({
+      source: sites_source,
+      minZoom: 10,
+      style: (feature) => styleForVisibility(feature),
+    });
+
+    map.addLayer(sites_layer);
+    sitesLayerRef.current = sites_layer;
+
+  }, [logged_in]);
+
+  useEffect(() => {
     if (sitesLayerRef.current) {
       sitesLayerRef.current.setVisible(includeSites);
     }
@@ -206,82 +286,6 @@ const App: React.FC = () => {
       setLoggedIn(true);
     }
   }
-  useEffect(() => {
-    const map = mapInstanceRef.current;
-    if (!map || !logged_in) return;
-
-    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-
-    // ---------- WDPA Layer ----------
-    const wdpa_style = new Style({
-      fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)' }),
-      stroke: new Stroke({ color: [99, 148, 69, 0.3], width: 1 })
-    });
-
-    const wdpa_endpoint = isLocalhost
-      ? "http://127.0.0.1:8080/tiles/{z}/{x}/{y}.pbf?source=wdpa"
-      : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=wdpa";
-
-    const wdpa_source = new VectorTileSource({ format: new MVT(), url: wdpa_endpoint });
-    const wdpa_layer = new VectorTileLayer({ source: wdpa_source, style: wdpa_style, minZoom: 10 });
-
-    map.addLayer(wdpa_layer);
-    wdpaLayerRef.current = wdpa_layer;
-
-    // ---------- Sites Layer ----------
-    const sites_endpoint = isLocalhost
-      ? "http://127.0.0.1:8080/tiles/{z}/{x}/{y}.pbf?source=sites"
-      : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=sites";
-
-    const sites_source = new VectorTileSource({ format: new MVT(), url: sites_endpoint });
-
-    const styleCache: Record<string, Style> = Object.create(null);
-
-    function styleForVisibility(feature: FeatureLike): Style | undefined {
-      const area = Number(feature.get('surface_area_km2'));
-      if (Number.isFinite(area) && area > 1000) return undefined;
-
-      const key = String(feature.get('site_visibility') ?? 'unknown').toLowerCase();
-      if (styleCache[key]) return styleCache[key];
-
-      const styles = {
-        public: {
-          stroke: new Stroke({ color: 'rgba(244,97,97,0.9)', width: 2 }),
-          fill: new Fill({ color: 'rgba(97,97,97,0.05)' }),
-        },
-        private: {
-          stroke: new Stroke({ color: 'rgba(244,97,97,0.9)', width: 2, lineDash: [2, 6] }),
-          fill: new Fill({ color: 'rgba(97,97,97,0.05)' }),
-        },
-        unknown: {
-          stroke: new Stroke({ color: 'rgba(244,67,54,0.6)', width: 2 }),
-          fill: new Fill({ color: 'rgba(244,67,54,0.05)' }),
-        },
-      } as const;
-
-      const def = styles[key as keyof typeof styles] ?? styles.unknown;
-      const style = new Style({ stroke: def.stroke, fill: def.fill });
-      styleCache[key] = style;
-      return style;
-    }
-
-    const sites_layer = new VectorTileLayer({
-      source: sites_source,
-      minZoom: 10,
-      style: (feature) => styleForVisibility(feature),
-    });
-
-    map.addLayer(sites_layer);
-    sitesLayerRef.current = sites_layer;
-
-    return () => {
-      // Cleanup when logged out
-      if (wdpa_layer) map.removeLayer(wdpa_layer);
-      if (sites_layer) map.removeLayer(sites_layer);
-      wdpaLayerRef.current = null;
-      sitesLayerRef.current = null;
-    };
-  }, [logged_in]);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -315,6 +319,37 @@ const App: React.FC = () => {
     map.on('pointermove', (evt: MapBrowserEvent) => {
       const lonLat = toLonLat(evt.coordinate);
       coordsDiv.innerText = `Lon: ${lonLat[0].toFixed(4)}, Lat: ${lonLat[1].toFixed(4)}`;
+      const popup = document.getElementById('popup') as HTMLDivElement;
+
+      if (!includeWDPARef.current && !includeSitesRef.current) {
+        popup.style.display = 'none';
+        return;
+      }
+
+      let found = false;
+      map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
+        const props = feature.getProperties() || {};
+        const isWdpa = layer === wdpaLayerRef.current && props.NAME;
+        const isSite = layer === sitesLayerRef.current && props.name;
+        if (isWdpa || isSite) {
+          const name = isWdpa ? props.NAME : props.name;
+          const color = isWdpa ? 'rgb(99, 148, 69)' : 'rgb(244,97,97)';
+          const html = isWdpa && props.WDPAID
+            ? `<a href="https://www.protectedplanet.net/${props.WDPAID}" target="_blank" style="color:${color};text-decoration:none;">${name}</a>`
+            : `<span style="color:${color}">${name}</span>`;
+          popup.innerHTML = html;
+          popup.style.left = `${evt.pixel[0] + 30}px`;
+          popup.style.top = `${evt.pixel[1] + 30}px`;
+          popup.style.display = 'block';
+          found = true;
+          return true; // Stop iteration
+        }
+      });
+
+      if (!found) {
+        popup.style.display = 'none';
+      }
+
     });
 
     const addGeoJSONToMap = (map: Map, geojsonData: any) => {
@@ -342,97 +377,6 @@ const App: React.FC = () => {
     apply(map, styleJson).then(() => {
       map.addLayer(vectorLayer);
 
-      // Add the WDPA boundaries
-      const wdpa_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)', }), stroke: new Stroke({ color: [99, 148, 69, 0.3], width: 1 }) });
-      // const wdpa_endpoint = 'https://storage.googleapis.com/restor_default/vector_tiles/wdpa/{z}/{x}/{y}.pbf'; // prebuilt MVT protected area boundaries 
-      var isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-      // isLocalhost = false;
-      const wdpa_endpoint = isLocalhost
-        ? "http://127.0.0.1:8080/tiles/{z}/{x}/{y}.pbf?source=wdpa"
-        : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=wdpa";
-      const wdpa_source = new VectorTileSource({ format: new MVT(), url: wdpa_endpoint });
-      const wdpa_layer = new VectorTileLayer({ source: wdpa_source, style: wdpa_style, minZoom: 10 });
-      // Set the useRef to point to the wdpa_layer
-      wdpaLayerRef.current = wdpa_layer;
-
-      const popup = document.getElementById('popup') as HTMLDivElement;
-
-      map.on('pointermove', function (evt) {
-        if (!includeWDPARef.current && !includeSitesRef.current) {
-          popup.style.display = 'none';
-          return;
-        }
-
-        let found = false;
-        map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
-          const props = feature.getProperties() || {};
-          const isWdpa = layer === wdpa_layer && props.NAME;
-          const isSite = layer === sites_layer && props.name;
-
-          if (isWdpa || isSite) {
-            const name = isWdpa ? props.NAME : props.name;
-            const color = isWdpa ? 'rgb(99, 148, 69)' : 'rgb(244,97,97)';
-            const html = isWdpa && props.WDPAID
-              ? `<a href="https://www.protectedplanet.net/${props.WDPAID}" target="_blank" style="color:${color};text-decoration:none;">${name}</a>`
-              : `<span style="color:${color}">${name}</span>`;
-            popup.innerHTML = html;
-            popup.style.left = `${evt.pixel[0] + 30}px`;
-            popup.style.top = `${evt.pixel[1] + 30}px`;
-            popup.style.display = 'block';
-            found = true;
-            return true; // Stop iteration
-          }
-        });
-
-        if (!found) {
-          popup.style.display = 'none';
-        }
-      });
-
-      const sites_endpoint = isLocalhost
-        ? "http://127.0.0.1:8080/tiles/{z}/{x}/{y}.pbf?source=sites"
-        : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=sites";
-
-      const sites_source = new VectorTileSource({ format: new MVT(), url: sites_endpoint });
-
-      // style cache for performance
-      const styleCache: Record<string, Style> = Object.create(null);
-
-      function styleForVisibility(feature: FeatureLike): Style | undefined {
-        const area = Number(feature.get('surface_area_km2'));
-        if (Number.isFinite(area) && area > 1000) return undefined;
-
-        const key = String(feature.get('site_visibility') ?? 'unknown').toLowerCase();
-        if (styleCache[key]) return styleCache[key];
-
-        const styles = {
-          public: {
-            stroke: new Stroke({ color: 'rgba(244,97,97,0.9)', width: 2 }),
-            fill: new Fill({ color: 'rgba(97,97,97,0.05)' }),
-          },
-          private: {
-            stroke: new Stroke({ color: 'rgba(244,97,97,0.9)', width: 2, lineDash: [2, 6] }),
-            fill: new Fill({ color: 'rgba(97,97,97,0.05)' }),
-          },
-          unknown: {
-            stroke: new Stroke({ color: 'rgba(244,67,54,0.6)', width: 2 }),
-            fill: new Fill({ color: 'rgba(244,67,54,0.05)' }),
-          },
-        } as const;
-
-        const def = styles[key as keyof typeof styles] ?? styles.unknown;
-        const style = new Style({ stroke: def.stroke, fill: def.fill });
-        styleCache[key] = style;
-        return style;
-      }
-
-      const sites_layer = new VectorTileLayer({
-        source: sites_source,
-        minZoom: 10,
-        style: (feature) => styleForVisibility(feature),
-      });
-
-      sitesLayerRef.current = sites_layer;
       // Tile boundaries - debug only
       const debug_Layer = new TileLayer({ source: new TileDebug({ projection: 'EPSG:3857', zDirection: 1, tileGrid: createXYZ({ tileSize: 512, maxZoom: 22 }) }) });
       // map.addLayer(debug_Layer);
