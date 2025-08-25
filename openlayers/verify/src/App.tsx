@@ -206,6 +206,82 @@ const App: React.FC = () => {
       setLoggedIn(true);
     }
   }
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !logged_in) return;
+
+    const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+
+    // ---------- WDPA Layer ----------
+    const wdpa_style = new Style({
+      fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)' }),
+      stroke: new Stroke({ color: [99, 148, 69, 0.3], width: 1 })
+    });
+
+    const wdpa_endpoint = isLocalhost
+      ? "http://127.0.0.1:8080/tiles/{z}/{x}/{y}.pbf?source=wdpa"
+      : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=wdpa";
+
+    const wdpa_source = new VectorTileSource({ format: new MVT(), url: wdpa_endpoint });
+    const wdpa_layer = new VectorTileLayer({ source: wdpa_source, style: wdpa_style, minZoom: 10 });
+
+    map.addLayer(wdpa_layer);
+    wdpaLayerRef.current = wdpa_layer;
+
+    // ---------- Sites Layer ----------
+    const sites_endpoint = isLocalhost
+      ? "http://127.0.0.1:8080/tiles/{z}/{x}/{y}.pbf?source=sites"
+      : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=sites";
+
+    const sites_source = new VectorTileSource({ format: new MVT(), url: sites_endpoint });
+
+    const styleCache: Record<string, Style> = Object.create(null);
+
+    function styleForVisibility(feature: FeatureLike): Style | undefined {
+      const area = Number(feature.get('surface_area_km2'));
+      if (Number.isFinite(area) && area > 1000) return undefined;
+
+      const key = String(feature.get('site_visibility') ?? 'unknown').toLowerCase();
+      if (styleCache[key]) return styleCache[key];
+
+      const styles = {
+        public: {
+          stroke: new Stroke({ color: 'rgba(244,97,97,0.9)', width: 2 }),
+          fill: new Fill({ color: 'rgba(97,97,97,0.05)' }),
+        },
+        private: {
+          stroke: new Stroke({ color: 'rgba(244,97,97,0.9)', width: 2, lineDash: [2, 6] }),
+          fill: new Fill({ color: 'rgba(97,97,97,0.05)' }),
+        },
+        unknown: {
+          stroke: new Stroke({ color: 'rgba(244,67,54,0.6)', width: 2 }),
+          fill: new Fill({ color: 'rgba(244,67,54,0.05)' }),
+        },
+      } as const;
+
+      const def = styles[key as keyof typeof styles] ?? styles.unknown;
+      const style = new Style({ stroke: def.stroke, fill: def.fill });
+      styleCache[key] = style;
+      return style;
+    }
+
+    const sites_layer = new VectorTileLayer({
+      source: sites_source,
+      minZoom: 10,
+      style: (feature) => styleForVisibility(feature),
+    });
+
+    map.addLayer(sites_layer);
+    sitesLayerRef.current = sites_layer;
+
+    return () => {
+      // Cleanup when logged out
+      if (wdpa_layer) map.removeLayer(wdpa_layer);
+      if (sites_layer) map.removeLayer(sites_layer);
+      wdpaLayerRef.current = null;
+      sitesLayerRef.current = null;
+    };
+  }, [logged_in]);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -276,7 +352,6 @@ const App: React.FC = () => {
         : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=wdpa";
       const wdpa_source = new VectorTileSource({ format: new MVT(), url: wdpa_endpoint });
       const wdpa_layer = new VectorTileLayer({ source: wdpa_source, style: wdpa_style, minZoom: 10 });
-      map.addLayer(wdpa_layer);
       // Set the useRef to point to the wdpa_layer
       wdpaLayerRef.current = wdpa_layer;
 
@@ -357,7 +432,6 @@ const App: React.FC = () => {
         style: (feature) => styleForVisibility(feature),
       });
 
-      map.addLayer(sites_layer);      // Set the useRef to point to the sites_layer
       sitesLayerRef.current = sites_layer;
       // Tile boundaries - debug only
       const debug_Layer = new TileLayer({ source: new TileDebug({ projection: 'EPSG:3857', zDirection: 1, tileGrid: createXYZ({ tileSize: 512, maxZoom: 22 }) }) });
