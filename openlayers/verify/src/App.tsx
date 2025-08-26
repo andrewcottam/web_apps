@@ -61,7 +61,7 @@ const firestore = getFirestore(app);
 const App: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const drawnFeatureRef = useRef<any>(null);
-
+  const [isDrawing, setIsDrawing] = useState(false);
   const [user, setUser] = useState<UserCredential["user"]>();
   const [logged_in, setLoggedIn] = useState(false);
   const [data, setData] = useState<Record<string, any>>({});
@@ -71,6 +71,8 @@ const App: React.FC = () => {
   const [includeWDPA, setIncludeWDPA] = useState(true);
   const [includeSites, setIncludeSites] = useState(true);
   const [checkStatuses, setCheckStatuses] = useState<Record<string, CheckStatus>>({});
+  const [selectedSiteFeature, setSelectedSiteFeature] = useState<any>(null);
+  const selectedSiteFeatureRef = useRef<any>(null);
   const drawSourceRef = useRef<VectorSource | null>(null);
   const osmLayerRef = useRef<VectorLayer | null>(null);
   const wdpaLayerRef = useRef<VectorTileLayer | null>(null);
@@ -81,13 +83,22 @@ const App: React.FC = () => {
   const includeSitesRef = useRef(includeSites);
   const drawInteractionRef = useRef<Draw | null>(null);
   const mapInstanceRef = useRef<Map | null>(null);
+  const isDrawingRef = useRef(false);
+  const loggedInRef = useRef(logged_in);
 
+  // Update the ref when selectedSiteFeature changes
+  useEffect(() => {
+    selectedSiteFeatureRef.current = selectedSiteFeature;
+  }, [selectedSiteFeature]);
   useEffect(() => {
     includeLandCoverRef.current = includeLandCover;
     includeOSMRef.current = includeOSM;
     includeWDPARef.current = includeWDPA;
     includeSitesRef.current = includeSites;
   }, [includeLandCover, includeOSM, includeWDPA, includeSites]);
+  useEffect(() => {
+    loggedInRef.current = logged_in;
+  }, [logged_in]);
   useEffect(() => {
     // If the selected tab is now hidden due to checkbox changes, revert to "Checks"
     if (
@@ -182,10 +193,33 @@ const App: React.FC = () => {
     }
 
     const sites_layer = new VectorTileLayer({
-      source: sites_source,
-      minZoom: 10,
-      style: (feature) => styleForVisibility(feature),
+      source: sites_source,  // ← This was missing!
+      minZoom: 10,          // ← This was missing!
+      style: (feature) => {
+        const baseStyle = styleForVisibility(feature);
+
+        // Check if this feature is selected
+        const selectedFeature = selectedSiteFeatureRef.current;
+        const isSelected = selectedFeature &&
+          feature.get('id') === selectedFeature.get('id');
+
+        if (isSelected) {
+          // Create highlighted style
+          return new Style({
+            stroke: new Stroke({
+              color: 'rgba(255, 215, 0, 1)', // Gold color for selection
+              width: 4
+            }),
+            fill: new Fill({
+              color: 'rgba(255, 215, 0, 0.3)' // Semi-transparent gold fill
+            }),
+          });
+        }
+
+        return baseStyle;
+      },
     });
+
 
     map.addLayer(sites_layer);
     sitesLayerRef.current = sites_layer;
@@ -234,6 +268,16 @@ const App: React.FC = () => {
     );
   }, [overallStatus]);
 
+  // Add this helper function to force layer re-render when selection changes
+  const refreshSitesLayer = () => {
+    if (sitesLayerRef.current) {
+      sitesLayerRef.current.getSource()?.refresh();
+    }
+  };
+  useEffect(() => {
+    refreshSitesLayer();
+  }, [selectedSiteFeature]);
+
   useEffect(() => {
     const map = mapInstanceRef.current;
     const draw = drawInteractionRef.current;
@@ -250,6 +294,8 @@ const App: React.FC = () => {
   function logout() {
     setLoggedIn(false);
     setUser(undefined);
+    setIsDrawing(false);
+    isDrawingRef.current = false;
     // Clear drawn features
     if (drawSourceRef.current) {
       drawSourceRef.current.clear();
@@ -287,6 +333,179 @@ const App: React.FC = () => {
     }
   }
 
+  // Replace your verifySiteFeature function with this updated version:
+  const verifySiteFeature = async (feature: FeatureLike) => {
+    if (!userRef.current) return;
+
+    try {
+      // For vector tile features (RenderFeature), reconstruct geometry from flatCoordinates_
+      let geometry;
+
+      const renderFeature = feature as any;
+
+      if (renderFeature.flatCoordinates_ && renderFeature.ends_) {
+        // RenderFeature has flatCoordinates_ and ends_ properties
+        const flatCoords = renderFeature.flatCoordinates_;
+        const ends = renderFeature.ends_;
+        const stride = renderFeature.stride_ || 2; // Usually 2 for [x, y]
+
+        console.log('Flat coordinates:', flatCoords);
+        console.log('Ends:', ends);
+        console.log('Stride:', stride);
+
+        // Convert flat coordinates to coordinate rings
+        const rings = [];
+        let start = 0;
+
+        for (let i = 0; i < ends.length; i++) {
+          const end = ends[i];
+          const ring = [];
+
+          for (let j = start; j < end; j += stride) {
+            ring.push([flatCoords[j], flatCoords[j + 1]]);
+          }
+
+          rings.push(ring);
+          start = end;
+        }
+
+        // Create polygon geometry
+        geometry = new Polygon(rings);
+        console.log('Reconstructed geometry:', geometry);
+
+      } else if (renderFeature.getGeometry && typeof renderFeature.getGeometry === 'function') {
+        // Try regular geometry access
+        geometry = renderFeature.getGeometry();
+      } else {
+        console.error('Cannot access geometry from this feature type');
+        console.log('Available properties:', Object.keys(renderFeature));
+        return;
+      }
+
+      if (!geometry) {
+        console.error('Feature has no geometry');
+        return;
+      }
+
+      // Transform geometry to WGS84 and convert to WKT
+      const geometry4326 = geometry.clone().transform("EPSG:3857", "EPSG:4326");
+      const wkt = new WKT().writeGeometry(geometry4326);
+
+      // Get auth token
+      const idToken = await userRef.current.getIdToken();
+
+      // Determine endpoint
+      const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      const endpoint = isLocalhost
+        ? "http://localhost:8080"
+        : "https://europe-west6-restor-gis.cloudfunctions.net/verify_site";
+
+      // Build config based on current checkbox states
+      const configList = [];
+      if (includeLandCoverRef.current) {
+        configList.push("landcover");
+      }
+      if (includeOSMRef.current) {
+        configList.push("osm");
+      }
+      if (includeWDPARef.current) {
+        configList.push("wdpa");
+      }
+      if (includeSitesRef.current) {
+        configList.push("sites");
+      }
+      // Add this line:
+      configList.push("profile_completeness");
+      // Get feature properties
+      const properties = renderFeature.properties_ || {};
+      console.log('Feature properties:', properties);
+
+      // Make API call with both geometry and properties
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${idToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          site_data: {
+            geometry: wkt,
+            ...properties  // Spread all properties into site_data
+          },
+          config: {
+            optional_metrics: configList,
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API call failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+
+      // Update UI with verification results
+      setCheckStatuses({});
+      setData(result.results);
+
+      // Handle OSM overlay if enabled
+      if (includeOSMRef.current) {
+        const best_feature = (result.results.osm && result.results.osm.features && result.results.osm.best_feature);
+        if (best_feature) {
+          const overpassQuery = `${best_feature.type}(${best_feature.id});`;
+          const fullQuery = `[out:json];(${overpassQuery});out geom;`;
+
+          fetch("https://overpass-api.de/api/interpreter", {
+            method: "POST",
+            body: fullQuery.trim(),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              const geojson = osmtogeojson(data);
+              if (mapInstanceRef.current) {
+                addGeoJSONToMap(mapInstanceRef.current, geojson);
+              }
+            })
+            .catch((error) => {
+              console.error('Error fetching OSM data:', error);
+            });
+        }
+      }
+
+    } catch (error) {
+      console.error('Error verifying site feature:', error);
+      alert('Failed to verify site. Please try again.');
+    }
+  };
+
+  // You'll also need to move the addGeoJSONToMap function outside of the main useEffect 
+  // so it can be accessed by verifySiteFeature. Add this at the component level:
+  const addGeoJSONToMap = (map: Map, geojsonData: any) => {
+    // Remove existing OSM layer if it exists
+    if (osmLayerRef.current) {
+      map.removeLayer(osmLayerRef.current);
+      osmLayerRef.current = null;
+    }
+
+    const features = new GeoJSON().readFeatures(geojsonData, {
+      featureProjection: "EPSG:3857",
+    });
+
+    const vectorSource = new VectorSource({ features });
+
+    const vectorLayer = new VectorLayer({
+      source: vectorSource,
+      style: new Style({
+        stroke: new Stroke({ color: 'rgba(0,0,200,0.9)', width: 1, lineDash: [2, 6] }),
+        fill: new Fill({ color: 'rgba(97,97,97,0)' }),
+      }),
+    });
+
+    map.addLayer(vectorLayer);
+
+    // Store reference to OSM layer so we can remove it later
+    osmLayerRef.current = vectorLayer;
+  };
   useEffect(() => {
     if (!mapRef.current) return;
 
@@ -314,64 +533,41 @@ const App: React.FC = () => {
       layers: [],
     });
 
-    const coordsDiv = document.getElementById('coords') as HTMLDivElement;
-
-    map.on('pointermove', (evt: MapBrowserEvent) => {
-      const lonLat = toLonLat(evt.coordinate);
-      coordsDiv.innerText = `Lon: ${lonLat[0].toFixed(4)}, Lat: ${lonLat[1].toFixed(4)}`;
-      const popup = document.getElementById('popup') as HTMLDivElement;
-
-      if (!includeWDPARef.current && !includeSitesRef.current) {
-        popup.style.display = 'none';
+    // Replace your existing click handler in the main useEffect with this enhanced version
+    map.on('click', (evt: MapBrowserEvent) => {
+      // Only handle site selection if Ctrl key is pressed and user is logged in
+      if (!evt.originalEvent.ctrlKey || !loggedInRef.current) {
         return;
       }
 
-      let found = false;
-      map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
-        const props = feature.getProperties() || {};
-        const isWdpa = layer === wdpaLayerRef.current && props.NAME;
-        const isSite = layer === sitesLayerRef.current && props.name;
-        if (isWdpa || isSite) {
-          const name = isWdpa ? props.NAME : props.name;
-          const color = isWdpa ? 'rgb(99, 148, 69)' : 'rgb(244,97,97)';
-          const html = isWdpa && props.WDPAID
-            ? `<a href="https://www.protectedplanet.net/${props.WDPAID}" target="_blank" style="color:${color};text-decoration:none;">${name}</a>`
-            : `<span style="color:${color}">${name}</span>`;
-          popup.innerHTML = html;
-          popup.style.left = `${evt.pixel[0] + 30}px`;
-          popup.style.top = `${evt.pixel[1] + 30}px`;
-          popup.style.display = 'block';
-          found = true;
+      let clickedFeature: FeatureLike | null = null;
+      map.forEachFeatureAtPixel(evt.pixel, function (feature: FeatureLike, layer) {
+        // Only look for features in the sites layer
+        if (layer === sitesLayerRef.current) {
+          clickedFeature = feature;
           return true; // Stop iteration
         }
       });
 
-      if (!found) {
-        popup.style.display = 'none';
+      if (clickedFeature) {
+        console.log('Selected site feature:', (clickedFeature as any).getProperties());
+        setSelectedSiteFeature(clickedFeature);
+
+        // Call verification API with the selected feature
+        verifySiteFeature(clickedFeature);
+
+        // Prevent the click from propagating to avoid any other interactions
+        evt.stopPropagation();
+      } else {
+        // Clear selection if clicking elsewhere with Ctrl
+        setSelectedSiteFeature(null);
+        // Clear data when deselecting
+        setData({});
+        setCheckStatuses({});
       }
-
     });
+    const coordsDiv = document.getElementById('coords') as HTMLDivElement;
 
-    const addGeoJSONToMap = (map: Map, geojsonData: any) => {
-      const features = new GeoJSON().readFeatures(geojsonData, {
-        featureProjection: "EPSG:3857",
-      });
-
-      const vectorSource = new VectorSource({ features });
-
-      const vectorLayer = new VectorLayer({
-        source: vectorSource,
-        style: new Style({
-          stroke: new Stroke({ color: 'rgba(0,0,200,0.9)', width: 1, lineDash: [2, 6] }),
-          fill: new Fill({ color: 'rgba(97,97,97,0)' }),
-        }),
-      });
-
-      map.addLayer(vectorLayer);
-
-      // Store reference to OSM layer so we can remove it later
-      osmLayerRef.current = vectorLayer;
-    };
     const styleJson = "https://api.maptiler.com/maps/a1d2f17b-d57a-45ba-b7c6-4af845f758fb/style.json?key=67VOA297U9cciigsJVvm";
 
     apply(map, styleJson).then(() => {
@@ -385,6 +581,7 @@ const App: React.FC = () => {
 
     mapInstanceRef.current = map;  // Save reference for later
 
+    // In your main useEffect where you create the map, modify the draw interaction setup:
     // Create the draw interaction but don't add it yet
     drawInteractionRef.current = new Draw({
       source: vectorSource,
@@ -392,6 +589,8 @@ const App: React.FC = () => {
     });
 
     drawInteractionRef.current.on("drawstart", () => {
+      setIsDrawing(true);
+      isDrawingRef.current = true;
       // Clear previously drawn features
       if (drawSourceRef.current) {
         drawSourceRef.current.clear();
@@ -406,6 +605,8 @@ const App: React.FC = () => {
     });
 
     drawInteractionRef.current.on("drawend", async (event) => {
+      setIsDrawing(false);
+      isDrawingRef.current = false;
       const feature = event.feature;
       drawnFeatureRef.current = feature;
       const geometry = feature.getGeometry() as Polygon;
@@ -462,29 +663,54 @@ const App: React.FC = () => {
               .then((res) => res.json())
               .then((data) => {
                 const geojson = osmtogeojson(data);
-                addGeoJSONToMap(map, geojson);
+                addGeoJSONToMap(mapInstanceRef.current!, geojson);
               });
           }
         }
-
-        // const osm_relations = (result.results.osm && result.results.osm.features) ?? [];
-        // if (osm_relations.length > 0) {
-        //   const overpassQuery = osm_relations.map((rel: { type: string; id: number }) => `${rel.type}(${rel.id});`).join("\n");
-        //   const fullQuery = `[out:json];(${overpassQuery});out geom;`;
-        //   // Uncomment the following to fetch the features from Overpass API if needed
-        //   fetch("https://overpass-api.de/api/interpreter", {
-        //     method: "POST",
-        //     body: fullQuery.trim(),
-        //   })
-        //     .then((res) => res.json())
-        //     .then((data) => {
-        //       const geojson = osmtogeojson(data);
-        //       addGeoJSONToMap(map, geojson);
-        //     });
-        // }
       }
     });
 
+    // Also handle draw cancellation
+    drawInteractionRef.current.on("drawabort", () => {
+      setIsDrawing(false);
+      isDrawingRef.current = false;
+    });
+
+    // Modified pointermove handler
+    map.on('pointermove', (evt: MapBrowserEvent) => {
+      const lonLat = toLonLat(evt.coordinate);
+      coordsDiv.innerText = `Lon: ${lonLat[0].toFixed(4)}, Lat: ${lonLat[1].toFixed(4)}`;
+      const popup = document.getElementById('popup') as HTMLDivElement;
+
+      // Use loggedInRef.current instead of logged_in
+      if (isDrawingRef.current || !loggedInRef.current || (!includeWDPARef.current && !includeSitesRef.current)) {
+        popup.style.display = 'none';
+        return;
+      }
+      let found = false;
+      map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
+        const props = feature.getProperties() || {};
+        const isWdpa = layer === wdpaLayerRef.current && props.NAME;
+        const isSite = layer === sitesLayerRef.current && props.name;
+        if (isWdpa || isSite) {
+          const name = isWdpa ? props.NAME : props.name;
+          const color = isWdpa ? 'rgb(99, 148, 69)' : 'rgb(244,97,97)';
+          const html = isWdpa && props.WDPAID
+            ? `<a href="https://www.protectedplanet.net/${props.WDPAID}" target="_blank" style="color:${color};text-decoration:none;">${name}</a>`
+            : `<span style="color:${color}">${name}</span>`;
+          popup.innerHTML = html;
+          popup.style.left = `${evt.pixel[0] + 30}px`;
+          popup.style.top = `${evt.pixel[1] + 30}px`;
+          popup.style.display = 'block';
+          found = true;
+          return true; // Stop iteration
+        }
+      });
+
+      if (!found) {
+        popup.style.display = 'none';
+      }
+    });
     return () => {
       map.setTarget(undefined);
     };
