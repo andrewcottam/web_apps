@@ -61,6 +61,7 @@ const firestore = getFirestore(app);
 const App: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const drawnFeatureRef = useRef<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [user, setUser] = useState<UserCredential["user"]>();
   const [logged_in, setLoggedIn] = useState(false);
@@ -336,6 +337,8 @@ const App: React.FC = () => {
   // Replace your verifySiteFeature function with this updated version:
   const verifySiteFeature = async (feature: FeatureLike) => {
     if (!userRef.current) return;
+    // Set loading to true at the start
+    setIsLoading(true);
 
     try {
       // For vector tile features (RenderFeature), reconstruct geometry from flatCoordinates_
@@ -348,10 +351,6 @@ const App: React.FC = () => {
         const flatCoords = renderFeature.flatCoordinates_;
         const ends = renderFeature.ends_;
         const stride = renderFeature.stride_ || 2; // Usually 2 for [x, y]
-
-        console.log('Flat coordinates:', flatCoords);
-        console.log('Ends:', ends);
-        console.log('Stride:', stride);
 
         // Convert flat coordinates to coordinate rings
         const rings = [];
@@ -371,7 +370,6 @@ const App: React.FC = () => {
 
         // Create polygon geometry
         geometry = new Polygon(rings);
-        console.log('Reconstructed geometry:', geometry);
 
       } else if (renderFeature.getGeometry && typeof renderFeature.getGeometry === 'function') {
         // Try regular geometry access
@@ -418,7 +416,6 @@ const App: React.FC = () => {
       configList.push("profile_completeness");
       // Get feature properties
       const properties = renderFeature.properties_ || {};
-      console.log('Feature properties:', properties);
 
       // Make API call with both geometry and properties
       const response = await fetch(endpoint, {
@@ -475,6 +472,9 @@ const App: React.FC = () => {
     } catch (error) {
       console.error('Error verifying site feature:', error);
       alert('Failed to verify site. Please try again.');
+    } finally {
+      // Always set loading to false when done
+      setIsLoading(false);
     }
   };
 
@@ -548,11 +548,16 @@ const App: React.FC = () => {
           return true; // Stop iteration
         }
       });
+      // Clear data when deselecting
+      setData({});
 
       if (clickedFeature) {
-        console.log('Selected site feature:', (clickedFeature as any).getProperties());
         setSelectedSiteFeature(clickedFeature);
-
+        // Clear drawn polygons when selecting a site
+        if (drawSourceRef.current) {
+          drawSourceRef.current.clear();
+        }
+        drawnFeatureRef.current = null;
         // Call verification API with the selected feature
         verifySiteFeature(clickedFeature);
 
@@ -561,8 +566,6 @@ const App: React.FC = () => {
       } else {
         // Clear selection if clicking elsewhere with Ctrl
         setSelectedSiteFeature(null);
-        // Clear data when deselecting
-        setData({});
         setCheckStatuses({});
       }
     });
@@ -595,7 +598,7 @@ const App: React.FC = () => {
       if (drawSourceRef.current) {
         drawSourceRef.current.clear();
       }
-
+      setSelectedSiteFeature(null);
       setData({});
       if (osmLayerRef.current) {
         map.removeLayer(osmLayerRef.current);
@@ -614,60 +617,69 @@ const App: React.FC = () => {
       const wkt = new WKT().writeGeometry(geometry4326);
 
       if (userRef.current) {
-        const idToken = await userRef.current.getIdToken();
-        const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-        const endpoint = isLocalhost
-          ? "http://localhost:8080"
-          : "https://europe-west6-restor-gis.cloudfunctions.net/verify_site";
+        setIsLoading(true);
+        try {
+          const idToken = await userRef.current.getIdToken();
+          const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+          const endpoint = isLocalhost
+            ? "http://localhost:8080"
+            : "https://europe-west6-restor-gis.cloudfunctions.net/verify_site";
 
-        const configList = [];
-        if (includeLandCoverRef.current) {
-          configList.push("landcover");
-        }
-        if (includeOSMRef.current) {
-          configList.push("osm");
-        }
-        if (includeWDPARef.current) {
-          configList.push("wdpa");
-        }
-        if (includeSitesRef.current) {
-          configList.push("sites");
-        }
-        const response = await fetch(endpoint, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${idToken}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            site_data: { geometry: wkt },
-            config: {
-              optional_metrics: configList,
-            },
-          }),
-        });
-
-        const result = await response.json();
-        setCheckStatuses({});
-        setData(result.results);
-
-        if (includeOSMRef.current) {
-          const best_feature = (result.results.osm && result.results.osm.features && result.results.osm.best_feature);
-          if (best_feature) {
-            const overpassQuery = `${best_feature.type}(${best_feature.id});`;
-            const fullQuery = `[out:json];(${overpassQuery});out geom;`;
-            fetch("https://overpass-api.de/api/interpreter", {
-              method: "POST",
-              body: fullQuery.trim(),
-            })
-              .then((res) => res.json())
-              .then((data) => {
-                const geojson = osmtogeojson(data);
-                addGeoJSONToMap(mapInstanceRef.current!, geojson);
-              });
+          const configList = [];
+          if (includeLandCoverRef.current) {
+            configList.push("landcover");
           }
+          if (includeOSMRef.current) {
+            configList.push("osm");
+          }
+          if (includeWDPARef.current) {
+            configList.push("wdpa");
+          }
+          if (includeSitesRef.current) {
+            configList.push("sites");
+          }
+          const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${idToken}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              site_data: { geometry: wkt },
+              config: {
+                optional_metrics: configList,
+              },
+            }),
+          });
+
+          const result = await response.json();
+          setCheckStatuses({});
+          setData(result.results);
+
+          if (includeOSMRef.current) {
+            const best_feature = (result.results.osm && result.results.osm.features && result.results.osm.best_feature);
+            if (best_feature) {
+              const overpassQuery = `${best_feature.type}(${best_feature.id});`;
+              const fullQuery = `[out:json];(${overpassQuery});out geom;`;
+              fetch("https://overpass-api.de/api/interpreter", {
+                method: "POST",
+                body: fullQuery.trim(),
+              })
+                .then((res) => res.json())
+                .then((data) => {
+                  const geojson = osmtogeojson(data);
+                  addGeoJSONToMap(mapInstanceRef.current!, geojson);
+                });
+            }
+          }
+        } catch (error) {
+          console.error('Error verifying drawn polygon:', error);
+          alert('Failed to verify site. Please try again.');
+        } finally {
+          // Always set loading to false when done
+          setIsLoading(false);
         }
-      }
+      } // end of if (userRef.current) {
     });
 
     // Also handle draw cancellation
@@ -754,6 +766,32 @@ const App: React.FC = () => {
           <>
             <h1>Site Verification Playground</h1>
             <h2>Draw a polygon on the map</h2>
+            {isLoading && (
+              <div style={{
+                position: "fixed",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                backgroundColor: "rgba(255, 255, 255, 0.9)",
+                padding: "20px",
+                borderRadius: "8px",
+                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                zIndex: 9999,
+                display: "flex",
+                alignItems: "center",
+                gap: "10px"
+              }}>
+                <div style={{
+                  width: "20px",
+                  height: "20px",
+                  border: "2px solid #f3f3f3",
+                  borderTop: "2px solid #3498db",
+                  borderRadius: "50%",
+                  animation: "spin 1s linear infinite"
+                }}></div>
+                <span>Verifying site...</span>
+              </div>
+            )}
 
             {Object.keys(data).length > 0 && (
               <>
