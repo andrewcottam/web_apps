@@ -147,13 +147,26 @@ const App: React.FC = () => {
       ? "http://127.0.0.1:8080/tiles/{z}/{x}/{y}.pbf?source=wdpa"
       : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=wdpa";
 
-    const wdpa_style = new Style({
-      fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)' }),
-      stroke: new Stroke({ color: [99, 148, 69, 0.3], width: 1 }),
-    });
+    // Updated style function to filter out IUCN_CAT "V"
+    const wdpa_style_function = (feature: FeatureLike) => {
+      // Check if IUCN_CAT is "V" and hide the feature if it is
+      const iucnCat = feature.get('IUCN_CAT');
+      if (iucnCat === 'V') {
+        return undefined; // This hides the feature
+      }
 
+      // Return the normal style for all other features
+      return new Style({
+        fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)' }),
+        stroke: new Stroke({ color: [99, 148, 69, 0.3], width: 1 }),
+      });
+    };
     const wdpa_source = new VectorTileSource({ format: new MVT(), url: wdpa_endpoint });
-    const wdpa_layer = new VectorTileLayer({ source: wdpa_source, style: wdpa_style, minZoom: 10 });
+    const wdpa_layer = new VectorTileLayer({
+      source: wdpa_source,
+      style: wdpa_style_function,  // Use the function instead of the static style
+      minZoom: 10
+    });
     map.addLayer(wdpa_layer);
     wdpaLayerRef.current = wdpa_layer;
 
