@@ -58,6 +58,30 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 const firestore = getFirestore(app);
 
+// Helper function to parse URL parameters
+const getUrlParameters = (): { lat?: number; lng?: number; zoom?: number } => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const lat = urlParams.get('lat');
+  const lng = urlParams.get('lng') || urlParams.get('lon'); // Accept both lng and lon
+  const zoom = urlParams.get('zoom');
+  
+  const result: { lat?: number; lng?: number; zoom?: number } = {};
+  
+  if (lat && !isNaN(parseFloat(lat))) {
+    result.lat = parseFloat(lat);
+  }
+  
+  if (lng && !isNaN(parseFloat(lng))) {
+    result.lng = parseFloat(lng);
+  }
+  
+  if (zoom && !isNaN(parseFloat(zoom))) {
+    result.zoom = parseFloat(zoom);
+  }
+  
+  return result;
+};
+
 const App: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const drawnFeatureRef = useRef<any>(null);
@@ -536,11 +560,26 @@ const App: React.FC = () => {
       units: 'metric', // 'imperial' for feet/miles, 'nautical' also supported
     });
 
+    // Parse URL parameters for initial map position
+    const urlParams = getUrlParameters();
+    let initialCenter = fromLonLat([118.293, 5.5296]); // Default center
+    let initialZoom = 13; // Default zoom
+
+    // If lat/lng are provided in URL, use them
+    if (urlParams.lat !== undefined && urlParams.lng !== undefined) {
+      initialCenter = fromLonLat([urlParams.lng, urlParams.lat]);
+    }
+
+    // If zoom is provided in URL, use it
+    if (urlParams.zoom !== undefined) {
+      initialZoom = urlParams.zoom;
+    }
+
     const map = new Map({
       target: mapRef.current,
       view: new View({
-        center: fromLonLat([118.293, 5.5296]),
-        zoom: 13,
+        center: initialCenter,
+        zoom: initialZoom,
       }),
       controls: defaultControls().extend([scaleLineControl]),
       layers: [],
