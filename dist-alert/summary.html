@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Disturbance Alert</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .bg-alert-teal { background-color: #005b7f; }
+        .bg-alert-red { background-color: #cc474b; }
+        .bg-alert-cyan { background-color: #008b8b; }
+        .border-alert-yellow { border-color: #ffde66; }
+        .border-alert-cyan { border-color: #008b8b; }
+        .text-alert-cyan { color: #008b8b; }
+        .text-alert-red { color: #cc474b; }
+        .hover\:bg-opacity-90:hover { opacity: 0.9; }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+    <div class="max-w-2xl mx-auto my-8 bg-white rounded-lg shadow-lg overflow-hidden">
+        
+        <!-- Header -->
+        <div class="bg-alert-teal text-white px-10 py-8 text-center">
+            <div class="flex items-center justify-center mb-3">
+                <svg class="w-8 h-8 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <h1 class="text-2xl font-semibold">Site Monitoring Alert</h1>
+            </div>
+            <span class="inline-block bg-alert-red text-white text-xs font-bold uppercase tracking-wider px-4 py-2 rounded-full">
+                Disturbance Detected
+            </span>
+        </div>
+
+        <!-- Main Content -->
+        <div class="px-10 py-8">
+            
+            <!-- Alert Summary -->
+            <div class="bg-yellow-50 border-l-4 border-alert-yellow px-6 py-5 rounded-r mb-8">
+                <p class="text-gray-700 leading-relaxed">
+                    <span class="font-semibold">A significant vegetation disturbance has been detected at your monitored site.</span> 
+                    Immediate review is recommended to assess the cause and extent of the change.
+                </p>
+            </div>
+
+            <!-- Alert Details Section -->
+            <h2 class="text-xl font-semibold text-gray-800 mb-6">Alert Details</h2>
+
+            <div class="space-y-4 mb-8">
+                <div class="grid grid-cols-5 gap-4 py-3 border-b border-gray-200">
+                    <div class="col-span-2 text-sm font-semibold text-gray-600">Site Location:</div>
+                    <div class="col-span-3 text-sm text-gray-900">Northern Forest Reserve - Plot A42</div>
+                </div>
+                
+                <div class="grid grid-cols-5 gap-4 py-3 border-b border-gray-200">
+                    <div class="col-span-2 text-sm font-semibold text-gray-600">Alert Severity:</div>
+                    <div class="col-span-3">
+                        <span class="inline-block bg-alert-red text-white text-xs font-bold px-3 py-1.5 rounded">HIGH</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-5 gap-4 py-3 border-b border-gray-200">
+                    <div class="col-span-2 text-sm font-semibold text-gray-600">Vegetation Cover Change:</div>
+                    <div class="col-span-3 text-sm">
+                        <span class="font-bold text-alert-red text-lg">-34.7%</span>
+                        <span class="text-gray-600 ml-2">(Significant decrease)</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-5 gap-4 py-3 border-b border-gray-200">
+                    <div class="col-span-2 text-sm font-semibold text-gray-600">Disturbance Start Date:</div>
+                    <div class="col-span-3 text-sm text-gray-900 font-medium">October 15, 2025</div>
+                </div>
+                
+                <div class="grid grid-cols-5 gap-4 py-3 border-b border-gray-200">
+                    <div class="col-span-2 text-sm font-semibold text-gray-600">Duration:</div>
+                    <div class="col-span-3 text-sm text-gray-900 font-medium">12 days (ongoing)</div>
+                </div>
+                
+                <div class="grid grid-cols-5 gap-4 py-3 border-b border-gray-200">
+                    <div class="col-span-2 text-sm font-semibold text-gray-600">Affected Area:</div>
+                    <div class="col-span-3 text-sm text-gray-900">2.8 hectares</div>
+                </div>
+                
+                <div class="grid grid-cols-5 gap-4 py-3 border-b border-gray-200">
+                    <div class="col-span-2 text-sm font-semibold text-gray-600">Detection Method:</div>
+                    <div class="col-span-3 text-sm text-gray-900">Satellite imagery analysis (10m resolution)</div>
+                </div>
+            </div>
+
+            <hr class="my-8 border-gray-200">
+
+            <!-- Info Boxes -->
+            <div class="bg-cyan-50 border border-alert-cyan rounded-lg px-6 py-5 mb-6">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-alert-cyan mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <h3 class="text-base font-semibold text-alert-cyan mb-2">What This Means</h3>
+                        <p class="text-sm text-gray-700 leading-relaxed">
+                            The detected change exceeds the threshold for natural seasonal variation. This magnitude of vegetation loss typically indicates clearing activity, severe fire damage, or other significant land disturbance events.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-cyan-50 border border-alert-cyan rounded-lg px-6 py-5 mb-8">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-alert-cyan mt-0.5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>
+                        <h3 class="text-base font-semibold text-alert-cyan mb-2">Recommended Actions</h3>
+                        <ul class="text-sm text-gray-700 leading-relaxed space-y-1">
+                            <li>• Review satellite imagery and historical data</li>
+                            <li>• Conduct a site inspection if possible</li>
+                            <li>• Document the disturbance type and cause</li>
+                            <li>• Update your monitoring logs and compliance records</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Button -->
+            <div class="text-center">
+                <a href="detailed.html" class="inline-block bg-alert-teal hover:bg-opacity-90 text-white font-semibold px-8 py-3.5 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg">
+                    View Detailed Report →
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-gray-50 px-10 py-6 text-center border-t border-gray-200">
+            <p class="text-sm font-semibold text-gray-800 mb-1">Site Monitoring System</p>
+            <p class="text-xs text-gray-600 mb-3">This is an automated alert from your environmental monitoring service</p>
+            <p class="text-xs text-gray-500 mb-2">Questions? Contact support@sitemonitoring.com</p>
+            <p class="text-xs text-gray-400 mt-4">© 2025 Site Monitoring Services. All rights reserved.</p>
+        </div>
+
+    </div>
+</body>
+</html>

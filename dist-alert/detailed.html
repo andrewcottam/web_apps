@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vegetation Disturbance Detailed Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .bg-alert-yellow { background-color: #ffde66 !important; }
+        .bg-alert-red { background-color: #cc474b !important; }
+        .bg-alert-cyan { background-color: #008b8b !important; }
+        .bg-alert-teal { background-color: #007f66 !important; }
+        .border-alert-yellow { border-color: #ffde66 !important; }
+        .border-alert-cyan { border-color: #008b8b !important; }
+        .border-alert-red { border-color: #cc474b !important; }
+        .text-alert-cyan { color: #008b8b !important; }
+        .text-alert-red { color: #cc474b !important; }
+        .text-alert-teal { color: #007f66 !important; }
+        
+        @media print {
+            .no-print { display: none; }
+            body { background: white; }
+        }
+        
+        .image-comparison {
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+        
+        .satellite-image {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+    <div class="max-w-5xl mx-auto my-8 bg-white shadow-lg">
+        
+        <!-- Header -->
+        <div class="bg-alert-teal text-white px-10 py-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">Vegetation Disturbance Report</h1>
+                    <p class="text-sm opacity-90">Northern Forest Reserve - Plot A42</p>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm opacity-90">Report Generated</div>
+                    <div class="text-lg font-semibold">October 29, 2025</div>
+                </div>
+            </div>
+            <div class="mt-6 flex items-center justify-between">
+                <span class="inline-block bg-alert-red text-white text-sm font-bold uppercase tracking-wider px-4 py-2 rounded-full">
+                    ⚠ High Severity Alert
+                </span>
+                <div class="text-right">
+                    <div class="text-sm opacity-90">Monitoring Period</div>
+                    <div class="font-semibold">September 23 - October 21, 2025</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Executive Summary -->
+        <div class="px-10 py-8 border-b border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Executive Summary</h2>
+            <div class="bg-red-50 border-l-4 border-alert-red px-6 py-5 rounded-r mb-6">
+                <p class="text-gray-800 leading-relaxed">
+                    <span class="font-bold text-alert-red">Critical vegetation loss detected:</span> Satellite monitoring has identified a significant and progressive disturbance event at Northern Forest Reserve Plot A42, beginning on or around October 15, 2025. The affected area shows a dramatic reduction in vegetation cover of <span class="font-bold">34.7%</span>, representing approximately <span class="font-bold">2.8 hectares</span> of forest loss over a 12-day period.
+                </p>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-6 mt-6">
+                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Area Affected</div>
+                    <div class="text-3xl font-bold text-alert-red">2.8 ha</div>
+                </div>
+                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Vegetation Loss</div>
+                    <div class="text-3xl font-bold text-alert-red">-34.7%</div>
+                </div>
+                <div class="bg-gray-50 p-5 rounded-lg border border-gray-200">
+                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Duration</div>
+                    <div class="text-3xl font-bold text-gray-700">12 days</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline Analysis -->
+        <div class="px-10 py-8 border-b border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Temporal Analysis & Satellite Imagery</h2>
+            
+            <!-- Period 1: Pre-Disturbance -->
+            <div class="mb-10">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">Period 1: Pre-Disturbance Baseline</h3>
+                        <p class="text-sm text-gray-600 mt-1">September 23, 2025</p>
+                    </div>
+                    <span class="inline-block bg-green-100 text-green-800 text-xs font-bold uppercase px-3 py-1.5 rounded">
+                        Normal Conditions
+                    </span>
+                </div>
+                
+                <div class="bg-gray-50 p-6 rounded-lg mb-4">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3">Alert Overlay</h4>
+                            <div class="image-comparison border-2 border-gray-300">
+                                <img src="images/23rd september 2025 alert.png" alt="September 23 Alert Overlay" class="satellite-image">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Yellow markers indicate minor monitoring areas; dark cyan shows existing clearings</p>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3">True Color Satellite Image</h4>
+                            <div class="image-comparison border-2 border-gray-300">
+                                <img src="images/23rd september 2025 image.png" alt="September 23 Satellite Image" class="satellite-image">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Baseline imagery shows healthy, dense forest canopy coverage</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-white border border-gray-200 p-5 rounded-lg">
+                    <h4 class="font-semibold text-gray-800 mb-3">Analysis</h4>
+                    <ul class="text-sm text-gray-700 space-y-2">
+                        <li>• <span class="font-semibold">Vegetation Status:</span> Healthy, continuous forest canopy with no signs of disturbance</li>
+                        <li>• <span class="font-semibold">Monitoring Alerts:</span> Minimal activity detected (yellow markers indicate routine monitoring zones)</li>
+                        <li>• <span class="font-semibold">Assessment:</span> Site conditions within normal parameters for this time of year</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Period 2: Post-Disturbance 1 -->
+            <div class="mb-10">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">Period 2: Initial Disturbance Detection</h3>
+                        <p class="text-sm text-gray-600 mt-1">October 13, 2025 (20 days after baseline)</p>
+                    </div>
+                    <span class="inline-block bg-alert-cyan text-white text-xs font-bold uppercase px-3 py-1.5 rounded">
+                        Disturbance Initiated
+                    </span>
+                </div>
+                
+                <div class="bg-gray-50 p-6 rounded-lg mb-4">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3">Alert Overlay</h4>
+                            <div class="image-comparison border-2 border-alert-cyan">
+                                <img src="images/13th october 2025 alert.png" alt="October 13 Alert Overlay" class="satellite-image">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Large cyan area indicates significant vegetation change detection</p>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3">True Color Satellite Image</h4>
+                            <div class="image-comparison border-2 border-alert-cyan">
+                                <img src="images/13th october 2025 image.png" alt="October 13 Satellite Image" class="satellite-image">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Visible clearing and bare soil exposure in central area</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-cyan-50 border border-alert-cyan p-5 rounded-lg">
+                    <h4 class="font-semibold text-alert-cyan mb-3">Analysis</h4>
+                    <ul class="text-sm text-gray-700 space-y-2">
+                        <li>• <span class="font-semibold">Vegetation Status:</span> Substantial clearing activity detected in central plot area</li>
+                        <li>• <span class="font-semibold">Change Magnitude:</span> Approximately 2.8 hectares showing exposed soil and loss of canopy</li>
+                        <li>• <span class="font-semibold">Pattern Analysis:</span> Clearing pattern suggests organized land-clearing activity rather than natural disturbance</li>
+                        <li>• <span class="font-semibold">Alert Level:</span> Elevated to Medium - requiring immediate investigation</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Period 3: Post-Disturbance 2 -->
+            <div class="mb-10">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">Period 3: Progressive Disturbance</h3>
+                        <p class="text-sm text-gray-600 mt-1">October 21, 2025 (28 days after baseline, +8 days from initial detection)</p>
+                    </div>
+                    <span class="inline-block bg-alert-red text-white text-xs font-bold uppercase px-3 py-1.5 rounded">
+                        High Severity
+                    </span>
+                </div>
+                
+                <div class="bg-gray-50 p-6 rounded-lg mb-4">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3">Alert Overlay</h4>
+                            <div class="image-comparison border-2 border-alert-red">
+                                <img src="images/21st october 2025 alert.png" alt="October 21 Alert Overlay" class="satellite-image">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Red core indicates critical loss; orange shows moderate impact zones</p>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-semibold text-gray-700 mb-3">True Color Satellite Image</h4>
+                            <div class="image-comparison border-2 border-alert-red">
+                                <img src="images/21st october 2025 image.png" alt="October 21 Satellite Image" class="satellite-image">
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Complete vegetation removal in core area with defined boundaries</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-red-50 border border-alert-red p-5 rounded-lg">
+                    <h4 class="font-semibold text-alert-red mb-3">Analysis</h4>
+                    <ul class="text-sm text-gray-700 space-y-2">
+                        <li>• <span class="font-semibold">Vegetation Status:</span> Complete canopy removal in core disturbance zone (red area)</li>
+                        <li>• <span class="font-semibold">Change Magnitude:</span> Total vegetation cover reduction of 34.7% across monitored area</li>
+                        <li>• <span class="font-semibold">Progression:</span> Disturbance has intensified and expanded from October 13 observation</li>
+                        <li>• <span class="font-semibold">Pattern Analysis:</span> Defined clearing boundaries suggest controlled land conversion activity</li>
+                        <li>• <span class="font-semibold">Alert Level:</span> Escalated to HIGH - immediate action required</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Timeline Visualization -->
+            <div class="bg-gray-50 p-6 rounded-lg">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">Disturbance Timeline</h3>
+                <div class="relative">
+                    <div class="absolute left-0 top-0 bottom-0 w-1 bg-gray-300"></div>
+                    
+                    <div class="ml-8 space-y-6">
+                        <div class="relative">
+                            <div class="absolute -left-10 top-1 w-4 h-4 rounded-full bg-green-500 border-2 border-white"></div>
+                            <div class="text-sm font-semibold text-gray-800">September 23, 2025</div>
+                            <div class="text-xs text-gray-600">Baseline conditions - Normal forest coverage</div>
+                        </div>
+                        
+                        <div class="relative">
+                            <div class="absolute -left-10 top-1 w-4 h-4 rounded-full bg-alert-yellow border-2 border-white"></div>
+                            <div class="text-sm font-semibold text-gray-800">~October 15, 2025</div>
+                            <div class="text-xs text-gray-600">Estimated disturbance start date</div>
+                        </div>
+                        
+                        <div class="relative">
+                            <div class="absolute -left-10 top-1 w-4 h-4 rounded-full bg-alert-cyan border-2 border-white"></div>
+                            <div class="text-sm font-semibold text-gray-800">October 13, 2025</div>
+                            <div class="text-xs text-gray-600">First detection - Clearing activity identified (2.8 ha affected)</div>
+                        </div>
+                        
+                        <div class="relative">
+                            <div class="absolute -left-10 top-1 w-4 h-4 rounded-full bg-alert-red border-2 border-white"></div>
+                            <div class="text-sm font-semibold text-gray-800">October 21, 2025</div>
+                            <div class="text-xs text-gray-600">Progressive disturbance - High severity (34.7% vegetation loss)</div>
+                        </div>
+                        
+                        <div class="relative">
+                            <div class="absolute -left-10 top-1 w-4 h-4 rounded-full bg-gray-400 border-2 border-white"></div>
+                            <div class="text-sm font-semibold text-gray-800">Present (Ongoing)</div>
+                            <div class="text-xs text-gray-600">Status continues to be monitored</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Details -->
+        <div class="px-10 py-8 border-b border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Technical Monitoring Details</h2>
+            
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Detection Methodology</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Data Source:</div>
+                            <div class="text-gray-800">Satellite imagery (10m resolution)</div>
+                        </div>
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Analysis Type:</div>
+                            <div class="text-gray-800">Multi-spectral vegetation index</div>
+                        </div>
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Detection Algorithm:</div>
+                            <div class="text-gray-800">NDVI change detection</div>
+                        </div>
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Threshold:</div>
+                            <div class="text-gray-800">±15% vegetation cover change</div>
+                        </div>
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Monitoring Frequency:</div>
+                            <div class="text-gray-800">Every 5-7 days</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Site Information</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Location:</div>
+                            <div class="text-gray-800">Northern Forest Reserve</div>
+                        </div>
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Plot ID:</div>
+                            <div class="text-gray-800">A42</div>
+                        </div>
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Total Plot Area:</div>
+                            <div class="text-gray-800">8.1 hectares</div>
+                        </div>
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Forest Type:</div>
+                            <div class="text-gray-800">Mixed deciduous/tropical</div>
+                        </div>
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Protection Status:</div>
+                            <div class="text-gray-800">Protected conservation area</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alert Color Legend -->
+            <div class="mt-8 bg-gray-50 p-6 rounded-lg">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Alert Classification Legend</h3>
+                <div class="grid grid-cols-4 gap-4 text-sm">
+                    <div class="flex items-center">
+                        <div class="w-6 h-6 bg-alert-yellow rounded mr-3"></div>
+                        <div>
+                            <div class="font-semibold">Yellow</div>
+                            <div class="text-xs text-gray-600">Minor change</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-6 h-6 bg-alert-cyan rounded mr-3"></div>
+                        <div>
+                            <div class="font-semibold">Cyan</div>
+                            <div class="text-xs text-gray-600">Medium disturbance</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-6 h-6" style="background-color: #ff8c00;" class="rounded mr-3"></div>
+                        <div>
+                            <div class="font-semibold">Orange</div>
+                            <div class="text-xs text-gray-600">Moderate loss</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-6 h-6 bg-alert-red rounded mr-3"></div>
+                        <div>
+                            <div class="font-semibold">Red</div>
+                            <div class="text-xs text-gray-600">Critical loss</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assessment & Recommendations -->
+        <div class="px-10 py-8 border-b border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Assessment & Recommendations</h2>
+            
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-alert-red mb-3">Key Findings</h3>
+                <ul class="space-y-2 text-sm text-gray-700">
+                    <li class="flex items-start">
+                        <span class="text-alert-red mr-2">▸</span>
+                        <span><span class="font-semibold">Magnitude:</span> 34.7% vegetation cover loss represents a severe and rapid disturbance event</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-alert-red mr-2">▸</span>
+                        <span><span class="font-semibold">Pattern:</span> The geometric clearing boundaries and rapid progression suggest deliberate land clearing rather than natural causes (fire, disease, or storm damage)</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-alert-red mr-2">▸</span>
+                        <span><span class="font-semibold">Progression:</span> Activity intensified between October 13-21, indicating ongoing operations</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-alert-red mr-2">▸</span>
+                        <span><span class="font-semibold">Impact:</span> 2.8 hectares of primary forest canopy has been removed within protected conservation area</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-alert-cyan mb-3">Possible Causes</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div class="font-semibold text-sm mb-2">Most Likely:</div>
+                        <ul class="text-xs text-gray-700 space-y-1">
+                            <li>• Unauthorized clearing/deforestation</li>
+                            <li>• Agricultural land conversion</li>
+                            <li>• Infrastructure development</li>
+                        </ul>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <div class="font-semibold text-sm mb-2">Less Likely:</div>
+                        <ul class="text-xs text-gray-700 space-y-1">
+                            <li>• Natural fire event</li>
+                            <li>• Disease outbreak</li>
+                            <li>• Storm damage</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-alert-teal bg-opacity-10 border-l-4 border-alert-teal p-6 rounded-r">
+                <h3 class="text-lg font-semibold text-alert-teal mb-4">Recommended Immediate Actions</h3>
+                <ol class="space-y-3 text-sm text-gray-700">
+                    <li class="flex items-start">
+                        <span class="font-bold text-alert-teal mr-3">1.</span>
+                        <span><span class="font-semibold">Ground Verification:</span> Conduct immediate site inspection to confirm satellite findings and assess current site conditions</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="font-bold text-alert-teal mr-3">2.</span>
+                        <span><span class="font-semibold">Documentation:</span> Photograph and document the extent of clearing, equipment present, and any visible operators</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="font-bold text-alert-teal mr-3">3.</span>
+                        <span><span class="font-semibold">Regulatory Notification:</span> Report to relevant environmental authorities and forest management agencies</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="font-bold text-alert-teal mr-3">4.</span>
+                        <span><span class="font-semibold">Permit Verification:</span> Check if any land-use permits or clearing authorizations have been issued for this plot</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="font-bold text-alert-teal mr-3">5.</span>
+                        <span><span class="font-semibold">Enforcement Action:</span> If unauthorized, initiate immediate stop-work orders and legal proceedings</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="font-bold text-alert-teal mr-3">6.</span>
+                        <span><span class="font-semibold">Continued Monitoring:</span> Increase satellite monitoring frequency to daily observations to track any further activity</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="font-bold text-alert-teal mr-3">7.</span>
+                        <span><span class="font-semibold">Restoration Assessment:</span> Begin planning for ecological restoration and reforestation once clearing activity has ceased</span>
+                    </li>
+                </ol>
+            </div>
+        </div>
+
+        <!-- Contact & Footer -->
+        <div class="bg-gray-50 px-10 py-6 border-t border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <p class="text-sm font-semibold text-gray-800">Site Monitoring System</p>
+                    <p class="text-xs text-gray-600">Environmental Surveillance & Compliance Division</p>
+                </div>
+                <button onclick="window.print()" class="no-print bg-alert-teal text-white text-sm font-semibold px-6 py-2 rounded-lg hover:opacity-90 transition">
+                    Print Report
+                </button>
+            </div>
+            <div class="border-t border-gray-300 pt-4">
+                <div class="grid grid-cols-3 gap-6 text-xs text-gray-600">
+                    <div>
+                        <div class="font-semibold text-gray-700 mb-1">Questions?</div>
+                        <div>support@sitemonitoring.com</div>
+                        <div>+1 (555) 123-4567</div>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-gray-700 mb-1">Report Information</div>
+                        <div>Report ID: NFR-A42-2025-10-29</div>
+                        <div>Classification: Confidential</div>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-gray-700 mb-1">Next Review</div>
+                        <div>Daily monitoring active</div>
+                        <div>Site visit scheduled: October 30, 2025</div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-6 pt-4 border-t border-gray-300">
+                <p class="text-xs text-gray-500">© 2025 Site Monitoring Services. All rights reserved. | This report contains confidential information.</p>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
