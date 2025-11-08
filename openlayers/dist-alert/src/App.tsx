@@ -240,8 +240,8 @@ const App: React.FC = () => {
     });
 
     const urlParams = getUrlParameters();
-    let initialCenter = fromLonLat([118.293, 5.5296]);
-    let initialZoom = 13;
+    let initialCenter = fromLonLat([118.187211, 5.770305]);
+    let initialZoom = 16;
 
     if (urlParams.lat !== undefined && urlParams.lng !== undefined) {
       initialCenter = fromLonLat([urlParams.lng, urlParams.lat]);
