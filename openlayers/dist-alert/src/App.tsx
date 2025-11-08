@@ -200,7 +200,6 @@ const App: React.FC = () => {
         headers: {
           Authorization: `Bearer ${idToken}`,
           "Content-Type": "application/json",
-          "Origin": "https://andrewcottam.github.io",
         },
         body: JSON.stringify(requestBody),
       });
