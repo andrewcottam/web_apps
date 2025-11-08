@@ -452,7 +452,10 @@ const App: React.FC = () => {
                 label="Min Disturbance Percentage"
                 type="number"
                 value={minDisturbancePercentage}
-                onChange={(e) => setMinDisturbancePercentage(parseFloat(e.target.value))}
+                onChange={(e) => {
+                  const value = parseFloat(e.target.value);
+                  setMinDisturbancePercentage(isNaN(value) ? 0 : value);
+                }}
                 size="small"
                 fullWidth
                 inputProps={{ min: 0, max: 100, step: 0.1 }}
@@ -519,7 +522,7 @@ const App: React.FC = () => {
                   <div style={{ marginTop: "10px", padding: "8px", backgroundColor: "#e8f5e9", borderRadius: "4px" }}>
                     <h4>Email Sent</h4>
                     <p style={{ fontSize: "12px", margin: "4px 0" }}>
-                      Notification sent to: {data.response.email.to.join(', ')}
+                      Notification sent to: {Array.isArray(data.response.email.to) ? data.response.email.to.join(', ') : data.response.email.to}
                     </p>
                   </div>
                 )}
