@@ -20,6 +20,7 @@ npm install
 
 ## Running Locally
 
+### Frontend Only
 ```bash
 cd openlayers/dist-alert
 npm run dev
@@ -27,10 +28,26 @@ npm run dev
 
 The app will be available at `http://localhost:5173`
 
-**Note on CORS:** The dist-alert cloud function may have CORS restrictions that prevent local development from `localhost:5173`. If you encounter CORS errors:
-- Option 1: Test using the deployed version on GitHub Pages (recommended)
-- Option 2: Ask the backend admin to add `http://localhost:5173` to the allowed origins in the cloud function CORS configuration
-- The app adds an `Origin: https://andrewcottam.github.io` header to requests to match the production origin
+When running locally, the app will automatically connect to a local dist-alert server at `http://127.0.0.1:8080`.
+
+### With Local Backend
+
+To run the full stack locally:
+
+1. Start the dist-alert cloud function locally (in the restor-servers repo):
+   ```bash
+   cd cloud_functions/dist-alert
+   python main.py
+   ```
+   This will start the server at `http://127.0.0.1:8080`
+
+2. Start the frontend:
+   ```bash
+   cd openlayers/dist-alert
+   npm run dev
+   ```
+
+The frontend will automatically detect it's running on localhost and connect to the local backend.
 
 ## Building
 
@@ -47,9 +64,9 @@ https://andrewcottam.github.io/web_apps/openlayers/dist-alert/dist/index.html
 
 ## API Configuration
 
-The app connects to the OPERA DIST-ALERT cloud function:
-- **Production**: `https://europe-west6-restor-gis.cloudfunctions.net/dist-alert`
-- **Local**: `http://localhost:8080` (when running locally)
+The app automatically selects the correct endpoint based on where it's running:
+- **Production** (deployed on GitHub Pages): `https://europe-west6-restor-gis.cloudfunctions.net/dist-alert`
+- **Local Development** (localhost): `http://127.0.0.1:8080`
 
 ## Usage
 
