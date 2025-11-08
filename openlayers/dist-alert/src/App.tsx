@@ -11,7 +11,6 @@ import { Draw } from "ol/interaction";
 import { fromLonLat, toLonLat } from "ol/proj";
 import { apply } from "ol-mapbox-style";
 import { Style, Fill, Stroke } from "ol/style";
-import WKT from 'ol/format/WKT';
 import { MapBrowserEvent } from 'ol';
 import { ScaleLine, defaults as defaultControls } from 'ol/control';
 import GeoTIFF from 'ol/source/GeoTIFF';
@@ -126,7 +125,6 @@ const App: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const drawnFeatureRef = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isDrawing, setIsDrawing] = useState(false);
   const [user, setUser] = useState<UserCredential["user"]>();
   const [logged_in, setLoggedIn] = useState(false);
   const [data, setData] = useState<Record<string, any> | null>(null);
@@ -181,7 +179,6 @@ const App: React.FC = () => {
   function logout() {
     setLoggedIn(false);
     setUser(undefined);
-    setIsDrawing(false);
     isDrawingRef.current = false;
     if (drawSourceRef.current) {
       drawSourceRef.current.clear();
@@ -372,7 +369,6 @@ const App: React.FC = () => {
     });
 
     drawInteractionRef.current.on("drawstart", () => {
-      setIsDrawing(true);
       isDrawingRef.current = true;
       if (drawSourceRef.current) {
         drawSourceRef.current.clear();
@@ -381,14 +377,12 @@ const App: React.FC = () => {
     });
 
     drawInteractionRef.current.on("drawend", async (event) => {
-      setIsDrawing(false);
       isDrawingRef.current = false;
       const feature = event.feature;
       drawnFeatureRef.current = feature;
     });
 
     drawInteractionRef.current.on("drawabort", () => {
-      setIsDrawing(false);
       isDrawingRef.current = false;
     });
 
