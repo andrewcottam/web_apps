@@ -1,5 +1,5 @@
 {
-  "name": "verify",
+  "name": "dist-alert",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -16,7 +16,6 @@
     "firebase": "^11.10.0",
     "ol": "^10.6.1",
     "ol-mapbox-style": "^13.0.1",
-    "osmtogeojson": "^3.0.0-beta.5",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
