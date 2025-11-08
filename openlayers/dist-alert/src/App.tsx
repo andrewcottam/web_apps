@@ -169,10 +169,10 @@ const App: React.FC = () => {
 
       const idToken = await userRef.current.getIdToken();
 
-      const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-      const endpoint = isLocalhost
-        ? "http://localhost:8080"
-        : "https://europe-west6-restor-gis.cloudfunctions.net/dist-alert";
+      // Always use production endpoint (unless you need to test locally, uncomment the localhost check)
+      const endpoint = "https://europe-west6-restor-gis.cloudfunctions.net/dist-alert";
+      // const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      // const endpoint = isLocalhost ? "http://localhost:8080" : "https://europe-west6-restor-gis.cloudfunctions.net/dist-alert";
 
       const requestBody: Record<string, any> = {
         geometry: wkt,
