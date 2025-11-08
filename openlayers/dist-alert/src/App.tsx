@@ -125,11 +125,11 @@ const App: React.FC = () => {
   const loggedInRef = useRef(logged_in);
 
   // Dist-alert parameters
-  const [siteName, setSiteName] = useState("");
-  const [siteId, setSiteId] = useState("");
-  const [reportOrg, setReportOrg] = useState("");
-  const [reportOwnerName, setReportOwnerName] = useState("");
-  const [reportOwnerEmail, setReportOwnerEmail] = useState("");
+  const [siteName, setSiteName] = useState("Forest Reserve 22");
+  const [siteId, setSiteId] = useState("#123ABC");
+  const [reportOrg, setReportOrg] = useState("Accounting For Nature");
+  const [reportOwnerName, setReportOwnerName] = useState("Andrew Cottam");
+  const [reportOwnerEmail, setReportOwnerEmail] = useState("andrew@restor.eco");
   const [reportSubscriberEmails, setReportSubscriberEmails] = useState("");
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
