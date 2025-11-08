@@ -165,7 +165,10 @@ const App: React.FC = () => {
     try {
       const geometry = drawnFeatureRef.current.getGeometry() as Polygon;
       const geometry4326 = geometry.clone().transform("EPSG:3857", "EPSG:4326");
-      const wkt = new WKT().writeGeometry(geometry4326);
+
+      // Convert to coordinate array format expected by backend
+      const coordinates = geometry4326.getCoordinates()[0]; // Get outer ring coordinates
+      const geometryArray = coordinates.map(coord => [coord[0], coord[1]]);
 
       const idToken = await userRef.current.getIdToken();
 
@@ -175,7 +178,7 @@ const App: React.FC = () => {
         : "https://europe-west6-restor-gis.cloudfunctions.net/dist-alert";
 
       const requestBody: Record<string, any> = {
-        geometry: wkt,
+        geometry: geometryArray,
         start_date: startDate,
         end_date: endDate,
         min_confidence: minConfidence,
