@@ -200,6 +200,7 @@ const App: React.FC = () => {
         headers: {
           Authorization: `Bearer ${idToken}`,
           "Content-Type": "application/json",
+          "Origin": "https://andrewcottam.github.io",
         },
         body: JSON.stringify(requestBody),
       });
@@ -325,15 +326,13 @@ const App: React.FC = () => {
         </div>
 
         {logged_in && (
-          <>
+          <div className="panel-content">
             <h1>OPERA DIST-ALERT</h1>
             <h2>Vegetation Disturbance Analysis</h2>
 
-            <div style={{ marginTop: "20px" }}>
-              <p style={{ fontSize: "14px", color: "#666" }}>
-                Draw a polygon on the map to analyze vegetation disturbance
-              </p>
-            </div>
+            <p style={{ fontSize: "13px", color: "#666", margin: "10px 0" }}>
+              Draw a polygon on the map to analyze vegetation disturbance
+            </p>
 
             {isLoading && (
               <div style={{
@@ -362,7 +361,7 @@ const App: React.FC = () => {
               </div>
             )}
 
-            <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "12px" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               <TextField
                 label="Site Name"
                 value={siteName}
@@ -479,11 +478,11 @@ const App: React.FC = () => {
             </div>
 
             {data && (
-              <div style={{ marginTop: "20px", padding: "15px", backgroundColor: "#f5f5f5", borderRadius: "4px" }}>
+              <div style={{ marginTop: "12px", padding: "10px", backgroundColor: "#f5f5f5", borderRadius: "4px" }}>
                 <h3>Results</h3>
 
                 {data.response?.disturbance_analysis && (
-                  <div style={{ marginBottom: "15px" }}>
+                  <div style={{ marginBottom: "10px" }}>
                     <h4 style={{
                       color: data.response.disturbance_analysis.disturbance_flagged ? "#d32f2f" : "#388e3c"
                     }}>
@@ -492,21 +491,21 @@ const App: React.FC = () => {
                         : "✓ No Significant Disturbance"}
                     </h4>
 
-                    <div style={{ fontSize: "14px", marginTop: "10px" }}>
-                      <p><strong>Disturbed Area:</strong> {data.response.disturbance_analysis.overall.disturbed_area.toFixed(2)} ha</p>
-                      <p><strong>Total Area:</strong> {data.response.disturbance_analysis.overall.total_area.toFixed(2)} ha</p>
-                      <p><strong>Disturbance:</strong> {data.response.disturbance_analysis.overall.disturbed_percentage.toFixed(2)}%</p>
+                    <div style={{ fontSize: "12px", marginTop: "8px" }}>
+                      <p style={{ margin: "4px 0" }}><strong>Disturbed Area:</strong> {data.response.disturbance_analysis.overall.disturbed_area.toFixed(2)} ha</p>
+                      <p style={{ margin: "4px 0" }}><strong>Total Area:</strong> {data.response.disturbance_analysis.overall.total_area.toFixed(2)} ha</p>
+                      <p style={{ margin: "4px 0" }}><strong>Disturbance:</strong> {data.response.disturbance_analysis.overall.disturbed_percentage.toFixed(2)}%</p>
                       {data.response.disturbance_analysis.min_disturbance_date && (
-                        <p><strong>First Detected:</strong> {data.response.disturbance_analysis.min_disturbance_date}</p>
+                        <p style={{ margin: "4px 0" }}><strong>First Detected:</strong> {data.response.disturbance_analysis.min_disturbance_date}</p>
                       )}
                     </div>
                   </div>
                 )}
 
                 {data.response?.report && (
-                  <div style={{ marginTop: "15px", padding: "10px", backgroundColor: "#e3f2fd", borderRadius: "4px" }}>
+                  <div style={{ marginTop: "10px", padding: "8px", backgroundColor: "#e3f2fd", borderRadius: "4px" }}>
                     <h4>Report Generated</h4>
-                    <p style={{ fontSize: "14px" }}>
+                    <p style={{ fontSize: "12px", margin: "4px 0" }}>
                       <a href={data.response.report.authenticated_url} target="_blank" rel="noopener noreferrer">
                         View Detailed Report
                       </a>
@@ -515,31 +514,31 @@ const App: React.FC = () => {
                 )}
 
                 {data.response?.email?.sent && (
-                  <div style={{ marginTop: "15px", padding: "10px", backgroundColor: "#e8f5e9", borderRadius: "4px" }}>
+                  <div style={{ marginTop: "10px", padding: "8px", backgroundColor: "#e8f5e9", borderRadius: "4px" }}>
                     <h4>Email Sent</h4>
-                    <p style={{ fontSize: "14px" }}>
+                    <p style={{ fontSize: "12px", margin: "4px 0" }}>
                       Notification sent to: {data.response.email.to.join(', ')}
                     </p>
                   </div>
                 )}
 
-                <details style={{ marginTop: "15px" }}>
-                  <summary style={{ cursor: "pointer", fontWeight: "bold" }}>View Full Response</summary>
+                <details style={{ marginTop: "10px" }}>
+                  <summary style={{ cursor: "pointer", fontWeight: "bold", fontSize: "13px" }}>View Full Response</summary>
                   <pre style={{
-                    fontSize: "12px",
+                    fontSize: "10px",
                     overflow: "auto",
-                    maxHeight: "400px",
+                    maxHeight: "300px",
                     backgroundColor: "#fff",
-                    padding: "10px",
+                    padding: "8px",
                     borderRadius: "4px",
-                    marginTop: "10px"
+                    marginTop: "8px"
                   }}>
                     {JSON.stringify(data, null, 2)}
                   </pre>
                 </details>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>

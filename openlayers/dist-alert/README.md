@@ -27,6 +27,11 @@ npm run dev
 
 The app will be available at `http://localhost:5173`
 
+**Note on CORS:** The dist-alert cloud function may have CORS restrictions that prevent local development from `localhost:5173`. If you encounter CORS errors:
+- Option 1: Test using the deployed version on GitHub Pages (recommended)
+- Option 2: Ask the backend admin to add `http://localhost:5173` to the allowed origins in the cloud function CORS configuration
+- The app adds an `Origin: https://andrewcottam.github.io` header to requests to match the production origin
+
 ## Building
 
 ```bash
