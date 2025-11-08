@@ -14,6 +14,8 @@ import { Style, Fill, Stroke } from "ol/style";
 import WKT from 'ol/format/WKT';
 import { MapBrowserEvent } from 'ol';
 import { ScaleLine, defaults as defaultControls } from 'ol/control';
+import GeoTIFF from 'ol/source/GeoTIFF';
+import WebGLTileLayer from 'ol/layer/WebGLTile';
 
 // Firebase
 import { initializeApp } from "firebase/app";
@@ -68,6 +70,45 @@ const getUrlParameters = (): { lat?: number; lng?: number; zoom?: number } => {
 
   return result;
 };
+
+// Fetch the latest DIST-ALERT COG URL from CMR API
+async function fetchLatestDistAlertCOG(lat: number, lon: number): Promise<string | null> {
+  try {
+    // CMR granule search endpoint
+    const cmrUrl = 'https://cmr.earthdata.nasa.gov/search/granules.json';
+
+    // Create bounding box around the point
+    const buffer = 0.1; // degrees
+    const bbox = `${lon - buffer},${lat - buffer},${lon + buffer},${lat + buffer}`;
+
+    const params = new URLSearchParams({
+      short_name: 'OPERA_L3_DIST-ALERT-HLS_V1',
+      bounding_box: bbox,
+      sort_key: '-start_date', // Sort by most recent first
+      page_size: '1'
+    });
+
+    const response = await fetch(`${cmrUrl}?${params}`);
+    const data = await response.json();
+
+    if (data.feed?.entry?.[0]) {
+      const entry = data.feed.entry[0];
+      // Find the VEG_DIST_STATUS layer COG URL
+      const cogLink = entry.links?.find((link: any) =>
+        link.href?.includes('VEG_DIST_STATUS') && link.href?.endsWith('.tif')
+      );
+
+      if (cogLink) {
+        return cogLink.href;
+      }
+    }
+
+    return null;
+  } catch (error) {
+    console.error('Error fetching DIST-ALERT COG:', error);
+    return null;
+  }
+}
 
 const App: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -263,9 +304,32 @@ const App: React.FC = () => {
 
     const coordsDiv = document.getElementById('coords') as HTMLDivElement;
 
-    const styleJson = "https://api.maptiler.com/maps/a1d2f17b-d57a-45ba-b7c6-4af845f758fb/style.json?key=67VOA297U9cciigsJVvm";
+    const styleJson = "https://api.maptiler.com/maps/hybrid/style.json?key=67VOA297U9cciigsJVvm";
 
-    apply(map, styleJson).then(() => {
+    apply(map, styleJson).then(async () => {
+      // Add the DIST-ALERT COG layer
+      const cogUrl = await fetchLatestDistAlertCOG(5.770305, 118.187211);
+
+      if (cogUrl) {
+        const cogSource = new GeoTIFF({
+          sources: [{ url: cogUrl }],
+        });
+
+        const cogLayer = new WebGLTileLayer({
+          source: cogSource,
+          style: {
+            color: [
+              'case',
+              ['==', ['band', 1], 0], // If band value is 0
+              ['color', 0, 0, 0, 0],   // Make it transparent
+              ['color', 255, 0, 0, 0.7] // Otherwise red with opacity
+            ],
+          },
+        });
+
+        map.addLayer(cogLayer);
+      }
+
       map.addLayer(vectorLayer);
     });
 
