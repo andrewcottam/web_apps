@@ -125,6 +125,7 @@ const App: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const drawnFeatureRef = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasDrawnFeature, setHasDrawnFeature] = useState(false);
   const [user, setUser] = useState<UserCredential["user"]>();
   const [logged_in, setLoggedIn] = useState(false);
   const [data, setData] = useState<Record<string, any> | null>(null);
@@ -180,6 +181,7 @@ const App: React.FC = () => {
     }
     setData(null);
     drawnFeatureRef.current = null;
+    setHasDrawnFeature(false);
   }
 
   async function login_clicked() {
@@ -374,12 +376,14 @@ const App: React.FC = () => {
         drawSourceRef.current.clear();
       }
       setData(null);
+      setHasDrawnFeature(false);
     });
 
     drawInteractionRef.current.on("drawend", async (event) => {
       isDrawingRef.current = false;
       const feature = event.feature;
       drawnFeatureRef.current = feature;
+      setHasDrawnFeature(true);
     });
 
     drawInteractionRef.current.on("drawabort", () => {
@@ -521,7 +525,7 @@ const App: React.FC = () => {
                 variant="contained"
                 color="primary"
                 onClick={analyzeDisturbance}
-                disabled={!drawnFeatureRef.current || isLoading || !siteName.trim()}
+                disabled={!hasDrawnFeature || isLoading || !siteName.trim()}
                 fullWidth
               >
                 Analyse Disturbance
