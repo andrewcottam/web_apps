@@ -125,6 +125,7 @@ const App: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const drawnFeatureRef = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasDrawnFeature, setHasDrawnFeature] = useState(false);
   const [user, setUser] = useState<UserCredential["user"]>();
   const [logged_in, setLoggedIn] = useState(false);
   const [data, setData] = useState<Record<string, any> | null>(null);
@@ -135,12 +136,7 @@ const App: React.FC = () => {
   const loggedInRef = useRef(logged_in);
 
   // Dist-alert parameters
-  const [siteName, setSiteName] = useState("Forest Reserve 22");
-  const [siteId, setSiteId] = useState("#123ABC");
-  const [reportOrg, setReportOrg] = useState("Accounting For Nature");
-  const [reportOwnerName, setReportOwnerName] = useState("Andrew Cottam");
-  const [reportOwnerEmail, setReportOwnerEmail] = useState("andrew@restor.eco");
-  const [reportSubscriberEmails, setReportSubscriberEmails] = useState("");
+  const [siteName, setSiteName] = useState("");
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
     date.setDate(date.getDate() - 7);
@@ -185,6 +181,7 @@ const App: React.FC = () => {
     }
     setData(null);
     drawnFeatureRef.current = null;
+    setHasDrawnFeature(false);
   }
 
   async function login_clicked() {
@@ -236,16 +233,21 @@ const App: React.FC = () => {
         debug: debug
       };
 
+      // Add site name if provided
       if (siteName) requestBody.site_name = siteName;
-      if (siteId) requestBody.site_id = siteId;
-      if (reportOrg) requestBody.report_org = reportOrg;
-      if (reportOwnerName) requestBody.report_owner_name = reportOwnerName;
-      if (reportOwnerEmail) requestBody.report_owner_email = reportOwnerEmail;
-      if (reportSubscriberEmails) {
-        requestBody.report_subscriber_emails = reportSubscriberEmails
-          .split(',')
-          .map(email => email.trim())
-          .filter(email => email.length > 0);
+
+      // Use hardcoded default values
+      requestBody.site_id = "#123ABC";
+      requestBody.report_org = "Restor";
+
+      // Get user info from Firebase authenticated user
+      if (userRef.current) {
+        if (userRef.current.displayName) {
+          requestBody.report_owner_name = userRef.current.displayName;
+        }
+        if (userRef.current.email) {
+          requestBody.report_owner_email = userRef.current.email;
+        }
       }
 
       const response = await fetch(endpoint, {
@@ -374,12 +376,14 @@ const App: React.FC = () => {
         drawSourceRef.current.clear();
       }
       setData(null);
+      setHasDrawnFeature(false);
     });
 
     drawInteractionRef.current.on("drawend", async (event) => {
       isDrawingRef.current = false;
       const feature = event.feature;
       drawnFeatureRef.current = feature;
+      setHasDrawnFeature(true);
     });
 
     drawInteractionRef.current.on("drawabort", () => {
@@ -462,49 +466,6 @@ const App: React.FC = () => {
               />
 
               <TextField
-                label="Site ID"
-                value={siteId}
-                onChange={(e) => setSiteId(e.target.value)}
-                size="small"
-                fullWidth
-              />
-
-              <TextField
-                label="Organization Name"
-                value={reportOrg}
-                onChange={(e) => setReportOrg(e.target.value)}
-                size="small"
-                fullWidth
-              />
-
-              <TextField
-                label="Report Owner Name"
-                value={reportOwnerName}
-                onChange={(e) => setReportOwnerName(e.target.value)}
-                size="small"
-                fullWidth
-              />
-
-              <TextField
-                label="Report Owner Email"
-                type="email"
-                value={reportOwnerEmail}
-                onChange={(e) => setReportOwnerEmail(e.target.value)}
-                size="small"
-                fullWidth
-              />
-
-              <TextField
-                label="Subscriber Emails (comma-separated)"
-                value={reportSubscriberEmails}
-                onChange={(e) => setReportSubscriberEmails(e.target.value)}
-                size="small"
-                fullWidth
-                multiline
-                rows={2}
-              />
-
-              <TextField
                 label="Start Date"
                 type="date"
                 value={startDate}
@@ -564,10 +525,10 @@ const App: React.FC = () => {
                 variant="contained"
                 color="primary"
                 onClick={analyzeDisturbance}
-                disabled={!drawnFeatureRef.current || isLoading}
+                disabled={!hasDrawnFeature || isLoading || !siteName.trim()}
                 fullWidth
               >
-                Analyze Disturbance
+                Analyse Disturbance
               </Button>
             </div>
 
