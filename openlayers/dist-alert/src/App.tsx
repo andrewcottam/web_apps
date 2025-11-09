@@ -99,6 +99,11 @@ async function fetchLatestDistAlertCOG(lat: number, lon: number): Promise<string
       for (const entry of data.feed.entry) {
         console.log('Checking entry:', entry.title);
 
+        // Log the links array for the first entry to see the structure
+        if (entry === data.feed.entry[0]) {
+          console.log('Links in first entry:', entry.links);
+        }
+
         // Find the VEG_DIST_STATUS layer COG URL
         const cogLink = entry.links?.find((link: any) =>
           link.href?.includes('VEG_DIST_STATUS') && link.href?.endsWith('.tif')
