@@ -53,7 +53,7 @@ The frontend will automatically detect it's running on localhost and connect to 
 
 ```bash
 cd openlayers/dist-alert
-npm run build
+npx vite build
 ```
 
 ## Deploying
