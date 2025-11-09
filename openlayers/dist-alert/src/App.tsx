@@ -135,7 +135,7 @@ const App: React.FC = () => {
   const loggedInRef = useRef(logged_in);
 
   // Dist-alert parameters
-  const [siteName, setSiteName] = useState("Forest Reserve 22");
+  const [siteName, setSiteName] = useState("");
   const [startDate, setStartDate] = useState(() => {
     const date = new Date();
     date.setDate(date.getDate() - 7);
@@ -521,10 +521,10 @@ const App: React.FC = () => {
                 variant="contained"
                 color="primary"
                 onClick={analyzeDisturbance}
-                disabled={!drawnFeatureRef.current || isLoading}
+                disabled={!drawnFeatureRef.current || isLoading || !siteName.trim()}
                 fullWidth
               >
-                Analyze Disturbance
+                Analyse Disturbance
               </Button>
             </div>
 
