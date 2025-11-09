@@ -102,6 +102,23 @@ async function fetchLatestDistAlertCOG(lat: number, lon: number): Promise<string
         // Log the links array for the first entry to see the structure
         if (entry === data.feed.entry[0]) {
           console.log('Links in first entry:', entry.links);
+          console.log('Sample links (first 5):');
+          entry.links?.slice(0, 5).forEach((link: any, idx: number) => {
+            console.log(`  Link ${idx}:`, {
+              href: link.href,
+              rel: link.rel,
+              title: link.title,
+              type: link.type
+            });
+          });
+          // Log all links that contain 'VEG' or 'DIST' in href or title
+          const vegDistLinks = entry.links?.filter((link: any) =>
+            link.href?.toUpperCase().includes('VEG') ||
+            link.href?.toUpperCase().includes('DIST') ||
+            link.title?.toUpperCase().includes('VEG') ||
+            link.title?.toUpperCase().includes('DIST')
+          );
+          console.log('Links containing VEG or DIST:', vegDistLinks);
         }
 
         // Find the VEG_DIST_STATUS layer COG URL
