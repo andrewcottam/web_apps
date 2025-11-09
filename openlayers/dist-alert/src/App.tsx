@@ -87,36 +87,25 @@ async function fetchLatestDistAlertCOG(lat: number, lon: number): Promise<string
       page_size: '10' // Get more results to find a good one
     });
 
-    console.log('Fetching DIST-ALERT COG from CMR:', `${cmrUrl}?${params}`);
     const response = await fetch(`${cmrUrl}?${params}`);
     const data = await response.json();
-
-    console.log('CMR API response:', data);
-    console.log('Number of granules found:', data.feed?.entry?.length || 0);
 
     if (data.feed?.entry?.length > 0) {
       // Try each entry until we find a valid COG URL
       for (const entry of data.feed.entry) {
-        console.log('Checking entry:', entry.title);
-
-        // Find the VEG_DIST_STATUS layer COG URL
+        // Find the VEG-DIST-STATUS layer COG URL
         const cogLink = entry.links?.find((link: any) =>
-          link.href?.includes('VEG_DIST_STATUS') && link.href?.endsWith('.tif')
+          link.href?.includes('VEG-DIST-STATUS') && link.href?.endsWith('.tif')
         );
 
         if (cogLink) {
-          console.log('Found COG URL:', cogLink.href);
           return cogLink.href;
         }
       }
-      console.log('No VEG_DIST_STATUS COG found in any entry');
-    } else {
-      console.log('No granules found in search area');
     }
 
     return null;
   } catch (error) {
-    console.error('Error fetching DIST-ALERT COG:', error);
     return null;
   }
 }
@@ -319,18 +308,15 @@ const App: React.FC = () => {
 
     apply(map, styleJson).then(async () => {
       // Add the DIST-ALERT COG layer
-      console.log('Starting to fetch DIST-ALERT COG...');
       const cogUrl = await fetchLatestDistAlertCOG(5.770305, 118.187211);
 
       if (cogUrl) {
-        console.log('Creating GeoTIFF source with URL:', cogUrl);
         try {
           const cogSource = new GeoTIFF({
             sources: [{ url: cogUrl }],
             normalize: false,
           });
 
-          console.log('Creating WebGLTileLayer...');
           const cogLayer = new WebGLTileLayer({
             source: cogSource,
             style: {
@@ -343,24 +329,13 @@ const App: React.FC = () => {
             },
           });
 
-          // Listen for source errors
-          cogSource.on('error', (error) => {
-            console.error('GeoTIFF source error:', error);
-          });
-
-          console.log('Adding COG layer to map...');
           map.addLayer(cogLayer);
-          console.log('COG layer added successfully');
         } catch (error) {
-          console.error('Error creating or adding COG layer:', error);
+          // Silent fail - COG layer is optional
         }
-      } else {
-        console.log('No COG URL found, skipping DIST-ALERT layer');
       }
 
       map.addLayer(vectorLayer);
-    }).catch(error => {
-      console.error('Error in map style apply:', error);
     });
 
     mapInstanceRef.current = map;
