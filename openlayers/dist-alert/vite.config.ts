@@ -3,6 +3,6 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: '/web_apps/openlayers/verify/dist/',
+  base: '/web_apps/openlayers/dist-alert/dist/',
   plugins: [react()],
 })
