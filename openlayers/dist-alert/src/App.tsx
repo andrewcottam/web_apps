@@ -121,9 +121,9 @@ async function fetchLatestDistAlertCOG(lat: number, lon: number): Promise<string
           console.log('Links containing VEG or DIST:', vegDistLinks);
         }
 
-        // Find the VEG_DIST_STATUS layer COG URL
+        // Find the VEG-DIST-STATUS layer COG URL
         const cogLink = entry.links?.find((link: any) =>
-          link.href?.includes('VEG_DIST_STATUS') && link.href?.endsWith('.tif')
+          link.href?.includes('VEG-DIST-STATUS') && link.href?.endsWith('.tif')
         );
 
         if (cogLink) {
@@ -131,7 +131,7 @@ async function fetchLatestDistAlertCOG(lat: number, lon: number): Promise<string
           return cogLink.href;
         }
       }
-      console.log('No VEG_DIST_STATUS COG found in any entry');
+      console.log('No VEG-DIST-STATUS COG found in any entry');
     } else {
       console.log('No granules found in search area');
     }
