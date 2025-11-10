@@ -15,6 +15,10 @@ import { MapBrowserEvent } from 'ol';
 import { ScaleLine, defaults as defaultControls } from 'ol/control';
 import GeoTIFF from 'ol/source/GeoTIFF';
 import WebGLTileLayer from 'ol/layer/WebGLTile';
+import VectorTileLayer from 'ol/layer/VectorTile';
+import VectorTileSource from 'ol/source/VectorTile';
+import MVT from 'ol/format/MVT';
+import type { FeatureLike } from "ol/Feature";
 
 // Firebase
 import { initializeApp } from "firebase/app";
@@ -123,6 +127,9 @@ const App: React.FC = () => {
   const mapInstanceRef = useRef<Map | null>(null);
   const isDrawingRef = useRef(false);
   const loggedInRef = useRef(logged_in);
+  const sitesLayerRef = useRef<VectorTileLayer | null>(null);
+  const [selectedSiteFeature, setSelectedSiteFeature] = useState<any>(null);
+  const selectedSiteFeatureRef = useRef<any>(null);
 
   // Dist-alert parameters
   const [siteName, setSiteName] = useState("");
@@ -147,6 +154,14 @@ const App: React.FC = () => {
   useEffect(() => {
     loggedInRef.current = logged_in;
   }, [logged_in]);
+
+  useEffect(() => {
+    selectedSiteFeatureRef.current = selectedSiteFeature;
+    // Trigger re-render of sites layer when selection changes
+    if (sitesLayerRef.current) {
+      sitesLayerRef.current.changed();
+    }
+  }, [selectedSiteFeature]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -193,6 +208,58 @@ const App: React.FC = () => {
       setLoggedIn(true);
     }
   }
+
+  const handleSiteClick = async (feature: FeatureLike) => {
+    // Extract geometry from vector tile feature (RenderFeature)
+    let geometry;
+
+    const renderFeature = feature as any;
+
+    if (renderFeature.flatCoordinates_ && renderFeature.ends_) {
+      // RenderFeature has flatCoordinates_ and ends_ properties
+      const flatCoords = renderFeature.flatCoordinates_;
+      const ends = renderFeature.ends_;
+      const stride = renderFeature.stride_ || 2; // Usually 2 for [x, y]
+
+      // Convert flat coordinates to coordinate rings
+      const rings = [];
+      let start = 0;
+
+      for (let i = 0; i < ends.length; i++) {
+        const end = ends[i];
+        const ring = [];
+
+        for (let j = start; j < end; j += stride) {
+          ring.push([flatCoords[j], flatCoords[j + 1]]);
+        }
+
+        rings.push(ring);
+        start = end;
+      }
+
+      // Create polygon geometry
+      geometry = new Polygon(rings);
+
+    } else if (renderFeature.getGeometry && typeof renderFeature.getGeometry === 'function') {
+      // Try regular geometry access
+      geometry = renderFeature.getGeometry();
+    } else {
+      return;
+    }
+
+    if (!geometry) {
+      return;
+    }
+
+    // Create a feature with the geometry and store it
+    const Feature = (await import('ol/Feature')).default;
+    const newFeature = new Feature({ geometry });
+    drawnFeatureRef.current = newFeature;
+    setHasDrawnFeature(true);
+
+    // Call the analyze function
+    analyzeDisturbance();
+  };
 
   const analyzeDisturbance = async () => {
     if (!drawnFeatureRef.current || !userRef.current) return;
@@ -335,6 +402,74 @@ const App: React.FC = () => {
         }
       }
 
+      // Add Restor sites layer
+      const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+      const sites_endpoint = isLocalhost
+        ? "http://127.0.0.1:8080/tiles/{z}/{x}/{y}.pbf?source=sites"
+        : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=sites";
+
+      const sites_source = new VectorTileSource({ format: new MVT(), url: sites_endpoint });
+
+      const styleCache: Record<string, Style> = Object.create(null);
+      function styleForVisibility(feature: FeatureLike): Style | undefined {
+        const area = Number(feature.get('surface_area_km2'));
+        if (Number.isFinite(area) && area > 1000) return undefined;
+
+        const key = String(feature.get('site_visibility') ?? 'unknown').toLowerCase();
+        if (styleCache[key]) return styleCache[key];
+
+        const styles = {
+          public: {
+            stroke: new Stroke({ color: 'rgba(244,97,97,0.9)', width: 2 }),
+            fill: new Fill({ color: 'rgba(97,97,97,0.05)' }),
+          },
+          private: {
+            stroke: new Stroke({ color: 'rgba(244,97,97,0.9)', width: 2, lineDash: [2, 6] }),
+            fill: new Fill({ color: 'rgba(97,97,97,0.05)' }),
+          },
+          unknown: {
+            stroke: new Stroke({ color: 'rgba(244,67,54,0.6)', width: 2 }),
+            fill: new Fill({ color: 'rgba(244,67,54,0.05)' }),
+          },
+        } as const;
+
+        const def = styles[key as keyof typeof styles] ?? styles.unknown;
+        const style = new Style({ stroke: def.stroke, fill: def.fill });
+        styleCache[key] = style;
+        return style;
+      }
+
+      const sites_layer = new VectorTileLayer({
+        source: sites_source,
+        minZoom: 10,
+        style: (feature) => {
+          const baseStyle = styleForVisibility(feature);
+
+          // Check if this feature is selected
+          const selectedFeature = selectedSiteFeatureRef.current;
+          const isSelected = selectedFeature &&
+            feature.get('id') === selectedFeature.get('id');
+
+          if (isSelected) {
+            // Create highlighted style
+            return new Style({
+              stroke: new Stroke({
+                color: 'rgba(255, 215, 0, 1)', // Gold color for selection
+                width: 4
+              }),
+              fill: new Fill({
+                color: 'rgba(255, 215, 0, 0.3)' // Semi-transparent gold fill
+              }),
+            });
+          }
+
+          return baseStyle;
+        },
+      });
+
+      map.addLayer(sites_layer);
+      sitesLayerRef.current = sites_layer;
+
       map.addLayer(vectorLayer);
     });
 
@@ -363,6 +498,42 @@ const App: React.FC = () => {
 
     drawInteractionRef.current.on("drawabort", () => {
       isDrawingRef.current = false;
+    });
+
+    // Handle Ctrl+click on sites layer to use site geometry
+    map.on('click', (evt: MapBrowserEvent) => {
+      // Only handle site selection if Ctrl key is pressed, user is logged in, and site name is filled
+      if (!evt.originalEvent.ctrlKey || !loggedInRef.current || !siteName.trim()) {
+        return;
+      }
+
+      let clickedFeature: FeatureLike | null = null;
+      map.forEachFeatureAtPixel(evt.pixel, function (feature: FeatureLike, layer) {
+        // Only look for features in the sites layer
+        if (layer === sitesLayerRef.current) {
+          clickedFeature = feature;
+          return true; // Stop iteration
+        }
+      });
+
+      if (clickedFeature) {
+        setSelectedSiteFeature(clickedFeature);
+        // Clear drawn polygons when selecting a site
+        if (drawSourceRef.current) {
+          drawSourceRef.current.clear();
+        }
+        drawnFeatureRef.current = null;
+        setHasDrawnFeature(false);
+
+        // Extract geometry from vector tile feature
+        handleSiteClick(clickedFeature);
+
+        // Prevent the click from propagating
+        evt.stopPropagation();
+      } else {
+        // Clear selection if clicking elsewhere with Ctrl
+        setSelectedSiteFeature(null);
+      }
     });
 
     map.on('pointermove', (evt: MapBrowserEvent<any>) => {
