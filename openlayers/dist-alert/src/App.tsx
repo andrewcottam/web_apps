@@ -130,6 +130,7 @@ const App: React.FC = () => {
   const sitesLayerRef = useRef<VectorTileLayer | null>(null);
   const [selectedSiteFeature, setSelectedSiteFeature] = useState<any>(null);
   const selectedSiteFeatureRef = useRef<any>(null);
+  const [isCtrlPressed, setIsCtrlPressed] = useState(false);
 
   // Dist-alert parameters
   const [siteName, setSiteName] = useState("");
@@ -146,6 +147,7 @@ const App: React.FC = () => {
   const [debug, setDebug] = useState(false);
 
   const userRef = useRef<typeof user>(undefined);
+  const siteNameRef = useRef(siteName);
 
   useEffect(() => {
     userRef.current = user;
@@ -154,6 +156,10 @@ const App: React.FC = () => {
   useEffect(() => {
     loggedInRef.current = logged_in;
   }, [logged_in]);
+
+  useEffect(() => {
+    siteNameRef.current = siteName;
+  }, [siteName]);
 
   useEffect(() => {
     selectedSiteFeatureRef.current = selectedSiteFeature;
@@ -175,6 +181,36 @@ const App: React.FC = () => {
       map.removeInteraction(draw);
     }
   }, [logged_in]);
+
+  // Track Ctrl key state for cursor changes
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Control' || e.ctrlKey) {
+        setIsCtrlPressed(true);
+      }
+    };
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Control' || !e.ctrlKey) {
+        setIsCtrlPressed(false);
+      }
+    };
+
+    // Handle window blur to reset Ctrl state
+    const handleBlur = () => {
+      setIsCtrlPressed(false);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    window.addEventListener('blur', handleBlur);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+      window.removeEventListener('blur', handleBlur);
+    };
+  }, []);
 
   function logout() {
     setLoggedIn(false);
@@ -403,10 +439,7 @@ const App: React.FC = () => {
       }
 
       // Add Restor sites layer
-      const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
-      const sites_endpoint = isLocalhost
-        ? "http://127.0.0.1:8080/tiles/{z}/{x}/{y}.pbf?source=sites"
-        : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=sites";
+      const sites_endpoint = "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=sites";
 
       const sites_source = new VectorTileSource({ format: new MVT(), url: sites_endpoint });
 
@@ -503,7 +536,7 @@ const App: React.FC = () => {
     // Handle Ctrl+click on sites layer to use site geometry
     map.on('click', (evt: MapBrowserEvent) => {
       // Only handle site selection if Ctrl key is pressed, user is logged in, and site name is filled
-      if (!evt.originalEvent.ctrlKey || !loggedInRef.current || !siteName.trim()) {
+      if (!evt.originalEvent.ctrlKey || !loggedInRef.current || !siteNameRef.current.trim()) {
         return;
       }
 
@@ -546,11 +579,21 @@ const App: React.FC = () => {
     };
   }, []);
 
+  // Determine cursor style based on Ctrl key state and conditions
+  const shouldShowSelectionCursor = isCtrlPressed && logged_in && siteName.trim();
+
   return (
     <div>
       <div
         ref={mapRef}
-        style={{ position: "absolute", top: 20, left: 20, bottom: 20, right: 420 }}
+        style={{
+          position: "absolute",
+          top: 20,
+          left: 20,
+          bottom: 20,
+          right: 420,
+          cursor: shouldShowSelectionCursor ? 'crosshair' : 'default'
+        }}
       />
       <div id="coords">Move cursor to see coordinates</div>
 
