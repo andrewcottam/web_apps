@@ -246,6 +246,12 @@ const App: React.FC = () => {
   }
 
   const handleSiteClick = async (feature: FeatureLike) => {
+    // Extract site name from feature properties
+    const name = feature.get('name') || feature.get('site_name') || feature.get('title') || '';
+    if (name) {
+      setSiteName(name);
+    }
+
     // Extract geometry from vector tile feature (RenderFeature)
     let geometry;
 
@@ -535,8 +541,8 @@ const App: React.FC = () => {
 
     // Handle Ctrl+click on sites layer to use site geometry
     map.on('click', (evt: MapBrowserEvent) => {
-      // Only handle site selection if Ctrl key is pressed, user is logged in, and site name is filled
-      if (!evt.originalEvent.ctrlKey || !loggedInRef.current || !siteNameRef.current.trim()) {
+      // Only handle site selection if Ctrl key is pressed and user is logged in
+      if (!evt.originalEvent.ctrlKey || !loggedInRef.current) {
         return;
       }
 
@@ -580,7 +586,7 @@ const App: React.FC = () => {
   }, []);
 
   // Determine cursor style based on Ctrl key state and conditions
-  const shouldShowSelectionCursor = isCtrlPressed && logged_in && siteName.trim();
+  const shouldShowSelectionCursor = isCtrlPressed && logged_in;
 
   return (
     <div>
