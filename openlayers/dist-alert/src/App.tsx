@@ -155,6 +155,10 @@ const App: React.FC = () => {
 
   useEffect(() => {
     loggedInRef.current = logged_in;
+    // Control sites layer visibility based on login state
+    if (sitesLayerRef.current) {
+      sitesLayerRef.current.setVisible(logged_in);
+    }
   }, [logged_in]);
 
   useEffect(() => {
@@ -481,6 +485,7 @@ const App: React.FC = () => {
       const sites_layer = new VectorTileLayer({
         source: sites_source,
         minZoom: 10,
+        visible: false, // Initially hidden until user logs in
         style: (feature) => {
           const baseStyle = styleForVisibility(feature);
 
@@ -578,6 +583,35 @@ const App: React.FC = () => {
     map.on('pointermove', (evt: MapBrowserEvent<any>) => {
       const lonLat = toLonLat(evt.coordinate);
       coordsDiv.innerText = `Lon: ${lonLat[0].toFixed(4)}, Lat: ${lonLat[1].toFixed(4)}`;
+      const popup = document.getElementById('popup') as HTMLDivElement;
+
+      // Only show popup if user is logged in and not drawing
+      if (isDrawingRef.current || !loggedInRef.current) {
+        popup.style.display = 'none';
+        return;
+      }
+
+      let found = false;
+      map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
+        // Check if this is a site feature
+        if (layer === sitesLayerRef.current) {
+          const props = feature.getProperties() || {};
+          const name = props.name || props.site_name || props.title;
+          if (name) {
+            const color = 'rgb(244,97,97)';
+            popup.innerHTML = `<span style="color:${color}">${name}</span>`;
+            popup.style.left = `${evt.pixel[0] + 30}px`;
+            popup.style.top = `${evt.pixel[1] + 30}px`;
+            popup.style.display = 'block';
+            found = true;
+            return true; // Stop iteration
+          }
+        }
+      });
+
+      if (!found) {
+        popup.style.display = 'none';
+      }
     });
 
     return () => {
@@ -602,6 +636,20 @@ const App: React.FC = () => {
         }}
       />
       <div id="coords">Move cursor to see coordinates</div>
+
+      <div
+        id="popup"
+        style={{
+          position: "absolute",
+          backgroundColor: "#fffd",
+          padding: "4px 8px",
+          border: "1px solid #ccc",
+          borderRadius: "4px",
+          display: "none",
+          pointerEvents: "none",
+          zIndex: 1000
+        }}
+      ></div>
 
       <div className="panel">
         <div id="fixed-column">
