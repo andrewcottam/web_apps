@@ -362,7 +362,18 @@ const App: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`API call failed: ${response.statusText}`);
+        let errorMessage = `API call failed: ${response.status} ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (e) {
+          // If we can't parse the error as JSON, use the status text
+        }
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
@@ -370,7 +381,8 @@ const App: React.FC = () => {
 
     } catch (error) {
       console.error('Error analyzing disturbance:', error);
-      alert('Failed to analyze disturbance. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Failed to analyze disturbance:\n\n${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
