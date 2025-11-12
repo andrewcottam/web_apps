@@ -306,6 +306,7 @@ const App: React.FC = () => {
     if (!drawnFeatureRef.current || !userRef.current) return;
 
     setIsLoading(true);
+    setData(null); // Clear previous results
     try {
       const geometry = drawnFeatureRef.current.getGeometry() as Polygon;
       const geometry4326 = geometry.clone().transform("EPSG:3857", "EPSG:4326");
