@@ -39,7 +39,7 @@ To run the full stack locally:
    cd cloud_functions/dist-alert
    python main.py
    ```
-   This will start the server at `http://127.0.0.1:8080` with the `/dist-alert` endpoint
+   This will start the server at `http://127.0.0.1:8080`
 
 2. Start the frontend:
    ```bash
@@ -47,7 +47,7 @@ To run the full stack locally:
    npm run dev
    ```
 
-The frontend will automatically detect it's running on localhost and connect to `http://127.0.0.1:8080/dist-alert`.
+The frontend will automatically detect it's running on localhost and connect to the local backend.
 
 ## Building
 
@@ -65,35 +65,8 @@ https://andrewcottam.github.io/web_apps/openlayers/dist-alert/dist/index.html
 ## API Configuration
 
 The app automatically selects the correct endpoint based on where it's running:
-- **Production** (deployed on GitHub Pages): `https://europe-west6-restor-gis.cloudfunctions.net/dist_alert`
-- **Local Development** (localhost): `http://127.0.0.1:8080/dist-alert`
-
-The cloud function is deployed as `dist_alert` in Google Cloud Functions.
-
-## Testing the API
-
-You can test the deployed cloud function directly using curl:
-
-```bash
-curl -X POST https://europe-west6-restor-gis.cloudfunctions.net/dist_alert \
--H "Content-Type: application/json" \
--H "Authorization: Bearer $(gcloud auth print-identity-token)" \
--H "Origin: https://andrewcottam.github.io" \
--d '{
-  "geometry": [[118.18309491638289899,5.77414399756847541],[118.18307364091026557,5.76597421607950178],[118.19203061488646256,5.76599549155212987],[118.19220081866747307,5.77401634473271042],[118.18309491638289899,5.77414399756847541]],
-  "min_confidence": "confirmed",
-  "min_disturbance_percentage": 0.4,
-  "site_name": "Forest Reserve A",
-  "site_id": "FR-001",
-  "report_org": "Conservation International",
-  "report_owner_name": "Andrew Cottam",
-  "report_owner_email": "a.cottam@gmail.com",
-  "report_subscriber_emails": ["andrew@restor.eco"],
-  "debug": true
-}'
-```
-
-This will test the analysis on a sample polygon in Sabah, Malaysia.
+- **Production** (deployed on GitHub Pages): `https://europe-west6-restor-gis.cloudfunctions.net/dist-alert`
+- **Local Development** (localhost): `http://127.0.0.1:8080`
 
 ## Usage
 
