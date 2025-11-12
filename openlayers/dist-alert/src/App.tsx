@@ -716,7 +716,7 @@ const App: React.FC = () => {
               />
 
               <TextField
-                label="End Date"
+                label="Analysis Date"
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
