@@ -28,7 +28,7 @@ npm run dev
 
 The app will be available at `http://localhost:5173`
 
-When running locally, the app will automatically connect to a local dist-alert server at `http://127.0.0.1:8080`.
+When running locally, the app will automatically connect to a local dist-alert server at `http://127.0.0.1:8081`.
 
 ### With Local Backend
 
@@ -39,7 +39,7 @@ To run the full stack locally:
    cd cloud_functions/dist-alert
    python main.py
    ```
-   This will start the server at `http://127.0.0.1:8080`
+   This will start the server at `http://127.0.0.1:8081`
 
 2. Start the frontend:
    ```bash
@@ -66,7 +66,7 @@ https://andrewcottam.github.io/web_apps/openlayers/dist-alert/dist/index.html
 
 The app automatically selects the correct endpoint based on where it's running:
 - **Production** (deployed on GitHub Pages): `https://europe-west6-restor-gis.cloudfunctions.net/dist-alert`
-- **Local Development** (localhost): `http://127.0.0.1:8080`
+- **Local Development** (localhost): `http://127.0.0.1:8081`
 
 ## Usage
 

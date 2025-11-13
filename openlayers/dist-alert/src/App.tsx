@@ -134,11 +134,6 @@ const App: React.FC = () => {
 
   // Dist-alert parameters
   const [siteName, setSiteName] = useState("");
-  const [startDate, setStartDate] = useState(() => {
-    const date = new Date();
-    date.setDate(date.getDate() - 7);
-    return date.toISOString().split('T')[0];
-  });
   const [endDate, setEndDate] = useState(() => {
     return new Date().toISOString().split('T')[0];
   });
@@ -311,6 +306,7 @@ const App: React.FC = () => {
     if (!drawnFeatureRef.current || !userRef.current) return;
 
     setIsLoading(true);
+    setData(null); // Clear previous results
     try {
       const geometry = drawnFeatureRef.current.getGeometry() as Polygon;
       const geometry4326 = geometry.clone().transform("EPSG:3857", "EPSG:4326");
@@ -323,12 +319,11 @@ const App: React.FC = () => {
 
       const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
       const endpoint = isLocalhost
-        ? "http://127.0.0.1:8080/opera-dist-alert"
+        ? "http://127.0.0.1:8081/dist-alert"
         : "https://europe-west6-restor-gis.cloudfunctions.net/dist_alert";
 
       const requestBody: Record<string, any> = {
         geometry: geometryArray,
-        start_date: startDate,
         end_date: endDate,
         min_confidence: minConfidence,
         min_disturbance_percentage: minDisturbancePercentage,
@@ -362,7 +357,18 @@ const App: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`API call failed: ${response.statusText}`);
+        let errorMessage = `API call failed: ${response.status} ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (e) {
+          // If we can't parse the error as JSON, use the status text
+        }
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
@@ -370,7 +376,8 @@ const App: React.FC = () => {
 
     } catch (error) {
       console.error('Error analyzing disturbance:', error);
-      alert('Failed to analyze disturbance. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      alert(`Failed to analyze disturbance:\n\n${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
@@ -709,17 +716,7 @@ const App: React.FC = () => {
               />
 
               <TextField
-                label="Start Date"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                size="small"
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-              />
-
-              <TextField
-                label="End Date"
+                label="Analysis Date"
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
