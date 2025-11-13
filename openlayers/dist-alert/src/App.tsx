@@ -319,7 +319,7 @@ const App: React.FC = () => {
 
       const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
       const endpoint = isLocalhost
-        ? "http://127.0.0.1:8080/dist-alert"
+        ? "http://127.0.0.1:8081/dist-alert"
         : "https://europe-west6-restor-gis.cloudfunctions.net/dist_alert";
 
       const requestBody: Record<string, any> = {
