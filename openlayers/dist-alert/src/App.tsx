@@ -138,7 +138,6 @@ const App: React.FC = () => {
     return new Date().toISOString().split('T')[0];
   });
   const [minConfidence, setMinConfidence] = useState("confirmed");
-  const [minDisturbancePercentage, setMinDisturbancePercentage] = useState(10.0);
   const [debug, setDebug] = useState(false);
 
   const userRef = useRef<typeof user>(undefined);
@@ -326,7 +325,6 @@ const App: React.FC = () => {
         geometry: geometryArray,
         end_date: endDate,
         min_confidence: minConfidence,
-        min_disturbance_percentage: minDisturbancePercentage,
         debug: debug
       };
 
@@ -737,19 +735,6 @@ const App: React.FC = () => {
                 <MenuItem value="provisional">Provisional</MenuItem>
                 <MenuItem value="confirmed">Confirmed</MenuItem>
               </TextField>
-
-              <TextField
-                label="Min Disturbance Percentage"
-                type="number"
-                value={minDisturbancePercentage}
-                onChange={(e) => {
-                  const value = parseFloat(e.target.value);
-                  setMinDisturbancePercentage(isNaN(value) ? 0 : value);
-                }}
-                size="small"
-                fullWidth
-                inputProps={{ min: 0, max: 100, step: 0.1 }}
-              />
 
               <FormControlLabel
                 control={
