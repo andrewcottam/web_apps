@@ -627,6 +627,35 @@ const App: React.FC = () => {
   // Determine cursor style based on Ctrl key state and conditions
   const shouldShowSelectionCursor = isCtrlPressed && logged_in;
 
+  // Helper function to determine disturbance severity
+  const getDisturbanceSeverity = (percentage: number) => {
+    if (percentage === 0) {
+      return {
+        message: "✓ No Disturbance Detected",
+        color: "#388e3c", // Green
+        emoji: "✓"
+      };
+    } else if (percentage > 0 && percentage <= 10) {
+      return {
+        message: "⚠️ Low Severity Disturbance",
+        color: "#f9a825", // Yellow
+        emoji: "⚠️"
+      };
+    } else if (percentage > 10 && percentage <= 20) {
+      return {
+        message: "🟠 Medium Severity Disturbance",
+        color: "#ff6f00", // Orange
+        emoji: "🟠"
+      };
+    } else {
+      return {
+        message: "🔴 High Severity Disturbance",
+        color: "#d32f2f", // Red
+        emoji: "🔴"
+      };
+    }
+  };
+
   return (
     <div>
       <div
@@ -761,26 +790,27 @@ const App: React.FC = () => {
               <div style={{ marginTop: "12px", padding: "10px", backgroundColor: "#f5f5f5", borderRadius: "4px" }}>
                 <h3>Results</h3>
 
-                {data.response?.disturbance_analysis && (
-                  <div style={{ marginBottom: "10px" }}>
-                    <h4 style={{
-                      color: data.response.disturbance_analysis.disturbance_flagged ? "#d32f2f" : "#388e3c"
-                    }}>
-                      {data.response.disturbance_analysis.disturbance_flagged
-                        ? "⚠️ DISTURBANCE DETECTED"
-                        : "✓ No Significant Disturbance"}
-                    </h4>
+                {data.response?.disturbance_analysis && (() => {
+                  const percentage = data.response.disturbance_analysis.overall.disturbed_percentage;
+                  const severity = getDisturbanceSeverity(percentage);
 
-                    <div style={{ fontSize: "12px", marginTop: "8px" }}>
-                      <p style={{ margin: "4px 0" }}><strong>Disturbed Area:</strong> {data.response.disturbance_analysis.overall.disturbed_area.toFixed(2)} ha</p>
-                      <p style={{ margin: "4px 0" }}><strong>Total Area:</strong> {data.response.disturbance_analysis.overall.total_area.toFixed(2)} ha</p>
-                      <p style={{ margin: "4px 0" }}><strong>Disturbance:</strong> {data.response.disturbance_analysis.overall.disturbed_percentage.toFixed(2)}%</p>
-                      {data.response.disturbance_analysis.min_disturbance_date && (
-                        <p style={{ margin: "4px 0" }}><strong>First Detected:</strong> {data.response.disturbance_analysis.min_disturbance_date}</p>
-                      )}
+                  return (
+                    <div style={{ marginBottom: "10px" }}>
+                      <h4 style={{ color: severity.color }}>
+                        {severity.message}
+                      </h4>
+
+                      <div style={{ fontSize: "12px", marginTop: "8px" }}>
+                        <p style={{ margin: "4px 0" }}><strong>Disturbed Area:</strong> {data.response.disturbance_analysis.overall.disturbed_area.toFixed(2)} ha</p>
+                        <p style={{ margin: "4px 0" }}><strong>Total Area:</strong> {data.response.disturbance_analysis.overall.total_area.toFixed(2)} ha</p>
+                        <p style={{ margin: "4px 0" }}><strong>Disturbance:</strong> {data.response.disturbance_analysis.overall.disturbed_percentage.toFixed(2)}%</p>
+                        {data.response.disturbance_analysis.min_disturbance_date && (
+                          <p style={{ margin: "4px 0" }}><strong>First Detected:</strong> {data.response.disturbance_analysis.min_disturbance_date}</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {data.response?.report && (
                   <div style={{ marginTop: "10px", padding: "8px", backgroundColor: "#e3f2fd", borderRadius: "4px" }}>
