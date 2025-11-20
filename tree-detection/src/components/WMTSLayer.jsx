@@ -5,7 +5,15 @@ import WebTileLayer from "@arcgis/core/layers/WebTileLayer.js";
 import esriConfig from "@arcgis/core/config.js";
 
 // Configure CORS enabled servers
-esriConfig.request.corsEnabledServers.push("tiles.openaerialmap.org");
+if (!esriConfig.request) {
+    esriConfig.request = {};
+}
+if (!esriConfig.request.corsEnabledServers) {
+    esriConfig.request.corsEnabledServers = [];
+}
+if (!esriConfig.request.corsEnabledServers.includes("tiles.openaerialmap.org")) {
+    esriConfig.request.corsEnabledServers.push("tiles.openaerialmap.org");
+}
 
 export default function WMTSLayer(props) {
 
