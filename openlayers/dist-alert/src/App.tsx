@@ -325,7 +325,9 @@ const App: React.FC = () => {
         geometry: geometryArray,
         end_date: endDate,
         min_confidence: minConfidence,
-        debug: debug
+        debug: debug,
+        create_report: true,
+        send_email: true
       };
 
       // Add site name if provided
