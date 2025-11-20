@@ -2,6 +2,10 @@ import React, { useEffect, useState } from "react";
 // esri components
 import { when } from '@arcgis/core/core/reactiveUtils';
 import WebTileLayer from "@arcgis/core/layers/WebTileLayer.js";
+import esriConfig from "@arcgis/core/config.js";
+
+// Configure CORS enabled servers
+esriConfig.request.corsEnabledServers.push("tiles.openaerialmap.org");
 
 export default function WMTSLayer(props) {
 
@@ -82,6 +86,9 @@ export default function WMTSLayer(props) {
             canvas_set: props.canvas_set,
             visible: true,
             copyright: props.copyright,
+            requestOptions: {
+                withCredentials: false
+            }
         });
         // get the index of the first graphics layer - we will add the WMTSLayer underneath it
         const graphics_layer_index = props.view.allLayerViews.findIndex(l => l.declaredClass === 'esri.views.2d.layers.GraphicsLayerView2D');

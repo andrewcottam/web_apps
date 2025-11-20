@@ -135,7 +135,7 @@ class UI extends Component {
         //move the map to java
         this.state.view.goTo({ center: [112.84350452926209, -8.054735059174224], zoom: 18 }).then(_ => {
             //set the state
-            this.setState({ mode: 'webtile_layer', status_text: 'Getting satellite imagery..', feature_collection: undefined, wms_endpoint: 'https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', wms_copyright: 'Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community' });
+            this.setState({ mode: 'webtile_layer', status_text: 'Getting image from OpenAerialMap..', feature_collection: undefined, wms_endpoint: 'https://tiles.openaerialmap.org/61b94e69b26de1000596d605/1/61b94e69b26de1000596d607/{z}/{x}/{y}', wms_copyright: 'Imagery from OpenAerialMap. Maxar Products. WorldView2 © 2021 Maxar Technologies.' });
         });
     }
 
