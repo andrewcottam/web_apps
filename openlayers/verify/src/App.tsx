@@ -12,16 +12,13 @@ import GeoJSON from "ol/format/GeoJSON";
 import { Draw } from "ol/interaction";
 import { fromLonLat } from "ol/proj";
 import { apply } from "ol-mapbox-style";
-import { Style, Circle as CircleStyle, Fill, Stroke } from "ol/style";
+import { Style, Fill, Stroke } from "ol/style";
 import VectorTileLayer from 'ol/layer/VectorTile';
 import VectorTileSource from 'ol/source/VectorTile';
 import MVT from 'ol/format/MVT';
 import WKT from 'ol/format/WKT';
-import TileLayer from 'ol/layer/Tile';
-import TileDebug from 'ol/source/TileDebug';
 import { toLonLat } from 'ol/proj';
 import { MapBrowserEvent } from 'ol';
-import { createXYZ } from 'ol/tilegrid';
 import { ScaleLine, defaults as defaultControls } from 'ol/control';
 
 // Firebase
@@ -86,7 +83,7 @@ const App: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const drawnFeatureRef = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isDrawing, setIsDrawing] = useState(false);
+  const [, setIsDrawing] = useState(false);
   const [user, setUser] = useState<UserCredential["user"]>();
   const [logged_in, setLoggedIn] = useState(false);
   const [data, setData] = useState<Record<string, any>>({});
@@ -629,7 +626,7 @@ const App: React.FC = () => {
       map.addLayer(vectorLayer);
 
       // Tile boundaries - debug only
-      const debug_Layer = new TileLayer({ source: new TileDebug({ projection: 'EPSG:3857', zDirection: 1, tileGrid: createXYZ({ tileSize: 512, maxZoom: 22 }) }) });
+      // const debug_Layer = new TileLayer({ source: new TileDebug({ projection: 'EPSG:3857', zDirection: 1, tileGrid: createXYZ({ tileSize: 512, maxZoom: 22 }) }) });
       // map.addLayer(debug_Layer);
 
     });
