@@ -748,7 +748,9 @@ const App: React.FC = () => {
         popup.style.display = 'none';
         return;
       }
-      let found = false;
+
+      // Collect all features under the cursor
+      const features: Array<{name: string, color: string, html: string}> = [];
       map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
         const props = feature.getProperties() || {};
         const isWdpa = layer === wdpaLayerRef.current && props.NAME;
@@ -759,16 +761,18 @@ const App: React.FC = () => {
           const html = isWdpa && props.WDPAID
             ? `<a href="https://www.protectedplanet.net/${props.WDPAID}" target="_blank" style="color:${color};text-decoration:none;">${name}</a>`
             : `<span style="color:${color}">${name}</span>`;
-          popup.innerHTML = html;
-          popup.style.left = `${evt.pixel[0] + 30}px`;
-          popup.style.top = `${evt.pixel[1] + 30}px`;
-          popup.style.display = 'block';
-          found = true;
-          return true; // Stop iteration
+          features.push({ name, color, html });
         }
       });
 
-      if (!found) {
+      if (features.length > 0) {
+        // Build HTML for all features
+        const allHtml = features.map(f => f.html).join('<br/>');
+        popup.innerHTML = allHtml;
+        popup.style.left = `${evt.pixel[0] + 30}px`;
+        popup.style.top = `${evt.pixel[1] + 30}px`;
+        popup.style.display = 'block';
+      } else {
         popup.style.display = 'none';
       }
     });
