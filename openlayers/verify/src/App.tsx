@@ -776,8 +776,19 @@ const App: React.FC = () => {
         popup.style.display = 'none';
       }
     });
+
+    // Add ESC key handler to abort drawing
+    const handleKeyDown = (evt: KeyboardEvent) => {
+      if (evt.key === 'Escape' && isDrawingRef.current && drawInteractionRef.current) {
+        drawInteractionRef.current.abortDrawing();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
     return () => {
       map.setTarget(undefined);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
