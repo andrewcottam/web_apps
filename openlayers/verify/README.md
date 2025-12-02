@@ -6,7 +6,7 @@ conda activate restor-servers
 cd /Users/andrewcottam/Documents/GitHub/restor-servers/cloud_functions/site_verify
 functions-framework --target=verify_site --port=8080 --debug
 ```
-Then start the Site verification playground locally:
+Then start the Site verification playground locally - make sure it is running on port 5173:
 ```
 cd openlayers/verify
 npm run dev
