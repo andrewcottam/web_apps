@@ -95,6 +95,8 @@ const App: React.FC = () => {
   const [checkStatuses, setCheckStatuses] = useState<Record<string, CheckStatus>>({});
   const [selectedSiteFeature, setSelectedSiteFeature] = useState<any>(null);
   const selectedSiteFeatureRef = useRef<any>(null);
+  const [verificationType, setVerificationType] = useState<'site' | 'drawn' | null>(null);
+  const [siteName, setSiteName] = useState<string>('');
   const drawSourceRef = useRef<VectorSource | null>(null);
   const osmLayerRef = useRef<VectorLayer | null>(null);
   const wdpaLayerRef = useRef<VectorTileLayer | null>(null);
@@ -451,6 +453,11 @@ const App: React.FC = () => {
       // Get feature properties
       const properties = renderFeature.properties_ || {};
 
+      // Extract and set site name for display
+      const extractedSiteName = properties.name || properties.site_name || properties.title || 'Unknown Site';
+      setSiteName(extractedSiteName);
+      setVerificationType('site');
+
       // Make API call with both geometry and properties
       const response = await fetch(endpoint, {
         method: "POST",
@@ -615,6 +622,8 @@ const App: React.FC = () => {
       } else {
         // Clear selection if clicking elsewhere with Ctrl
         setSelectedSiteFeature(null);
+        setVerificationType(null);
+        setSiteName('');
         setCheckStatuses({});
       }
     });
@@ -648,6 +657,8 @@ const App: React.FC = () => {
         drawSourceRef.current.clear();
       }
       setSelectedSiteFeature(null);
+      setVerificationType(null);
+      setSiteName('');
       setData({});
       if (osmLayerRef.current) {
         map.removeLayer(osmLayerRef.current);
@@ -704,6 +715,7 @@ const App: React.FC = () => {
           const result = await response.json();
           setCheckStatuses({});
           setData(result.results);
+          setVerificationType('drawn');
 
           if (includeOSMRef.current) {
             const best_feature = (result.results.osm && result.results.osm.features && result.results.osm.best_feature);
@@ -829,7 +841,13 @@ const App: React.FC = () => {
         {logged_in && (
           <>
             <h1>Site Verification Playground</h1>
-            <h2>Draw a polygon on the map</h2>
+            {verificationType === 'site' ? (
+              <h2>Site Verification Report for {siteName}</h2>
+            ) : verificationType === 'drawn' ? (
+              <h2>Drawn Polygon Verification</h2>
+            ) : (
+              <h2>Draw a polygon on the map or Ctrl+click on a Restor site</h2>
+            )}
             {isLoading && (
               <div style={{
                 position: "fixed",
