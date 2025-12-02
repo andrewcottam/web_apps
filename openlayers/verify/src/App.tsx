@@ -306,7 +306,7 @@ const App: React.FC = () => {
   // Add this helper function to force layer re-render when selection changes
   const refreshSitesLayer = () => {
     if (sitesLayerRef.current) {
-      sitesLayerRef.current.getSource()?.refresh();
+      sitesLayerRef.current.changed();
     }
   };
   useEffect(() => {
