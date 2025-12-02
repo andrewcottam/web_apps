@@ -337,7 +337,7 @@ const App: React.FC = () => {
   // Add this helper function to force layer re-render when selection changes
   const refreshSitesLayer = () => {
     if (sitesLayerRef.current) {
-      sitesLayerRef.current.getSource()?.refresh();
+      sitesLayerRef.current.changed();
     }
   };
   useEffect(() => {
@@ -783,8 +783,7 @@ const App: React.FC = () => {
       }
 
       // Collect all features under the cursor
-      const features: Array<{name: string, id: string, color: string, html: string, feature: any, isWdpa: boolean}> = [];
-      const siteFeatures: any[] = [];
+      const features: Array<{name: string, id: string | number, color: string, isWdpa: boolean}> = [];
       map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
         const props = feature.getProperties() || {};
         const isWdpa = layer === wdpaLayerRef.current && props.NAME;
@@ -793,43 +792,30 @@ const App: React.FC = () => {
           const name = isWdpa ? props.NAME : props.name;
           const id = isWdpa ? props.WDPAID : props.id;
           const color = isWdpa ? 'rgb(99, 148, 69)' : 'rgb(244,97,97)';
-          features.push({ name, id, color, html: '', feature, isWdpa });
-          if (isSite) {
-            siteFeatures.push(feature);
-          }
+          features.push({ name, id, color, isWdpa });
         }
       });
 
-      // Update hovered site features
-      setHoveredFeatures(siteFeatures);
-      if (siteFeatures.length === 0) {
-        setHighlightedFeatureIndex(0);
-      } else if (highlightedFeatureIndexRef.current >= siteFeatures.length) {
-        setHighlightedFeatureIndex(0);
-      }
-
       if (features.length > 0) {
-        // Check for duplicate names to determine if IDs should be shown
-        const names = features.map(f => f.name);
-        const hasDuplicates = names.some((name, idx) => names.indexOf(name) !== idx);
+        // Count occurrences of each name to detect duplicates
+        const nameCounts = new Map<string, number>();
+        features.forEach(f => {
+          nameCounts.set(f.name, (nameCounts.get(f.name) || 0) + 1);
+        });
 
-        // Build HTML for all features with numbering for multiple sites
-        const allHtml = features.map((f, idx) => {
-          const displayName = (hasDuplicates && !f.isWdpa) ? `${f.name} (${f.id})` : f.name;
-          const number = siteFeatures.length > 1 && !f.isWdpa ? `${idx + 1}. ` : '';
-          const isHighlighted = !f.isWdpa && idx === highlightedFeatureIndexRef.current;
-          const style = isHighlighted ? `font-weight: bold; background-color: rgba(0, 191, 255, 0.2); padding: 2px 4px;` : '';
+        // Build HTML for all features, adding IDs for duplicates
+        const allHtml = features.map(f => {
+          const hasDuplicate = nameCounts.get(f.name)! > 1;
+          const displayName = hasDuplicate ? `${f.name} (${f.id})` : f.name;
 
           if (f.isWdpa && f.id) {
-            return `<span style="${style}">${number}<a href="https://www.protectedplanet.net/${f.id}" target="_blank" style="color:${f.color};text-decoration:none;">${displayName}</a></span>`;
+            return `<a href="https://www.protectedplanet.net/${f.id}" target="_blank" style="color:${f.color};text-decoration:none;">${displayName}</a>`;
           } else {
-            return `<span style="${style};color:${f.color}">${number}${displayName}</span>`;
+            return `<span style="color:${f.color}">${displayName}</span>`;
           }
         }).join('<br/>');
 
-        popup.innerHTML = siteFeatures.length > 1
-          ? `${allHtml}<br/><small style="color:#666;">(Use ↑/↓ arrows to cycle)</small>`
-          : allHtml;
+        popup.innerHTML = allHtml;
         popup.style.left = `${evt.pixel[0] + 30}px`;
         popup.style.top = `${evt.pixel[1] + 30}px`;
         popup.style.display = 'block';
