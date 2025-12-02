@@ -41,6 +41,7 @@ function App() {
   const [busy, setBusy] = useState<null | "date" | "org">(null);
   const [orgUrl, setOrgUrl] = useState<string | null>(null);
   const [dateUrl, setDateUrl] = useState<string | null>(null);
+  const [invalidChecksCount, setInvalidChecksCount] = useState<number>(0);
 
   useEffect(() => {
     userRef.current = user;
@@ -109,7 +110,16 @@ function App() {
       setDateUrl(null);
 
       const idToken = await userRef.current.getIdToken();
-      const url = await submitToEndpoint({ organizationName }, idToken);
+      const payload = {
+        organizationName,
+        config: {
+          overall_status_thresholds: {
+            lower: 0,
+            upper: invalidChecksCount
+          }
+        }
+      };
+      const url = await submitToEndpoint(payload, idToken);
       setOrgUrl(url);
       return url;
     } finally {
@@ -140,7 +150,17 @@ function App() {
       setDateUrl(null);
 
       const idToken = await userRef.current.getIdToken();
-      const url = await submitToEndpoint({ startDate, endDate }, idToken);
+      const payload = {
+        startDate,
+        endDate,
+        config: {
+          overall_status_thresholds: {
+            lower: 0,
+            upper: invalidChecksCount
+          }
+        }
+      };
+      const url = await submitToEndpoint(payload, idToken);
       setDateUrl(url);
       return url;
     } finally {
@@ -208,6 +228,28 @@ function App() {
                 <h2>Organisation name</h2>
                 <OrganisationForm onSubmit={handleOrgSubmit} disabled={busy === "date"} url={orgUrl} />
               </div>
+            </div>
+
+            {/* Invalid Checks Count Configuration */}
+            <div
+              style={{
+                padding: '2rem',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
+            >
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span>Invalid checks count:</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={invalidChecksCount}
+                  onChange={(e) => setInvalidChecksCount(Math.max(0, parseInt(e.target.value) || 0))}
+                  style={{ width: '80px', padding: '0.25rem' }}
+                />
+              </label>
             </div>
           </>
         )}
