@@ -113,10 +113,7 @@ function App() {
       const payload = {
         organizationName,
         config: {
-          overall_status_thresholds: {
-            lower: 0,
-            upper: invalidChecksCount
-          }
+          overall_status_thresholds: [0, invalidChecksCount]
         }
       };
       const url = await submitToEndpoint(payload, idToken);
@@ -154,10 +151,7 @@ function App() {
         startDate,
         endDate,
         config: {
-          overall_status_thresholds: {
-            lower: 0,
-            upper: invalidChecksCount
-          }
+          overall_status_thresholds: [0, invalidChecksCount]
         }
       };
       const url = await submitToEndpoint(payload, idToken);
