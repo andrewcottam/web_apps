@@ -750,24 +750,38 @@ const App: React.FC = () => {
       }
 
       // Collect all features under the cursor
-      const features: Array<{name: string, color: string, html: string}> = [];
+      const features: Array<{name: string, id: string | number, color: string, isWdpa: boolean}> = [];
       map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
         const props = feature.getProperties() || {};
         const isWdpa = layer === wdpaLayerRef.current && props.NAME;
         const isSite = layer === sitesLayerRef.current && props.name;
         if (isWdpa || isSite) {
           const name = isWdpa ? props.NAME : props.name;
+          const id = isWdpa ? props.WDPAID : props.id;
           const color = isWdpa ? 'rgb(99, 148, 69)' : 'rgb(244,97,97)';
-          const html = isWdpa && props.WDPAID
-            ? `<a href="https://www.protectedplanet.net/${props.WDPAID}" target="_blank" style="color:${color};text-decoration:none;">${name}</a>`
-            : `<span style="color:${color}">${name}</span>`;
-          features.push({ name, color, html });
+          features.push({ name, id, color, isWdpa });
         }
       });
 
       if (features.length > 0) {
-        // Build HTML for all features
-        const allHtml = features.map(f => f.html).join('<br/>');
+        // Count occurrences of each name to detect duplicates
+        const nameCounts = new Map<string, number>();
+        features.forEach(f => {
+          nameCounts.set(f.name, (nameCounts.get(f.name) || 0) + 1);
+        });
+
+        // Build HTML for all features, adding IDs for duplicates
+        const allHtml = features.map(f => {
+          const hasDuplicate = nameCounts.get(f.name)! > 1;
+          const displayName = hasDuplicate ? `${f.name} (${f.id})` : f.name;
+
+          if (f.isWdpa && f.id) {
+            return `<a href="https://www.protectedplanet.net/${f.id}" target="_blank" style="color:${f.color};text-decoration:none;">${displayName}</a>`;
+          } else {
+            return `<span style="color:${f.color}">${displayName}</span>`;
+          }
+        }).join('<br/>');
+
         popup.innerHTML = allHtml;
         popup.style.left = `${evt.pixel[0] + 30}px`;
         popup.style.top = `${evt.pixel[1] + 30}px`;
