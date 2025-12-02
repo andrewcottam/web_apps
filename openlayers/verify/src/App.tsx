@@ -99,6 +99,13 @@ const App: React.FC = () => {
   const osmLayerRef = useRef<VectorLayer | null>(null);
   const wdpaLayerRef = useRef<VectorTileLayer | null>(null);
   const sitesLayerRef = useRef<VectorTileLayer | null>(null);
+
+  // State for cycling through overlapping features
+  const [hoveredFeatures, setHoveredFeatures] = useState<any[]>([]);
+  const [highlightedFeatureIndex, setHighlightedFeatureIndex] = useState<number>(0);
+  const hoveredFeaturesRef = useRef<any[]>([]);
+  const highlightedFeatureIndexRef = useRef<number>(0);
+
   const includeLandCoverRef = useRef(includeLandCover);
   const includeOSMRef = useRef(includeOSM);
   const includeWDPARef = useRef(includeWDPA);
@@ -121,6 +128,10 @@ const App: React.FC = () => {
   useEffect(() => {
     loggedInRef.current = logged_in;
   }, [logged_in]);
+  useEffect(() => {
+    hoveredFeaturesRef.current = hoveredFeatures;
+    highlightedFeatureIndexRef.current = highlightedFeatureIndex;
+  }, [hoveredFeatures, highlightedFeatureIndex]);
   useEffect(() => {
     // If the selected tab is now hidden due to checkbox changes, revert to "Checks"
     if (
@@ -251,6 +262,26 @@ const App: React.FC = () => {
           });
         }
 
+        // Check if this feature is currently highlighted (hovered)
+        const hoveredFeats = hoveredFeaturesRef.current;
+        const highlightedIdx = highlightedFeatureIndexRef.current;
+        const highlightedFeature = hoveredFeats[highlightedIdx];
+        const isHighlighted = highlightedFeature &&
+          feature.get('id') === highlightedFeature.get('id');
+
+        if (isHighlighted) {
+          // Create hover highlight style
+          return new Style({
+            stroke: new Stroke({
+              color: 'rgba(0, 191, 255, 1)', // Deep sky blue for hover highlight
+              width: 4
+            }),
+            fill: new Fill({
+              color: 'rgba(0, 191, 255, 0.3)' // Semi-transparent blue fill
+            }),
+          });
+        }
+
         return baseStyle;
       },
     });
@@ -312,6 +343,9 @@ const App: React.FC = () => {
   useEffect(() => {
     refreshSitesLayer();
   }, [selectedSiteFeature]);
+  useEffect(() => {
+    refreshSitesLayer();
+  }, [hoveredFeatures, highlightedFeatureIndex]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -589,14 +623,11 @@ const App: React.FC = () => {
         return;
       }
 
-      let clickedFeature: FeatureLike | null = null;
-      map.forEachFeatureAtPixel(evt.pixel, function (feature: FeatureLike, layer) {
-        // Only look for features in the sites layer
-        if (layer === sitesLayerRef.current) {
-          clickedFeature = feature;
-          return true; // Stop iteration
-        }
-      });
+      // Use the currently highlighted feature from hoveredFeatures
+      const hoveredFeats = hoveredFeaturesRef.current;
+      const highlightedIdx = highlightedFeatureIndexRef.current;
+      const clickedFeature = hoveredFeats.length > 0 ? hoveredFeats[highlightedIdx] : null;
+
       // Clear data when deselecting
       setData({});
 
@@ -746,29 +777,59 @@ const App: React.FC = () => {
       // Use loggedInRef.current instead of logged_in
       if (isDrawingRef.current || !loggedInRef.current || (!includeWDPARef.current && !includeSitesRef.current)) {
         popup.style.display = 'none';
+        setHoveredFeatures([]);
+        setHighlightedFeatureIndex(0);
         return;
       }
 
       // Collect all features under the cursor
-      const features: Array<{name: string, color: string, html: string}> = [];
+      const features: Array<{name: string, id: string, color: string, html: string, feature: any, isWdpa: boolean}> = [];
+      const siteFeatures: any[] = [];
       map.forEachFeatureAtPixel(evt.pixel, function (feature, layer) {
         const props = feature.getProperties() || {};
         const isWdpa = layer === wdpaLayerRef.current && props.NAME;
         const isSite = layer === sitesLayerRef.current && props.name;
         if (isWdpa || isSite) {
           const name = isWdpa ? props.NAME : props.name;
+          const id = isWdpa ? props.WDPAID : props.id;
           const color = isWdpa ? 'rgb(99, 148, 69)' : 'rgb(244,97,97)';
-          const html = isWdpa && props.WDPAID
-            ? `<a href="https://www.protectedplanet.net/${props.WDPAID}" target="_blank" style="color:${color};text-decoration:none;">${name}</a>`
-            : `<span style="color:${color}">${name}</span>`;
-          features.push({ name, color, html });
+          features.push({ name, id, color, html: '', feature, isWdpa });
+          if (isSite) {
+            siteFeatures.push(feature);
+          }
         }
       });
 
+      // Update hovered site features
+      setHoveredFeatures(siteFeatures);
+      if (siteFeatures.length === 0) {
+        setHighlightedFeatureIndex(0);
+      } else if (highlightedFeatureIndexRef.current >= siteFeatures.length) {
+        setHighlightedFeatureIndex(0);
+      }
+
       if (features.length > 0) {
-        // Build HTML for all features
-        const allHtml = features.map(f => f.html).join('<br/>');
-        popup.innerHTML = allHtml;
+        // Check for duplicate names to determine if IDs should be shown
+        const names = features.map(f => f.name);
+        const hasDuplicates = names.some((name, idx) => names.indexOf(name) !== idx);
+
+        // Build HTML for all features with numbering for multiple sites
+        const allHtml = features.map((f, idx) => {
+          const displayName = (hasDuplicates && !f.isWdpa) ? `${f.name} (${f.id})` : f.name;
+          const number = siteFeatures.length > 1 && !f.isWdpa ? `${idx + 1}. ` : '';
+          const isHighlighted = !f.isWdpa && idx === highlightedFeatureIndexRef.current;
+          const style = isHighlighted ? `font-weight: bold; background-color: rgba(0, 191, 255, 0.2); padding: 2px 4px;` : '';
+
+          if (f.isWdpa && f.id) {
+            return `<span style="${style}">${number}<a href="https://www.protectedplanet.net/${f.id}" target="_blank" style="color:${f.color};text-decoration:none;">${displayName}</a></span>`;
+          } else {
+            return `<span style="${style};color:${f.color}">${number}${displayName}</span>`;
+          }
+        }).join('<br/>');
+
+        popup.innerHTML = siteFeatures.length > 1
+          ? `${allHtml}<br/><small style="color:#666;">(Use ↑/↓ arrows to cycle)</small>`
+          : allHtml;
         popup.style.left = `${evt.pixel[0] + 30}px`;
         popup.style.top = `${evt.pixel[1] + 30}px`;
         popup.style.display = 'block';
@@ -777,10 +838,24 @@ const App: React.FC = () => {
       }
     });
 
-    // Add ESC key handler to abort drawing
+    // Add ESC key handler to abort drawing and arrow keys to cycle through features
     const handleKeyDown = (evt: KeyboardEvent) => {
+      // ESC to abort drawing
       if (evt.key === 'Escape' && isDrawingRef.current && drawInteractionRef.current) {
         drawInteractionRef.current.abortDrawing();
+        return;
+      }
+
+      // Arrow keys to cycle through hovered features
+      const hoveredFeats = hoveredFeaturesRef.current;
+      if (hoveredFeats.length > 1 && (evt.key === 'ArrowUp' || evt.key === 'ArrowDown')) {
+        evt.preventDefault(); // Prevent page scrolling
+        const currentIdx = highlightedFeatureIndexRef.current;
+        if (evt.key === 'ArrowDown') {
+          setHighlightedFeatureIndex((currentIdx + 1) % hoveredFeats.length);
+        } else if (evt.key === 'ArrowUp') {
+          setHighlightedFeatureIndex((currentIdx - 1 + hoveredFeats.length) % hoveredFeats.length);
+        }
       }
     };
 
