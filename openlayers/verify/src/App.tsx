@@ -233,6 +233,16 @@ const App: React.FC = () => {
       source: sites_source,  // ← This was missing!
       minZoom: 10,          // ← This was missing!
       style: (feature) => {
+        // Filter private sites for non-restor.eco users
+        const userEmail = userRef.current?.email || '';
+        const isRestorUser = userEmail.endsWith('@restor.eco');
+        const siteVisibility = String(feature.get('site_visibility') ?? 'unknown').toLowerCase();
+
+        // Hide private sites for non-restor.eco users
+        if (!isRestorUser && siteVisibility === 'private') {
+          return undefined;
+        }
+
         const baseStyle = styleForVisibility(feature);
 
         // Check if this feature is selected
@@ -1035,20 +1045,27 @@ const App: React.FC = () => {
                   )}
                   {selectedTab === "Sites" && data.sites && data.sites.items && (
                     <div>
-                      {data.sites.items.map((feature: any) => {
-                        const siteId = feature?.id;
-                        return (
-                          siteId && (
-                            <div key={siteId} className="site">
-                              {feature.site_visibility == 'PUBLIC' ? (
-                                <span><a href={`https://restor.eco/sites/${siteId}`} target="_blank" rel="noopener noreferrer" >{feature.name}</a></span>
-                              ) : (
-                                <span className="private">{feature.name}</span>
-                              )}
-                            </div>
-                          )
-                        );
-                      })}
+                      {data.sites.items
+                        .filter((feature: any) => {
+                          // Filter private sites for non-restor.eco users
+                          const isRestorUser = user?.email?.endsWith('@restor.eco');
+                          const isPublic = feature.site_visibility === 'PUBLIC';
+                          return isRestorUser || isPublic;
+                        })
+                        .map((feature: any) => {
+                          const siteId = feature?.id;
+                          return (
+                            siteId && (
+                              <div key={siteId} className="site">
+                                {feature.site_visibility == 'PUBLIC' ? (
+                                  <span><a href={`https://restor.eco/sites/${siteId}`} target="_blank" rel="noopener noreferrer" >{feature.name}</a></span>
+                                ) : (
+                                  <span className="private">{feature.name}</span>
+                                )}
+                              </div>
+                            )
+                          );
+                        })}
                     </div>
                   )}
                   {/* Always render the checks, but conditionally show them */}
