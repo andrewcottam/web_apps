@@ -3,48 +3,128 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Tahi Tree Crowns</title>
+    <title>Tahi Tree Crowns and Heights</title>
     <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.css" rel="stylesheet">
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.5.1/mapbox-gl.js"></script>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+
+        /* Unified Overlay */
+        .map-overlay {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            bottom: 30px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            font: 12px/20px 'Inter', sans-serif;
+            padding: 12px;
+            position: absolute;
+            right: 20px;
+            z-index: 1;
+            min-width: 160px;
+        }
+        .map-overlay h4 { margin: 8px 0 4px; font-weight: 600; border-top: 1px solid #eee; padding-top: 8px; }
+        .counter-section { margin-bottom: 8px; font-size: 14px; }
+        #tree-count { font-weight: bold; color: #313695; font-size: 20px; }
+        
+        .legend-item { display: flex; align-items: center; margin-bottom: 2px; }
+        .legend-item span {
+            border-radius: 50%;
+            display: inline-block;
+            height: 10px;
+            margin-right: 8px;
+            width: 10px;
+            border: 0.5px solid rgba(0,0,0,0.2);
         }
 
-        #map {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 100%;
+        /* Tight Popup Styling */
+        .mapboxgl-popup { z-index: 10; pointer-events: none; }
+        .mapboxgl-popup-content {
+            background: #ffffff;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            padding: 0 !important;
+            min-width: 190px;
+        }
+        .popup-header {
+            background: #f1f1f1;
+            padding: 4px 8px;
+            font-weight: bold;
+            font-size: 10px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        .popup-table { border-collapse: collapse; width: 100%; font-size: 11px; }
+        .popup-table td {
+            padding: 4px 8px;
+            border-bottom: 1px solid #f8f8f8;
+            color: #222;
+        }
+        .popup-table td:first-child {
+            color: #777;
+            font-weight: 500;
+            background: #fafafa;
+            width: 45%;
         }
     </style>
 </head>
 
 <body>
     <div id="map"></div>
+    
+    <div class="map-overlay">
+        <div class="counter-section">
+            <div id="tree-count">0</div>
+            <div style="font-size: 10px; color: #666; text-transform: uppercase;">Trees in View</div>
+        </div>
+        
+        <h4>Height (m)</h4>
+        <div class="legend-item"><span style="background-color: #313695"></span> < 2m</div>
+        <div class="legend-item"><span style="background-color: #4575b4"></span> 2 - 5m</div>
+        <div class="legend-item"><span style="background-color: #abd9e9"></span> 5 - 10m</div>
+        <div class="legend-item"><span style="background-color: #fee090"></span> 10 - 15m</div>
+        <div class="legend-item"><span style="background-color: #fdae61"></span> 15 - 20m</div>
+        <div class="legend-item"><span style="background-color: #f46d43"></span> 20 - 30m</div>
+        <div class="legend-item"><span style="background-color: #d73027"></span> 30m+</div>
+    </div>
+
     <script>
         mapboxgl.accessToken = 'pk.eyJ1IjoiYW5kcmV3Y290dGFtIiwiYSI6ImNsY3N4aHM5czB1YjkzbmxoNzN1NHk3aGYifQ.LzpyM7lJ5-f0vjshJoaNXg';
+        
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/light-v11',
-            zoom: 17,
+            zoom: 14, // Updated Zoom
             maxZoom: 22,
-            center: [174.49608, -35.70818]
+            center: [174.49812, -35.70844], // Updated Center
+            antialias: true
         });
+
+        // Add Zoom in/out and Rotation controls
+        map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+        const popup = new mapboxgl.Popup({
+            closeButton: false,
+            closeOnClick: false,
+            offset: 15 
+        });
+
+        function updateCounter() {
+            const features = map.queryRenderedFeatures({ layers: ['vector-tiles-hitbox'] });
+            const uniqueIds = new Set(features.map(f => f.properties.id));
+            document.getElementById('tree-count').innerText = uniqueIds.size.toLocaleString();
+        }
+
         map.on('load', () => {
             map.addSource('vector-tiles-source', {
                 type: 'vector',
-                maxzoom: 20,
-                tiles: [
-                    'https://storage.googleapis.com/restor-tree-detection-vector-tiles/andrew@restor.eco/ri17pJwRBKiKhkOPmK3L/cbfbf0ba-d010-473a-bae9-d9399bfd9290/{z}/{x}/{y}.pbf'
-                ],
+                tiles: ['https://storage.googleapis.com/restor-tree-detection-vector-tiles/andrew@restor.eco/tahi/v1/{z}/{x}/{y}.pbf'],
             });
+
             map.addLayer({
                 id: 'tahi_tms_tiles',
                 type: 'raster',
-                maxzoom: 23,
                 source: {
                     type: 'raster',
                     scheme: "tms",
@@ -52,19 +132,65 @@
                     tileSize: 256
                 }
             });
-            map.addLayer(
-                {
-                    id: 'vector-tiles-layer',
-                    type: 'line',
-                    maxzoom: 23,
-                    source: 'vector-tiles-source',
-                    'source-layer': 'mvt_tiles',
-                    paint: { 'line-color': 'red', 'line-width': 1.5 },
+
+            map.addLayer({
+                id: 'vector-tiles-hitbox',
+                type: 'fill',
+                source: 'vector-tiles-source',
+                'source-layer': 'mvt_tiles',
+                paint: { 'fill-color': 'rgba(0,0,0,0)' }
+            });
+
+            map.addLayer({
+                id: 'vector-tiles-layer',
+                type: 'line',
+                source: 'vector-tiles-source',
+                'source-layer': 'mvt_tiles',
+                paint: {
+                    'line-color': [
+                        'interpolate', ['linear'], ['get', 'height_max'],
+                        0,  '#313695',
+                        2,  '#4575b4',
+                        5,  '#abd9e9',
+                        10, '#fee090',
+                        15, '#fdae61',
+                        20, '#f46d43',
+                        30, '#d73027'
+                    ],
+                    'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.5, 18, 2, 22, 6]
                 }
-            );
+            });
+
+            map.on('idle', updateCounter);
+            map.on('moveend', updateCounter);
+
+            map.on('mousemove', 'vector-tiles-hitbox', (e) => {
+                map.getCanvas().style.cursor = 'pointer';
+                const feature = e.features[0];
+                const props = feature.properties;
+
+                let html = '<div class="popup-header">Tree Metrics</div><table class="popup-table">';
+                for (let key in props) {
+                    let val = props[key];
+                    let displayKey = key;
+
+                    if (key === 'perimeter_') displayKey = 'perimeter_m';
+                    if (key === 'height_mea') displayKey = 'height_mean';
+
+                    if (typeof val === 'number') {
+                        val = (key === 'id') ? Math.floor(val) : val.toFixed(2);
+                    }
+                    html += `<tr><td>${displayKey}</td><td>${val}</td></tr>`;
+                }
+                html += '</table>';
+                popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
+            });
+
+            map.on('mouseleave', 'vector-tiles-hitbox', () => {
+                map.getCanvas().style.cursor = '';
+                popup.remove();
+            });
         });
     </script>
-
 </body>
-
 </html>
