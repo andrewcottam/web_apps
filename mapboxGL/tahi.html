@@ -95,13 +95,12 @@
         const map = new mapboxgl.Map({
             container: 'map',
             style: 'mapbox://styles/mapbox/light-v11',
-            zoom: 14, // Updated Zoom
+            zoom: 14, 
             maxZoom: 22,
-            center: [174.49812, -35.70844], // Updated Center
+            center: [174.49812, -35.70844], 
             antialias: true
         });
 
-        // Add Zoom in/out and Rotation controls
         map.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
         const popup = new mapboxgl.Popup({
@@ -161,6 +160,20 @@
                 }
             });
 
+            // Refined Highlight Layer: Slightly thicker than base, but smaller than before
+            map.addLayer({
+                id: 'vector-tiles-highlight',
+                type: 'line',
+                source: 'vector-tiles-source',
+                'source-layer': 'mvt_tiles',
+                paint: {
+                    'line-color': '#ffffff',
+                    // Starts at 1.5px and grows to 7px at max zoom
+                    'line-width': ['interpolate', ['linear'], ['zoom'], 14, 1.5, 18, 3, 22, 7]
+                },
+                filter: ['==', ['get', 'id'], '']
+            });
+
             map.on('idle', updateCounter);
             map.on('moveend', updateCounter);
 
@@ -168,6 +181,8 @@
                 map.getCanvas().style.cursor = 'pointer';
                 const feature = e.features[0];
                 const props = feature.properties;
+
+                map.setFilter('vector-tiles-highlight', ['==', ['get', 'id'], props.id]);
 
                 let html = '<div class="popup-header">Tree Metrics</div><table class="popup-table">';
                 for (let key in props) {
@@ -189,6 +204,7 @@
             map.on('mouseleave', 'vector-tiles-hitbox', () => {
                 map.getCanvas().style.cursor = '';
                 popup.remove();
+                map.setFilter('vector-tiles-highlight', ['==', ['get', 'id'], '']);
             });
         });
     </script>
