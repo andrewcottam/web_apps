@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@arcgis/core": "^4.26.5",
+    "@arcgis/core": "^4.34.8",
     "@emotion/react": "^11.10.6",
     "@emotion/styled": "^11.10.6",
     "@mui/icons-material": "^5.11.11",
