@@ -13,6 +13,7 @@ import Avatar from '@mui/material/Avatar';
 // Other
 import DateForm from './DateForm';
 import OrganisationForm from './OrganisationForm';
+import SiteIdsForm from './SiteIdsForm';
 
 import './App.css'
 
@@ -38,9 +39,10 @@ function App() {
   const userRef = useRef<typeof user>(undefined);
 
   // shared UI state
-  const [busy, setBusy] = useState<null | "date" | "org">(null);
+  const [busy, setBusy] = useState<null | "date" | "org" | "siteIds">(null);
   const [orgUrl, setOrgUrl] = useState<string | null>(null);
   const [dateUrl, setDateUrl] = useState<string | null>(null);
+  const [siteIdsUrl, setSiteIdsUrl] = useState<string | null>(null);
   const [invalidChecksCount, setInvalidChecksCount] = useState<number>(0);
 
   useEffect(() => {
@@ -101,6 +103,29 @@ function App() {
     }
   }
 
+  const handleSiteIdsSubmit = async (siteIds: string[]): Promise<string | null> => {
+    if (!userRef.current) return null;
+    try {
+      setBusy("siteIds");
+      setOrgUrl(null);
+      setDateUrl(null);
+      setSiteIdsUrl(null);
+
+      const idToken = await userRef.current.getIdToken();
+      const payload = {
+        siteIds,
+        config: {
+          overall_status_thresholds: [0, invalidChecksCount]
+        }
+      };
+      const url = await submitToEndpoint(payload, idToken);
+      setSiteIdsUrl(url);
+      return url;
+    } finally {
+      setBusy(null);
+    }
+  };
+
   const handleOrgSubmit = async (organizationName: string): Promise<string | null> => {
     if (!userRef.current) return null;
     try {
@@ -108,6 +133,7 @@ function App() {
       // clear old links
       setOrgUrl(null);
       setDateUrl(null);
+      setSiteIdsUrl(null);
 
       const idToken = await userRef.current.getIdToken();
       const payload = {
@@ -145,6 +171,7 @@ function App() {
       // clear old links
       setOrgUrl(null);
       setDateUrl(null);
+      setSiteIdsUrl(null);
 
       const idToken = await userRef.current.getIdToken();
       const payload = {
@@ -201,7 +228,7 @@ function App() {
                 }}
               >
                 <h2>Select Dates</h2>
-                <DateForm onSubmit={handleDateSubmit} disabled={busy === "org"} />
+                <DateForm onSubmit={handleDateSubmit} disabled={busy === "org" || busy === "siteIds"} />
                 {dateUrl && (
                   <div style={{ marginTop: '0.75rem' }}>
                     <a href={dateUrl} target="_blank" rel="noreferrer">Open generated sheet</a>
@@ -220,7 +247,21 @@ function App() {
                 }}
               >
                 <h2>Organisation name</h2>
-                <OrganisationForm onSubmit={handleOrgSubmit} disabled={busy === "date"} url={orgUrl} />
+                <OrganisationForm onSubmit={handleOrgSubmit} disabled={busy === "date" || busy === "siteIds"} url={orgUrl} />
+              </div>
+
+              {/* Site IDs Panel */}
+              <div
+                style={{
+                  flex: '1 1 0',
+                  minWidth: '300px',
+                  border: '1px solid #ccc',
+                  padding: '1rem',
+                  borderRadius: '8px',
+                }}
+              >
+                <h2>Site_ids</h2>
+                <SiteIdsForm onSubmit={handleSiteIdsSubmit} disabled={busy === "date" || busy === "org"} url={siteIdsUrl} />
               </div>
             </div>
 
