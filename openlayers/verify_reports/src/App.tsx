@@ -118,8 +118,6 @@ function App() {
           overall_status_thresholds: [0, invalidChecksCount]
         }
       };
-      console.log("Site IDs being sent:", siteIds);
-      console.log("Full payload:", JSON.stringify(payload, null, 2));
       const url = await submitToEndpoint(payload, idToken);
       setSiteIdsUrl(url);
       return url;
