@@ -16,6 +16,9 @@ const SiteIdsForm: React.FC<Props> = ({ onSubmit, disabled = false, url }) => {
       .split(",")
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
+    console.log("Raw input:", siteIdsInput);
+    console.log("Parsed IDs:", ids);
+    console.log("Number of IDs:", ids.length);
     if (ids.length === 0) {
       alert("Please enter at least one site ID.");
       return;
