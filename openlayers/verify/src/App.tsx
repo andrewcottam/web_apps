@@ -460,8 +460,17 @@ const App: React.FC = () => {
       }
       // Add this line:
       configList.push("profile_completeness");
-      // Get feature properties
-      const properties = renderFeature.properties_ || {};
+      // Get feature properties, parsing any JSON-stringified values back to their original types
+      // (MVT only supports scalar values, so arrays/objects are encoded as JSON strings by the tile server)
+      const rawProperties = renderFeature.properties_ || {};
+      const properties = Object.fromEntries(
+        Object.entries(rawProperties).map(([k, v]) => {
+          if (typeof v === 'string' && (v.startsWith('[') || v.startsWith('{'))) {
+            try { return [k, JSON.parse(v)]; } catch { /* leave as string if invalid */ }
+          }
+          return [k, v];
+        })
+      );
 
       // Extract and set site name for display
       const extractedSiteName = properties.name || properties.site_name || properties.title || 'Unknown Site';
