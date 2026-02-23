@@ -13,6 +13,8 @@ npm run dev
 ```
 
 # Building
+If you are bringing in changes from Claude, it builds already so when you merge you already have the latest built files. Otherwise you can do:
+
 ```
 cd openlayers/verify
 npx vite build

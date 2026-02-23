@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenLayers - OpenAerialMap XYZ Layer</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.3.1/ol.css">
+    
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+        }
+        #map {
+            height: 100vh;
+            width: 100%;
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ol@v10.3.1/dist/ol.js"></script>
+
+    <script>
+        // Define the OpenAerialMap XYZ source
+        const oamSource = new ol.source.XYZ({
+            url: 'https://tiles.openaerialmap.org/60baf63ef59a4300057c54fc/0/60baf63ef59a4300057c54fd/{z}/{x}/{y}',
+            attributions: '© <a href="https://openaerialmap.org/">OpenAerialMap</a> contributors',
+            maxZoom: 20
+        });
+
+        // Create the map
+        const map = new ol.Map({
+            target: 'map',
+            layers: [
+                // Optional: Standard OSM background layer for context
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                }),
+                // The OpenAerialMap layer
+                new ol.layer.Tile({
+                    source: oamSource
+                })
+            ],
+            view: new ol.View({
+                // Coordinates provided: [Longitude, Latitude]
+                center: ol.proj.fromLonLat([174.4586420059204, -35.933575390964286]),
+                zoom: 16 // Starting zoom level to see the aerial detail
+            })
+        });
+    </script>
+</body>
+</html>
