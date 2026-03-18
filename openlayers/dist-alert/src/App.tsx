@@ -135,6 +135,9 @@ const App: React.FC = () => {
 
   // Dist-alert parameters
   const [siteName, setSiteName] = useState("");
+  const [startDate, setStartDate] = useState(() => {
+    return new Date().toISOString().split('T')[0];
+  });
   const [endDate, setEndDate] = useState(() => {
     return new Date().toISOString().split('T')[0];
   });
@@ -324,6 +327,7 @@ const App: React.FC = () => {
 
       const requestBody: Record<string, any> = {
         geometry: geometryArray,
+        start_date: startDate,
         end_date: endDate,
         min_confidence: minConfidence,
         debug: debug,
@@ -746,7 +750,17 @@ const App: React.FC = () => {
               />
 
               <TextField
-                label="Analysis Date"
+                label="Start Date"
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                size="small"
+                fullWidth
+                InputLabelProps={{ shrink: true }}
+              />
+
+              <TextField
+                label="End Date"
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
