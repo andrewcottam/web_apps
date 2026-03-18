@@ -146,6 +146,8 @@ const App: React.FC = () => {
 
   const userRef = useRef<typeof user>(undefined);
   const siteNameRef = useRef(siteName);
+  const startDateRef = useRef(startDate);
+  const endDateRef = useRef(endDate);
 
   useEffect(() => {
     userRef.current = user;
@@ -162,6 +164,14 @@ const App: React.FC = () => {
   useEffect(() => {
     siteNameRef.current = siteName;
   }, [siteName]);
+
+  useEffect(() => {
+    startDateRef.current = startDate;
+  }, [startDate]);
+
+  useEffect(() => {
+    endDateRef.current = endDate;
+  }, [endDate]);
 
   useEffect(() => {
     selectedSiteFeatureRef.current = selectedSiteFeature;
@@ -327,8 +337,8 @@ const App: React.FC = () => {
 
       const requestBody: Record<string, any> = {
         geometry: geometryArray,
-        start_date: startDate,
-        end_date: endDate,
+        start_date: startDateRef.current,
+        end_date: endDateRef.current,
         min_confidence: minConfidence,
         debug: debug,
         create_report: true,
