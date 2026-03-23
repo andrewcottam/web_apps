@@ -13,8 +13,6 @@ import { apply } from "ol-mapbox-style";
 import { Style, Fill, Stroke } from "ol/style";
 import { MapBrowserEvent } from 'ol';
 import { ScaleLine, defaults as defaultControls } from 'ol/control';
-import GeoTIFF from 'ol/source/GeoTIFF';
-import WebGLTileLayer from 'ol/layer/WebGLTile';
 import VectorTileLayer from 'ol/layer/VectorTile';
 import VectorTileSource from 'ol/source/VectorTile';
 import MVT from 'ol/format/MVT';
@@ -75,45 +73,6 @@ const getUrlParameters = (): { lat?: number; lng?: number; zoom?: number } => {
   return result;
 };
 
-// Fetch the latest DIST-ALERT COG URL from CMR API
-async function fetchLatestDistAlertCOG(lat: number, lon: number): Promise<string | null> {
-  try {
-    // CMR granule search endpoint
-    const cmrUrl = 'https://cmr.earthdata.nasa.gov/search/granules.json';
-
-    // Create bounding box around the point - larger buffer for better coverage
-    const buffer = 1.0; // degrees
-    const bbox = `${lon - buffer},${lat - buffer},${lon + buffer},${lat + buffer}`;
-
-    const params = new URLSearchParams({
-      short_name: 'OPERA_L3_DIST-ALERT-HLS_V1',
-      bounding_box: bbox,
-      sort_key: '-start_date', // Sort by most recent first
-      page_size: '10' // Get more results to find a good one
-    });
-
-    const response = await fetch(`${cmrUrl}?${params}`);
-    const data = await response.json();
-
-    if (data.feed?.entry?.length > 0) {
-      // Try each entry until we find a valid COG URL
-      for (const entry of data.feed.entry) {
-        // Find the VEG-DIST-STATUS layer COG URL
-        const cogLink = entry.links?.find((link: any) =>
-          link.href?.includes('VEG-DIST-STATUS') && link.href?.endsWith('.tif')
-        );
-
-        if (cogLink) {
-          return cogLink.href;
-        }
-      }
-    }
-
-    return null;
-  } catch (error) {
-    return null;
-  }
-}
 
 const App: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -439,35 +398,7 @@ const App: React.FC = () => {
 
     const styleJson = "https://api.maptiler.com/maps/hybrid/style.json?key=67VOA297U9cciigsJVvm";
 
-    apply(map, styleJson).then(async () => {
-      // Add the DIST-ALERT COG layer
-      const cogUrl = await fetchLatestDistAlertCOG(5.770305, 118.187211);
-
-      if (cogUrl) {
-        try {
-          const cogSource = new GeoTIFF({
-            sources: [{ url: cogUrl }],
-            normalize: false,
-          });
-
-          const cogLayer = new WebGLTileLayer({
-            source: cogSource,
-            style: {
-              color: [
-                'case',
-                ['==', ['band', 1], 0], // If band value is 0
-                ['color', 0, 0, 0, 0],   // Make it transparent
-                ['color', 255, 0, 0, 0.7] // Otherwise red with opacity
-              ],
-            },
-          });
-
-          map.addLayer(cogLayer);
-        } catch (error) {
-          // Silent fail - COG layer is optional
-        }
-      }
-
+    apply(map, styleJson).then(() => {
       // Add Restor sites layer
       const sites_endpoint = "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=sites";
 
