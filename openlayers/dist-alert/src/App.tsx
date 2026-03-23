@@ -95,7 +95,9 @@ const App: React.FC = () => {
   // Dist-alert parameters
   const [siteName, setSiteName] = useState("");
   const [startDate, setStartDate] = useState(() => {
-    return new Date().toISOString().split('T')[0];
+    const d = new Date();
+    d.setDate(d.getDate() - 7);
+    return d.toISOString().split('T')[0];
   });
   const [endDate, setEndDate] = useState(() => {
     return new Date().toISOString().split('T')[0];
@@ -787,7 +789,7 @@ const App: React.FC = () => {
                   );
                 })()}
 
-                {data.response?.report && (
+                {data.response?.report && !data.response?.metadata?.no_granules_found && (
                   <div style={{ marginTop: "10px", padding: "8px", backgroundColor: "#e3f2fd", borderRadius: "4px" }}>
                     <h4>Report Generated</h4>
                     <p style={{ fontSize: "12px", margin: "4px 0" }}>
