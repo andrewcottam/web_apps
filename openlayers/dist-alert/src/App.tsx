@@ -759,13 +759,21 @@ const App: React.FC = () => {
 
                 {data.response?.disturbance_analysis && (() => {
                   const percentage = data.response.disturbance_analysis.overall.disturbed_percentage;
-                  const severity = getDisturbanceSeverity(percentage);
+                  const noGranules = data.response?.metadata?.no_granules_found === true;
+                  const severity = noGranules
+                    ? { message: "⚠ No Data Available", color: "#757575" }
+                    : getDisturbanceSeverity(percentage);
 
                   return (
                     <div style={{ marginBottom: "10px" }}>
                       <h4 style={{ color: severity.color }}>
                         {severity.message}
                       </h4>
+                      {noGranules && (
+                        <p style={{ fontSize: "12px", color: "#757575", margin: "4px 0" }}>
+                          No satellite scenes are available for this monitoring period, or DIST-ALERT granules have not yet been produced.
+                        </p>
+                      )}
 
                       <div style={{ fontSize: "12px", marginTop: "8px" }}>
                         <p style={{ margin: "4px 0" }}><strong>Disturbed Area:</strong> {data.response.disturbance_analysis.overall.disturbed_area.toFixed(2)} ha</p>
