@@ -311,8 +311,6 @@ const App: React.FC = () => {
     drawnFeatureRef.current = newFeature;
     setHasDrawnFeature(true);
 
-    // Call the analyze function
-    analyzeDisturbance();
   };
 
   const analyzeDisturbance = async () => {
@@ -854,7 +852,7 @@ const App: React.FC = () => {
                   <div style={{ marginTop: "10px", padding: "8px", backgroundColor: "#e3f2fd", borderRadius: "4px" }}>
                     <h4>Report Generated</h4>
                     <p style={{ fontSize: "12px", margin: "4px 0" }}>
-                      <a href={data.response.report.authenticated_url} target="_blank" rel="noopener noreferrer">
+                      <a href={data.response.report.public_url} target="_blank" rel="noopener noreferrer">
                         View Detailed Report
                       </a>
                     </p>
