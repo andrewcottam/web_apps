@@ -161,6 +161,9 @@ const App: React.FC = () => {
       if (e.key === 'Control' || e.ctrlKey) {
         setIsCtrlPressed(true);
       }
+      if (e.key === 'Escape' && isDrawingRef.current && drawInteractionRef.current) {
+        drawInteractionRef.current.abortDrawing();
+      }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
