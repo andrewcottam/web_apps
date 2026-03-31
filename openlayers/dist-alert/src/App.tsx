@@ -396,6 +396,17 @@ const App: React.FC = () => {
       layers: [],
     });
 
+    map.on('moveend', () => {
+      const view = map.getView();
+      const center = toLonLat(view.getCenter()!);
+      const zoom = view.getZoom()!;
+      const params = new URLSearchParams(window.location.search);
+      params.set('lng', center[0].toFixed(6));
+      params.set('lat', center[1].toFixed(6));
+      params.set('zoom', zoom.toFixed(2));
+      window.history.replaceState(null, '', `?${params.toString()}`);
+    });
+
     const coordsDiv = document.getElementById('coords') as HTMLDivElement;
 
     const styleJson = "https://api.maptiler.com/maps/hybrid/style.json?key=67VOA297U9cciigsJVvm";
