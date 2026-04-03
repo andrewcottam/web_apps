@@ -102,7 +102,6 @@ const App: React.FC = () => {
   const [endDate, setEndDate] = useState(() => {
     return new Date().toISOString().split('T')[0];
   });
-  const [minConfidence, setMinConfidence] = useState("confirmed");
   const [debug, setDebug] = useState(false);
   const [light, setLight] = useState(false);
 
@@ -302,7 +301,6 @@ const App: React.FC = () => {
         geometry: geometryArray,
         start_date: startDateRef.current,
         end_date: endDateRef.current,
-        min_confidence: minConfidence,
         debug: debug,
         create_report: true,
         send_email: true
@@ -729,19 +727,6 @@ const App: React.FC = () => {
                 fullWidth
                 InputLabelProps={{ shrink: true }}
               />
-
-              <TextField
-                select
-                label="Minimum Confidence"
-                value={minConfidence}
-                onChange={(e) => setMinConfidence(e.target.value)}
-                size="small"
-                fullWidth
-              >
-                <MenuItem value="initial">Initial</MenuItem>
-                <MenuItem value="provisional">Provisional</MenuItem>
-                <MenuItem value="confirmed">Confirmed</MenuItem>
-              </TextField>
 
               <FormControlLabel
                 control={
