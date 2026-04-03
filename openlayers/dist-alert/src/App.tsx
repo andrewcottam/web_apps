@@ -104,6 +104,7 @@ const App: React.FC = () => {
   });
   const [minConfidence, setMinConfidence] = useState("confirmed");
   const [debug, setDebug] = useState(false);
+  const [light, setLight] = useState(false);
 
   const userRef = useRef<typeof user>(undefined);
   const siteNameRef = useRef(siteName);
@@ -307,11 +308,16 @@ const App: React.FC = () => {
         send_email: true
       };
 
+      // Add light mode if enabled
+      if (light) requestBody['dist_alert_light'] = true;
+
       // Add site name if provided
       if (siteName) requestBody.site_name = siteName;
 
-      // Use hardcoded default values
-      requestBody.site_id = "#123ABC";
+      // Use the selected Restor site's id if one is selected, otherwise fall back to a default
+      requestBody.site_id = selectedSiteFeatureRef.current
+        ? selectedSiteFeatureRef.current.get('id')
+        : "#123ABC";
       requestBody.report_org = "Restor";
 
       // Get user info from Firebase authenticated user
@@ -736,6 +742,16 @@ const App: React.FC = () => {
                 <MenuItem value="provisional">Provisional</MenuItem>
                 <MenuItem value="confirmed">Confirmed</MenuItem>
               </TextField>
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={light}
+                    onChange={(e) => setLight(e.target.checked)}
+                  />
+                }
+                label="Light"
+              />
 
               <FormControlLabel
                 control={
