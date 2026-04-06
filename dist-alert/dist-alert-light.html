@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vegetation Disturbance Detailed Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .bg-alert-yellow { background-color: #ffde66 !important; }
+        .bg-alert-red { background-color: #cc474b !important; }
+        .bg-alert-cyan { background-color: #008b8b !important; }
+        .bg-alert-orange { background-color: #ff8c00 !important; }
+        .bg-alert-teal { background-color: #007f66 !important; }
+        .border-alert-yellow { border-color: #ffde66 !important; }
+        .border-alert-cyan { border-color: #008b8b !important; }
+        .border-alert-red { border-color: #cc474b !important; }
+        .border-alert-orange { border-color: #ff8c00 !important; }
+        .text-alert-cyan { color: #008b8b !important; }
+        .text-alert-red { color: #cc474b !important; }
+        .text-alert-orange { color: #ff8c00 !important; }
+        .text-alert-teal { color: #007f66 !important; }
+
+        @media print {
+            .no-print { display: none; }
+            body { background: white; }
+        }
+    </style>
+    <script>
+        // Arrow-key navigation between date previews
+        document.addEventListener('keydown', function(e) {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === 'ArrowUp') {
+                window.scrollTo(0, 0);
+                e.preventDefault();
+                return;
+            }
+            if (e.key === 'ArrowDown') {
+                window.scrollTo(0, document.body.scrollHeight);
+                e.preventDefault();
+                return;
+            }
+            if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+            const previews = Array.from(document.querySelectorAll('div[id^="date-"]'));
+            if (previews.length === 0) return;
+            // Find the preview whose top is closest to (but not below) the viewport centre
+            const viewportMid = window.scrollY + window.innerHeight / 2;
+            let currentIdx = 0;
+            for (let i = 0; i < previews.length; i++) {
+                if (previews[i].getBoundingClientRect().top + window.scrollY <= viewportMid) {
+                    currentIdx = i;
+                }
+            }
+            const targetIdx = e.key === 'ArrowLeft'
+                ? Math.max(0, currentIdx - 1)
+                : Math.min(previews.length - 1, currentIdx + 1);
+            window.location.hash = '#' + previews[targetIdx].id;
+            e.preventDefault();
+        });
+
+        function copyCogUrl(url, button) {
+            navigator.clipboard.writeText(url).then(function() {
+                // Show success feedback
+                const originalHTML = button.innerHTML;
+                button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>';
+                button.style.color = '#10b981'; // green color
+
+                setTimeout(function() {
+                    button.innerHTML = originalHTML;
+                    button.style.color = '';
+                }, 2000);
+            }).catch(function(err) {
+                console.error('Failed to copy: ', err);
+                alert('Failed to copy URL to clipboard');
+            });
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+    <a id="top"></a>
+    <div class="max-w-5xl mx-auto my-8 bg-white shadow-lg">
+
+        <!-- Header -->
+        <div class="bg-alert-teal text-white px-10 py-8 relative">
+            <div class="absolute top-4 right-6 h-14">
+                <svg width="130" height="80" viewBox="0 0 306 183" xmlns="http://www.w3.org/2000/svg" class="h-full w-auto text-white">
+                    <path fill="currentColor" d="M38.692 78.216h8.507c4.673 0 7.995.403 9.967 1.245 1.972.841 3.578 2.232 4.783 4.172s1.825 4.245 1.825 6.88c0 2.782-.657 5.124-2.008 6.991-1.314 1.867-3.322 3.294-6.024 4.246l10.004 18.812h-8.762l-9.493-17.934h-.73v17.934h-8.033V78.216zM46.76 94.76h2.519c2.556 0 4.308-.33 5.294-1.025s1.46-1.793 1.46-3.367c0-.915-.255-1.72-.73-2.415s-1.132-1.172-1.935-1.464-2.264-.44-4.418-.44h-2.19zm31.325-16.543h23.075v7.906H86.082v7.649h15.079v7.759H86.082v11.126h15.079v7.906H78.086V78.216Zm61.082 5.746-5.951 5.27c-2.081-2.927-4.235-4.391-6.389-4.391-1.059 0-1.935.292-2.593.841-.657.55-1.022 1.208-1.022 1.904 0 .695.256 1.39.73 2.013.658.841 2.629 2.671 5.915 5.453 3.067 2.562 4.929 4.209 5.586 4.867 1.643 1.648 2.775 3.221 3.469 4.722.693 1.5 1.022 3.147 1.022 4.941 0 3.477-1.205 6.331-3.578 8.601-2.41 2.269-5.513 3.403-9.383 3.403-2.994 0-5.623-.732-7.85-2.232-2.227-1.464-4.162-3.807-5.732-6.954l6.754-4.099q3.067 5.6 7.01 5.599c1.388 0 2.556-.402 3.469-1.207.949-.805 1.424-1.72 1.424-2.782 0-.951-.365-1.903-1.059-2.891-.694-.952-2.264-2.416-4.674-4.392-4.6-3.77-7.594-6.661-8.908-8.71-1.351-2.05-2.008-4.1-2.008-6.113 0-2.928 1.132-5.453 3.359-7.54 2.227-2.085 5.002-3.147 8.251-3.147 2.118 0 4.126.476 6.024 1.464 1.826.988 3.907 2.782 6.134 5.38m10.113-5.746h23.367v7.942h-7.704v34.404h-8.141V86.158h-7.485v-7.942zm53.999-1.098c5.988 0 11.099 2.16 15.407 6.515 4.309 4.355 6.463 9.626 6.463 15.847q0 9.278-6.353 15.701c-4.235 4.283-9.383 6.405-15.444 6.405-6.353 0-11.61-2.196-15.809-6.588s-6.28-9.625-6.28-15.664c0-4.063.986-7.76 2.921-11.163 1.972-3.404 4.637-6.075 8.069-8.088 3.395-1.94 7.083-2.965 11.026-2.965m-.109 7.906c-3.907 0-7.193 1.354-9.858 4.099-2.665 2.708-3.98 6.185-3.98 10.394 0 4.685 1.68 8.381 5.039 11.126q3.888 3.184 8.981 3.184c3.797 0 7.047-1.39 9.748-4.135 2.702-2.782 4.016-6.186 4.016-10.212s-1.35-7.43-4.052-10.248-5.988-4.208-9.894-4.208m34.21-6.808h8.507c4.673 0 7.995.403 9.967 1.245 1.971.841 3.578 2.232 4.783 4.172s1.825 4.245 1.825 6.88c0 2.782-.657 5.124-2.008 6.991-1.314 1.867-3.322 3.294-6.024 4.246l10.004 18.812h-8.799l-9.493-17.934h-.73v17.934h-8.032V78.216Zm8.032 16.543h2.519c2.556 0 4.308-.33 5.294-1.025s1.461-1.793 1.461-3.367a4.2 4.2 0 0 0-.731-2.415c-.474-.696-1.131-1.172-1.935-1.464-.803-.293-2.263-.44-4.417-.44h-2.191z"></path>
+                    <path fill="#FFDE66" d="M4.226 183a4.26 4.26 0 0 1-2.994-1.244 4.24 4.24 0 0 1-1.204-3.477L20.765 3.736A4.29 4.29 0 0 1 22.481.808a4.28 4.28 0 0 1 3.323-.732L280.79 51.828a4.22 4.22 0 0 1 3.25 3.11l21.833 87.107a4.28 4.28 0 0 1-.621 3.441 4.23 4.23 0 0 1-2.957 1.793L4.701 182.963c-.146.037-.329.037-.475.037M28.616 9.3 9.045 173.96l287.481-34.513-20.007-79.86L28.615 9.299Z"></path>
+                </svg>
+            </div>
+            <div class="flex items-center justify-between" style="padding-right: 150px;">
+                <div>
+                    <h1 class="text-3xl font-bold mb-2">Vegetation Disturbance Report (Light)</h1>
+                    <p class="text-lg opacity-90">Example1_Tindarey</p>
+                </div>
+            </div>
+            <div class="mt-6 flex items-center justify-between">
+                <span class="inline-block bg-alert-orange text-white text-sm font-bold uppercase tracking-wider px-4 py-2 rounded-full">
+                    MEDIUM Severity Alert
+                </span>
+                <div class="text-right">
+                    <div class="text-sm opacity-90">Monitoring Period</div>
+                    <div class="font-semibold">Q2 2024</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="px-10 py-3 border-b border-gray-200 bg-gray-50 overflow-x-auto">
+            <div class="flex items-center justify-between">
+                <nav class="flex flex-nowrap gap-x-4 text-xs text-gray-500 whitespace-nowrap">
+                    <span class="font-semibold text-gray-400 uppercase tracking-wide mr-1">Contents</span>
+                    <a href="#exec-summary" class="hover:text-alert-teal hover:underline">Executive Summary</a>
+                    <span class="text-gray-300">·</span>
+                    <a href="#disturbance-analysis" class="hover:text-alert-teal hover:underline">Disturbance Analysis</a>
+                    <span class="text-gray-300">·</span>
+                    <a href="#disturbance-history" class="hover:text-alert-teal hover:underline">Timeline</a>
+                    <span class="text-gray-300">·</span>
+                    <a href="#temporal-analysis" class="hover:text-alert-teal hover:underline">Temporal Analysis</a>
+                    <span class="text-gray-300">·</span>
+                    <a href="#technical-details" class="hover:text-alert-teal hover:underline">Technical Details</a>
+                    <span class="text-gray-300">·</span>
+                    <a href="#assessment" class="hover:text-alert-teal hover:underline">Assessment</a>
+                </nav>
+                <a href="https://storage.googleapis.com/restor_default/dist-alert/help.html" target="_blank" title="Access the Help Documentation"
+                   class="ml-4 flex-shrink-0 text-gray-400 hover:text-alert-teal transition" aria-label="Help">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                        <circle cx="12" cy="17" r=".5" fill="currentColor"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+        <!-- Executive Summary -->
+        <div class="px-10 py-8 border-b border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+                <h2 id="exec-summary" class="text-2xl font-bold text-gray-800">Executive Summary</h2>
+                <a href="#top" class="text-xs text-gray-400 hover:text-alert-teal hover:underline">↑ Back to top</a>
+            </div>
+            <div class="bg-orange-50 border-l-4 border-alert-orange px-6 py-5 rounded-r mb-6">
+                <p class="text-gray-800 leading-relaxed">
+                    <span class="font-bold text-alert-orange">Significant vegetation loss detected:</span> Satellite monitoring has identified 14 disturbance events at Example1_Tindarey with initial detection from April 09, 2024. Confirmed vegetation loss totals <span class="font-bold">384.84 ha</span> (14.2% of site area), including any disturbances first detected in prior periods but confirmed during this monitoring window.
+                </p>
+            </div>
+        </div>
+
+        <!-- Disturbance Analysis with Timeline -->
+        
+        <!-- Disturbance Analysis -->
+        <div class="px-10 py-8 border-b border-gray-200">
+            <div class="flex items-center justify-between mb-6">
+                <h2 id="disturbance-analysis" class="text-2xl font-bold text-gray-800">Disturbance Analysis</h2>
+                <a href="#top" class="text-xs text-gray-400 hover:text-alert-teal hover:underline">↑ Back to top</a>
+            </div>
+
+            <!-- Overall Impact Summary -->
+            <div class="mb-6">
+                <div class="bg-gray-50 p-6 rounded-lg">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Overall Impact</h3>
+                    <div class="grid grid-cols-4 gap-4">
+                        <div class="bg-white p-4 rounded border border-gray-200">
+                            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Disturbed Pixels</div>
+                            <div class="text-2xl font-bold text-alert-red">4,276</div>
+                        </div>
+                        <div class="bg-white p-4 rounded border border-gray-200">
+                            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Area Affected</div>
+                            <div class="text-2xl font-bold text-alert-red">384.84 ha</div>
+                        </div>
+                        <div class="bg-white p-4 rounded border border-gray-200">
+                            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Vegetation Loss</div>
+                            <div class="text-2xl font-bold text-alert-red">14.2%</div>
+                        </div>
+                        <div class="bg-white p-4 rounded border border-gray-200">
+                            <div class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Total Site Area</div>
+                            <div class="text-2xl font-bold text-gray-700">2702.97 ha</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 border-t border-gray-200 pt-4">
+                        <div class="flex items-center gap-2 mb-3">
+                            <h4 class="text-sm font-semibold text-gray-700">Cumulative Disturbance Map</h4>
+                            <button onclick="copyCogUrl(&quot;https://storage.googleapis.com/dist-alert-previews/restor/example1-tindarey/overview/overlay/cumulative_disturbance_map_q2-2024.tif&quot;, this)" class="text-alert-teal hover:opacity-80 transition cursor-pointer" title="Click to copy the GeoTIFF URL&#10;https://storage.googleapis.com/dist-alert-previews/restor/example1-tindarey/overview/overlay/cumulative_disturbance_map_q2-2024.tif"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg></button>
+                        </div>
+                        <div class="bg-white rounded border-2 border-gray-400 overflow-hidden" style="max-width: 432px;">
+                            <img src="https://storage.googleapis.com/dist-alert-previews/restor/example1-tindarey/overview/overlay/20260403_154649_S2B_T55JDF_20240628T002456_L2A.png" alt="Cumulative disturbance overview"
+                                 class="w-full object-cover"
+                                 onerror="this.parentElement.innerHTML='<p class=&quot;text-gray-500 text-sm p-4&quot;>Image not available</p>';">
+                        </div>
+                        <p class="text-xs text-gray-600 mt-2" style="max-width: 432px;">
+                            Orange pixels show confirmed vegetation disturbances present at the end of the monitoring
+                            period (384.84 ha, 14.2% of site area), including
+                            disturbances first detected in prior periods
+                            (Satellite image from June 28, 2024).
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Timeline -->
+        <div class="px-10 py-8 border-b border-gray-200">
+            <div class="flex items-center justify-between mb-2">
+                <h2 id="disturbance-history" class="text-2xl font-bold text-gray-800">Timeline</h2>
+                <a href="#top" class="text-xs text-gray-400 hover:text-alert-teal hover:underline">↑ Back to top</a>
+            </div>
+            <p class="text-sm text-gray-600 mb-6">Click on a date to view the satellite imagery for that event.</p>
+            <div class="bg-gray-50 p-6 rounded-lg">
+
+                    <div class="relative" style="margin-left: 270px;">
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-gray-300"></div>
+
+                        <div class="ml-8 space-y-6">
+<div class="relative" style="min-height: 28px;"><div class="absolute text-right" style="right: calc(100% + 58px); top: 0; width: 220px; line-height: 1.4;"><div class="text-sm font-semibold text-gray-800">Monitoring Period Start</div><div class="text-xs text-gray-500">April 01, 2024</div><div class="text-xs text-gray-400 italic">Q2 2024</div></div><div class="absolute rounded-full bg-white border-2 border-gray-400" style="left: -37px; top: 2px; width: 14px; height: 14px;"></div></div>
+
+                                <div class="relative">
+                                    
+                                    <div class="absolute top-1 w-4 h-4 rounded-full bg-green-500 border-2 border-white" style="left: -38px;"></div>
+                                    <a href="#date-20240404" class="text-sm font-semibold text-alert-teal hover:underline">April 04, 2024: First DIST-ALERT granule</a>
+                                    <div class="text-xs text-gray-600">State of vegetation at the start of the monitoring period</div>
+                                </div>
+
+                                <div class="relative">
+                                    <div class="absolute bg-gray-50" style="left: -34px; top: 0; width: 8px; height: 20px;"></div>
+                                    <div class="absolute rounded-full bg-gray-300" style="left: -33px; top: 3px;  width: 5px; height: 5px;"></div>
+                                    <div class="absolute rounded-full bg-gray-300" style="left: -33px; top: 12px; width: 5px; height: 5px;"></div>
+                                    <div class="text-sm font-semibold text-gray-700">14 Disturbances</div>
+                                    <div class="text-xs text-gray-600">Disturbance events detected during the monitoring period</div>
+                                </div>
+
+                                <div class="relative">
+                                    
+                                    <div class="absolute top-1 w-4 h-4 rounded-full bg-green-500 border-2 border-white" style="left: -38px;"></div>
+                                    <a href="#date-20240628" class="text-sm font-semibold text-alert-teal hover:underline">June 28, 2024: Last DIST-ALERT granule</a>
+                                    <div class="text-xs text-gray-600">State of vegetation at the end of the monitoring period</div>
+                                </div>
+<div class="relative" style="min-height: 28px;"><div class="absolute text-right" style="right: calc(100% + 58px); top: 0; width: 220px; line-height: 1.4;"><div class="text-sm font-semibold text-gray-800">Monitoring Period End</div><div class="text-xs text-gray-500">July 01, 2024</div></div><div class="absolute rounded-full bg-white border-2 border-gray-400" style="left: -37px; top: 2px; width: 14px; height: 14px;"></div></div>
+
+                                <div class="relative">
+                                    <div class="absolute top-1 w-4 h-4 rounded-full bg-gray-400 border-2 border-white" style="left: -38px;"></div>
+                                    <div class="text-sm font-semibold text-gray-800">Present (Ongoing)</div>
+                                    <div class="text-xs text-gray-600">Status continues to be monitored</div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+        </div>
+
+
+        <!-- Site Preview Image -->
+        
+        <div class="px-10 py-8 border-b border-gray-200">
+            <div class="flex items-center justify-between mb-6">
+                <h2 id="temporal-analysis" class="text-2xl font-bold text-gray-800">Temporal Analysis & Satellite Imagery</h2>
+                <a href="#top" class="text-xs text-gray-400 hover:text-alert-teal hover:underline">↑ Back to top</a>
+            </div>
+
+            <div id="date-20240404" class="mb-8 last:mb-0 border-t-2 border-gray-300 pt-8">
+                <div class="flex items-start justify-between mb-0">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 leading-none mt-0">
+                            April 04, 2024: First DIST-ALERT granule
+                        </h3>
+                        <p class='text-sm text-gray-600 mt-1'>First available DIST-ALERT granule within the monitoring period</p>
+                    </div>
+                    <div class="flex flex-col items-end gap-3">
+                        <span class="inline-block bg-alert-cyan text-white text-xs font-bold uppercase px-3 py-1.5 rounded">
+                            Existing Disturbance
+                        </span>
+                        <div class="flex gap-1">
+                            <span class="inline-block font-semibold rounded border border-gray-300 text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition opacity-30 cursor-default" style="font-size:9px; padding: 1px 6px;" title="No previous disturbance (← arrow key)">&#8592; Prev</span><a href="#date-20240628" class="inline-block font-semibold rounded border border-gray-300 text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition" style="font-size:9px; padding: 1px 6px;" title="Go to next disturbance (→ arrow key)">Next &#8594;</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-4"></div>
+                <div class="bg-gray-100 rounded-lg p-6">
+                    <div class="flex items-center gap-8 text-xs text-gray-600 mb-4">
+                        <div style="min-width:160px"><span class="font-semibold">Satellite:</span> Sentinel</div><div><span class="font-semibold">Cloud Cover:</span> <span class="text-amber-600 font-semibold" title="High cloud cover — imagery may be partially obscured">⚠ 99.5%</span></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-semibold text-gray-700">True Color Satellite Image</p>
+                                <button onclick="copyCogUrl(&quot;https://e84-earth-search-sentinel-data.s3.us-west-2.amazonaws.com/sentinel-2-c1-l2a/55/J/DF/2024/4/S2A_T55JDF_20240404T002222_L2A/TCI.tif&quot;, this)" class="text-alert-teal hover:opacity-80 transition cursor-pointer" title="Click to copy the GeoTIFF URL&#10;https://e84-earth-search-sentinel-data.s3.us-west-2.amazonaws.com/sentinel-2-c1-l2a/55/J/DF/2024/4/S2A_T55JDF_20240404T002222_L2A/TCI.tif"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg></button>
+                            </div>
+                            <div class="bg-white rounded border-2 border-gray-300 overflow-hidden aspect-[4/3] flex items-center justify-center">
+                                <img src="https://storage.googleapis.com/dist-alert-previews/restor/example1-tindarey/normal/20260403_154642_S2A_T55JDF_20240404T002222_L2A.png" alt="Satellite imagery - true color" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<p class=&quot;text-gray-500 text-sm p-4&quot;>Image not available</p>';">
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-semibold text-gray-700">Disturbance Overlay</p>
+                                <button onclick="copyCogUrl(&quot;https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/OPERA_L3_DIST-ALERT-HLS_V1/OPERA_L3_DIST-ALERT-HLS_T55JDF_20240404T002051Z_20240407T093426Z_S2A_30_v1/OPERA_L3_DIST-ALERT-HLS_T55JDF_20240404T002051Z_20240407T093426Z_S2A_30_v1_VEG-DIST-STATUS.tif&quot;, this)" class="text-alert-teal hover:opacity-80 transition cursor-pointer" title="Click to copy the GeoTIFF URL&#10;https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/OPERA_L3_DIST-ALERT-HLS_V1/OPERA_L3_DIST-ALERT-HLS_T55JDF_20240404T002051Z_20240407T093426Z_S2A_30_v1/OPERA_L3_DIST-ALERT-HLS_T55JDF_20240404T002051Z_20240407T093426Z_S2A_30_v1_VEG-DIST-STATUS.tif"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg></button>
+                            </div>
+                            <div class="bg-white rounded border-2 border-alert-cyan overflow-hidden aspect-[4/3] flex items-center justify-center">
+                                <img src="https://storage.googleapis.com/dist-alert-previews/restor/example1-tindarey/overlay/20260403_154641_S2A_T55JDF_20240404T002222_L2A.png" alt="Satellite imagery - with disturbance overlay" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<p class=&quot;text-gray-500 text-sm p-4&quot;>Image not available</p>';">
+                            </div>
+                            
+                            <div class="bg-cyan-50 border border-alert-cyan p-3 rounded mt-2" style="padding-left: 50px;">
+                                <table style="width: auto; min-width: 50%;">
+                                    <thead>
+                                        <tr class="border-b border-gray-300">
+                                            <th class="py-1 pr-3 text-left font-semibold text-gray-700" style="font-size: 10px;"></th>
+                                            <th class="py-1 pr-6 text-left font-semibold text-gray-700" style="font-size: 10px;">Disturbance Type</th>
+                                            <th class="py-1 pr-6 text-right font-semibold text-gray-700" style="font-size: 10px;">Pixels</th>
+                                            <th class="py-1 text-right font-semibold text-gray-700" style="font-size: 10px;">Area</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        
+                            <tr>
+                                <td class="py-1 pr-3" style="font-size: 10px;">
+                                    <div class="w-3 h-3 rounded" style="background-color: rgb(0, 85, 85);"></div>
+                                </td>
+                                <td class="py-1 pr-6 text-gray-700" style="font-size: 10px;">First Detection (<50% Loss)</td>
+                                <td class="py-1 pr-6 text-right text-gray-900 font-medium" style="font-size: 10px;">319</td>
+                                <td class="py-1 text-right text-gray-900 font-medium" style="font-size: 10px;">28.71 ha</td>
+                            </tr>
+                            <tr>
+                                <td class="py-1 pr-3" style="font-size: 10px;">
+                                    <div class="w-3 h-3 rounded" style="background-color: rgb(137, 127, 78);"></div>
+                                </td>
+                                <td class="py-1 pr-6 text-gray-700" style="font-size: 10px;">Provisional (<50% Loss)</td>
+                                <td class="py-1 pr-6 text-right text-gray-900 font-medium" style="font-size: 10px;">635</td>
+                                <td class="py-1 text-right text-gray-900 font-medium" style="font-size: 10px;">57.15 ha</td>
+                            </tr>
+                            <tr>
+                                <td class="py-1 pr-3" style="font-size: 10px;">
+                                    <div class="w-3 h-3 rounded" style="background-color: rgb(222, 224, 67);"></div>
+                                </td>
+                                <td class="py-1 pr-6 text-gray-700" style="font-size: 10px;">Confirmed (<50% Loss)</td>
+                                <td class="py-1 pr-6 text-right text-gray-900 font-medium" style="font-size: 10px;">1,282</td>
+                                <td class="py-1 text-right text-gray-900 font-medium" style="font-size: 10px;">115.38 ha</td>
+                            </tr>
+                            <tr>
+                                <td class="py-1 pr-3" style="font-size: 10px;">
+                                    <div class="w-3 h-3 rounded" style="background-color: rgb(224, 27, 7);"></div>
+                                </td>
+                                <td class="py-1 pr-6 text-gray-700" style="font-size: 10px;">Confirmed (≥50% Loss)</td>
+                                <td class="py-1 pr-6 text-right text-gray-900 font-medium" style="font-size: 10px;">35</td>
+                                <td class="py-1 text-right text-gray-900 font-medium" style="font-size: 10px;">3.15 ha</td>
+                            </tr>
+                            <tr>
+                                <td class="py-1 pr-3" style="font-size: 10px;">
+                                    <div class="w-3 h-3 rounded" style="background-color: rgb(119, 119, 119);"></div>
+                                </td>
+                                <td class="py-1 pr-6 text-gray-700" style="font-size: 10px;">Confirmed (<50% Loss) Finished</td>
+                                <td class="py-1 pr-6 text-right text-gray-900 font-medium" style="font-size: 10px;">3,920</td>
+                                <td class="py-1 text-right text-gray-900 font-medium" style="font-size: 10px;">352.80 ha</td>
+                            </tr>
+                            <tr>
+                                <td class="py-1 pr-3" style="font-size: 10px;">
+                                    <div class="w-3 h-3 rounded" style="background-color: rgb(221, 221, 221);"></div>
+                                </td>
+                                <td class="py-1 pr-6 text-gray-700" style="font-size: 10px;">Confirmed (≥50% Loss) Finished</td>
+                                <td class="py-1 pr-6 text-right text-gray-900 font-medium" style="font-size: 10px;">116</td>
+                                <td class="py-1 text-right text-gray-900 font-medium" style="font-size: 10px;">10.44 ha</td>
+                            </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="date-20240628" class="mb-8 last:mb-0 border-t-2 border-gray-300 pt-8">
+                <div class="flex items-start justify-between mb-0">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-800 leading-none mt-0">
+                            June 28, 2024: Last DIST-ALERT granule
+                        </h3>
+                        <p class='text-sm text-gray-600 mt-1'>Last available DIST-ALERT granule within the monitoring period</p>
+                    </div>
+                    <div class="flex flex-col items-end gap-3">
+                        <span class="inline-block bg-alert-orange text-white text-xs font-bold uppercase px-3 py-1.5 rounded">
+                            Medium Severity
+                        </span>
+                        <div class="flex gap-1">
+                            <a href="#date-20240404" class="inline-block font-semibold rounded border border-gray-300 text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition" style="font-size:9px; padding: 1px 6px;" title="Go to previous disturbance (← arrow key)">&#8592; Prev</a><span class="inline-block font-semibold rounded border border-gray-300 text-gray-500 hover:bg-gray-200 hover:text-gray-800 transition opacity-30 cursor-default" style="font-size:9px; padding: 1px 6px;" title="No next disturbance (→ arrow key)">Next &#8594;</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-4"></div>
+                <div class="bg-gray-100 rounded-lg p-6">
+                    <div class="flex items-center gap-8 text-xs text-gray-600 mb-4">
+                        <div style="min-width:160px"><span class="font-semibold">Satellite:</span> Sentinel</div><div><span class="font-semibold">Cloud Cover:</span> 0.0%</div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-semibold text-gray-700">True Color Satellite Image</p>
+                                <button onclick="copyCogUrl(&quot;https://e84-earth-search-sentinel-data.s3.us-west-2.amazonaws.com/sentinel-2-c1-l2a/55/J/DF/2024/6/S2B_T55JDF_20240628T002456_L2A/TCI.tif&quot;, this)" class="text-alert-teal hover:opacity-80 transition cursor-pointer" title="Click to copy the GeoTIFF URL&#10;https://e84-earth-search-sentinel-data.s3.us-west-2.amazonaws.com/sentinel-2-c1-l2a/55/J/DF/2024/6/S2B_T55JDF_20240628T002456_L2A/TCI.tif"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg></button>
+                            </div>
+                            <div class="bg-white rounded border-2 border-gray-300 overflow-hidden aspect-[4/3] flex items-center justify-center">
+                                <img src="https://storage.googleapis.com/dist-alert-previews/restor/example1-tindarey/normal/20260403_154639_S2B_T55JDF_20240628T002456_L2A.png" alt="Satellite imagery - true color" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<p class=&quot;text-gray-500 text-sm p-4&quot;>Image not available</p>';">
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm font-semibold text-gray-700">Disturbance Overlay</p>
+                                <button onclick="copyCogUrl(&quot;https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/OPERA_L3_DIST-ALERT-HLS_V1/OPERA_L3_DIST-ALERT-HLS_T55JDF_20240628T002059Z_20240630T091245Z_S2B_30_v1/OPERA_L3_DIST-ALERT-HLS_T55JDF_20240628T002059Z_20240630T091245Z_S2B_30_v1_VEG-DIST-STATUS.tif&quot;, this)" class="text-alert-teal hover:opacity-80 transition cursor-pointer" title="Click to copy the GeoTIFF URL&#10;https://data.lpdaac.earthdatacloud.nasa.gov/lp-prod-protected/OPERA_L3_DIST-ALERT-HLS_V1/OPERA_L3_DIST-ALERT-HLS_T55JDF_20240628T002059Z_20240630T091245Z_S2B_30_v1/OPERA_L3_DIST-ALERT-HLS_T55JDF_20240628T002059Z_20240630T091245Z_S2B_30_v1_VEG-DIST-STATUS.tif"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg></button>
+                            </div>
+                            <div class="bg-white rounded border-2 border-alert-orange overflow-hidden aspect-[4/3] flex items-center justify-center">
+                                <img src="https://storage.googleapis.com/dist-alert-previews/restor/example1-tindarey/overlay/20260403_154638_S2B_T55JDF_20240628T002456_L2A.png" alt="Satellite imagery - with disturbance overlay" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<p class=&quot;text-gray-500 text-sm p-4&quot;>Image not available</p>';">
+                            </div>
+                            
+                            <div class="bg-orange-50 border border-alert-orange p-3 rounded mt-2" style="padding-left: 50px;">
+                                <table style="width: auto; min-width: 50%;">
+                                    <thead>
+                                        <tr class="border-b border-gray-300">
+                                            <th class="py-1 pr-3 text-left font-semibold text-gray-700" style="font-size: 10px;"></th>
+                                            <th class="py-1 pr-6 text-left font-semibold text-gray-700" style="font-size: 10px;">Disturbance Type</th>
+                                            <th class="py-1 pr-6 text-right font-semibold text-gray-700" style="font-size: 10px;">Pixels</th>
+                                            <th class="py-1 text-right font-semibold text-gray-700" style="font-size: 10px;">Area</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        
+                            <tr>
+                                <td class="py-1 pr-3" style="font-size: 10px;">
+                                    <div class="w-3 h-3 rounded" style="background-color: rgb(0, 85, 85);"></div>
+                                </td>
+                                <td class="py-1 pr-6 text-gray-700" style="font-size: 10px;">First Detection (<50% Loss)</td>
+                                <td class="py-1 pr-6 text-right text-gray-900 font-medium" style="font-size: 10px;">1,342</td>
+                                <td class="py-1 text-right text-gray-900 font-medium" style="font-size: 10px;">120.78 ha</td>
+                            </tr>
+                            <tr>
+                                <td class="py-1 pr-3" style="font-size: 10px;">
+                                    <div class="w-3 h-3 rounded" style="background-color: rgb(137, 127, 78);"></div>
+                                </td>
+                                <td class="py-1 pr-6 text-gray-700" style="font-size: 10px;">Provisional (<50% Loss)</td>
+                                <td class="py-1 pr-6 text-right text-gray-900 font-medium" style="font-size: 10px;">2,244</td>
+                                <td class="py-1 text-right text-gray-900 font-medium" style="font-size: 10px;">201.96 ha</td>
+                            </tr>
+                            <tr>
+                                <td class="py-1 pr-3" style="font-size: 10px;">
+                                    <div class="w-3 h-3 rounded" style="background-color: rgb(222, 224, 67);"></div>
+                                </td>
+                                <td class="py-1 pr-6 text-gray-700" style="font-size: 10px;">Confirmed (<50% Loss)</td>
+                                <td class="py-1 pr-6 text-right text-gray-900 font-medium" style="font-size: 10px;">4,837</td>
+                                <td class="py-1 text-right text-gray-900 font-medium" style="font-size: 10px;">435.33 ha</td>
+                            </tr>
+                            <tr>
+                                <td class="py-1 pr-3" style="font-size: 10px;">
+                                    <div class="w-3 h-3 rounded" style="background-color: rgb(224, 27, 7);"></div>
+                                </td>
+                                <td class="py-1 pr-6 text-gray-700" style="font-size: 10px;">Confirmed (≥50% Loss)</td>
+                                <td class="py-1 pr-6 text-right text-gray-900 font-medium" style="font-size: 10px;">143</td>
+                                <td class="py-1 text-right text-gray-900 font-medium" style="font-size: 10px;">12.87 ha</td>
+                            </tr>
+                            <tr>
+                                <td class="py-1 pr-3" style="font-size: 10px;">
+                                    <div class="w-3 h-3 rounded" style="background-color: rgb(119, 119, 119);"></div>
+                                </td>
+                                <td class="py-1 pr-6 text-gray-700" style="font-size: 10px;">Confirmed (<50% Loss) Finished</td>
+                                <td class="py-1 pr-6 text-right text-gray-900 font-medium" style="font-size: 10px;">2,666</td>
+                                <td class="py-1 text-right text-gray-900 font-medium" style="font-size: 10px;">239.94 ha</td>
+                            </tr>
+                            <tr>
+                                <td class="py-1 pr-3" style="font-size: 10px;">
+                                    <div class="w-3 h-3 rounded" style="background-color: rgb(221, 221, 221);"></div>
+                                </td>
+                                <td class="py-1 pr-6 text-gray-700" style="font-size: 10px;">Confirmed (≥50% Loss) Finished</td>
+                                <td class="py-1 pr-6 text-right text-gray-900 font-medium" style="font-size: 10px;">28</td>
+                                <td class="py-1 text-right text-gray-900 font-medium" style="font-size: 10px;">2.52 ha</td>
+                            </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- OPERA DIST-ALERT Classification -->
+        <div class="px-10 py-8 border-b border-gray-200">
+            <div class="flex items-center justify-between mb-6">
+                <h2 id="opera-classification" class="text-2xl font-bold text-gray-800">OPERA DIST-ALERT Classification</h2>
+                <a href="#top" class="text-xs text-gray-400 hover:text-alert-teal hover:underline">↑ Back to top</a>
+            </div>
+            <div class="bg-gray-50 p-6 rounded-lg">
+                <div class="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <div class="font-semibold mb-2">Active (&lt;50% Loss):</div>
+                        <div class="space-y-2">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded mr-2" style="background-color: rgb(0, 85, 85);"></div>
+                                <div class="text-xs">First Detection</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded mr-2" style="background-color: rgb(137, 127, 78);"></div>
+                                <div class="text-xs">Provisional</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded mr-2" style="background-color: rgb(222, 224, 67);"></div>
+                                <div class="text-xs">Confirmed</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="font-semibold mb-2">Active (&#8805;50% Loss):</div>
+                        <div class="space-y-2">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded mr-2" style="background-color: rgb(0, 136, 136);"></div>
+                                <div class="text-xs">First Detection</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded mr-2" style="background-color: rgb(228, 135, 39);"></div>
+                                <div class="text-xs">Provisional</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded mr-2" style="background-color: rgb(224, 27, 7);"></div>
+                                <div class="text-xs">Confirmed</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="font-semibold mb-2">Finished:</div>
+                        <div class="space-y-2">
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded mr-2" style="background-color: rgb(119, 119, 119);"></div>
+                                <div class="text-xs">Confirmed &lt;50%</div>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-4 h-4 rounded mr-2" style="background-color: rgb(221, 221, 221);"></div>
+                                <div class="text-xs">Confirmed &#8805;50%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Details -->
+        <div class="px-10 py-8 border-b border-gray-200">
+            <div class="flex items-center justify-between mb-6">
+                <h2 id="technical-details" class="text-2xl font-bold text-gray-800">Technical Monitoring Details</h2>
+                <a href="#top" class="text-xs text-gray-400 hover:text-alert-teal hover:underline">↑ Back to top</a>
+            </div>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Detection Methodology</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Data Source:</div>
+                            <div class="text-gray-800">OPERA DIST-ALERT (30m resolution)</div>
+                        </div>
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Analysis Type:</div>
+                            <div class="text-gray-800">Multi-spectral vegetation analysis</div>
+                        </div>
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Confidence Level:</div>
+                            <div class="text-gray-800">Confirmed</div>
+                        </div>
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Monitoring Frequency:</div>
+                            <div class="text-gray-800">Continuous (5-7 day intervals)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Site Information</h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Site Name:</div>
+                            <div class="text-gray-800">Example1_Tindarey</div>
+                        </div>
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Site ID:</div>
+                            <div class="text-gray-800">e2a85e16-bb3a-4f9c-bbe9-daba9a0beec9</div>
+                        </div>
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Organization:</div>
+                            <div class="text-gray-800">Restor</div>
+                        </div>
+                        <div class="flex">
+                            <div class="font-semibold text-gray-600 w-40">Total Site Area:</div>
+                            <div class="text-gray-800">2702.97 hectares</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        <!-- Assessment & Recommendations -->
+        <div class="px-10 py-8 border-b border-gray-200">
+            <div class="flex items-center justify-between mb-6">
+                <h2 id="assessment" class="text-2xl font-bold text-gray-800">Assessment & Recommendations</h2>
+                <a href="#top" class="text-xs text-gray-400 hover:text-alert-teal hover:underline">↑ Back to top</a>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-alert-red mb-3">Key Findings</h3>
+                <ul class="space-y-2 text-sm text-gray-700">
+                    <li class="flex items-start">
+                        <span class="text-alert-red mr-2">▸</span>
+                        <span><span class="font-semibold">Magnitude:</span> 14.2% vegetation cover loss detected across 384.84 hectares</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-alert-red mr-2">▸</span>
+                        <span><span class="font-semibold">Detection Date:</span> Disturbance first detected on April 09, 2024</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-alert-red mr-2">▸</span>
+                        <span><span class="font-semibold">Latest Observation:</span> Most recent satellite data from June 28, 2024</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="text-alert-red mr-2">▸</span>
+                        <span><span class="font-semibold">Confidence:</span> Disturbance classified at Confirmed confidence level</span>
+                    </li>
+                </ul>
+            </div>
+
+            <div style="background-color: #ecfeff; border: 1px solid #008b8b; border-radius: 8px; padding: 12px 16px;">
+                <h3 style="font-size: 14px; font-weight: 600; color: #008b8b; margin: 0 0 6px 0;">📋 Recommended Actions</h3>
+                <ul style="font-size: 14px; color: #374151; line-height: 1.5; margin: 0; padding-left: 18px; list-style-type: disc;">
+                    <li>Conduct a site inspection to confirm satellite findings and assess current conditions</li>
+                    <li>Photograph and document the extent of disturbance and any visible causes</li>
+                    <li>Determine the cause of disturbance (clearing, fire, disease, etc.)</li>
+                    <li>Update monitoring logs and notify relevant stakeholders</li>
+                    <li>Verify any required permits or authorizations if clearing was intentional</li>
+                    <li>Maintain regular satellite observation to track any further changes</li>
+                </ul>
+            </div>
+        </div>
+
+
+        <!-- Contact & Footer -->
+        <div class="bg-gray-50 px-10 py-6 border-t border-gray-200">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <p class="text-sm font-semibold text-gray-800">Restor Site Monitoring System</p>
+                    <p class="text-xs text-gray-600">Environmental Monitoring Service</p>
+                </div>
+                <div class="no-print flex gap-3">
+                    
+        <a href="data:application/json;base64,ewogICJzdGF0dXMiOiAic3VjY2VzcyIsCiAgInJlcXVlc3QiOiB7CiAgICAiZ2VvbWV0cnkiOiBbCiAgICAgIFsKICAgICAgICAxNDYuMTMzMDEyNzcxNjA2NDIsCiAgICAgICAgLTMxLjA0OTg4MjQyNTcwMDgKICAgICAgXSwKICAgICAgWwogICAgICAgIDE0Ni4xMzYxNDU1OTE3MzU4LAogICAgICAgIC0zMS4wNDgxNzI3NzQwMTYwNgogICAgICBdLAogICAgICBbCiAgICAgICAgMTQ2LjE0MDcxNjA3NTg5NzIsCiAgICAgICAgLTMxLjA0NjAwMzQ5NDM0MDQxOAogICAgICBdLAogICAgICBbCiAgICAgICAgMTQ2LjE2NzA0NDYzOTU4NzM3LAogICAgICAgIC0zMS4wMjE5OTEwNDY4MjAzOQogICAgICBdLAogICAgICBbCiAgICAgICAgMTQ2LjE4MTIyODE2MDg1ODE1LAogICAgICAgIC0zMS4wMTQ1NDMzODQxODY1NgogICAgICBdLAogICAgICBbCiAgICAgICAgMTQ2LjE5OTUzMTU1NTE3NTc4LAogICAgICAgIC0zMS4wNDI1ODQwMjA5MDY5MjIKICAgICAgXSwKICAgICAgWwogICAgICAgIDE0Ni4xODUxMzM0NTcxODM4LAogICAgICAgIC0zMS4wNTAwNDc4NzQyMzM5NDcKICAgICAgXSwKICAgICAgWwogICAgICAgIDE0Ni4xNTQ3Mjc5MzU3OTEsCiAgICAgICAgLTMxLjA4MTQ3Nzg3NTQ3MDkyNAogICAgICBdLAogICAgICBbCiAgICAgICAgMTQ2LjE0MzU0ODQ4ODYxNjkxLAogICAgICAgIC0zMS4wODY2NjAwNzA4NjQ1MQogICAgICBdLAogICAgICBbCiAgICAgICAgMTQ2LjEyMTEwMzc2MzU4MDMsCiAgICAgICAgLTMxLjA1MjI3MjIwOTkxNzQxCiAgICAgIF0sCiAgICAgIFsKICAgICAgICAxNDYuMTMzMDEyNzcxNjA2NDIsCiAgICAgICAgLTMxLjA0OTg4MjQyNTcwMDgKICAgICAgXQogICAgXSwKICAgICJzdGFydF9kYXRlIjogIjIwMjQtMDQtMDEiLAogICAgImVuZF9kYXRlIjogIjIwMjQtMDctMDEiLAogICAgIm1pbl9jb25maWRlbmNlIjogbnVsbCwKICAgICJmcmVxdWVuY3kiOiAid2Vla2x5IiwKICAgICJzaXRlX25hbWUiOiAiRXhhbXBsZTFfVGluZGFyZXkiLAogICAgInNpdGVfaWQiOiAiZTJhODVlMTYtYmIzYS00ZjljLWJiZTktZGFiYTlhMGJlZWM5IiwKICAgICJyZXBvcnRfb3JnIjogIlJlc3RvciIsCiAgICAicmVwb3J0X293bmVyX25hbWUiOiAiQW5kcmV3IENvdHRhbSIsCiAgICAicmVwb3J0X293bmVyX2VtYWlsIjogImFuZHJld0ByZXN0b3IuZWNvIiwKICAgICJyZXBvcnRfc3Vic2NyaWJlcl9lbWFpbHMiOiBudWxsLAogICAgInNlbmRfZW1haWwiOiB0cnVlLAogICAgImNyZWF0ZV9yZXBvcnQiOiB0cnVlLAogICAgImRpc3RfYWxlcnRfbGlnaHQiOiB0cnVlLAogICAgInVuaXRfcHJpY2UiOiAwLjAwNCwKICAgICJub3RlIjogbnVsbCwKICAgICJsb2dsZXZlbCI6ICJub25lIgogIH0sCiAgInJlc3BvbnNlIjogewogICAgInZlZ19kaXN0X3N0YXR1cyI6IHsKICAgICAgInBvbHlnb25fMSI6IHsKICAgICAgICAiZ2VvbWV0cnkiOiBbCiAgICAgICAgICBbCiAgICAgICAgICAgIDE0Ni4xMzMwMTI3NzE2MDY0MiwKICAgICAgICAgICAgLTMxLjA0OTg4MjQyNTcwMDgKICAgICAgICAgIF0sCiAgICAgICAgICBbCiAgICAgICAgICAgIDE0Ni4xMzYxNDU1OTE3MzU4LAogICAgICAgICAgICAtMzEuMDQ4MTcyNzc0MDE2MDYKICAgICAgICAgIF0sCiAgICAgICAgICBbCiAgICAgICAgICAgIDE0Ni4xNDA3MTYwNzU4OTcyLAogICAgICAgICAgICAtMzEuMDQ2MDAzNDk0MzQwNDE4CiAgICAgICAgICBdLAogICAgICAgICAgWwogICAgICAgICAgICAxNDYuMTY3MDQ0NjM5NTg3MzcsCiAgICAgICAgICAgIC0zMS4wMjE5OTEwNDY4MjAzOQogICAgICAgICAgXSwKICAgICAgICAgIFsKICAgICAgICAgICAgMTQ2LjE4MTIyODE2MDg1ODE1LAogICAgICAgICAgICAtMzEuMDE0NTQzMzg0MTg2NTYKICAgICAgICAgIF0sCiAgICAgICAgICBbCiAgICAgICAgICAgIDE0Ni4xOTk1MzE1NTUxNzU3OCwKICAgICAgICAgICAgLTMxLjA0MjU4NDAyMDkwNjkyMgogICAgICAgICAgXSwKICAgICAgICAgIFsKICAgICAgICAgICAgMTQ2LjE4NTEzMzQ1NzE4MzgsCiAgICAgICAgICAgIC0zMS4wNTAwNDc4NzQyMzM5NDcKICAgICAgICAgIF0sCiAgICAgICAgICBbCiAgICAgICAgICAgIDE0Ni4xNTQ3Mjc5MzU3OTEsCiAgICAgICAgICAgIC0zMS4wODE0Nzc4NzU0NzA5MjQKICAgICAgICAgIF0sCiAgICAgICAgICBbCiAgICAgICAgICAgIDE0Ni4xNDM1NDg0ODg2MTY5MSwKICAgICAgICAgICAgLTMxLjA4NjY2MDA3MDg2NDUxCiAgICAgICAgICBdLAogICAgICAgICAgWwogICAgICAgICAgICAxNDYuMTIxMTAzNzYzNTgwMywKICAgICAgICAgICAgLTMxLjA1MjI3MjIwOTkxNzQxCiAgICAgICAgICBdLAogICAgICAgICAgWwogICAgICAgICAgICAxNDYuMTMzMDEyNzcxNjA2NDIsCiAgICAgICAgICAgIC0zMS4wNDk4ODI0MjU3MDA4CiAgICAgICAgICBdCiAgICAgICAgXSwKICAgICAgICAibW9uaXRvcmluZ19zdGFydF9kYXRlIjogIjIwMjQtMDQtMDQiLAogICAgICAgICJtb25pdG9yaW5nX2VuZF9kYXRlIjogIjIwMjQtMDYtMjgiLAogICAgICAgICJkYXRhIjogewogICAgICAgICAgImNsYXNzZXMiOiBbCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAiY2xhc3MiOiAwLAogICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6ICJObyBEaXN0dXJiYW5jZSIsCiAgICAgICAgICAgICAgInRvdGFsX2FyZWEiOiAxNjg5LjU3LAogICAgICAgICAgICAgICJwaXhlbF9jb3VudCI6IDE4NzczCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAiY2xhc3MiOiAxLAogICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6ICJGaXJzdCBEZXRlY3Rpb24gKDw1MCUgTG9zcykiLAogICAgICAgICAgICAgICJ0b3RhbF9hcmVhIjogMTIwLjc4LAogICAgICAgICAgICAgICJwaXhlbF9jb3VudCI6IDEzNDIKICAgICAgICAgICAgfSwKICAgICAgICAgICAgewogICAgICAgICAgICAgICJjbGFzcyI6IDIsCiAgICAgICAgICAgICAgImRlc2NyaXB0aW9uIjogIlByb3Zpc2lvbmFsICg8NTAlIExvc3MpIiwKICAgICAgICAgICAgICAidG90YWxfYXJlYSI6IDIwMS45NiwKICAgICAgICAgICAgICAicGl4ZWxfY291bnQiOiAyMjQ0CiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAiY2xhc3MiOiAzLAogICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6ICJDb25maXJtZWQgKDw1MCUgTG9zcykiLAogICAgICAgICAgICAgICJ0b3RhbF9hcmVhIjogNDM1LjMzLAogICAgICAgICAgICAgICJwaXhlbF9jb3VudCI6IDQ4MzcKICAgICAgICAgICAgfSwKICAgICAgICAgICAgewogICAgICAgICAgICAgICJjbGFzcyI6IDYsCiAgICAgICAgICAgICAgImRlc2NyaXB0aW9uIjogIkNvbmZpcm1lZCAo4omlNTAlIExvc3MpIiwKICAgICAgICAgICAgICAidG90YWxfYXJlYSI6IDEyLjg3LAogICAgICAgICAgICAgICJwaXhlbF9jb3VudCI6IDE0MwogICAgICAgICAgICB9LAogICAgICAgICAgICB7CiAgICAgICAgICAgICAgImNsYXNzIjogNywKICAgICAgICAgICAgICAiZGVzY3JpcHRpb24iOiAiQ29uZmlybWVkICg8NTAlIExvc3MpIEZpbmlzaGVkIiwKICAgICAgICAgICAgICAidG90YWxfYXJlYSI6IDIzOS45NCwKICAgICAgICAgICAgICAicGl4ZWxfY291bnQiOiAyNjY2CiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAiY2xhc3MiOiA4LAogICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6ICJDb25maXJtZWQgKOKJpTUwJSBMb3NzKSBGaW5pc2hlZCIsCiAgICAgICAgICAgICAgInRvdGFsX2FyZWEiOiAyLjUyLAogICAgICAgICAgICAgICJwaXhlbF9jb3VudCI6IDI4CiAgICAgICAgICAgIH0KICAgICAgICAgIF0sCiAgICAgICAgICAidG90YWxfYXJlYV9oYSI6IDI3MDIuOTcsCiAgICAgICAgICAidG90YWxfdW5pcXVlX3BpeGVscyI6IDMwMDMzLAogICAgICAgICAgInRpbGVzIjogWwogICAgICAgICAgICB7CiAgICAgICAgICAgICAgIm1ncnNfdGlsZSI6ICJUNTVKREYiLAogICAgICAgICAgICAgICJkYXRlIjogIjIwMjQtMDYtMjhUMDA6MjU6MzYuNzM0MzUwWiIsCiAgICAgICAgICAgICAgImdyYW51bGVfaWQiOiAiT1BFUkFfTDNfRElTVC1BTEVSVC1ITFNfVDU1SkRGXzIwMjQwNjI4VDAwMjA1OVpfMjAyNDA2MzBUMDkxMjQ1Wl9TMkJfMzBfdjEiLAogICAgICAgICAgICAgICJwaXhlbF9hcmVhX20yIjogOTAwLjAsCiAgICAgICAgICAgICAgInBpeGVsX2NvdW50X3JhdyI6IDMwMDMzLAogICAgICAgICAgICAgICJ1bmlxdWVfcGl4ZWxfY291bnQiOiAzMDAzMywKICAgICAgICAgICAgICAiZHVwbGljYXRlX3BpeGVscyI6IDAKICAgICAgICAgICAgfQogICAgICAgICAgXQogICAgICAgIH0KICAgICAgfQogICAgfSwKICAgICJtZXRhZGF0YSI6IHsKICAgICAgImdlb21ldHJ5IjogWwogICAgICAgIFsKICAgICAgICAgIDE0Ni4xMzMwMTI3NzE2MDY0MiwKICAgICAgICAgIC0zMS4wNDk4ODI0MjU3MDA4CiAgICAgICAgXSwKICAgICAgICBbCiAgICAgICAgICAxNDYuMTM2MTQ1NTkxNzM1OCwKICAgICAgICAgIC0zMS4wNDgxNzI3NzQwMTYwNgogICAgICAgIF0sCiAgICAgICAgWwogICAgICAgICAgMTQ2LjE0MDcxNjA3NTg5NzIsCiAgICAgICAgICAtMzEuMDQ2MDAzNDk0MzQwNDE4CiAgICAgICAgXSwKICAgICAgICBbCiAgICAgICAgICAxNDYuMTY3MDQ0NjM5NTg3MzcsCiAgICAgICAgICAtMzEuMDIxOTkxMDQ2ODIwMzkKICAgICAgICBdLAogICAgICAgIFsKICAgICAgICAgIDE0Ni4xODEyMjgxNjA4NTgxNSwKICAgICAgICAgIC0zMS4wMTQ1NDMzODQxODY1NgogICAgICAgIF0sCiAgICAgICAgWwogICAgICAgICAgMTQ2LjE5OTUzMTU1NTE3NTc4LAogICAgICAgICAgLTMxLjA0MjU4NDAyMDkwNjkyMgogICAgICAgIF0sCiAgICAgICAgWwogICAgICAgICAgMTQ2LjE4NTEzMzQ1NzE4MzgsCiAgICAgICAgICAtMzEuMDUwMDQ3ODc0MjMzOTQ3CiAgICAgICAgXSwKICAgICAgICBbCiAgICAgICAgICAxNDYuMTU0NzI3OTM1NzkxLAogICAgICAgICAgLTMxLjA4MTQ3Nzg3NTQ3MDkyNAogICAgICAgIF0sCiAgICAgICAgWwogICAgICAgICAgMTQ2LjE0MzU0ODQ4ODYxNjkxLAogICAgICAgICAgLTMxLjA4NjY2MDA3MDg2NDUxCiAgICAgICAgXSwKICAgICAgICBbCiAgICAgICAgICAxNDYuMTIxMTAzNzYzNTgwMywKICAgICAgICAgIC0zMS4wNTIyNzIyMDk5MTc0MQogICAgICAgIF0sCiAgICAgICAgWwogICAgICAgICAgMTQ2LjEzMzAxMjc3MTYwNjQyLAogICAgICAgICAgLTMxLjA0OTg4MjQyNTcwMDgKICAgICAgICBdCiAgICAgIF0sCiAgICAgICJzdGFydF9kYXRlIjogIjIwMjQtMDQtMDFUMDA6MDA6MDAiLAogICAgICAiZW5kX2RhdGUiOiAiMjAyNC0wNy0wMVQwMDowMDowMCIsCiAgICAgICJzdGFydF9lbmRfc3RyIjogIlEyIDIwMjQiLAogICAgICAiZnJlcXVlbmN5IjogIlF1YXJ0ZXJseSIsCiAgICAgICJuZXh0X3J1bl9kYXRlIjogIk9jdG9iZXIgMDEsIDIwMjQiLAogICAgICAibW9uaXRvcmluZ19zdGFydF9kYXRlIjogIjIwMjQtMDQtMDQiLAogICAgICAibW9uaXRvcmluZ19lbmRfZGF0ZSI6ICIyMDI0LTA2LTI4IiwKICAgICAgInRpbGVzX3Byb2Nlc3NlZCI6IDEsCiAgICAgICJnZW9tZXRyeV90eXBlIjogInBvbHlnb24iLAogICAgICAibm9fZ3JhbnVsZXNfZm91bmQiOiBmYWxzZQogICAgfSwKICAgICJyZXBvcnQiOiB7CiAgICAgICJjcmVhdGVkIjogdHJ1ZSwKICAgICAgImJ1Y2tldCI6ICJkaXN0LWFsZXJ0LXJlc3RvciIsCiAgICAgICJwYXRoIjogImV4YW1wbGUxLXRpbmRhcmV5L3EyLTIwMjQtbGlnaHQuaHRtbCIsCiAgICAgICJwdWJsaWNfdXJsIjogImh0dHBzOi8vc3RvcmFnZS5nb29nbGVhcGlzLmNvbS9kaXN0LWFsZXJ0LXJlc3Rvci9leGFtcGxlMS10aW5kYXJleS9xMi0yMDI0LWxpZ2h0Lmh0bWwiCiAgICB9LAogICAgImVtYWlsIjogewogICAgICAic2VudCI6IHRydWUsCiAgICAgICJ0byI6ICJhbmRyZXdAcmVzdG9yLmVjbyIKICAgIH0sCiAgICAiZGlzdHVyYmFuY2VfYW5hbHlzaXMiOiB7CiAgICAgICJtaW5fY29uZmlkZW5jZSI6ICJjb25maXJtZWQiLAogICAgICAicG9seWdvbnMiOiB7CiAgICAgICAgInBvbHlnb25fMSI6IHsKICAgICAgICAgICJkaXN0dXJiZWRfYXJlYSI6IDM4NC44NCwKICAgICAgICAgICJ0b3RhbF9hcmVhIjogMjcwMi45NywKICAgICAgICAgICJkaXN0dXJiZWRfcGVyY2VudGFnZSI6IDE0LjIzNzY3MTg5NDI0OTY2LAogICAgICAgICAgImRpc3R1cmJlZF9waXhlbHMiOiA0Mjc2CiAgICAgICAgfQogICAgICB9LAogICAgICAib3ZlcmFsbCI6IHsKICAgICAgICAiZGlzdHVyYmVkX2FyZWEiOiAzODQuODQsCiAgICAgICAgInRvdGFsX2FyZWEiOiAyNzAyLjk3LAogICAgICAgICJkaXN0dXJiZWRfcGVyY2VudGFnZSI6IDE0LjIzNzY3MTg5NDI0OTY2LAogICAgICAgICJ0b3RhbF9waXhlbHMiOiA0Mjc2CiAgICAgIH0sCiAgICAgICJkaXN0dXJiYW5jZV9ldmVudHMiOiBbCiAgICAgICAgewogICAgICAgICAgImlkIjogIjk2MzA1N2Y1LWM3M2UtNDM0MS04YTYyLTRkYTdhY2JiMzgyOSIsCiAgICAgICAgICAiZGF0ZSI6ICIyMDI0LTA0LTA5IiwKICAgICAgICAgICJkYXRlX3ZhbHVlIjogMTE5NSwKICAgICAgICAgICJkaXN0X2FsZXJ0X3N0YXRpc3RpY3MiOiB7CiAgICAgICAgICAgICJjbGFzc2VzIjogWwogICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJjbGFzcyI6IDMsCiAgICAgICAgICAgICAgICAiZGVzY3JpcHRpb24iOiAiQ29uZmlybWVkICg8NTAlIExvc3MpIiwKICAgICAgICAgICAgICAgICJwaXhlbF9jb3VudCI6IDI1NSwKICAgICAgICAgICAgICAgICJ0b3RhbF9hcmVhIjogMjIuOTUKICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJjbGFzcyI6IDYsCiAgICAgICAgICAgICAgICAiZGVzY3JpcHRpb24iOiAiQ29uZmlybWVkICjiiaU1MCUgTG9zcykiLAogICAgICAgICAgICAgICAgInBpeGVsX2NvdW50IjogMTMsCiAgICAgICAgICAgICAgICAidG90YWxfYXJlYSI6IDEuMTcKICAgICAgICAgICAgICB9CiAgICAgICAgICAgIF0KICAgICAgICAgIH0sCiAgICAgICAgICAiYXJlYV9oYV90b3RhbCI6IDI0LjExOTk5OTk5OTk5OTk5NywKICAgICAgICAgICJwZXJjZW50YWdlX3RvdGFsIjogMC44OTIzNTE3NDY0MTIyNzk4CiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAiaWQiOiAiMzRhOTY3NGItZTI0OS00N2ExLThkMWMtNzJmNjA3MzY5MzdmIiwKICAgICAgICAgICJkYXRlIjogIjIwMjQtMDQtMTQiLAogICAgICAgICAgImRhdGVfdmFsdWUiOiAxMjAwLAogICAgICAgICAgImRpc3RfYWxlcnRfc3RhdGlzdGljcyI6IHsKICAgICAgICAgICAgImNsYXNzZXMiOiBbCiAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgImNsYXNzIjogMywKICAgICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6ICJDb25maXJtZWQgKDw1MCUgTG9zcykiLAogICAgICAgICAgICAgICAgInBpeGVsX2NvdW50IjogMjE4LAogICAgICAgICAgICAgICAgInRvdGFsX2FyZWEiOiAxOS42MgogICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgImNsYXNzIjogNiwKICAgICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6ICJDb25maXJtZWQgKOKJpTUwJSBMb3NzKSIsCiAgICAgICAgICAgICAgICAicGl4ZWxfY291bnQiOiAxMSwKICAgICAgICAgICAgICAgICJ0b3RhbF9hcmVhIjogMC45OQogICAgICAgICAgICAgIH0KICAgICAgICAgICAgXQogICAgICAgICAgfSwKICAgICAgICAgICJhcmVhX2hhX3RvdGFsIjogMjAuNjEsCiAgICAgICAgICAicGVyY2VudGFnZV90b3RhbCI6IDAuNzYyNDk0NTg5Mjg1MTE5OAogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgImlkIjogImNiMjIwOGU3LTRkZmMtNDNkMC1hYjRjLTBjOTE1OTc5YTU1ZSIsCiAgICAgICAgICAiZGF0ZSI6ICIyMDI0LTA0LTIyIiwKICAgICAgICAgICJkYXRlX3ZhbHVlIjogMTIwOCwKICAgICAgICAgICJkaXN0X2FsZXJ0X3N0YXRpc3RpY3MiOiB7CiAgICAgICAgICAgICJjbGFzc2VzIjogWwogICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJjbGFzcyI6IDMsCiAgICAgICAgICAgICAgICAiZGVzY3JpcHRpb24iOiAiQ29uZmlybWVkICg8NTAlIExvc3MpIiwKICAgICAgICAgICAgICAgICJwaXhlbF9jb3VudCI6IDEwMTYsCiAgICAgICAgICAgICAgICAidG90YWxfYXJlYSI6IDkxLjQ0CiAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAiY2xhc3MiOiA2LAogICAgICAgICAgICAgICAgImRlc2NyaXB0aW9uIjogIkNvbmZpcm1lZCAo4omlNTAlIExvc3MpIiwKICAgICAgICAgICAgICAgICJwaXhlbF9jb3VudCI6IDgsCiAgICAgICAgICAgICAgICAidG90YWxfYXJlYSI6IDAuNzIKICAgICAgICAgICAgICB9CiAgICAgICAgICAgIF0KICAgICAgICAgIH0sCiAgICAgICAgICAiYXJlYV9oYV90b3RhbCI6IDkyLjE2LAogICAgICAgICAgInBlcmNlbnRhZ2VfdG90YWwiOiAzLjQwOTU4Mjc5MjI2MTg0NgogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgImlkIjogImJlNGNjMWRiLTM0ZjItNDdmNy04NjE3LWUzZTllYzAxMDlmZCIsCiAgICAgICAgICAiZGF0ZSI6ICIyMDI0LTA0LTI0IiwKICAgICAgICAgICJkYXRlX3ZhbHVlIjogMTIxMCwKICAgICAgICAgICJkaXN0X2FsZXJ0X3N0YXRpc3RpY3MiOiB7CiAgICAgICAgICAgICJjbGFzc2VzIjogWwogICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJjbGFzcyI6IDMsCiAgICAgICAgICAgICAgICAiZGVzY3JpcHRpb24iOiAiQ29uZmlybWVkICg8NTAlIExvc3MpIiwKICAgICAgICAgICAgICAgICJwaXhlbF9jb3VudCI6IDMsCiAgICAgICAgICAgICAgICAidG90YWxfYXJlYSI6IDAuMjcKICAgICAgICAgICAgICB9CiAgICAgICAgICAgIF0KICAgICAgICAgIH0sCiAgICAgICAgICAiYXJlYV9oYV90b3RhbCI6IDAuMjcsCiAgICAgICAgICAicGVyY2VudGFnZV90b3RhbCI6IDAuMDA5OTg5MDEyMDg2NzA0NjI2CiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAiaWQiOiAiYjRhNGM4ZWMtN2M4My00MGUzLTk4NTQtYWU3OTQ5MzI1MGU5IiwKICAgICAgICAgICJkYXRlIjogIjIwMjQtMDUtMDQiLAogICAgICAgICAgImRhdGVfdmFsdWUiOiAxMjIwLAogICAgICAgICAgImRpc3RfYWxlcnRfc3RhdGlzdGljcyI6IHsKICAgICAgICAgICAgImNsYXNzZXMiOiBbCiAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgImNsYXNzIjogMywKICAgICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6ICJDb25maXJtZWQgKDw1MCUgTG9zcykiLAogICAgICAgICAgICAgICAgInBpeGVsX2NvdW50IjogNTAsCiAgICAgICAgICAgICAgICAidG90YWxfYXJlYSI6IDQuNQogICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgImNsYXNzIjogNiwKICAgICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6ICJDb25maXJtZWQgKOKJpTUwJSBMb3NzKSIsCiAgICAgICAgICAgICAgICAicGl4ZWxfY291bnQiOiAzLAogICAgICAgICAgICAgICAgInRvdGFsX2FyZWEiOiAwLjI3CiAgICAgICAgICAgICAgfQogICAgICAgICAgICBdCiAgICAgICAgICB9LAogICAgICAgICAgImFyZWFfaGFfdG90YWwiOiA0Ljc3LAogICAgICAgICAgInBlcmNlbnRhZ2VfdG90YWwiOiAwLjE3NjQ3MjU0Njg2NTExNTA0CiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAiaWQiOiAiNmQ1YzI2Y2YtMDMxOC00OTI5LWFjZGQtNWQ4ZTg4NGRkMWFlIiwKICAgICAgICAgICJkYXRlIjogIjIwMjQtMDUtMTQiLAogICAgICAgICAgImRhdGVfdmFsdWUiOiAxMjMwLAogICAgICAgICAgImRpc3RfYWxlcnRfc3RhdGlzdGljcyI6IHsKICAgICAgICAgICAgImNsYXNzZXMiOiBbCiAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgImNsYXNzIjogMywKICAgICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6ICJDb25maXJtZWQgKDw1MCUgTG9zcykiLAogICAgICAgICAgICAgICAgInBpeGVsX2NvdW50IjogMTAwNiwKICAgICAgICAgICAgICAgICJ0b3RhbF9hcmVhIjogOTAuNTQKICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJjbGFzcyI6IDYsCiAgICAgICAgICAgICAgICAiZGVzY3JpcHRpb24iOiAiQ29uZmlybWVkICjiiaU1MCUgTG9zcykiLAogICAgICAgICAgICAgICAgInBpeGVsX2NvdW50IjogNiwKICAgICAgICAgICAgICAgICJ0b3RhbF9hcmVhIjogMC41NAogICAgICAgICAgICAgIH0KICAgICAgICAgICAgXQogICAgICAgICAgfSwKICAgICAgICAgICJhcmVhX2hhX3RvdGFsIjogOTEuMDgwMDAwMDAwMDAwMDEsCiAgICAgICAgICAicGVyY2VudGFnZV90b3RhbCI6IDMuMzY5NjI2NzQzOTE1MDI3NgogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgImlkIjogImRkYmY0ODcxLTI4ZjAtNDlhZC04ZmJjLWNmMWZmZjAwZDkzYSIsCiAgICAgICAgICAiZGF0ZSI6ICIyMDI0LTA1LTE5IiwKICAgICAgICAgICJkYXRlX3ZhbHVlIjogMTIzNSwKICAgICAgICAgICJkaXN0X2FsZXJ0X3N0YXRpc3RpY3MiOiB7CiAgICAgICAgICAgICJjbGFzc2VzIjogWwogICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJjbGFzcyI6IDMsCiAgICAgICAgICAgICAgICAiZGVzY3JpcHRpb24iOiAiQ29uZmlybWVkICg8NTAlIExvc3MpIiwKICAgICAgICAgICAgICAgICJwaXhlbF9jb3VudCI6IDI2MywKICAgICAgICAgICAgICAgICJ0b3RhbF9hcmVhIjogMjMuNjcKICAgICAgICAgICAgICB9CiAgICAgICAgICAgIF0KICAgICAgICAgIH0sCiAgICAgICAgICAiYXJlYV9oYV90b3RhbCI6IDIzLjY3LAogICAgICAgICAgInBlcmNlbnRhZ2VfdG90YWwiOiAwLjg3NTcwMzM5MjkzNDQzODkKICAgICAgICB9LAogICAgICAgIHsKICAgICAgICAgICJpZCI6ICI2YzZjMTdjNy0xNTUzLTQzMWUtOTFiMC1mNjZiOWRkNTNiNmQiLAogICAgICAgICAgImRhdGUiOiAiMjAyNC0wNS0yOSIsCiAgICAgICAgICAiZGF0ZV92YWx1ZSI6IDEyNDUsCiAgICAgICAgICAiZGlzdF9hbGVydF9zdGF0aXN0aWNzIjogewogICAgICAgICAgICAiY2xhc3NlcyI6IFsKICAgICAgICAgICAgICB7CiAgICAgICAgICAgICAgICAiY2xhc3MiOiAzLAogICAgICAgICAgICAgICAgImRlc2NyaXB0aW9uIjogIkNvbmZpcm1lZCAoPDUwJSBMb3NzKSIsCiAgICAgICAgICAgICAgICAicGl4ZWxfY291bnQiOiAxLAogICAgICAgICAgICAgICAgInRvdGFsX2FyZWEiOiAwLjA5CiAgICAgICAgICAgICAgfQogICAgICAgICAgICBdCiAgICAgICAgICB9LAogICAgICAgICAgImFyZWFfaGFfdG90YWwiOiAwLjA5LAogICAgICAgICAgInBlcmNlbnRhZ2VfdG90YWwiOiAwLjAwMzMyOTY3MDY5NTU2ODIwOQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgImlkIjogIjg0Nzk0ZjNkLTU2MWYtNDg2Ny04OGJlLWU3MjJiNjc5MTgyNyIsCiAgICAgICAgICAiZGF0ZSI6ICIyMDI0LTA2LTAxIiwKICAgICAgICAgICJkYXRlX3ZhbHVlIjogMTI0OCwKICAgICAgICAgICJkaXN0X2FsZXJ0X3N0YXRpc3RpY3MiOiB7CiAgICAgICAgICAgICJjbGFzc2VzIjogWwogICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJjbGFzcyI6IDMsCiAgICAgICAgICAgICAgICAiZGVzY3JpcHRpb24iOiAiQ29uZmlybWVkICg8NTAlIExvc3MpIiwKICAgICAgICAgICAgICAgICJwaXhlbF9jb3VudCI6IDEyNCwKICAgICAgICAgICAgICAgICJ0b3RhbF9hcmVhIjogMTEuMTYKICAgICAgICAgICAgICB9CiAgICAgICAgICAgIF0KICAgICAgICAgIH0sCiAgICAgICAgICAiYXJlYV9oYV90b3RhbCI6IDExLjE2LAogICAgICAgICAgInBlcmNlbnRhZ2VfdG90YWwiOiAwLjQxMjg3OTE2NjI1MDQ1Nzg0CiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAiaWQiOiAiN2U3NzY0YzctNmJjMy00MTdhLWFkN2EtZjM3NTJjZmFlN2FmIiwKICAgICAgICAgICJkYXRlIjogIjIwMjQtMDYtMDMiLAogICAgICAgICAgImRhdGVfdmFsdWUiOiAxMjUwLAogICAgICAgICAgImRpc3RfYWxlcnRfc3RhdGlzdGljcyI6IHsKICAgICAgICAgICAgImNsYXNzZXMiOiBbCiAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgImNsYXNzIjogMywKICAgICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6ICJDb25maXJtZWQgKDw1MCUgTG9zcykiLAogICAgICAgICAgICAgICAgInBpeGVsX2NvdW50IjogMzY1LAogICAgICAgICAgICAgICAgInRvdGFsX2FyZWEiOiAzMi44NQogICAgICAgICAgICAgIH0KICAgICAgICAgICAgXQogICAgICAgICAgfSwKICAgICAgICAgICJhcmVhX2hhX3RvdGFsIjogMzIuODUsCiAgICAgICAgICAicGVyY2VudGFnZV90b3RhbCI6IDEuMjE1MzI5ODAzODgyMzk2CiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAiaWQiOiAiNzhhODY2NGItM2ZkNS00NTE2LTlhYzgtZjk4ZmExZjNlODVkIiwKICAgICAgICAgICJkYXRlIjogIjIwMjQtMDYtMDgiLAogICAgICAgICAgImRhdGVfdmFsdWUiOiAxMjU1LAogICAgICAgICAgImRpc3RfYWxlcnRfc3RhdGlzdGljcyI6IHsKICAgICAgICAgICAgImNsYXNzZXMiOiBbCiAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgImNsYXNzIjogMywKICAgICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6ICJDb25maXJtZWQgKDw1MCUgTG9zcykiLAogICAgICAgICAgICAgICAgInBpeGVsX2NvdW50IjogMTEzLAogICAgICAgICAgICAgICAgInRvdGFsX2FyZWEiOiAxMC4xNwogICAgICAgICAgICAgIH0KICAgICAgICAgICAgXQogICAgICAgICAgfSwKICAgICAgICAgICJhcmVhX2hhX3RvdGFsIjogMTAuMTcsCiAgICAgICAgICAicGVyY2VudGFnZV90b3RhbCI6IDAuMzc2MjUyNzg4NTk5MjA3NgogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgImlkIjogIjZmYTQ4YWE5LTVkMDQtNDRlMy1iZjc1LTE0NzAzY2QxNzE4MiIsCiAgICAgICAgICAiZGF0ZSI6ICIyMDI0LTA2LTEzIiwKICAgICAgICAgICJkYXRlX3ZhbHVlIjogMTI2MCwKICAgICAgICAgICJkaXN0X2FsZXJ0X3N0YXRpc3RpY3MiOiB7CiAgICAgICAgICAgICJjbGFzc2VzIjogWwogICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJjbGFzcyI6IDMsCiAgICAgICAgICAgICAgICAiZGVzY3JpcHRpb24iOiAiQ29uZmlybWVkICg8NTAlIExvc3MpIiwKICAgICAgICAgICAgICAgICJwaXhlbF9jb3VudCI6IDEwNCwKICAgICAgICAgICAgICAgICJ0b3RhbF9hcmVhIjogOS4zNgogICAgICAgICAgICAgIH0sCiAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgImNsYXNzIjogNiwKICAgICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6ICJDb25maXJtZWQgKOKJpTUwJSBMb3NzKSIsCiAgICAgICAgICAgICAgICAicGl4ZWxfY291bnQiOiA0LAogICAgICAgICAgICAgICAgInRvdGFsX2FyZWEiOiAwLjM2CiAgICAgICAgICAgICAgfQogICAgICAgICAgICBdCiAgICAgICAgICB9LAogICAgICAgICAgImFyZWFfaGFfdG90YWwiOiA5LjcxOTk5OTk5OTk5OTk5OSwKICAgICAgICAgICJwZXJjZW50YWdlX3RvdGFsIjogMC4zNTk2MDQ0MzUxMjEzNjY1CiAgICAgICAgfSwKICAgICAgICB7CiAgICAgICAgICAiaWQiOiAiZTkzN2QwM2QtMzUyNC00NzM2LTliN2MtZjg3NTBiM2YyMDQwIiwKICAgICAgICAgICJkYXRlIjogIjIwMjQtMDYtMTciLAogICAgICAgICAgImRhdGVfdmFsdWUiOiAxMjY0LAogICAgICAgICAgImRpc3RfYWxlcnRfc3RhdGlzdGljcyI6IHsKICAgICAgICAgICAgImNsYXNzZXMiOiBbCiAgICAgICAgICAgICAgewogICAgICAgICAgICAgICAgImNsYXNzIjogMywKICAgICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6ICJDb25maXJtZWQgKDw1MCUgTG9zcykiLAogICAgICAgICAgICAgICAgInBpeGVsX2NvdW50IjogMjM5LAogICAgICAgICAgICAgICAgInRvdGFsX2FyZWEiOiAyMS41MQogICAgICAgICAgICAgIH0KICAgICAgICAgICAgXQogICAgICAgICAgfSwKICAgICAgICAgICJhcmVhX2hhX3RvdGFsIjogMjEuNTEsCiAgICAgICAgICAicGVyY2VudGFnZV90b3RhbCI6IDAuNzk1NzkxMjk2MjQwODAxOQogICAgICAgIH0sCiAgICAgICAgewogICAgICAgICAgImlkIjogImY3ZDM3OTA2LTAwZWMtNDRmMC1iZDU4LTdhNWI2OWRjMDA2YiIsCiAgICAgICAgICAiZGF0ZSI6ICIyMDI0LTA2LTE4IiwKICAgICAgICAgICJkYXRlX3ZhbHVlIjogMTI2NSwKICAgICAgICAgICJkaXN0X2FsZXJ0X3N0YXRpc3RpY3MiOiB7CiAgICAgICAgICAgICJjbGFzc2VzIjogWwogICAgICAgICAgICAgIHsKICAgICAgICAgICAgICAgICJjbGFzcyI6IDMsCiAgICAgICAgICAgICAgICAiZGVzY3JpcHRpb24iOiAiQ29uZmlybWVkICg8NTAlIExvc3MpIiwKICAgICAgICAgICAgICAgICJwaXhlbF9jb3VudCI6IDIwLAogICAgICAgICAgICAgICAgInRvdGFsX2FyZWEiOiAxLjgKICAgICAgICAgICAgICB9CiAgICAgICAgICAgIF0KICAgICAgICAgIH0sCiAgICAgICAgICAiYXJlYV9oYV90b3RhbCI6IDEuOCwKICAgICAgICAgICJwZXJjZW50YWdlX3RvdGFsIjogMC4wNjY1OTM0MTM5MTEzNjQxNwogICAgICAgIH0KICAgICAgXQogICAgfSwKICAgICJkYXRlX3ByZXZpZXdzIjogWwogICAgICB7CiAgICAgICAgImRhdGUiOiAiMjAyNC0wNC0wNCIsCiAgICAgICAgImJvcmRlcl9jb2xvciI6IFsKICAgICAgICAgIDMzLAogICAgICAgICAgMTUwLAogICAgICAgICAgMjQzCiAgICAgICAgXSwKICAgICAgICAiY2FwdGlvbiI6ICIiLAogICAgICAgICJub3JtYWxfaW1hZ2VfdXJsIjogImh0dHBzOi8vc3RvcmFnZS5nb29nbGVhcGlzLmNvbS9kaXN0LWFsZXJ0LXByZXZpZXdzL3Jlc3Rvci9leGFtcGxlMS10aW5kYXJleS9ub3JtYWwvMjAyNjA0MDNfMTU0NjQyX1MyQV9UNTVKREZfMjAyNDA0MDRUMDAyMjIyX0wyQS5wbmciLAogICAgICAgICJvdmVybGF5X2ltYWdlX3VybCI6ICJodHRwczovL3N0b3JhZ2UuZ29vZ2xlYXBpcy5jb20vZGlzdC1hbGVydC1wcmV2aWV3cy9yZXN0b3IvZXhhbXBsZTEtdGluZGFyZXkvb3ZlcmxheS8yMDI2MDQwM18xNTQ2NDFfUzJBX1Q1NUpERl8yMDI0MDQwNFQwMDIyMjJfTDJBLnBuZyIsCiAgICAgICAgIm1ldGFkYXRhIjogewogICAgICAgICAgInNhdGVsbGl0ZSI6ICJTZW50aW5lbCIsCiAgICAgICAgICAic2NlbmVfaWQiOiAiUzJBX1Q1NUpERl8yMDI0MDQwNFQwMDIyMjJfTDJBIiwKICAgICAgICAgICJjbG91ZF9jb3ZlciI6IDk5LjQ3OTE4MQogICAgICAgIH0sCiAgICAgICAgImJ1Y2tldCI6ICJkaXN0LWFsZXJ0LXByZXZpZXdzIiwKICAgICAgICAicGF0aCI6ICJyZXN0b3IvZXhhbXBsZTEtdGluZGFyZXkvb3ZlcmxheS8yMDI2MDQwM18xNTQ2NDFfUzJBX1Q1NUpERl8yMDI0MDQwNFQwMDIyMjJfTDJBLnBuZyIsCiAgICAgICAgImxheWVyX2Rlc2NyaXB0aW9uIjogIlByZS1yZW5kZXJlZCBUcnVlIENvbG9yICh2aXN1YWwgYXNzZXQpIiwKICAgICAgICAicHJldmlld193aWR0aCI6IDQzMiwKICAgICAgICAicHJldmlld19oZWlnaHQiOiAzNDUsCiAgICAgICAgImJ1ZmZlcl9wZXJjZW50IjogMTAsCiAgICAgICAgInN0cmV0Y2hfbWluIjogbnVsbCwKICAgICAgICAic3RyZXRjaF9tYXgiOiBudWxsLAogICAgICAgICJzY2VuZV9jb3VudCI6IDEsCiAgICAgICAgInNjZW5lX2RhdGUiOiAiMjAyNC0wNC0wNCIsCiAgICAgICAgImNsb3VkX2NvdmVyX3RocmVzaG9sZF9tZXQiOiB0cnVlLAogICAgICAgICJjb2xsZWN0aW9uIjogInNlbnRpbmVsLTItYzEtbDJhIiwKICAgICAgICAiYmFzZV9pbWFnZXJ5X2NvZ191cmxzIjogewogICAgICAgICAgInZpc3VhbCI6ICJodHRwczovL2U4NC1lYXJ0aC1zZWFyY2gtc2VudGluZWwtZGF0YS5zMy51cy13ZXN0LTIuYW1hem9uYXdzLmNvbS9zZW50aW5lbC0yLWMxLWwyYS81NS9KL0RGLzIwMjQvNC9TMkFfVDU1SkRGXzIwMjQwNDA0VDAwMjIyMl9MMkEvVENJLnRpZiIKICAgICAgICB9LAogICAgICAgICJkaXN0X2FsZXJ0X2NvZ191cmxzIjogewogICAgICAgICAgIlZFRy1ESVNULVNUQVRVUy1UNTVKREYiOiAiaHR0cHM6Ly9kYXRhLmxwZGFhYy5lYXJ0aGRhdGFjbG91ZC5uYXNhLmdvdi9scC1wcm9kLXByb3RlY3RlZC9PUEVSQV9MM19ESVNULUFMRVJULUhMU19WMS9PUEVSQV9MM19ESVNULUFMRVJULUhMU19UNTVKREZfMjAyNDA0MDRUMDAyMDUxWl8yMDI0MDQwN1QwOTM0MjZaX1MyQV8zMF92MS9PUEVSQV9MM19ESVNULUFMRVJULUhMU19UNTVKREZfMjAyNDA0MDRUMDAyMDUxWl8yMDI0MDQwN1QwOTM0MjZaX1MyQV8zMF92MV9WRUctRElTVC1TVEFUVVMudGlmIiwKICAgICAgICAgICJWRUctRElTVC1EQVRFLVQ1NUpERiI6ICJodHRwczovL2RhdGEubHBkYWFjLmVhcnRoZGF0YWNsb3VkLm5hc2EuZ292L2xwLXByb2QtcHJvdGVjdGVkL09QRVJBX0wzX0RJU1QtQUxFUlQtSExTX1YxL09QRVJBX0wzX0RJU1QtQUxFUlQtSExTX1Q1NUpERl8yMDI0MDQwNFQwMDIwNTFaXzIwMjQwNDA3VDA5MzQyNlpfUzJBXzMwX3YxL09QRVJBX0wzX0RJU1QtQUxFUlQtSExTX1Q1NUpERl8yMDI0MDQwNFQwMDIwNTFaXzIwMjQwNDA3VDA5MzQyNlpfUzJBXzMwX3YxX1ZFRy1ESVNULURBVEUudGlmIgogICAgICAgIH0sCiAgICAgICAgImRpc3RfYWxlcnRfc3RhdGlzdGljcyI6IHsKICAgICAgICAgICJjbGFzc2VzIjogWwogICAgICAgICAgICB7CiAgICAgICAgICAgICAgImNsYXNzIjogMCwKICAgICAgICAgICAgICAiZGVzY3JpcHRpb24iOiAiTm8gRGlzdHVyYmFuY2UiLAogICAgICAgICAgICAgICJ0b3RhbF9hcmVhIjogMjEzNS4zNCwKICAgICAgICAgICAgICAicGl4ZWxfY291bnQiOiAyMzcyNgogICAgICAgICAgICB9LAogICAgICAgICAgICB7CiAgICAgICAgICAgICAgImNsYXNzIjogMSwKICAgICAgICAgICAgICAiZGVzY3JpcHRpb24iOiAiRmlyc3QgRGV0ZWN0aW9uICg8NTAlIExvc3MpIiwKICAgICAgICAgICAgICAidG90YWxfYXJlYSI6IDI4LjcxLAogICAgICAgICAgICAgICJwaXhlbF9jb3VudCI6IDMxOQogICAgICAgICAgICB9LAogICAgICAgICAgICB7CiAgICAgICAgICAgICAgImNsYXNzIjogMiwKICAgICAgICAgICAgICAiZGVzY3JpcHRpb24iOiAiUHJvdmlzaW9uYWwgKDw1MCUgTG9zcykiLAogICAgICAgICAgICAgICJ0b3RhbF9hcmVhIjogNTcuMTUsCiAgICAgICAgICAgICAgInBpeGVsX2NvdW50IjogNjM1CiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAiY2xhc3MiOiAzLAogICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6ICJDb25maXJtZWQgKDw1MCUgTG9zcykiLAogICAgICAgICAgICAgICJ0b3RhbF9hcmVhIjogMTE1LjM4LAogICAgICAgICAgICAgICJwaXhlbF9jb3VudCI6IDEyODIKICAgICAgICAgICAgfSwKICAgICAgICAgICAgewogICAgICAgICAgICAgICJjbGFzcyI6IDYsCiAgICAgICAgICAgICAgImRlc2NyaXB0aW9uIjogIkNvbmZpcm1lZCAo4omlNTAlIExvc3MpIiwKICAgICAgICAgICAgICAidG90YWxfYXJlYSI6IDMuMTUsCiAgICAgICAgICAgICAgInBpeGVsX2NvdW50IjogMzUKICAgICAgICAgICAgfSwKICAgICAgICAgICAgewogICAgICAgICAgICAgICJjbGFzcyI6IDcsCiAgICAgICAgICAgICAgImRlc2NyaXB0aW9uIjogIkNvbmZpcm1lZCAoPDUwJSBMb3NzKSBGaW5pc2hlZCIsCiAgICAgICAgICAgICAgInRvdGFsX2FyZWEiOiAzNTIuOCwKICAgICAgICAgICAgICAicGl4ZWxfY291bnQiOiAzOTIwCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAiY2xhc3MiOiA4LAogICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6ICJDb25maXJtZWQgKOKJpTUwJSBMb3NzKSBGaW5pc2hlZCIsCiAgICAgICAgICAgICAgInRvdGFsX2FyZWEiOiAxMC40NCwKICAgICAgICAgICAgICAicGl4ZWxfY291bnQiOiAxMTYKICAgICAgICAgICAgfQogICAgICAgICAgXSwKICAgICAgICAgICJ0b3RhbF9hcmVhX2hhIjogMjcwMi45NywKICAgICAgICAgICJ0b3RhbF91bmlxdWVfcGl4ZWxzIjogMzAwMzMKICAgICAgICB9LAogICAgICAgICJ0eXBlIjogImZpcnN0X2dyYW51bGUiLAogICAgICAgICJ0aXRsZSI6ICJBcHJpbCAwNCwgMjAyNDogRmlyc3QgRElTVC1BTEVSVCBncmFudWxlIiwKICAgICAgICAiYW5hbHlzaXMiOiB7CiAgICAgICAgICAibWluX2NvbmZpZGVuY2UiOiAiY29uZmlybWVkIiwKICAgICAgICAgICJwaXhlbHNfbHQ1MCI6IDEyODIsCiAgICAgICAgICAicGl4ZWxzX2d0ZTUwIjogMzUsCiAgICAgICAgICAicGl4ZWxzX3RvdGFsIjogMTMxNywKICAgICAgICAgICJhcmVhX2hhX2x0NTAiOiAxMTUuMzgsCiAgICAgICAgICAiYXJlYV9oYV9ndGU1MCI6IDMuMTUsCiAgICAgICAgICAiYXJlYV9oYV90b3RhbCI6IDExOC41MywKICAgICAgICAgICJwZXJjZW50YWdlX2x0NTAiOiA0LjI3LAogICAgICAgICAgInBlcmNlbnRhZ2VfZ3RlNTAiOiAwLjEyLAogICAgICAgICAgInBlcmNlbnRhZ2VfdG90YWwiOiA0LjM5CiAgICAgICAgfQogICAgICB9LAogICAgICB7CiAgICAgICAgImRhdGUiOiAiMjAyNC0wNi0yOCIsCiAgICAgICAgImJvcmRlcl9jb2xvciI6IFsKICAgICAgICAgIDc2LAogICAgICAgICAgMTc1LAogICAgICAgICAgODAKICAgICAgICBdLAogICAgICAgICJjYXB0aW9uIjogIiIsCiAgICAgICAgIm5vcm1hbF9pbWFnZV91cmwiOiAiaHR0cHM6Ly9zdG9yYWdlLmdvb2dsZWFwaXMuY29tL2Rpc3QtYWxlcnQtcHJldmlld3MvcmVzdG9yL2V4YW1wbGUxLXRpbmRhcmV5L25vcm1hbC8yMDI2MDQwM18xNTQ2MzlfUzJCX1Q1NUpERl8yMDI0MDYyOFQwMDI0NTZfTDJBLnBuZyIsCiAgICAgICAgIm92ZXJsYXlfaW1hZ2VfdXJsIjogImh0dHBzOi8vc3RvcmFnZS5nb29nbGVhcGlzLmNvbS9kaXN0LWFsZXJ0LXByZXZpZXdzL3Jlc3Rvci9leGFtcGxlMS10aW5kYXJleS9vdmVybGF5LzIwMjYwNDAzXzE1NDYzOF9TMkJfVDU1SkRGXzIwMjQwNjI4VDAwMjQ1Nl9MMkEucG5nIiwKICAgICAgICAibWV0YWRhdGEiOiB7CiAgICAgICAgICAic2F0ZWxsaXRlIjogIlNlbnRpbmVsIiwKICAgICAgICAgICJzY2VuZV9pZCI6ICJTMkJfVDU1SkRGXzIwMjQwNjI4VDAwMjQ1Nl9MMkEiLAogICAgICAgICAgImNsb3VkX2NvdmVyIjogMC4wMDAyOTIKICAgICAgICB9LAogICAgICAgICJidWNrZXQiOiAiZGlzdC1hbGVydC1wcmV2aWV3cyIsCiAgICAgICAgInBhdGgiOiAicmVzdG9yL2V4YW1wbGUxLXRpbmRhcmV5L292ZXJsYXkvMjAyNjA0MDNfMTU0NjM4X1MyQl9UNTVKREZfMjAyNDA2MjhUMDAyNDU2X0wyQS5wbmciLAogICAgICAgICJsYXllcl9kZXNjcmlwdGlvbiI6ICJQcmUtcmVuZGVyZWQgVHJ1ZSBDb2xvciAodmlzdWFsIGFzc2V0KSIsCiAgICAgICAgInByZXZpZXdfd2lkdGgiOiA0MzIsCiAgICAgICAgInByZXZpZXdfaGVpZ2h0IjogMzQ1LAogICAgICAgICJidWZmZXJfcGVyY2VudCI6IDEwLAogICAgICAgICJzdHJldGNoX21pbiI6IG51bGwsCiAgICAgICAgInN0cmV0Y2hfbWF4IjogbnVsbCwKICAgICAgICAic2NlbmVfY291bnQiOiAxLAogICAgICAgICJzY2VuZV9kYXRlIjogIjIwMjQtMDYtMjgiLAogICAgICAgICJjbG91ZF9jb3Zlcl90aHJlc2hvbGRfbWV0IjogdHJ1ZSwKICAgICAgICAiY29sbGVjdGlvbiI6ICJzZW50aW5lbC0yLWMxLWwyYSIsCiAgICAgICAgImJhc2VfaW1hZ2VyeV9jb2dfdXJscyI6IHsKICAgICAgICAgICJ2aXN1YWwiOiAiaHR0cHM6Ly9lODQtZWFydGgtc2VhcmNoLXNlbnRpbmVsLWRhdGEuczMudXMtd2VzdC0yLmFtYXpvbmF3cy5jb20vc2VudGluZWwtMi1jMS1sMmEvNTUvSi9ERi8yMDI0LzYvUzJCX1Q1NUpERl8yMDI0MDYyOFQwMDI0NTZfTDJBL1RDSS50aWYiCiAgICAgICAgfSwKICAgICAgICAiZGlzdF9hbGVydF9jb2dfdXJscyI6IHsKICAgICAgICAgICJWRUctRElTVC1TVEFUVVMtVDU1SkRGIjogImh0dHBzOi8vZGF0YS5scGRhYWMuZWFydGhkYXRhY2xvdWQubmFzYS5nb3YvbHAtcHJvZC1wcm90ZWN0ZWQvT1BFUkFfTDNfRElTVC1BTEVSVC1ITFNfVjEvT1BFUkFfTDNfRElTVC1BTEVSVC1ITFNfVDU1SkRGXzIwMjQwNjI4VDAwMjA1OVpfMjAyNDA2MzBUMDkxMjQ1Wl9TMkJfMzBfdjEvT1BFUkFfTDNfRElTVC1BTEVSVC1ITFNfVDU1SkRGXzIwMjQwNjI4VDAwMjA1OVpfMjAyNDA2MzBUMDkxMjQ1Wl9TMkJfMzBfdjFfVkVHLURJU1QtU1RBVFVTLnRpZiIsCiAgICAgICAgICAiVkVHLURJU1QtREFURS1UNTVKREYiOiAiaHR0cHM6Ly9kYXRhLmxwZGFhYy5lYXJ0aGRhdGFjbG91ZC5uYXNhLmdvdi9scC1wcm9kLXByb3RlY3RlZC9PUEVSQV9MM19ESVNULUFMRVJULUhMU19WMS9PUEVSQV9MM19ESVNULUFMRVJULUhMU19UNTVKREZfMjAyNDA2MjhUMDAyMDU5Wl8yMDI0MDYzMFQwOTEyNDVaX1MyQl8zMF92MS9PUEVSQV9MM19ESVNULUFMRVJULUhMU19UNTVKREZfMjAyNDA2MjhUMDAyMDU5Wl8yMDI0MDYzMFQwOTEyNDVaX1MyQl8zMF92MV9WRUctRElTVC1EQVRFLnRpZiIKICAgICAgICB9LAogICAgICAgICJkaXN0X2FsZXJ0X3N0YXRpc3RpY3MiOiB7CiAgICAgICAgICAiY2xhc3NlcyI6IFsKICAgICAgICAgICAgewogICAgICAgICAgICAgICJjbGFzcyI6IDAsCiAgICAgICAgICAgICAgImRlc2NyaXB0aW9uIjogIk5vIERpc3R1cmJhbmNlIiwKICAgICAgICAgICAgICAidG90YWxfYXJlYSI6IDE2ODkuNTcsCiAgICAgICAgICAgICAgInBpeGVsX2NvdW50IjogMTg3NzMKICAgICAgICAgICAgfSwKICAgICAgICAgICAgewogICAgICAgICAgICAgICJjbGFzcyI6IDEsCiAgICAgICAgICAgICAgImRlc2NyaXB0aW9uIjogIkZpcnN0IERldGVjdGlvbiAoPDUwJSBMb3NzKSIsCiAgICAgICAgICAgICAgInRvdGFsX2FyZWEiOiAxMjAuNzgsCiAgICAgICAgICAgICAgInBpeGVsX2NvdW50IjogMTM0MgogICAgICAgICAgICB9LAogICAgICAgICAgICB7CiAgICAgICAgICAgICAgImNsYXNzIjogMiwKICAgICAgICAgICAgICAiZGVzY3JpcHRpb24iOiAiUHJvdmlzaW9uYWwgKDw1MCUgTG9zcykiLAogICAgICAgICAgICAgICJ0b3RhbF9hcmVhIjogMjAxLjk2LAogICAgICAgICAgICAgICJwaXhlbF9jb3VudCI6IDIyNDQKICAgICAgICAgICAgfSwKICAgICAgICAgICAgewogICAgICAgICAgICAgICJjbGFzcyI6IDMsCiAgICAgICAgICAgICAgImRlc2NyaXB0aW9uIjogIkNvbmZpcm1lZCAoPDUwJSBMb3NzKSIsCiAgICAgICAgICAgICAgInRvdGFsX2FyZWEiOiA0MzUuMzMsCiAgICAgICAgICAgICAgInBpeGVsX2NvdW50IjogNDgzNwogICAgICAgICAgICB9LAogICAgICAgICAgICB7CiAgICAgICAgICAgICAgImNsYXNzIjogNiwKICAgICAgICAgICAgICAiZGVzY3JpcHRpb24iOiAiQ29uZmlybWVkICjiiaU1MCUgTG9zcykiLAogICAgICAgICAgICAgICJ0b3RhbF9hcmVhIjogMTIuODcsCiAgICAgICAgICAgICAgInBpeGVsX2NvdW50IjogMTQzCiAgICAgICAgICAgIH0sCiAgICAgICAgICAgIHsKICAgICAgICAgICAgICAiY2xhc3MiOiA3LAogICAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6ICJDb25maXJtZWQgKDw1MCUgTG9zcykgRmluaXNoZWQiLAogICAgICAgICAgICAgICJ0b3RhbF9hcmVhIjogMjM5Ljk0LAogICAgICAgICAgICAgICJwaXhlbF9jb3VudCI6IDI2NjYKICAgICAgICAgICAgfSwKICAgICAgICAgICAgewogICAgICAgICAgICAgICJjbGFzcyI6IDgsCiAgICAgICAgICAgICAgImRlc2NyaXB0aW9uIjogIkNvbmZpcm1lZCAo4omlNTAlIExvc3MpIEZpbmlzaGVkIiwKICAgICAgICAgICAgICAidG90YWxfYXJlYSI6IDIuNTIsCiAgICAgICAgICAgICAgInBpeGVsX2NvdW50IjogMjgKICAgICAgICAgICAgfQogICAgICAgICAgXSwKICAgICAgICAgICJ0b3RhbF9hcmVhX2hhIjogMjcwMi45NywKICAgICAgICAgICJ0b3RhbF91bmlxdWVfcGl4ZWxzIjogMzAwMzMKICAgICAgICB9LAogICAgICAgICJ0eXBlIjogImxhc3RfZ3JhbnVsZSIsCiAgICAgICAgInRpdGxlIjogIkp1bmUgMjgsIDIwMjQ6IExhc3QgRElTVC1BTEVSVCBncmFudWxlIiwKICAgICAgICAiYW5hbHlzaXMiOiB7CiAgICAgICAgICAibWluX2NvbmZpZGVuY2UiOiAiY29uZmlybWVkIiwKICAgICAgICAgICJwaXhlbHNfbHQ1MCI6IDQ4MzcsCiAgICAgICAgICAicGl4ZWxzX2d0ZTUwIjogMTQzLAogICAgICAgICAgInBpeGVsc190b3RhbCI6IDQ5ODAsCiAgICAgICAgICAiYXJlYV9oYV9sdDUwIjogNDM1LjMzLAogICAgICAgICAgImFyZWFfaGFfZ3RlNTAiOiAxMi44NywKICAgICAgICAgICJhcmVhX2hhX3RvdGFsIjogNDQ4LjIsCiAgICAgICAgICAicGVyY2VudGFnZV9sdDUwIjogMTYuMTEsCiAgICAgICAgICAicGVyY2VudGFnZV9ndGU1MCI6IDAuNDgsCiAgICAgICAgICAicGVyY2VudGFnZV90b3RhbCI6IDE2LjU4CiAgICAgICAgfQogICAgICB9CiAgICBdLAogICAgIm92ZXJ2aWV3X3ByZXZpZXciOiB7CiAgICAgICJkYXRlIjogIjIwMjQtMDYtMjgiLAogICAgICAiYm9yZGVyX2NvbG9yIjogWwogICAgICAgIDIwMCwKICAgICAgICAyMDAsCiAgICAgICAgMjAwCiAgICAgIF0sCiAgICAgICJjYXB0aW9uIjogIiIsCiAgICAgICJub3JtYWxfaW1hZ2VfdXJsIjogImh0dHBzOi8vc3RvcmFnZS5nb29nbGVhcGlzLmNvbS9kaXN0LWFsZXJ0LXByZXZpZXdzL3Jlc3Rvci9leGFtcGxlMS10aW5kYXJleS9vdmVydmlldy9ub3JtYWwvMjAyNjA0MDNfMTU0NjM3X1MyQl9UNTVKREZfMjAyNDA2MjhUMDAyNDU2X0wyQS5wbmciLAogICAgICAib3ZlcmxheV9pbWFnZV91cmwiOiAiaHR0cHM6Ly9zdG9yYWdlLmdvb2dsZWFwaXMuY29tL2Rpc3QtYWxlcnQtcHJldmlld3MvcmVzdG9yL2V4YW1wbGUxLXRpbmRhcmV5L292ZXJ2aWV3L292ZXJsYXkvMjAyNjA0MDNfMTU0NjQ5X1MyQl9UNTVKREZfMjAyNDA2MjhUMDAyNDU2X0wyQS5wbmciLAogICAgICAibWV0YWRhdGEiOiB7CiAgICAgICAgInNhdGVsbGl0ZSI6ICJTZW50aW5lbCIsCiAgICAgICAgInNjZW5lX2lkIjogIlMyQl9UNTVKREZfMjAyNDA2MjhUMDAyNDU2X0wyQSIsCiAgICAgICAgImNsb3VkX2NvdmVyIjogMC4wMDAyOTIKICAgICAgfSwKICAgICAgImJ1Y2tldCI6ICJkaXN0LWFsZXJ0LXByZXZpZXdzIiwKICAgICAgInBhdGgiOiAicmVzdG9yL2V4YW1wbGUxLXRpbmRhcmV5L292ZXJ2aWV3L292ZXJsYXkvMjAyNjA0MDNfMTU0NjQ5X1MyQl9UNTVKREZfMjAyNDA2MjhUMDAyNDU2X0wyQS5wbmciLAogICAgICAibGF5ZXJfZGVzY3JpcHRpb24iOiAiUHJlLXJlbmRlcmVkIFRydWUgQ29sb3IgKHZpc3VhbCBhc3NldCkiLAogICAgICAicHJldmlld193aWR0aCI6IDQzMiwKICAgICAgInByZXZpZXdfaGVpZ2h0IjogMzQ1LAogICAgICAiYnVmZmVyX3BlcmNlbnQiOiAxMCwKICAgICAgInN0cmV0Y2hfbWluIjogbnVsbCwKICAgICAgInN0cmV0Y2hfbWF4IjogbnVsbCwKICAgICAgInNjZW5lX2NvdW50IjogNiwKICAgICAgInNjZW5lX2RhdGUiOiAiMjAyNC0wNi0yOCIsCiAgICAgICJjbG91ZF9jb3Zlcl90aHJlc2hvbGRfbWV0IjogdHJ1ZSwKICAgICAgImNvbGxlY3Rpb24iOiAic2VudGluZWwtMi1jMS1sMmEiLAogICAgICAiYmFzZV9pbWFnZXJ5X2NvZ191cmxzIjogewogICAgICAgICJ2aXN1YWwiOiAiaHR0cHM6Ly9lODQtZWFydGgtc2VhcmNoLXNlbnRpbmVsLWRhdGEuczMudXMtd2VzdC0yLmFtYXpvbmF3cy5jb20vc2VudGluZWwtMi1jMS1sMmEvNTUvSi9ERi8yMDI0LzYvUzJCX1Q1NUpERl8yMDI0MDYyOFQwMDI0NTZfTDJBL1RDSS50aWYiCiAgICAgIH0sCiAgICAgICJkaXN0X2FsZXJ0X2NvZ191cmxzIjogewogICAgICAgICJWRUctRElTVC1TVEFUVVMtVDU1SkRGIjogImh0dHBzOi8vZGF0YS5scGRhYWMuZWFydGhkYXRhY2xvdWQubmFzYS5nb3YvbHAtcHJvZC1wcm90ZWN0ZWQvT1BFUkFfTDNfRElTVC1BTEVSVC1ITFNfVjEvT1BFUkFfTDNfRElTVC1BTEVSVC1ITFNfVDU1SkRGXzIwMjQwNjI4VDAwMjA1OVpfMjAyNDA2MzBUMDkxMjQ1Wl9TMkJfMzBfdjEvT1BFUkFfTDNfRElTVC1BTEVSVC1ITFNfVDU1SkRGXzIwMjQwNjI4VDAwMjA1OVpfMjAyNDA2MzBUMDkxMjQ1Wl9TMkJfMzBfdjFfVkVHLURJU1QtU1RBVFVTLnRpZiIsCiAgICAgICAgIlZFRy1ESVNULURBVEUtVDU1SkRGIjogImh0dHBzOi8vZGF0YS5scGRhYWMuZWFydGhkYXRhY2xvdWQubmFzYS5nb3YvbHAtcHJvZC1wcm90ZWN0ZWQvT1BFUkFfTDNfRElTVC1BTEVSVC1ITFNfVjEvT1BFUkFfTDNfRElTVC1BTEVSVC1ITFNfVDU1SkRGXzIwMjQwNjI4VDAwMjA1OVpfMjAyNDA2MzBUMDkxMjQ1Wl9TMkJfMzBfdjEvT1BFUkFfTDNfRElTVC1BTEVSVC1ITFNfVDU1SkRGXzIwMjQwNjI4VDAwMjA1OVpfMjAyNDA2MzBUMDkxMjQ1Wl9TMkJfMzBfdjFfVkVHLURJU1QtREFURS50aWYiCiAgICAgIH0sCiAgICAgICJkaXN0X2FsZXJ0X2dlb3RpZmZfdXJsIjogImh0dHBzOi8vc3RvcmFnZS5nb29nbGVhcGlzLmNvbS9kaXN0LWFsZXJ0LXByZXZpZXdzL3Jlc3Rvci9leGFtcGxlMS10aW5kYXJleS9vdmVydmlldy9vdmVybGF5L2N1bXVsYXRpdmVfZGlzdHVyYmFuY2VfbWFwX3EyLTIwMjQudGlmIiwKICAgICAgImRpc3RfYWxlcnRfc3RhdGlzdGljcyI6IHsKICAgICAgICAiY2xhc3NlcyI6IFsKICAgICAgICAgIHsKICAgICAgICAgICAgImNsYXNzIjogMCwKICAgICAgICAgICAgImRlc2NyaXB0aW9uIjogIk5vIERpc3R1cmJhbmNlIiwKICAgICAgICAgICAgInRvdGFsX2FyZWEiOiAxNjg5LjU3LAogICAgICAgICAgICAicGl4ZWxfY291bnQiOiAxODc3MwogICAgICAgICAgfSwKICAgICAgICAgIHsKICAgICAgICAgICAgImNsYXNzIjogMSwKICAgICAgICAgICAgImRlc2NyaXB0aW9uIjogIkZpcnN0IERldGVjdGlvbiAoPDUwJSBMb3NzKSIsCiAgICAgICAgICAgICJ0b3RhbF9hcmVhIjogMTIwLjc4LAogICAgICAgICAgICAicGl4ZWxfY291bnQiOiAxMzQyCiAgICAgICAgICB9LAogICAgICAgICAgewogICAgICAgICAgICAiY2xhc3MiOiAyLAogICAgICAgICAgICAiZGVzY3JpcHRpb24iOiAiUHJvdmlzaW9uYWwgKDw1MCUgTG9zcykiLAogICAgICAgICAgICAidG90YWxfYXJlYSI6IDIwMS45NiwKICAgICAgICAgICAgInBpeGVsX2NvdW50IjogMjI0NAogICAgICAgICAgfSwKICAgICAgICAgIHsKICAgICAgICAgICAgImNsYXNzIjogMywKICAgICAgICAgICAgImRlc2NyaXB0aW9uIjogIkNvbmZpcm1lZCAoPDUwJSBMb3NzKSIsCiAgICAgICAgICAgICJ0b3RhbF9hcmVhIjogNDM1LjMzLAogICAgICAgICAgICAicGl4ZWxfY291bnQiOiA0ODM3CiAgICAgICAgICB9LAogICAgICAgICAgewogICAgICAgICAgICAiY2xhc3MiOiA2LAogICAgICAgICAgICAiZGVzY3JpcHRpb24iOiAiQ29uZmlybWVkICjiiaU1MCUgTG9zcykiLAogICAgICAgICAgICAidG90YWxfYXJlYSI6IDEyLjg3LAogICAgICAgICAgICAicGl4ZWxfY291bnQiOiAxNDMKICAgICAgICAgIH0sCiAgICAgICAgICB7CiAgICAgICAgICAgICJjbGFzcyI6IDcsCiAgICAgICAgICAgICJkZXNjcmlwdGlvbiI6ICJDb25maXJtZWQgKDw1MCUgTG9zcykgRmluaXNoZWQiLAogICAgICAgICAgICAidG90YWxfYXJlYSI6IDIzOS45NCwKICAgICAgICAgICAgInBpeGVsX2NvdW50IjogMjY2NgogICAgICAgICAgfSwKICAgICAgICAgIHsKICAgICAgICAgICAgImNsYXNzIjogOCwKICAgICAgICAgICAgImRlc2NyaXB0aW9uIjogIkNvbmZpcm1lZCAo4omlNTAlIExvc3MpIEZpbmlzaGVkIiwKICAgICAgICAgICAgInRvdGFsX2FyZWEiOiAyLjUyLAogICAgICAgICAgICAicGl4ZWxfY291bnQiOiAyOAogICAgICAgICAgfQogICAgICAgIF0sCiAgICAgICAgInRvdGFsX2FyZWFfaGEiOiAyNzAyLjk3LAogICAgICAgICJ0b3RhbF91bmlxdWVfcGl4ZWxzIjogMzAwMzMKICAgICAgfQogICAgfQogIH0KfQ=="
+           download="disturbance_report_e2a85e16-bb3a-4f9c-bbe9-daba9a0beec9_20260403.json"
+           class="inline-block bg-alert-teal text-white text-sm font-semibold px-6 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Download Data
+        </a>
+        
+                    <button onclick="window.print()" class="bg-alert-teal text-white text-sm font-semibold px-6 py-2 rounded-lg hover:opacity-90 transition flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        Print Report
+                    </button>
+                </div>
+            </div>
+            <div class="border-t border-gray-300 pt-4">
+                <div class="text-xs text-gray-600 mb-4">
+                    <div class="font-semibold text-gray-700 mb-2">Data Source & Citation</div>
+                    <p class="leading-relaxed">
+                        This report uses vegetation disturbance data from NASA's <strong>OPERA DIST-ALERT</strong> (Observational Products for End-Users from Remote Sensing Analysis - Disturbance Alert) product.
+                        OPERA DIST-ALERT provides near real-time detection of land surface disturbances using Harmonized Landsat Sentinel-2 (HLS) data at 30-meter resolution.
+                    </p>
+                    <p class="mt-2 leading-relaxed">
+                        <strong>Citation:</strong> Nguyen, T.H. et al. (2025). OPERA DIST-ALERT: Near-real-time disturbance detection in HLS satellite images.
+                        <em>Nature Communications</em>. <a href="https://www.nature.com/articles/s41467-025-64014-9" target="_blank" class="text-alert-teal hover:underline">https://www.nature.com/articles/s41467-025-64014-9</a>
+                    </p>
+                    <p class="mt-3 leading-relaxed">
+                        Satellite imagery previews use <strong>Landsat Collection 2 Level-2</strong> data (Landsat 5, 7, 8, 9) produced by NASA/USGS and accessed via
+                        <a href="https://planetarycomputer.microsoft.com/dataset/landsat-c2-l2" target="_blank" class="text-alert-teal hover:underline">Microsoft Planetary Computer</a>.
+                        <em>Landsat imagery courtesy of the U.S. Geological Survey.</em>
+                    </p>
+                    <p class="mt-2 leading-relaxed">
+                        Satellite imagery previews also use <strong>Sentinel-2 Level-2A</strong> data produced by ESA/Copernicus and accessed as Cloud-Optimized GeoTIFFs via
+                        <a href="https://registry.opendata.aws/sentinel-2-l2a-cogs/" target="_blank" class="text-alert-teal hover:underline">AWS Earth Search</a> (managed by Element 84).
+                        Access to Sentinel data is free, full and open under the
+                        <a href="https://scihub.copernicus.eu/twiki/do/view/SciHubWebPortal/TermsConditions" target="_blank" class="text-alert-teal hover:underline">Copernicus Terms and Conditions</a>.
+                    </p>
+                </div>
+            </div>
+            <div class="mt-6 pt-4 border-t border-gray-300">
+                <div class="grid grid-cols-3 gap-8 text-xs text-gray-600 mb-6">
+                    <div>
+                        <div class="font-semibold text-gray-700 mb-1">Report Admin</div>
+                        <div>Restor</div>
+                        <div>Andrew Cottam</div>
+                        <div>andrew@restor.eco</div>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-gray-700 mb-1">Report Schedule</div>
+                        <div>Monitoring Period: Q2 2024</div>
+                        <div>Frequency: Quarterly</div>
+                        <div>Next Run: October 01, 2024</div>
+                        <div>Generated: April 03, 2026 at 15:46 UTC</div>
+                    </div>
+                    <div>
+                        <div class="font-semibold text-gray-700 mb-1">Questions?</div>
+                        <div>support@restor.eco</div>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center py-3">
+                <a href="#top" class="text-sm text-alert-teal hover:underline">↑ Back to top</a>
+            </div>
+            <div class="text-center pt-4 border-t border-gray-300">
+                <p class="text-xs text-gray-500">© 2025 Restor Monitoring Services. All rights reserved.</p>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
