@@ -5,6 +5,7 @@ import "ol/ol.css";
 import Map from "ol/Map";
 import View from "ol/View";
 import Polygon from "ol/geom/Polygon";
+import MultiPolygon from "ol/geom/MultiPolygon";
 import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
 import { Draw } from "ol/interaction";
@@ -17,6 +18,7 @@ import VectorTileLayer from 'ol/layer/VectorTile';
 import VectorTileSource from 'ol/source/VectorTile';
 import MVT from 'ol/format/MVT';
 import type { FeatureLike } from "ol/Feature";
+import RenderFeature, { toGeometry } from 'ol/render/Feature';
 
 // Firebase
 import { initializeApp } from "firebase/app";
@@ -228,41 +230,19 @@ const App: React.FC = () => {
       setSiteName(name);
     }
 
-    // Extract geometry from vector tile feature (RenderFeature)
+    // Extract geometry from vector tile feature
     let geometry;
 
-    const renderFeature = feature as any;
-
-    if (renderFeature.flatCoordinates_ && renderFeature.ends_) {
-      // RenderFeature has flatCoordinates_ and ends_ properties
-      const flatCoords = renderFeature.flatCoordinates_;
-      const ends = renderFeature.ends_;
-      const stride = renderFeature.stride_ || 2; // Usually 2 for [x, y]
-
-      // Convert flat coordinates to coordinate rings
-      const rings = [];
-      let start = 0;
-
-      for (let i = 0; i < ends.length; i++) {
-        const end = ends[i];
-        const ring = [];
-
-        for (let j = start; j < end; j += stride) {
-          ring.push([flatCoords[j], flatCoords[j + 1]]);
-        }
-
-        rings.push(ring);
-        start = end;
-      }
-
-      // Create polygon geometry
-      geometry = new Polygon(rings);
-
-    } else if (renderFeature.getGeometry && typeof renderFeature.getGeometry === 'function') {
-      // Try regular geometry access
-      geometry = renderFeature.getGeometry();
+    if (feature instanceof RenderFeature) {
+      // toGeometry correctly returns Polygon or MultiPolygon based on inflateEnds
+      geometry = toGeometry(feature);
     } else {
-      return;
+      const f = feature as any;
+      if (f.getGeometry && typeof f.getGeometry === 'function') {
+        geometry = f.getGeometry();
+      } else {
+        return;
+      }
     }
 
     if (!geometry) {
@@ -283,12 +263,21 @@ const App: React.FC = () => {
     setIsLoading(true);
     setData(null); // Clear previous results
     try {
-      const geometry = drawnFeatureRef.current.getGeometry() as Polygon;
-      const geometry4326 = geometry.clone().transform("EPSG:3857", "EPSG:4326");
+      const geometry = drawnFeatureRef.current.getGeometry();
+      const geometry4326 = geometry!.clone().transform("EPSG:3857", "EPSG:4326") as Polygon | MultiPolygon;
 
       // Convert to coordinate array format expected by backend
-      const coordinates = geometry4326.getCoordinates()[0]; // Get outer ring coordinates
-      const geometryArray = coordinates.map(coord => [coord[0], coord[1]]);
+      let geometryArray: number[][] | number[][][];
+      if (geometry4326 instanceof MultiPolygon) {
+        // MultiPolygon: send each polygon's outer ring as an array of coordinate arrays
+        geometryArray = geometry4326.getPolygons().map(poly =>
+          poly.getCoordinates()[0].map((coord: number[]) => [coord[0], coord[1]])
+        );
+      } else {
+        // Single polygon: send outer ring coordinates
+        const coordinates = (geometry4326 as Polygon).getCoordinates()[0];
+        geometryArray = coordinates.map((coord: number[]) => [coord[0], coord[1]]);
+      }
 
       const idToken = await userRef.current.getIdToken();
 
