@@ -305,6 +305,7 @@ const App: React.FC = () => {
         ? selectedSiteFeatureRef.current.get('id')
         : "#123ABC";
       requestBody.report_org = "Restor";
+      requestBody.client = "linear-regression-playground";
 
       // Get user info from Firebase authenticated user
       if (userRef.current) {
