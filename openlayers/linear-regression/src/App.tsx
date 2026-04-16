@@ -104,6 +104,7 @@ const App: React.FC = () => {
     return new Date().toISOString().split('T')[0];
   });
   const [debug, setDebug] = useState(false);
+  const [geeAsync, setGeeAsync] = useState(false);
 
   const userRef = useRef<typeof user>(undefined);
   const siteNameRef = useRef(siteName);
@@ -292,10 +293,12 @@ const App: React.FC = () => {
         geometry: geojsonGeometry,
         start_date: startDateRef.current,
         end_date: endDateRef.current,
-        debug: debug,
+        loglevel: debug ? "verbose" : (isLocalhost ? "min" : "none"),
         create_report: true,
         send_email: true
       };
+
+      if (geeAsync) requestBody.gee_async = true;
 
       // Add site name if provided
       if (siteName) requestBody.site_name = siteName;
@@ -698,7 +701,28 @@ const App: React.FC = () => {
                 label={
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     Debug Mode
-                    <Tooltip title="Enabling Debug Mode logs debug statements in the Cloud Function">
+                    <Tooltip title="Enabling Debug Mode sets loglevel=verbose in the Cloud Function (otherwise min locally, none on GCP)">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.54)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ cursor: 'default', flexShrink: 0 }}>
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                      </svg>
+                    </Tooltip>
+                  </span>
+                }
+              />
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={geeAsync}
+                    onChange={(e) => setGeeAsync(e.target.checked)}
+                  />
+                }
+                label={
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    Async
+                    <Tooltip title="Run the analysis asynchronously in GEE">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.54)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ cursor: 'default', flexShrink: 0 }}>
                         <circle cx="12" cy="12" r="10"/>
                         <line x1="12" y1="16" x2="12" y2="12"/>
