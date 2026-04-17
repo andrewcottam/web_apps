@@ -31,7 +31,6 @@ import IconButton from "@mui/material/IconButton";
 import Avatar from '@mui/material/Avatar';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
-import MenuItem from '@mui/material/MenuItem';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import Tooltip from '@mui/material/Tooltip';
@@ -106,6 +105,7 @@ const App: React.FC = () => {
   });
   const [debug, setDebug] = useState(false);
   const [light, setLight] = useState(false);
+  const [useMpc, setUseMpc] = useState(true);
 
   const userRef = useRef<typeof user>(undefined);
   const siteNameRef = useRef(siteName);
@@ -297,6 +297,9 @@ const App: React.FC = () => {
 
       // Add light mode if enabled
       if (light) requestBody['dist_alert_light'] = true;
+
+      // Add landsat source
+      requestBody['landsat_source'] = useMpc ? 'mpc' : 'nasa';
 
       // Add site name if provided
       if (siteName) requestBody.site_name = siteName;
@@ -725,6 +728,16 @@ const App: React.FC = () => {
                   />
                 }
                 label="Light"
+              />
+
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={useMpc}
+                    onChange={(e) => setUseMpc(e.target.checked)}
+                  />
+                }
+                label="Use MPC"
               />
 
               <FormControlLabel
