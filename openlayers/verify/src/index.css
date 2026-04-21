@@ -150,7 +150,7 @@ tr:not(:last-child) th {}
 
 .overall {
   position: absolute;
-  bottom: 100px;
+  bottom: 130px;
   left: 1000px;
   width: 400px;
   font-weight: bold;
