@@ -90,6 +90,7 @@ const App: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState("Checks");
   const [includeLandCover, setIncludeLandCover] = useState(true);
   const [includeOSM, setIncludeOSM] = useState(false);
+  const [includeMangroves, setIncludeMangroves] = useState(false);
   const [includeWDPA, setIncludeWDPA] = useState(true);
   const [includeSites, setIncludeSites] = useState(true);
   const [checkStatuses, setCheckStatuses] = useState<Record<string, CheckStatus>>({});
@@ -103,6 +104,7 @@ const App: React.FC = () => {
   const sitesLayerRef = useRef<VectorTileLayer | null>(null);
   const includeLandCoverRef = useRef(includeLandCover);
   const includeOSMRef = useRef(includeOSM);
+  const includeMangrovesRef = useRef(includeMangroves);
   const includeWDPARef = useRef(includeWDPA);
   const includeSitesRef = useRef(includeSites);
   const drawInteractionRef = useRef<Draw | null>(null);
@@ -117,9 +119,10 @@ const App: React.FC = () => {
   useEffect(() => {
     includeLandCoverRef.current = includeLandCover;
     includeOSMRef.current = includeOSM;
+    includeMangrovesRef.current = includeMangroves;
     includeWDPARef.current = includeWDPA;
     includeSitesRef.current = includeSites;
-  }, [includeLandCover, includeOSM, includeWDPA, includeSites]);
+  }, [includeLandCover, includeOSM, includeMangroves, includeWDPA, includeSites]);
   useEffect(() => {
     loggedInRef.current = logged_in;
   }, [logged_in]);
@@ -128,12 +131,13 @@ const App: React.FC = () => {
     if (
       (selectedTab === "Land Cover" && !includeLandCover) ||
       (selectedTab === "OSM" && !includeOSM) ||
+      (selectedTab === "Mangroves" && !includeMangroves) ||
       (selectedTab === "WDPA" && !includeWDPA) ||
       (selectedTab === "Sites" && !includeSites)
     ) {
       setSelectedTab("Checks");
     }
-  }, [includeLandCover, includeOSM, includeWDPA, includeSites]);
+  }, [includeLandCover, includeOSM, includeMangroves, includeWDPA, includeSites]);
 
   const userRef = useRef<typeof user>(undefined);
 
@@ -452,6 +456,9 @@ const App: React.FC = () => {
       if (includeOSMRef.current) {
         configList.push("osm");
       }
+      if (includeMangrovesRef.current) {
+        configList.push("mangroves");
+      }
       if (includeWDPARef.current) {
         configList.push("wdpa");
       }
@@ -710,6 +717,9 @@ const App: React.FC = () => {
           }
           if (includeOSMRef.current) {
             configList.push("osm");
+          }
+          if (includeMangrovesRef.current) {
+            configList.push("mangroves");
           }
           if (includeWDPARef.current) {
             configList.push("wdpa");
@@ -995,6 +1005,22 @@ const App: React.FC = () => {
                       WDPA
                     </button>
                   )}
+                  {includeMangroves && (
+                    <button
+                      key="Mangroves"
+                      onClick={() => setSelectedTab("Mangroves")}
+                      style={{
+                        border: "1px solid #ccc",
+                        borderBottom: selectedTab === "Mangroves" ? "none" : "0px solid #ccc",
+                        backgroundColor: selectedTab === "Mangroves" ? "#ffffff" : "#f1f1f1",
+                        cursor: "pointer",
+                        outline: "none",
+                        marginRight: "0.25rem",
+                      }}
+                    >
+                      Mangroves
+                    </button>
+                  )}
                 </div>
 
                 {/* Content Box */}
@@ -1050,6 +1076,20 @@ const App: React.FC = () => {
                           )
                         );
                       })}
+                    </div>
+                  )}
+                  {selectedTab === "Mangroves" && data.mangroves && (
+                    <div style={{ padding: "8px" }}>
+                      <div>
+                        <strong>Distance to mangroves:</strong>{" "}
+                        {data.mangroves.status === "Inside"
+                          ? "Inside mangroves"
+                          : data.mangroves.distance_meters !== null
+                            ? data.mangroves.distance_meters >= 1000
+                              ? `${(data.mangroves.distance_meters / 1000).toFixed(1)} km away`
+                              : `${Math.round(data.mangroves.distance_meters)} m away`
+                            : "Outside mangroves"}
+                      </div>
                     </div>
                   )}
                   {selectedTab === "Sites" && data.sites && data.sites.items && (
@@ -1113,6 +1153,7 @@ const App: React.FC = () => {
         <div><label><input type="checkbox" checked={includeSites} onChange={e => setIncludeSites(e.target.checked)} /> Include Sites</label></div>
         <div><label><input type="checkbox" checked={includeLandCover} onChange={e => setIncludeLandCover(e.target.checked)} /> Include Land Cover</label></div>
         <div><label><input type="checkbox" checked={includeWDPA} onChange={e => setIncludeWDPA(e.target.checked)} /> Include WDPA</label></div>
+        <div><label><input type="checkbox" checked={includeMangroves} onChange={e => setIncludeMangroves(e.target.checked)} /> Include Mangroves</label></div>
         <div><label><input type="checkbox" checked={includeOSM} onChange={e => setIncludeOSM(e.target.checked)} /> Include OSM</label></div>
       </div>
     </div>
