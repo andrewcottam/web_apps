@@ -642,6 +642,18 @@ const App: React.FC = () => {
       layers: [],
     });
 
+    // Update URL parameters on map move
+    map.on('moveend', () => {
+      const view = map.getView();
+      const center = toLonLat(view.getCenter()!);
+      const zoom = view.getZoom()!;
+      const params = new URLSearchParams(window.location.search);
+      params.set('lng', center[0].toFixed(6));
+      params.set('lat', center[1].toFixed(6));
+      params.set('zoom', zoom.toFixed(2));
+      window.history.replaceState(null, '', `?${params.toString()}`);
+    });
+
     // Replace your existing click handler in the main useEffect with this enhanced version
     map.on('click', (evt: MapBrowserEvent) => {
       // Only handle site selection if Ctrl key is pressed and user is logged in
