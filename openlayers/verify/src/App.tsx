@@ -102,6 +102,7 @@ const App: React.FC = () => {
   const osmLayerRef = useRef<VectorLayer | null>(null);
   const wdpaLayerRef = useRef<VectorTileLayer | null>(null);
   const sitesLayerRef = useRef<VectorTileLayer | null>(null);
+  const mangrovesLayerRef = useRef<VectorTileLayer | null>(null);
   const includeLandCoverRef = useRef(includeLandCover);
   const includeOSMRef = useRef(includeOSM);
   const includeMangrovesRef = useRef(includeMangroves);
@@ -163,6 +164,10 @@ const App: React.FC = () => {
     if (sitesLayerRef.current) {
       map.removeLayer(sitesLayerRef.current);
       sitesLayerRef.current = null;
+    }
+    if (mangrovesLayerRef.current) {
+      map.removeLayer(mangrovesLayerRef.current);
+      mangrovesLayerRef.current = null;
     }
 
     if (!logged_in) return;
@@ -275,6 +280,22 @@ const App: React.FC = () => {
     map.addLayer(sites_layer);
     sitesLayerRef.current = sites_layer;
 
+    // ----- MANGROVES LAYER -----
+    const mangroves_endpoint = isLocalhost
+      ? "http://127.0.0.1:8080/tiles/{z}/{x}/{y}.pbf?source=mangroves"
+      : "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=mangroves";
+    const mangroves_source = new VectorTileSource({ format: new MVT(), url: mangroves_endpoint });
+    const mangroves_layer = new VectorTileLayer({
+      source: mangroves_source,
+      style: new Style({
+        fill: new Fill({ color: 'rgba(34, 139, 34, 0.25)' }),
+        stroke: new Stroke({ color: 'rgba(34, 139, 34, 0.6)', width: 1 }),
+      }),
+      visible: includeMangrovesRef.current,
+    });
+    map.addLayer(mangroves_layer);
+    mangrovesLayerRef.current = mangroves_layer;
+
   }, [logged_in]);
 
   useEffect(() => {
@@ -288,6 +309,12 @@ const App: React.FC = () => {
       osmLayerRef.current.setVisible(includeOSM);
     }
   }, [includeOSM]);
+
+  useEffect(() => {
+    if (mangrovesLayerRef.current) {
+      mangrovesLayerRef.current.setVisible(includeMangroves);
+    }
+  }, [includeMangroves]);
 
   const overallStatus: CheckStatus = Object.values(checkStatuses).includes(CheckStatus.Invalid)
     ? CheckStatus.Invalid
