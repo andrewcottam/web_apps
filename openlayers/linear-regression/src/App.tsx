@@ -34,6 +34,10 @@ import Button from '@mui/material/Button';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox';
 import Tooltip from '@mui/material/Tooltip';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 
 // Firebase config
 const firebaseConfig = {
@@ -105,6 +109,7 @@ const App: React.FC = () => {
   });
   const [debug, setDebug] = useState(false);
   const [geeAsync, setGeeAsync] = useState(false);
+  const [quarter, setQuarter] = useState("");
 
   const userRef = useRef<typeof user>(undefined);
   const siteNameRef = useRef(siteName);
@@ -299,6 +304,7 @@ const App: React.FC = () => {
       };
 
       if (geeAsync) requestBody.gee_async = true;
+      if (quarter !== "") requestBody.quarter = Number(quarter);
 
       // Add site name if provided
       if (siteName) requestBody.site_name = siteName;
@@ -690,6 +696,21 @@ const App: React.FC = () => {
                 fullWidth
                 InputLabelProps={{ shrink: true }}
               />
+
+              <FormControl size="small" fullWidth>
+                <InputLabel>Quarter</InputLabel>
+                <Select
+                  value={quarter}
+                  label="Quarter"
+                  onChange={(e) => setQuarter(e.target.value)}
+                >
+                  <MenuItem value=""><em>None</em></MenuItem>
+                  <MenuItem value="1">1</MenuItem>
+                  <MenuItem value="2">2</MenuItem>
+                  <MenuItem value="3">3</MenuItem>
+                  <MenuItem value="4">4</MenuItem>
+                </Select>
+              </FormControl>
 
               <FormControlLabel
                 control={
