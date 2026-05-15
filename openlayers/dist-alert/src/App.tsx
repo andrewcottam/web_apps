@@ -730,36 +730,40 @@ const App: React.FC = () => {
                 label="Light"
               />
 
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={useMpc}
-                    onChange={(e) => setUseMpc(e.target.checked)}
+              {user?.email === 'a.cottam@gmail.com' && (
+                <>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={useMpc}
+                        onChange={(e) => setUseMpc(e.target.checked)}
+                      />
+                    }
+                    label="Use MPC"
                   />
-                }
-                label="Use MPC"
-              />
 
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={debug}
-                    onChange={(e) => setDebug(e.target.checked)}
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={debug}
+                        onChange={(e) => setDebug(e.target.checked)}
+                      />
+                    }
+                    label={
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        Debug Mode
+                        <Tooltip title="Enabling Debug Mode logs debug statements in the Cloud Function">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.54)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ cursor: 'default', flexShrink: 0 }}>
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="16" x2="12" y2="12"/>
+                            <line x1="12" y1="8" x2="12.01" y2="8"/>
+                          </svg>
+                        </Tooltip>
+                      </span>
+                    }
                   />
-                }
-                label={
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    Debug Mode
-                    <Tooltip title="Enabling Debug Mode logs debug statements in the Cloud Function">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.54)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ cursor: 'default', flexShrink: 0 }}>
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="16" x2="12" y2="12"/>
-                        <line x1="12" y1="8" x2="12.01" y2="8"/>
-                      </svg>
-                    </Tooltip>
-                  </span>
-                }
-              />
+                </>
+              )}
 
               <Button
                 variant="contained"
