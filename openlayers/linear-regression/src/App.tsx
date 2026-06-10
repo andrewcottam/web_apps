@@ -771,7 +771,15 @@ const App: React.FC = () => {
             {data && (
               <div style={{ marginTop: "12px", padding: "10px", backgroundColor: "#f5f5f5", borderRadius: "4px" }}>
                 <h3>Results</h3>
-                {data.response?.metadata?.report_url && (
+                {data.status === 'gee_task_submitted' ? (
+                  <div style={{ marginTop: "10px", padding: "8px", backgroundColor: "#fff8e1", borderLeft: "4px solid #f59e0b", borderRadius: "0 4px 4px 0" }}>
+                    <p style={{ fontSize: "13px", fontWeight: 600, margin: "0 0 4px", color: "#92400e" }}>⏳ Processing async</p>
+                    <p style={{ fontSize: "12px", margin: 0, color: "#374151" }}>
+                      The area is too large for a synchronous response — the analysis has been submitted as a background job.
+                      You'll receive an email when the report is ready.
+                    </p>
+                  </div>
+                ) : data.response?.metadata?.report_url ? (
                   <div style={{ marginTop: "10px", padding: "8px", backgroundColor: "#e3f2fd", borderRadius: "4px" }}>
                     <h4>Report Generated</h4>
                     <p style={{ fontSize: "12px", margin: "4px 0" }}>
@@ -780,7 +788,7 @@ const App: React.FC = () => {
                       </a>
                     </p>
                   </div>
-                )}
+                ) : null}
               </div>
             )}
           </div>
