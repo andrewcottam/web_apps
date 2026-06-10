@@ -351,6 +351,9 @@ const App: React.FC = () => {
       }
 
       const result = await response.json();
+      if (result.status === 'error') {
+        throw new Error(result.message);
+      }
       setData(result);
 
     } catch (error) {
