@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@9/ol.css">
+  <script src="https://cdn.jsdelivr.net/npm/ol@9/dist/ol.js"></script>
+  <style> #map { width: 100%; height: 100vh; margin: 0; padding: 0; } </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+const WMTS_URL = 'https://tiles-eu1.arcgis.com/GS4R6nt5gxQK4Sbv/arcgis/rest/services/Tahi_Pleiades_Image_09th_April_2025/MapServer/WMTS';
+// to get a token open the image in arcis online and add it to the map then go to the network tab, filter for https://tiles-eu1.arcgis.com/GS4R6nt5gxQK4Sbv/arcgis/rest/services/
+// and copy the token value
+const TOKEN = 'afNLHc8q9IAffJV2-1HL5gQ..87uPfQjpYq8c-vMvJOxLOzwLOk93a5s9VKhLjv4XSh1ouOoNCwQ63iVLIf1GfsIfWSrTxhkT5M3AdDSE4eyFwVsYxo4d6gZXV3kjScItjNPiYhpM0peBw7B09eYuk4EOFQAtpgMntCe4ehQA7EBLk3vec-uquq16FUFVLU1EOCw_gNkY_78UR5qUAB40WiTO2O4skUdg7BGORfqHfypZMpJJk1FTqRghQvUG0fsV251c8tcpXSMJTJHSnO_-hujFg63lumK4w-WtNmeahy73Gmtl_OSdG5ohh9g9xRcH-ggYhchhP0dCN7bFk4fawRZ_W_SP6wy9x8p9iPVPnOO8qNyvvUgKIRsBIhA.';
+
+fetch(`${WMTS_URL}/1.0.0/WMTSCapabilities.xml?token=${TOKEN}`)
+  .then(r => r.text())
+  .then(text => {
+    const parser = new ol.format.WMTSCapabilities();
+    const caps = parser.read(text);
+
+    console.log('Full capabilities:', JSON.stringify(caps, null, 2));
+
+    const layer = caps.Contents.Layer[0].Identifier;
+    const matrixSet = caps.Contents.TileMatrixSet[0].Identifier;
+    console.log('Layer identifier:', layer);
+    console.log('MatrixSet identifier:', matrixSet);
+
+    const options = ol.source.WMTS.optionsFromCapabilities(caps, {
+      layer,
+      matrixSet,
+    });
+
+    // Append token to tile URLs
+    options.urls = options.urls.map(u => `${u}?token=${TOKEN}`);
+
+    const map = new ol.Map({
+      target: 'map',
+      layers: [
+        new ol.layer.Tile({
+          source: new ol.source.OSM()  // basemap for context
+        }),
+        new ol.layer.Tile({
+          source: new ol.source.WMTS(options)
+        })
+      ],
+      view: new ol.View({
+        projection: 'EPSG:3857',
+        center: [19427518, -4261494],
+        zoom: 16
+      })
+    });
+  })
+  .catch(err => {
+    console.error('Failed to load WMTS capabilities:', err);
+  });
+</script>
+</body>
+</html>
