@@ -427,10 +427,8 @@ const App: React.FC = () => {
       function styleForVisibility(feature: FeatureLike): Style | undefined {
         const siteType = feature.get('site_type');
         if (siteType !== 'RESTORATION' && siteType !== 'CONSERVATION') return undefined;
-        if (!useFgb) {
-          const area = Number(feature.get('surface_area_km2'));
-          if (Number.isFinite(area) && area > 1000) return undefined;
-        }
+        const area = Number(feature.get('surface_area_km2'));
+        if (Number.isFinite(area) && area > 1000) return undefined;
         const key = String(feature.get('site_visibility') ?? 'unknown').toLowerCase();
         if (styleCache[key]) return styleCache[key];
 
@@ -674,7 +672,6 @@ const App: React.FC = () => {
           cursor: shouldShowSelectionCursor ? 'crosshair' : 'default'
         }}
       />
-      <div id="coords">Move cursor to see coordinates</div>
 
       <div
         id="popup"
@@ -895,8 +892,9 @@ const App: React.FC = () => {
             )}
           </div>
         )}
-        <div style={{ padding: '4px 10px', textAlign: 'right', fontFamily: 'monospace', fontSize: '9px', color: '#ccc', borderTop: '1px solid #f0f0f0', flexShrink: 0 }}>
-          {__GIT_SHA__}
+        <div style={{ padding: '3px 10px', display: 'flex', justifyContent: 'space-between', fontFamily: 'monospace', fontSize: '9px', color: '#ccc', borderTop: '1px solid #f0f0f0', flexShrink: 0 }}>
+          <span id="coords">—</span>
+          <span>{__GIT_SHA__}</span>
         </div>
       </div>
     </div>
