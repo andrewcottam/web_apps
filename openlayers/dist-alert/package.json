@@ -14,7 +14,8 @@
     "@emotion/styled": "^11.14.1",
     "@mui/material": "^7.2.0",
     "firebase": "^11.10.0",
-    "ol": "^10.6.1",
+    "flatgeobuf": "^4.4.0",
+    "ol": "^10.9.0",
     "ol-mapbox-style": "^13.0.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
