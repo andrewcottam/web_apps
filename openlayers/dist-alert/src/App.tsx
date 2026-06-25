@@ -469,11 +469,16 @@ const App: React.FC = () => {
 
         const geoJsonFormat = new GeoJSON();
         fgbSource.setLoader(async function (extent, _resolution, projection, success, failure): Promise<any> {
+          if (!userRef.current) {
+            fgbSource.removeLoadedExtent(extent);
+            return;
+          }
           try {
             const [minX, minY, maxX, maxY] = transformExtent(extent, projection, 'EPSG:4326');
             const rect = { minX, minY, maxX, maxY };
-            const idToken = await userRef.current!.getIdToken();
+            const idToken = await userRef.current.getIdToken();
             const headers = { 'Authorization': `Bearer ${idToken}` };
+            console.log('[fgb] loading extent, token length:', idToken.length);
 
             const features: any[] = [];
             for await (const geoJsonFeature of fgbDeserialize(`${FGB_PROXY_URL}?source=sites`, rect, undefined, false, headers)) {
