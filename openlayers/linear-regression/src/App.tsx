@@ -9,7 +9,7 @@ import MultiPolygon from "ol/geom/MultiPolygon";
 import VectorSource from "ol/source/Vector";
 import VectorLayer from "ol/layer/Vector";
 import { Draw } from "ol/interaction";
-import { fromLonLat, toLonLat } from "ol/proj";
+import { fromLonLat, toLonLat, transformExtent } from "ol/proj";
 import { apply } from "ol-mapbox-style";
 import { Style, Fill, Stroke } from "ol/style";
 import { MapBrowserEvent } from 'ol';
@@ -17,8 +17,13 @@ import { ScaleLine, defaults as defaultControls } from 'ol/control';
 import VectorTileLayer from 'ol/layer/VectorTile';
 import VectorTileSource from 'ol/source/VectorTile';
 import MVT from 'ol/format/MVT';
+import { bbox as bboxStrategy } from 'ol/loadingstrategy';
+import GeoJSON from 'ol/format/GeoJSON';
 import type { FeatureLike } from "ol/Feature";
 import RenderFeature, { toGeometry } from 'ol/render/Feature';
+
+// FlatGeobuf
+import { deserialize as fgbDeserialize } from 'flatgeobuf/lib/mjs/geojson';
 
 // Firebase
 import { initializeApp } from "firebase/app";
@@ -79,6 +84,12 @@ const getUrlParameters = (): { lat?: number; lng?: number; zoom?: number } => {
 };
 
 
+const useFgb = new URLSearchParams(window.location.search).get('tiles') === 'fgb';
+
+const FGB_PROXY_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://127.0.0.1:8082/fgb_proxy'
+  : 'https://europe-west6-restor-gis.cloudfunctions.net/fgb_proxy';
+
 const App: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const drawnFeatureRef = useRef<any>(null);
@@ -92,7 +103,8 @@ const App: React.FC = () => {
   const mapInstanceRef = useRef<Map | null>(null);
   const isDrawingRef = useRef(false);
   const loggedInRef = useRef(logged_in);
-  const sitesLayerRef = useRef<VectorTileLayer | null>(null);
+  const sitesLayerRef = useRef<VectorTileLayer | VectorLayer | null>(null);
+  const fgbSourceRef = useRef<VectorSource | null>(null);
   const [selectedSiteFeature, setSelectedSiteFeature] = useState<any>(null);
   const selectedSiteFeatureRef = useRef<any>(null);
   const [isCtrlPressed, setIsCtrlPressed] = useState(false);
@@ -420,13 +432,10 @@ const App: React.FC = () => {
     const styleJson = "https://api.maptiler.com/maps/hybrid/style.json?key=67VOA297U9cciigsJVvm";
 
     apply(map, styleJson).then(() => {
-      // Add Restor sites layer
-      const sites_endpoint = "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=sites";
-
-      const sites_source = new VectorTileSource({ format: new MVT(), url: sites_endpoint });
-
       const styleCache: Record<string, Style> = Object.create(null);
       function styleForVisibility(feature: FeatureLike): Style | undefined {
+        const siteType = feature.get('site_type');
+        if (siteType !== 'RESTORATION' && siteType !== 'CONSERVATION') return undefined;
         const area = Number(feature.get('surface_area_km2'));
         if (Number.isFinite(area) && area > 1000) return undefined;
 
@@ -454,34 +463,66 @@ const App: React.FC = () => {
         return style;
       }
 
-      const sites_layer = new VectorTileLayer({
-        source: sites_source,
-        minZoom: 10,
-        visible: false, // Initially hidden until user logs in
-        style: (feature) => {
-          const baseStyle = styleForVisibility(feature);
+      function siteStyle(feature: FeatureLike): Style | undefined {
+        const selectedFeature = selectedSiteFeatureRef.current;
+        const isSelected = selectedFeature && feature.get('id') === selectedFeature.get('id');
+        if (isSelected) {
+          return new Style({
+            stroke: new Stroke({ color: 'rgba(255, 215, 0, 1)', width: 4 }),
+            fill: new Fill({ color: 'rgba(255, 215, 0, 0.3)' }),
+          });
+        }
+        return styleForVisibility(feature);
+      }
 
-          // Check if this feature is selected
-          const selectedFeature = selectedSiteFeatureRef.current;
-          const isSelected = selectedFeature &&
-            feature.get('id') === selectedFeature.get('id');
+      let sites_layer: VectorTileLayer | VectorLayer;
 
-          if (isSelected) {
-            // Create highlighted style
-            return new Style({
-              stroke: new Stroke({
-                color: 'rgba(255, 215, 0, 1)', // Gold color for selection
-                width: 4
-              }),
-              fill: new Fill({
-                color: 'rgba(255, 215, 0, 0.3)' // Semi-transparent gold fill
-              }),
-            });
+      if (useFgb) {
+        const fgbSource = new VectorSource({ strategy: bboxStrategy });
+        fgbSourceRef.current = fgbSource;
+        const geoJsonFormat = new GeoJSON();
+        fgbSource.setLoader(async function (extent, _resolution, projection, success, failure): Promise<any> {
+          if (!userRef.current) {
+            fgbSource.removeLoadedExtent(extent);
+            return;
           }
-
-          return baseStyle;
-        },
-      });
+          try {
+            const [minX, minY, maxX, maxY] = transformExtent(extent, projection, 'EPSG:4326');
+            const rect = { minX, minY, maxX, maxY };
+            const idToken = await userRef.current.getIdToken();
+            const headers = { 'Authorization': `Bearer ${idToken}` };
+            const features: any[] = [];
+            for await (const geoJsonFeature of fgbDeserialize(`${FGB_PROXY_URL}?source=sites`, rect, undefined, false, headers)) {
+              const olFeature = geoJsonFormat.readFeature(geoJsonFeature as any, {
+                featureProjection: projection,
+                dataProjection: 'EPSG:4326',
+              });
+              features.push(olFeature);
+            }
+            fgbSource.addFeatures(features);
+            success?.(features);
+          } catch (e) {
+            console.error('FGB load error:', e);
+            failure?.();
+            fgbSource.removeLoadedExtent(extent);
+          }
+        });
+        sites_layer = new VectorLayer({
+          source: fgbSource,
+          minZoom: 10,
+          visible: false,
+          style: siteStyle,
+        });
+      } else {
+        const sites_endpoint = "https://europe-west6-restor-gis.cloudfunctions.net/mvt_tile_server_secure/tiles/{z}/{x}/{y}.pbf?source=sites";
+        const sites_source = new VectorTileSource({ format: new MVT(), url: sites_endpoint });
+        sites_layer = new VectorTileLayer({
+          source: sites_source,
+          minZoom: 10,
+          visible: false,
+          style: siteStyle,
+        });
+      }
 
       map.addLayer(sites_layer);
       sitesLayerRef.current = sites_layer;
@@ -607,7 +648,6 @@ const App: React.FC = () => {
           cursor: shouldShowSelectionCursor ? 'crosshair' : 'default'
         }}
       />
-      <div id="coords">Move cursor to see coordinates</div>
 
       <div
         id="popup"
@@ -793,6 +833,10 @@ const App: React.FC = () => {
             )}
           </div>
         )}
+        <div style={{ padding: '3px 10px', display: 'flex', justifyContent: 'space-between', fontFamily: 'monospace', fontSize: '9px', color: '#ccc', borderTop: '1px solid #f0f0f0', flexShrink: 0 }}>
+          <span id="coords">—</span>
+          <span>{__GIT_SHA__}</span>
+        </div>
       </div>
     </div>
   );

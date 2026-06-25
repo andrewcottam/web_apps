@@ -2,6 +2,23 @@
 
 A React-based web application for analyzing vegetation change using linear regression on satellite data. This app provides an interactive map interface for drawing polygons and running change analysis.
 
+## 📑 Table of Contents
+
+---
+
+- [Features](#features)
+- [Installing](#installing)
+- [Running Locally](#running-locally)
+- [Building](#building)
+- [Deploying](#deploying)
+- [URL Parameters](#url-parameters)
+- [API Configuration](#api-configuration)
+- [Usage](#usage)
+- [Parameters](#parameters)
+- [Technologies](#technologies)
+
+---
+
 ## Features
 
 - Interactive OpenLayers map with polygon drawing
@@ -41,11 +58,36 @@ Build then commit your changes and push. GitHub Pages will deploy the app to:
 
 https://andrewcottam.github.io/web_apps/openlayers/linear-regression/dist/index.html
 
+## URL Parameters
+
+| Parameter | Values | Description |
+|---|---|---|
+| `lat`, `lng`, `zoom` | numbers | Initial map position and zoom level. Updated automatically as you pan/zoom, so the URL is always shareable. |
+| `tiles` | `fgb` (default: MVT) | Sites layer rendering mode. Omit for MVT tiles (default). Set to `fgb` to load sites via FlatGeobuf instead — returns full unclipped polygon geometries, fixing large-site rendering at the cost of fetching from a separate proxy. |
+
+**Example — open at a specific location in FGB mode:**
+```
+https://andrewcottam.github.io/web_apps/openlayers/linear-regression/dist/?lat=5.77&lng=118.19&zoom=12&tiles=fgb
+```
+
+### Sites layer modes
+
+| Mode | URL | Source | Large polygons |
+|---|---|---|---|
+| MVT (default) | _(no param)_ | `mvt_tile_server_secure` Cloud Function | Clipped at tile boundaries |
+| FGB | `?tiles=fgb` | `fgb_proxy` Cloud Function → `gs://restor-flatgeobuf/sites/sites.fgb` | Full geometry, no clipping |
+
+Both modes filter to `site_type` of `RESTORATION` or `CONSERVATION`, and hide sites with `surface_area_km2 > 1000`.
+
 ## API Configuration
 
 The app automatically selects the correct endpoint based on where it's running:
 - **Production** (deployed on GitHub Pages): `https://europe-west6-restor-gis.cloudfunctions.net/linear-regression`
 - **Local Development** (localhost): `http://127.0.0.1:8081/linear-regression`
+
+The `fgb_proxy` endpoint follows the same pattern:
+- **Production**: `https://europe-west6-restor-gis.cloudfunctions.net/fgb_proxy`
+- **Local Development**: `http://127.0.0.1:8082`
 
 ## Usage
 
