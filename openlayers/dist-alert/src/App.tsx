@@ -680,6 +680,9 @@ const App: React.FC = () => {
       ></div>
 
       <div className="panel">
+        <div style={{ position: 'absolute', bottom: 6, right: 10, fontSize: '10px', color: '#bbb', fontFamily: 'monospace' }}>
+          {__GIT_SHA__}
+        </div>
         <div id="fixed-column">
           <IconButton
             onClick={login_clicked}
