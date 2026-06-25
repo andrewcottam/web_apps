@@ -425,6 +425,10 @@ const App: React.FC = () => {
     apply(map, styleJson).then(() => {
       const styleCache: Record<string, Style> = Object.create(null);
       function styleForVisibility(feature: FeatureLike): Style | undefined {
+        if (!useFgb) {
+          const area = Number(feature.get('surface_area_km2'));
+          if (Number.isFinite(area) && area > 1000) return undefined;
+        }
         const key = String(feature.get('site_visibility') ?? 'unknown').toLowerCase();
         if (styleCache[key]) return styleCache[key];
 
