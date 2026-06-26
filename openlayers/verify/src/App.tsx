@@ -396,7 +396,7 @@ const App: React.FC = () => {
     } else {
       const result = await signInWithPopup(auth, provider);
 
-      const whitelistRef = doc(collection(firestore, "site-verify"), "whitelisted_emails");
+      const whitelistRef = doc(collection(firestore, "site-verification"), "whitelisted_emails");
       const whitelistSnap = await getDoc(whitelistRef);
       const whitelisted = Object.keys(whitelistSnap.data() || {});
 
@@ -473,7 +473,7 @@ const App: React.FC = () => {
       const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
       const endpoint = isLocalhost
         ? "http://localhost:8080"
-        : "https://europe-west6-restor-gis.cloudfunctions.net/verify_site";
+        : "https://europe-west6-restor-gis.cloudfunctions.net/site-verification";
 
       // Build config based on current checkbox states
       const configList = [];
@@ -748,7 +748,7 @@ const App: React.FC = () => {
           const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
           const endpoint = isLocalhost
             ? "http://localhost:8080"
-            : "https://europe-west6-restor-gis.cloudfunctions.net/verify_site";
+            : "https://europe-west6-restor-gis.cloudfunctions.net/site-verification";
 
           const configList = [];
           if (includeLandCoverRef.current) {
