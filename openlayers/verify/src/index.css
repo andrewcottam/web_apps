@@ -81,23 +81,49 @@ button:focus-visible {
 }
 
 h1 {
-  font-size: large;
+  font-size: 1.3rem;
+  margin: 0 0 0.5rem 0;
 }
 
 h2 {
-  font-size: medium;
+  font-size: 1rem;
+  margin: 0 0 0.5rem 0;
 }
 
 h3 {
-  font-size: small;
+  font-size: 0.9rem;
+  margin: 0 0 0.3rem 0;
+}
+
+h4 {
+  font-size: 0.85rem;
+  margin: 0 0 0.3rem 0;
 }
 
 .panel {
-  position: absolute;
-  left: 1000px;
+  position: fixed;
+  right: 20px;
   top: 20px;
-  width: 400px;
-  overflow: hidden;
+  bottom: 20px;
+  width: 460px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+#fixed-column {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  flex-shrink: 0;
+}
+
+.panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px;
 }
 
 .checks {
@@ -133,35 +159,19 @@ tr:not(:last-child) th {}
   margin-left: 10px;
 }
 
-#coords {
-  padding: 10px;
-  background: white;
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  font-family: monospace;
-  border: 1px solid #ccc;
-  z-index: 1;
-}
 
 .message {
   font-weight: 300;
 }
 
 .overall {
-  position: absolute;
-  bottom: 130px;
-  left: 1000px;
-  width: 400px;
   font-weight: bold;
+  margin-top: 10px;
 }
 
-
 .checkboxes {
-  position: absolute;
   font-size: 13px;
-  bottom: 10px;
-  left: 1000px;
+  margin-top: 10px;
 }
 
 #popup{

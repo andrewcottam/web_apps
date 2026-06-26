@@ -878,7 +878,6 @@ const App: React.FC = () => {
         ref={mapRef}
         style={{ position: "absolute", top: 20, left: 20, bottom: 20, right: 500 }}
       />
-      <div id="coords">Move cursor to see coordinates</div>
 
       <div
         id="popup"
@@ -907,7 +906,7 @@ const App: React.FC = () => {
         </div>
 
         {logged_in && (
-          <>
+          <div className="panel-content">
             <h1>Site Verification Playground</h1>
             {verificationType === 'site' ? (
               <h2>Site Verification Report for {siteName}</h2>
@@ -1168,32 +1167,33 @@ const App: React.FC = () => {
 
               </>
             )}
-          </>
+
+            {/* Overall status display */}
+            {data.checks && data.checks.overall_status && (
+              <div className="overall">
+                <div style={{ color: data.checks.overall_status === CheckStatus.Valid ? "green" : data.checks.overall_status === CheckStatus.NeedsReview ? "orange" : "red" }}>
+                  Overall Status: {data.checks.overall_status}
+                </div>
+                <div className="message" style={{ display: data.checks.overall_status === "Valid" ? "none" : "block" }}>
+                  {data.checks.max_status_message}
+                </div>
+              </div>
+            )}
+
+            {/* Checkbox controls */}
+            <div className="checkboxes">
+              <div><label><input type="checkbox" checked={includeSites} onChange={e => setIncludeSites(e.target.checked)} /> Include Sites</label></div>
+              <div><label><input type="checkbox" checked={includeLandCover} onChange={e => setIncludeLandCover(e.target.checked)} /> Include Land Cover</label></div>
+              <div><label><input type="checkbox" checked={includeWDPA} onChange={e => setIncludeWDPA(e.target.checked)} /> Include WDPA</label></div>
+              <div><label><input type="checkbox" checked={includeMangroves} onChange={e => setIncludeMangroves(e.target.checked)} /> Include Mangroves</label></div>
+              <div><label><input type="checkbox" checked={includeOSM} onChange={e => setIncludeOSM(e.target.checked)} /> Include OSM</label></div>
+            </div>
+          </div>
         )}
-      </div>
-      {/* Overall status display */}
-      {data.checks && data.checks.overall_status && (
-        <div className="overall">
-          <div style={{ color: data.checks.overall_status === CheckStatus.Valid ? "green" : data.checks.overall_status === CheckStatus.NeedsReview ? "orange" : "red" }}>
-            Overall Status: {data.checks.overall_status}
-          </div>
-          <div className="message" style={{ display: data.checks.overall_status === "Valid" ? "none" : "block" }}>
-            {data.checks.max_status_message}
-          </div>
-          {/*     <div className="checks">
-                      {data.checks && data.checks.summary && Object.keys(data.checks.summary).map((key: string) => (
-                        <div key={key}>{key}: {data.checks.summary[key]}</div>
-                      ))}
-                    </div>*/}
+        <div style={{ padding: '3px 10px', display: 'flex', justifyContent: 'space-between', fontFamily: 'monospace', fontSize: '9px', color: '#ccc', borderTop: '1px solid #f0f0f0', flexShrink: 0 }}>
+          <span id="coords">—</span>
+          <span>{__GIT_SHA__}</span>
         </div>
-      )}
-      {/* Checkbox controls */}
-      <div style={{ display: logged_in ? "block" : "none" }} className="checkboxes">
-        <div><label><input type="checkbox" checked={includeSites} onChange={e => setIncludeSites(e.target.checked)} /> Include Sites</label></div>
-        <div><label><input type="checkbox" checked={includeLandCover} onChange={e => setIncludeLandCover(e.target.checked)} /> Include Land Cover</label></div>
-        <div><label><input type="checkbox" checked={includeWDPA} onChange={e => setIncludeWDPA(e.target.checked)} /> Include WDPA</label></div>
-        <div><label><input type="checkbox" checked={includeMangroves} onChange={e => setIncludeMangroves(e.target.checked)} /> Include Mangroves</label></div>
-        <div><label><input type="checkbox" checked={includeOSM} onChange={e => setIncludeOSM(e.target.checked)} /> Include OSM</label></div>
       </div>
     </div>
   );
