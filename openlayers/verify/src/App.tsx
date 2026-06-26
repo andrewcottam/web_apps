@@ -396,7 +396,7 @@ const App: React.FC = () => {
     } else {
       const result = await signInWithPopup(auth, provider);
 
-      const whitelistRef = doc(collection(firestore, "site-verification"), "whitelisted_emails");
+      const whitelistRef = doc(collection(firestore, "site-verify"), "whitelisted_emails");
       const whitelistSnap = await getDoc(whitelistRef);
       const whitelisted = Object.keys(whitelistSnap.data() || {});
 
