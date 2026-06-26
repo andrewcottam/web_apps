@@ -909,7 +909,7 @@ const App: React.FC = () => {
           <div className="panel-content">
             <h1>Site Verification Playground</h1>
             {verificationType === 'site' ? (
-              <h2>Site Verification Report for {siteName}</h2>
+              <h2>{siteName}</h2>
             ) : verificationType === 'drawn' ? (
               <h2>Drawn Polygon Verification</h2>
             ) : (
