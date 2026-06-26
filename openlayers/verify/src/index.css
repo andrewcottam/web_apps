@@ -58,10 +58,9 @@ button:focus-visible {
 .content_box {
   border: 1px solid #ccc;
   border-top: none;
-  padding: 8px;
+  padding: 4px;
   background-color: #fff;
-  font-size: 14px;
-
+  font-size: 12px;
 }
 
 @media (prefers-color-scheme: light) {
@@ -143,14 +142,16 @@ table {
 th {
   background-color: #f0f0f0;
   border-bottom: 1px solid #cccccc;
-  padding: 4px 8px;
+  padding: 2px 6px;
   text-align: left;
   vertical-align: top;
-  width: 200px;
+  width: 180px;
+  font-size: 12px;
 }
 
 .json-viewer td {
-  padding: 4px 8px;
+  padding: 2px 6px;
+  font-size: 12px;
 }
 
 tr:not(:last-child) th {}

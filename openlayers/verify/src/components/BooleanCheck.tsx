@@ -60,10 +60,13 @@ const BooleanCheck: React.FC<Props> = ({ data, use_prop, prop_name, onCheckResul
                 style={{
                   backgroundColor,
                   color: 'white',
-                  padding: '3px 6px',
-                  borderRadius: '4px',
-                  fontWeight: 'normal',
-                  width: 'fit-content'
+                  padding: '2px 9px',
+                  borderRadius: '999px',
+                  fontWeight: 500,
+                  fontSize: '11px',
+                  letterSpacing: '0.02em',
+                  width: 'fit-content',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
                 }}
               >
                 {status}
