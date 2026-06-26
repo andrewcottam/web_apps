@@ -165,14 +165,74 @@ tr:not(:last-child) th {}
   font-weight: 300;
 }
 
+.tab-bar {
+  display: flex;
+  gap: 2px;
+  background: #f0f0f0;
+  border-radius: 8px;
+  padding: 3px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  border: none;
+  background: transparent;
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+
+.tab:hover {
+  background: rgba(255,255,255,0.6);
+  color: #333;
+  border-color: transparent;
+}
+
+.tab.active {
+  background: #fff;
+  color: #222;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+
 .overall {
-  font-weight: bold;
   margin-top: 10px;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.overall-banner {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.overall-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.overall-message {
+  font-size: 11px;
+  font-weight: 400;
+  margin-top: 4px;
+  opacity: 0.85;
 }
 
 .checkboxes {
-  font-size: 13px;
+  font-size: 12px;
   margin-top: 10px;
+  color: #555;
 }
 
 #popup{

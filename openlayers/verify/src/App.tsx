@@ -945,120 +945,15 @@ const App: React.FC = () => {
             {Object.keys(data).length > 0 && (
               <>
                 {/* Tabs */}
-                {/* Tabs */}
-                <div style={{ display: "flex", borderBottom: "1px solid #ccc", marginTop: "25px" }}>
-                  <button
-                    key="Checks"
-                    onClick={() => setSelectedTab("Checks")}
-                    style={{
-                      border: "1px solid #ccc",
-                      borderBottom: selectedTab === "Checks" ? "none" : "0px solid #ccc",
-                      backgroundColor: selectedTab === "Checks" ? "#ffffff" : "#f1f1f1",
-                      cursor: "pointer",
-                      outline: "none",
-                      marginRight: "0.25rem",
-                    }}
-                  >
-                    Checks
-                  </button>
-
-                  <button
-                    key="Geometric"
-                    onClick={() => setSelectedTab("Geometric")}
-                    style={{
-                      border: "1px solid #ccc",
-                      borderBottom: selectedTab === "Geometric" ? "none" : "0px solid #ccc",
-                      backgroundColor: selectedTab === "Geometric" ? "#ffffff" : "#f1f1f1",
-                      cursor: "pointer",
-                      outline: "none",
-                      marginRight: "0.25rem",
-                    }}
-                  >
-                    Geometric
-                  </button>
-
-                  {includeSites && (
-                    <button
-                      key="Sites"
-                      onClick={() => setSelectedTab("Sites")}
-                      style={{
-                        border: "1px solid #ccc",
-                        borderBottom: selectedTab === "Sites" ? "none" : "0px solid #ccc",
-                        backgroundColor: selectedTab === "Sites" ? "#ffffff" : "#f1f1f1",
-                        cursor: "pointer",
-                        outline: "none",
-                        marginRight: "0.25rem",
-                      }}
-                    >
-                      Sites
-                    </button>
-                  )}
-                  {includeLandCover && (
-                    <button
-                      key="Land Cover"
-                      onClick={() => setSelectedTab("Land Cover")}
-                      style={{
-                        border: "1px solid #ccc",
-                        borderBottom: selectedTab === "Land Cover" ? "none" : "0px solid #ccc",
-                        backgroundColor: selectedTab === "Land Cover" ? "#ffffff" : "#f1f1f1",
-                        cursor: "pointer",
-                        outline: "none",
-                        marginRight: "0.25rem",
-                      }}
-                    >
-                      Land Cover
-                    </button>
-                  )}
-
-                  {includeOSM && (
-                    <button
-                      key="OSM"
-                      onClick={() => setSelectedTab("OSM")}
-                      style={{
-                        border: "1px solid #ccc",
-                        borderBottom: selectedTab === "OSM" ? "none" : "0px solid #ccc",
-                        backgroundColor: selectedTab === "OSM" ? "#ffffff" : "#f1f1f1",
-                        cursor: "pointer",
-                        outline: "none",
-                        marginRight: "0.25rem",
-                      }}
-                    >
-                      OSM
-                    </button>
-                  )}
-
-                  {includeWDPA && (
-                    <button
-                      key="WDPA"
-                      onClick={() => setSelectedTab("WDPA")}
-                      style={{
-                        border: "1px solid #ccc",
-                        borderBottom: selectedTab === "WDPA" ? "none" : "0px solid #ccc",
-                        backgroundColor: selectedTab === "WDPA" ? "#ffffff" : "#f1f1f1",
-                        cursor: "pointer",
-                        outline: "none",
-                        marginRight: "0.25rem",
-                      }}
-                    >
-                      WDPA
-                    </button>
-                  )}
-                  {includeMangroves && (
-                    <button
-                      key="Mangroves"
-                      onClick={() => setSelectedTab("Mangroves")}
-                      style={{
-                        border: "1px solid #ccc",
-                        borderBottom: selectedTab === "Mangroves" ? "none" : "0px solid #ccc",
-                        backgroundColor: selectedTab === "Mangroves" ? "#ffffff" : "#f1f1f1",
-                        cursor: "pointer",
-                        outline: "none",
-                        marginRight: "0.25rem",
-                      }}
-                    >
-                      Mangroves
-                    </button>
-                  )}
+                <div className="tab-bar">
+                  {(["Checks", "Geometric"] as const).map(t => (
+                    <button key={t} className={`tab${selectedTab === t ? " active" : ""}`} onClick={() => setSelectedTab(t)}>{t}</button>
+                  ))}
+                  {includeSites    && <button className={`tab${selectedTab === "Sites"      ? " active" : ""}`} onClick={() => setSelectedTab("Sites")}>Sites</button>}
+                  {includeLandCover && <button className={`tab${selectedTab === "Land Cover" ? " active" : ""}`} onClick={() => setSelectedTab("Land Cover")}>Land Cover</button>}
+                  {includeOSM      && <button className={`tab${selectedTab === "OSM"        ? " active" : ""}`} onClick={() => setSelectedTab("OSM")}>OSM</button>}
+                  {includeWDPA     && <button className={`tab${selectedTab === "WDPA"       ? " active" : ""}`} onClick={() => setSelectedTab("WDPA")}>WDPA</button>}
+                  {includeMangroves && <button className={`tab${selectedTab === "Mangroves"  ? " active" : ""}`} onClick={() => setSelectedTab("Mangroves")}>Mangroves</button>}
                 </div>
 
                 {/* Content Box */}
@@ -1168,25 +1063,37 @@ const App: React.FC = () => {
               </>
             )}
 
-            {/* Overall status display */}
-            {data.checks && data.checks.overall_status && (
-              <div className="overall">
-                <div style={{ color: data.checks.overall_status === CheckStatus.Valid ? "green" : data.checks.overall_status === CheckStatus.NeedsReview ? "orange" : "red" }}>
-                  Overall Status: {data.checks.overall_status}
-                </div>
-                <div className="message" style={{ display: data.checks.overall_status === "Valid" ? "none" : "block" }}>
-                  {data.checks.max_status_message}
-                </div>
-              </div>
-            )}
+          </div>
+        )}
 
-            {/* Checkbox controls */}
-            <div className="checkboxes">
-              <div><label><input type="checkbox" checked={includeSites} onChange={e => setIncludeSites(e.target.checked)} /> Include Sites</label></div>
-              <div><label><input type="checkbox" checked={includeLandCover} onChange={e => setIncludeLandCover(e.target.checked)} /> Include Land Cover</label></div>
-              <div><label><input type="checkbox" checked={includeWDPA} onChange={e => setIncludeWDPA(e.target.checked)} /> Include WDPA</label></div>
-              <div><label><input type="checkbox" checked={includeMangroves} onChange={e => setIncludeMangroves(e.target.checked)} /> Include Mangroves</label></div>
-              <div><label><input type="checkbox" checked={includeOSM} onChange={e => setIncludeOSM(e.target.checked)} /> Include OSM</label></div>
+        {/* Fixed bottom section */}
+        {logged_in && (
+          <div style={{ flexShrink: 0 }}>
+            {data.checks && data.checks.overall_status && (() => {
+              const s = data.checks.overall_status;
+              const color = s === CheckStatus.Valid ? "#2e7d32" : s === CheckStatus.NeedsReview ? "#e65100" : "#c62828";
+              const bg    = s === CheckStatus.Valid ? "#f1f8e9" : s === CheckStatus.NeedsReview ? "#fff3e0" : "#ffebee";
+              return (
+                <div className="overall" style={{ background: bg, border: `1px solid ${color}30`, borderLeft: 'none', borderRight: 'none', borderRadius: 0 }}>
+                  <div className="overall-banner">
+                    <div className="overall-dot" style={{ background: color }} />
+                    <span style={{ color }}>{s}</span>
+                  </div>
+                  {s !== CheckStatus.Valid && data.checks.max_status_message && (
+                    <div className="overall-message" style={{ color }}>{data.checks.max_status_message}</div>
+                  )}
+                </div>
+              );
+            })()}
+            <div className="checkboxes" style={{ padding: '6px 15px 10px', borderTop: '1px solid #eee' }}>
+              <div style={{ fontSize: '10px', fontWeight: 600, color: '#999', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Options</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>
+                <label><input type="checkbox" checked={includeSites} onChange={e => setIncludeSites(e.target.checked)} /> Sites</label>
+                <label><input type="checkbox" checked={includeLandCover} onChange={e => setIncludeLandCover(e.target.checked)} /> Land Cover</label>
+                <label><input type="checkbox" checked={includeWDPA} onChange={e => setIncludeWDPA(e.target.checked)} /> WDPA</label>
+                <label><input type="checkbox" checked={includeMangroves} onChange={e => setIncludeMangroves(e.target.checked)} /> Mangroves</label>
+                <label><input type="checkbox" checked={includeOSM} onChange={e => setIncludeOSM(e.target.checked)} /> OSM</label>
+              </div>
             </div>
           </div>
         )}
