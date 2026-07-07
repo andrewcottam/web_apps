@@ -44,6 +44,12 @@ function App() {
   const [dateUrl, setDateUrl] = useState<string | null>(null);
   const [siteIdsUrl, setSiteIdsUrl] = useState<string | null>(null);
   const [invalidChecksCount, setInvalidChecksCount] = useState<number>(0);
+  const [includeMangroves, setIncludeMangroves] = useState<boolean>(false);
+
+  const getOptionalMetrics = () =>
+    includeMangroves
+      ? ["landcover", "sites", "wdpa", "profile_completeness", "mangroves"]
+      : ["landcover", "sites", "wdpa", "profile_completeness"];
 
   useEffect(() => {
     userRef.current = user;
@@ -115,7 +121,8 @@ function App() {
       const payload = {
         siteIds,
         config: {
-          overall_status_thresholds: [0, invalidChecksCount]
+          overall_status_thresholds: [0, invalidChecksCount],
+          optional_metrics: getOptionalMetrics()
         }
       };
       const url = await submitToEndpoint(payload, idToken);
@@ -139,7 +146,8 @@ function App() {
       const payload = {
         organizationName,
         config: {
-          overall_status_thresholds: [0, invalidChecksCount]
+          overall_status_thresholds: [0, invalidChecksCount],
+          optional_metrics: getOptionalMetrics()
         }
       };
       const url = await submitToEndpoint(payload, idToken);
@@ -178,7 +186,8 @@ function App() {
         startDate,
         endDate,
         config: {
-          overall_status_thresholds: [0, invalidChecksCount]
+          overall_status_thresholds: [0, invalidChecksCount],
+          optional_metrics: getOptionalMetrics()
         }
       };
       const url = await submitToEndpoint(payload, idToken);
@@ -284,6 +293,14 @@ function App() {
                   onChange={(e) => setInvalidChecksCount(Math.max(0, parseInt(e.target.value) || 0))}
                   style={{ width: '80px', padding: '0.25rem' }}
                 />
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <input
+                  type="checkbox"
+                  checked={includeMangroves}
+                  onChange={(e) => setIncludeMangroves(e.target.checked)}
+                />
+                <span>Include Mangrove checks</span>
               </label>
             </div>
           </>
