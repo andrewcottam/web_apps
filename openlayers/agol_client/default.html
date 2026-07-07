@@ -11,7 +11,7 @@
 const WMTS_URL = 'https://tiles-eu1.arcgis.com/GS4R6nt5gxQK4Sbv/arcgis/rest/services/Tahi_Pleiades_Image_09th_April_2025/MapServer/WMTS';
 // to get a token open the image in arcis online and add it to the map then go to the network tab, filter for https://tiles-eu1.arcgis.com/GS4R6nt5gxQK4Sbv/arcgis/rest/services/
 // and copy the token value
-const TOKEN = 'afNLHc8q9IAffJV2-1HL5gQ..87uPfQjpYq8c-vMvJOxLOzwLOk93a5s9VKhLjv4XSh1ouOoNCwQ63iVLIf1GfsIfWSrTxhkT5M3AdDSE4eyFwVsYxo4d6gZXV3kjScItjNPiYhpM0peBw7B09eYuk4EOFQAtpgMntCe4ehQA7EBLk3vec-uquq16FUFVLU1EOCw_gNkY_78UR5qUAB40WiTO2O4skUdg7BGORfqHfypZMpJJk1FTqRghQvUG0fsV251c8tcpXSMJTJHSnO_-hujFg63lumK4w-WtNmeahy73Gmtl_OSdG5ohh9g9xRcH-ggYhchhP0dCN7bFk4fawRZ_W_SP6wy9x8p9iPVPnOO8qNyvvUgKIRsBIhA.';
+const TOKEN = 'alPMkXKoAWtnGSU_Rvye5qQ..KsR-CiSJgoIwbr8nQ3RGFI3qlRjzgY8_dgYtW1LzY9wfURwKkpXAo9RCfqDmjPjE25jvgBKPKcJkXvJW5u7vHTSd7tBIocowXu-JLRyUaKMDF_1Gb41GVCksadLp--8Pq66Xr320v1ob-JawPxqyCfHKjYR-Fw1xdNWltYPKnCiKFVYDu5AmreKUmbT4KOBMQOLv62oPjaYsWkGWlGTU4yWkV3vUD9jh3NpGdzs45z3Iu2NQbPaAxxfKFOeXi6RN7DtW5TUXZcNVO54qXjCsFGkmghpnJLn71JWagBCxbC3jqa57Ws2c9026KedPINSCT3sRZYc6K-qGVPElSuq0v_R_MC8Wn1qU8oM.';
 
 fetch(`${WMTS_URL}/1.0.0/WMTSCapabilities.xml?token=${TOKEN}`)
   .then(r => r.text())
