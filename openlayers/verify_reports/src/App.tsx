@@ -298,29 +298,34 @@ function App() {
                   columnGap: '0.5rem',
                 }}
               >
+                <input
+                  id="invalidChecksCount"
+                  type="number"
+                  min="0"
+                  value={invalidChecksCount}
+                  onChange={(e) => setInvalidChecksCount(Math.max(0, parseInt(e.target.value) || 0))}
+                  style={{ width: '2.5rem', padding: '0.25rem', margin: 0, boxSizing: 'border-box', justifySelf: 'start' }}
+                  title="Sites will be flagged as invalid overall if they have this number of invalid checks or greater"
+                />
                 <label
-                  style={{ display: 'contents' }}
+                  htmlFor="invalidChecksCount"
                   title="Sites will be flagged as invalid overall if they have this number of invalid checks or greater"
                 >
-                  <input
-                    type="number"
-                    min="0"
-                    value={invalidChecksCount}
-                    onChange={(e) => setInvalidChecksCount(Math.max(0, parseInt(e.target.value) || 0))}
-                    style={{ width: '2.5rem', padding: '0.25rem' }}
-                  />
-                  <span>Invalid checks count:</span>
+                  Invalid checks count:
                 </label>
+                <input
+                  id="includeMangroves"
+                  type="checkbox"
+                  checked={includeMangroves}
+                  onChange={(e) => setIncludeMangroves(e.target.checked)}
+                  style={{ justifySelf: 'start', margin: 0 }}
+                  title="Click this box to include checks on Mangrove proximity and overlap"
+                />
                 <label
-                  style={{ display: 'contents' }}
+                  htmlFor="includeMangroves"
                   title="Click this box to include checks on Mangrove proximity and overlap"
                 >
-                  <input
-                    type="checkbox"
-                    checked={includeMangroves}
-                    onChange={(e) => setIncludeMangroves(e.target.checked)}
-                  />
-                  <span>Include Mangrove checks</span>
+                  Include Mangrove checks
                 </label>
               </div>
             </div>
