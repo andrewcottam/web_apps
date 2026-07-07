@@ -304,11 +304,20 @@ function App() {
                   min="0"
                   value={invalidChecksCount}
                   onChange={(e) => setInvalidChecksCount(Math.max(0, parseInt(e.target.value) || 0))}
-                  style={{ width: '2.5rem', padding: '0.25rem', margin: 0, boxSizing: 'border-box', justifySelf: 'start' }}
+                  style={{
+                    gridColumn: 1,
+                    gridRow: 1,
+                    width: '2.5rem',
+                    padding: '0.25rem',
+                    margin: 0,
+                    boxSizing: 'border-box',
+                    justifySelf: 'start',
+                  }}
                   title="Sites will be flagged as invalid overall if they have this number of invalid checks or greater"
                 />
                 <label
                   htmlFor="invalidChecksCount"
+                  style={{ gridColumn: 2, gridRow: 1, justifySelf: 'start' }}
                   title="Sites will be flagged as invalid overall if they have this number of invalid checks or greater"
                 >
                   Invalid checks count:
@@ -318,11 +327,12 @@ function App() {
                   type="checkbox"
                   checked={includeMangroves}
                   onChange={(e) => setIncludeMangroves(e.target.checked)}
-                  style={{ justifySelf: 'start', margin: 0 }}
+                  style={{ gridColumn: 1, gridRow: 2, margin: 0, justifySelf: 'start' }}
                   title="Click this box to include checks on Mangrove proximity and overlap"
                 />
                 <label
                   htmlFor="includeMangroves"
+                  style={{ gridColumn: 2, gridRow: 2, justifySelf: 'start' }}
                   title="Click this box to include checks on Mangrove proximity and overlap"
                 >
                   Include Mangrove checks
