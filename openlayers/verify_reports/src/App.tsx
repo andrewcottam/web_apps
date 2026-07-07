@@ -215,6 +215,11 @@ function App() {
         {logged_in && (
           <>
             <h1>Site Verification Reports</h1>
+            <p style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center' }}>
+              This tool can be used for producing a Google Sheet with the results of the Site Verification service for a set of sites.
+              The list of sites can be created using a date range, the name of the organisation or a list of site ids.
+              Enter one of these options and click Submit. The report will take a couple of minutes to be produced.
+            </p>
             <div
               style={{
                 padding: '2rem',
@@ -284,7 +289,10 @@ function App() {
                 gap: '0.5rem',
               }}
             >
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <label
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                title="Sites will be flagged as invalid overall if they have this number of invalid checks or greater"
+              >
                 <span>Invalid checks count:</span>
                 <input
                   type="number"
@@ -294,7 +302,10 @@ function App() {
                   style={{ width: '80px', padding: '0.25rem' }}
                 />
               </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <label
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                title="Click this box to include checks on Mangrove proximity and overlap"
+              >
                 <input
                   type="checkbox"
                   checked={includeMangroves}
