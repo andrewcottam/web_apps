@@ -553,7 +553,7 @@ const App: React.FC = () => {
 
     } catch (error) {
       console.error('Error verifying site feature:', error);
-      alert('Failed to verify site. Please try again.');
+      alert(`Failed to verify site: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       // Always set loading to false when done
       setIsLoading(false);
@@ -785,7 +785,7 @@ const App: React.FC = () => {
           }
         } catch (error) {
           console.error('Error verifying drawn polygon:', error);
-          alert('Failed to verify site. Please try again.');
+          alert(`Failed to verify site: ${error instanceof Error ? error.message : String(error)}`);
         } finally {
           // Always set loading to false when done
           setIsLoading(false);
@@ -1034,7 +1034,7 @@ const App: React.FC = () => {
                   )}
                   {/* Always render the checks, but conditionally show them */}
                   <div style={{ display: selectedTab === "Checks" ? "block" : "none" }} key={JSON.stringify(data)}>
-                    {data.checks.items.map((check: Check) => (
+                    {data.checks && data.checks.items.map((check: Check) => (
                       <CheckDiv key={check.name}
                         check={check}
                       />
