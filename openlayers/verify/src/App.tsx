@@ -481,7 +481,7 @@ const App: React.FC = () => {
         configList.push("landcover");
       }
       if (includeOSMRef.current) {
-        configList.push("osm");
+        configList.push("osm_esri");
       }
       if (includeMangrovesRef.current) {
         configList.push("mangroves");
@@ -541,7 +541,7 @@ const App: React.FC = () => {
 
       // Handle OSM overlay if enabled
       if (includeOSMRef.current) {
-        const best_feature = (result.results.osm && result.results.osm.features && result.results.osm.best_feature);
+        const best_feature = (result.results.osm_esri && result.results.osm_esri.features && result.results.osm_esri.best_feature);
         if (best_feature) {
           const overpassQuery = `${best_feature.type}(${best_feature.id});`;
           const fullQuery = `[out:json];(${overpassQuery});out geom;`;
@@ -755,7 +755,7 @@ const App: React.FC = () => {
             configList.push("landcover");
           }
           if (includeOSMRef.current) {
-            configList.push("osm");
+            configList.push("osm_esri");
           }
           if (includeMangrovesRef.current) {
             configList.push("mangroves");
@@ -786,7 +786,7 @@ const App: React.FC = () => {
           setVerificationType('drawn');
 
           if (includeOSMRef.current) {
-            const best_feature = (result.results.osm && result.results.osm.features && result.results.osm.best_feature);
+            const best_feature = (result.results.osm_esri && result.results.osm_esri.features && result.results.osm_esri.best_feature);
             if (best_feature) {
               const overpassQuery = `${best_feature.type}(${best_feature.id});`;
               const fullQuery = `[out:json];(${overpassQuery});out geom;`;
@@ -974,10 +974,10 @@ const App: React.FC = () => {
                       )}
                     />
                   )}
-                  {selectedTab === "OSM" && data.osm && data.osm.features && (
+                  {selectedTab === "OSM" && data.osm_esri && data.osm_esri.features && (
                     <div>
                       <div>
-                        {data.osm.features.map((rel: { type: string; id: number }) => (
+                        {data.osm_esri.features.map((rel: { type: string; id: number }) => (
                           <div key={rel.id} className="osm">
                             <a
                               href={`https://www.openstreetmap.org/${rel.type}/${rel.id}`}
