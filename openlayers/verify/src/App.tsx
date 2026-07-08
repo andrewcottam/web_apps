@@ -480,7 +480,7 @@ const App: React.FC = () => {
         configList.push("landcover");
       }
       if (includeOSMRef.current) {
-        configList.push("osm_esri");
+        configList.push("osm");
       }
       if (includeMangrovesRef.current) {
         configList.push("mangroves");
@@ -541,7 +541,7 @@ const App: React.FC = () => {
       // Handle OSM overlay if enabled — best_feature.geometry comes straight from the API, no
       // separate Overpass/ArcGIS round-trip needed
       if (includeOSMRef.current) {
-        const best_feature = (result.results.osm_esri && result.results.osm_esri.features && result.results.osm_esri.best_feature);
+        const best_feature = (result.results.osm && result.results.osm.features && result.results.osm.best_feature);
         if (best_feature && best_feature.geometry && mapInstanceRef.current) {
           addGeoJSONToMap(mapInstanceRef.current, {
             type: "Feature",
@@ -743,7 +743,7 @@ const App: React.FC = () => {
             configList.push("landcover");
           }
           if (includeOSMRef.current) {
-            configList.push("osm_esri");
+            configList.push("osm");
           }
           if (includeMangrovesRef.current) {
             configList.push("mangroves");
@@ -774,7 +774,7 @@ const App: React.FC = () => {
           setVerificationType('drawn');
 
           if (includeOSMRef.current) {
-            const best_feature = (result.results.osm_esri && result.results.osm_esri.features && result.results.osm_esri.best_feature);
+            const best_feature = (result.results.osm && result.results.osm.features && result.results.osm.best_feature);
             if (best_feature && best_feature.geometry && mapInstanceRef.current) {
               addGeoJSONToMap(mapInstanceRef.current, {
                 type: "Feature",
@@ -956,10 +956,10 @@ const App: React.FC = () => {
                       )}
                     />
                   )}
-                  {selectedTab === "OSM" && data.osm_esri && data.osm_esri.features && (
+                  {selectedTab === "OSM" && data.osm && data.osm.features && (
                     <div>
                       <div>
-                        {data.osm_esri.features.map((rel: { type: string; id: number }) => (
+                        {data.osm.features.map((rel: { type: string; id: number }) => (
                           <div key={rel.id} className="osm">
                             <a
                               href={`https://www.openstreetmap.org/${rel.type}/${rel.id}`}
