@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import osmtogeojson from "osmtogeojson";
 
 // OpenLayers
 import "ol/ol.css";
@@ -539,27 +538,16 @@ const App: React.FC = () => {
       setCheckStatuses({});
       setData(result.results);
 
-      // Handle OSM overlay if enabled
+      // Handle OSM overlay if enabled — best_feature.geometry comes straight from the API, no
+      // separate Overpass/ArcGIS round-trip needed
       if (includeOSMRef.current) {
         const best_feature = (result.results.osm_esri && result.results.osm_esri.features && result.results.osm_esri.best_feature);
-        if (best_feature) {
-          const overpassQuery = `${best_feature.type}(${best_feature.id});`;
-          const fullQuery = `[out:json];(${overpassQuery});out geom;`;
-
-          fetch("https://overpass-api.de/api/interpreter", {
-            method: "POST",
-            body: fullQuery.trim(),
-          })
-            .then((res) => res.json())
-            .then((data) => {
-              const geojson = osmtogeojson(data);
-              if (mapInstanceRef.current) {
-                addGeoJSONToMap(mapInstanceRef.current, geojson);
-              }
-            })
-            .catch((error) => {
-              console.error('Error fetching OSM data:', error);
-            });
+        if (best_feature && best_feature.geometry && mapInstanceRef.current) {
+          addGeoJSONToMap(mapInstanceRef.current, {
+            type: "Feature",
+            geometry: best_feature.geometry,
+            properties: {},
+          });
         }
       }
 
@@ -787,18 +775,12 @@ const App: React.FC = () => {
 
           if (includeOSMRef.current) {
             const best_feature = (result.results.osm_esri && result.results.osm_esri.features && result.results.osm_esri.best_feature);
-            if (best_feature) {
-              const overpassQuery = `${best_feature.type}(${best_feature.id});`;
-              const fullQuery = `[out:json];(${overpassQuery});out geom;`;
-              fetch("https://overpass-api.de/api/interpreter", {
-                method: "POST",
-                body: fullQuery.trim(),
-              })
-                .then((res) => res.json())
-                .then((data) => {
-                  const geojson = osmtogeojson(data);
-                  addGeoJSONToMap(mapInstanceRef.current!, geojson);
-                });
+            if (best_feature && best_feature.geometry && mapInstanceRef.current) {
+              addGeoJSONToMap(mapInstanceRef.current, {
+                type: "Feature",
+                geometry: best_feature.geometry,
+                properties: {},
+              });
             }
           }
         } catch (error) {
