@@ -54,6 +54,11 @@ const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 const firestore = getFirestore(app);
 
+// site-verification API Gateway key (internal/unlimited key, restricted to
+// this site's origin at the GCP API key level). Set VITE_SITE_VERIFICATION_API_KEY
+// in .env.local for local builds against the deployed gateway.
+const SITE_VERIFICATION_API_KEY = import.meta.env.VITE_SITE_VERIFICATION_API_KEY ?? "";
+
 // Helper function to parse URL parameters
 const getUrlParameters = (): { lat?: number; lng?: number; zoom?: number } => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -472,7 +477,7 @@ const App: React.FC = () => {
       const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
       const endpoint = isLocalhost
         ? "http://localhost:8080"
-        : "https://europe-west6-restor-gis.cloudfunctions.net/site-verification";
+        : "https://site-verification-gateway-5z0jvrht.ew.gateway.dev/site-verification";
 
       // Build config based on current checkbox states
       const configList = [];
@@ -516,6 +521,7 @@ const App: React.FC = () => {
         headers: {
           Authorization: `Bearer ${idToken}`,
           "Content-Type": "application/json",
+          ...(isLocalhost ? {} : { "x-api-key": SITE_VERIFICATION_API_KEY }),
         },
         body: JSON.stringify({
           site_data: {
@@ -736,7 +742,7 @@ const App: React.FC = () => {
           const isLocalhost = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
           const endpoint = isLocalhost
             ? "http://localhost:8080"
-            : "https://europe-west6-restor-gis.cloudfunctions.net/site-verification";
+            : "https://site-verification-gateway-5z0jvrht.ew.gateway.dev/site-verification";
 
           const configList = [];
           if (includeLandCoverRef.current) {
@@ -759,6 +765,7 @@ const App: React.FC = () => {
             headers: {
               Authorization: `Bearer ${idToken}`,
               "Content-Type": "application/json",
+              ...(isLocalhost ? {} : { "x-api-key": SITE_VERIFICATION_API_KEY }),
             },
             body: JSON.stringify({
               site_data: { geometry: wkt },
