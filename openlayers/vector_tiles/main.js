@@ -1,42 +1,151 @@
 import { Map, View } from 'ol';
-import MVT from 'ol/format/MVT';
 import OSM from 'ol/source/OSM';
 import { Fill, Stroke } from 'ol/style';
 import Style from 'ol/style/Style';
 import { Overlay } from 'ol';
-import { useGeographic } from "ol/proj";
+import { useGeographic, transformExtent } from "ol/proj";
 import TileLayer from 'ol/layer/WebGLTile';
-import VectorTileLayer from 'ol/layer/VectorTile';
-import VectorTileSource from 'ol/source/VectorTile';
+import VectorLayer from 'ol/layer/Vector';
+import VectorSource from 'ol/source/Vector';
+import GeoJSON from 'ol/format/GeoJSON';
+import { bbox as bboxStrategy } from 'ol/loadingstrategy';
 import { apply } from 'ol-mapbox-style';
+
+// FlatGeobuf
+import { deserialize as fgbDeserialize } from 'flatgeobuf/lib/mjs/geojson';
+
+// Firebase
+import { initializeApp } from "firebase/app";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getFirestore, getDoc, doc, collection } from "firebase/firestore";
 
 useGeographic();
 
-// Vector tile sources
-const vector_tiles_endpoint = 'https://storage.googleapis.com/restor_default/vector_tiles/sites/2025_03_02/mvt_tiles/{z}/{x}/{y}.pbf'; // restor sites
-const vector_tile_source = new VectorTileSource({ format: new MVT(), url: vector_tiles_endpoint, maxZoom: 20 });
-const mvt_layer_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)', }), stroke: new Stroke({ color: [99,148,69,0.3], width: 1 }) });
-const mvt_highlight_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.4)', }), stroke: new Stroke({ color: 'rgba(255, 255, 255, 1)', width: 2 }) });
+// Firebase config
+const firebaseConfig = {
+    apiKey: "AIzaSyAzrhJkckakoJLnRThTDvNRwyE29k7DDGQ",
+    authDomain: "restor-poc-apps-b3414.firebaseapp.com",
+    projectId: "restor-poc-apps-b3414",
+    storageBucket: "restor-poc-apps-b3414.appspot.com",
+    messagingSenderId: "1043831538397",
+    appId: "1:1043831538397:web:50d6c71e135234ef4b9134"
+};
+
+const firebase_app = initializeApp(firebaseConfig);
+const auth = getAuth(firebase_app);
+const provider = new GoogleAuthProvider();
+const firestore = getFirestore(firebase_app);
+
+const FGB_PROXY_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://127.0.0.1:8082/fgb_proxy'
+    : 'https://europe-west6-restor-gis.cloudfunctions.net/fgb_proxy';
+
+// Helper function to parse URL parameters
+function getUrlParameters() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const lat = urlParams.get('lat');
+    const lng = urlParams.get('lng') || urlParams.get('lon');
+    const zoom = urlParams.get('zoom');
+
+    const result = {};
+
+    if (lat && !isNaN(parseFloat(lat))) {
+        result.lat = parseFloat(lat);
+    }
+
+    if (lng && !isNaN(parseFloat(lng))) {
+        result.lng = parseFloat(lng);
+    }
+
+    if (zoom && !isNaN(parseFloat(zoom))) {
+        result.zoom = parseFloat(zoom);
+    }
+
+    return result;
+}
 
 // variables
 var visibility = 'PUBLIC';
+var logged_in = false;
+var current_user = null;
 
-// Create the sites vector tile layer 
-const vector_tile_layer = new VectorTileLayer({
+const geoJsonFormat = new GeoJSON();
+
+// Sites vector source, loaded directly from the FlatGeobuf file via fgb_proxy
+// (requires a logged-in, whitelisted user, same as dist-alert's FGB mode)
+const vector_tile_source = new VectorSource({ strategy: bboxStrategy });
+vector_tile_source.setLoader(async function (extent, _resolution, projection, success, failure) {
+    if (!current_user) {
+        vector_tile_source.removeLoadedExtent(extent);
+        return;
+    }
+    try {
+        const [minX, minY, maxX, maxY] = transformExtent(extent, projection, 'EPSG:4326');
+        const rect = { minX, minY, maxX, maxY };
+        const idToken = await current_user.getIdToken();
+        const headers = { 'Authorization': `Bearer ${idToken}` };
+
+        const features = [];
+        for await (const geoJsonFeature of fgbDeserialize(`${FGB_PROXY_URL}?source=sites_plus_checks`, rect, undefined, false, headers)) {
+            const olFeature = geoJsonFormat.readFeature(geoJsonFeature, {
+                featureProjection: projection,
+                dataProjection: 'EPSG:4326',
+            });
+            features.push(olFeature);
+        }
+        vector_tile_source.addFeatures(features);
+        success?.(features);
+    } catch (e) {
+        console.error('FGB load error:', e);
+        failure?.();
+        vector_tile_source.removeLoadedExtent(extent);
+    }
+});
+
+const mvt_layer_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)', }), stroke: new Stroke({ color: [99,148,69,0.3], width: 1 }) });
+const mvt_highlight_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.3)', }), stroke: new Stroke({ color: 'rgba(99, 148, 69, 0.7)', width: 2 }) });
+
+// Create the sites vector layer
+const vector_tile_layer = new VectorLayer({
     source: vector_tile_source, style: mvt_layer_style,
+    minZoom: 8,
+    visible: false,
     style: function (feature) {
         const threshold = parseFloat(document.getElementById('slider').value);
-        const featureValue = feature.get('area_km2'); 
-        const vis = feature.get('visibility');
+        const featureValue = feature.get('surface_area_km2');
+        const vis = feature.get('site_visibility');
         return (featureValue <= threshold && vis==visibility)? mvt_layer_style : null; // Hide features that do not meet the threshold
     }
 });
 // Create the map
+const urlParams = getUrlParameters();
+let initialCenter = [0, 0];
+let initialZoom = 0;
+
+if (urlParams.lat !== undefined && urlParams.lng !== undefined) {
+    initialCenter = [urlParams.lng, urlParams.lat];
+}
+
+if (urlParams.zoom !== undefined) {
+    initialZoom = urlParams.zoom;
+}
+
 const map = new Map({
     target: 'map',
     // layers: [new TileLayer({ source: new OSM() }), vector_tile_layer],
-    view: new View({ center: [0, 0], zoom: 0 }),
+    view: new View({ center: initialCenter, zoom: initialZoom }),
 
+});
+
+map.on('moveend', () => {
+    const view = map.getView();
+    const center = view.getCenter();
+    const zoom = view.getZoom();
+    const params = new URLSearchParams(window.location.search);
+    params.set('lng', center[0].toFixed(6));
+    params.set('lat', center[1].toFixed(6));
+    params.set('zoom', zoom.toFixed(2));
+    window.history.replaceState(null, '', `?${params.toString()}`);
 });
 
 // Apply the MapTiler style
@@ -53,12 +162,19 @@ apply(map, styleJson).then(() => {
 // Create a selected feature
 var selected_feature = {};
 // Create a popup
-var map_popup = new Overlay({ element: document.getElementById('popup') });
+var map_popup = new Overlay({
+    element: document.getElementById('popup'),
+    offset: [16, 16],
+    positioning: 'top-left',
+});
 map.addOverlay(map_popup);
 
-// Create the vector tile layer for the highlighted site 
-const selection_layer = new VectorTileLayer({
-    source: vector_tile_source, style: function (feature) {
+// Create the vector layer for the highlighted site
+const selection_layer = new VectorLayer({
+    source: vector_tile_source,
+    minZoom: 8,
+    visible: false,
+    style: function (feature) {
         const props = feature.getProperties();
         if (props['id'] === selected_feature.current) {
             return mvt_highlight_style;
@@ -66,9 +182,114 @@ const selection_layer = new VectorTileLayer({
     }
 });
 
-function getText(str) {
-    var ret = (str !== undefined) ? str : '';
-    return ret;
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function safe(value) {
+    // geopandas/pandas represents missing values as float NaN, not undefined
+    if (value === undefined || value === null) return '';
+    if (typeof value === 'number' && isNaN(value)) return '';
+    return value;
+}
+
+function formatEnum(str) {
+    if (!str) return '';
+    return str.toLowerCase().split('_').map(w => w[0].toUpperCase() + w.slice(1)).join(' ');
+}
+
+function formatNumber(value) {
+    const num = parseFloat(value);
+    if (isNaN(num)) return '';
+    return num.toLocaleString(undefined, { maximumFractionDigits: 1 });
+}
+
+function parseListField(value) {
+    // Some list-valued columns (goals, support_sought, certificate_types, ...) are
+    // stored as Python-repr strings with single quotes, e.g. "['CONSERVING_BIODIVERSITY']".
+    // Others (verification_checks) are proper JSON, whose string values may contain
+    // apostrophes (e.g. "Pete's patch") — try real JSON first so those aren't corrupted
+    // by a blind single-quote-to-double-quote replacement.
+    value = safe(value);
+    if (value === '') return [];
+    if (Array.isArray(value)) return value;
+    const trimmed = String(value).trim();
+    if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+        try {
+            const parsed = JSON.parse(trimmed);
+            if (Array.isArray(parsed)) return parsed;
+        } catch (e) {
+            try {
+                const parsed = JSON.parse(trimmed.replace(/'/g, '"'));
+                if (Array.isArray(parsed)) return parsed;
+            } catch (e2) {
+                // fall through and treat as a plain string
+            }
+        }
+    }
+    return [trimmed];
+}
+
+// Same status colors as openlayers/verify (CheckDiv/ClassificationCheck: green/orange/red, white text)
+const CHECK_STATUS_ORDER = ['Invalid', 'Needs Review', 'Valid'];
+const CHECK_STATUS_COLORS = { 'Invalid': '#c0605c', 'Needs Review': '#d39a4e', 'Valid': '#6b9b5e' };
+
+function buildVerificationPillsHtml(checks) {
+    if (!checks.length) return '';
+    const counts = {};
+    checks.forEach((check) => {
+        const status = (check && typeof check === 'object' ? check.status : check) || 'Unknown';
+        counts[status] = (counts[status] || 0) + 1;
+    });
+    const orderedStatuses = [...CHECK_STATUS_ORDER, ...Object.keys(counts).filter((s) => !CHECK_STATUS_ORDER.includes(s))];
+    return orderedStatuses
+        .filter((status) => counts[status])
+        .map((status) => {
+            const color = CHECK_STATUS_COLORS[status] || 'gray';
+            return `<span class="popup-check-pill" style="background:${color}" title="${escapeHtml(status)}">${counts[status]}</span>`;
+        })
+        .join('');
+}
+
+function countryCodeToFlagEmoji(code) {
+    if (!code || code.length !== 2 || !/^[a-zA-Z]{2}$/.test(code)) return '';
+    const codePoints = code.toUpperCase().split('').map(c => 127397 + c.charCodeAt(0));
+    return String.fromCodePoint(...codePoints);
+}
+
+function buildPopupHtml(props) {
+    const areaHa = formatNumber(props['surface_area_km2'] * 100);
+    const verificationChecks = parseListField(props['verification_checks']).filter(Boolean);
+    const fields = [
+        ['Country', safe(props['country_code'])],
+        ['Area', areaHa ? `${areaHa} ha` : ''],
+        ['Stage', formatEnum(props['stage'])],
+        ['Intervention start', safe(props['intervention_start_date'])],
+        ['Intervention type', formatEnum(props['intervention_type'])],
+        ['Pre-intervention use', formatEnum(props['pre_intervention_land_use'])],
+        ['Post-intervention cover', formatEnum(props['post_intervention_land_cover'])],
+    ].filter(([, value]) => value !== '');
+
+    const visibility = (props['site_visibility'] || '').toUpperCase();
+    const badges = [];
+    if (props['site_type']) badges.push(`<span class="popup-badge">${escapeHtml(formatEnum(props['site_type']))}</span>`);
+    if (visibility) badges.push(`<span class="popup-badge${visibility === 'PRIVATE' ? ' visibility-private' : ''}">${escapeHtml(formatEnum(visibility))}</span>`);
+
+    const flag = countryCodeToFlagEmoji(props['country_code']);
+    const checkPills = buildVerificationPillsHtml(verificationChecks);
+
+    return `
+        ${flag ? `<span class="popup-flag" title="${escapeHtml(props['country_code'])}">${flag}</span>` : ''}
+        <div class="popup-title">${escapeHtml(props['name'] || 'Untitled site')}</div>
+        <div class="popup-badges">${badges.join('')}</div>
+        ${checkPills ? `<div class="popup-check-pills">${checkPills}</div>` : ''}
+        <dl class="popup-fields">
+            ${fields.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join('')}
+        </dl>
+    `;
 }
 
 function handleRadioClick(event) {
@@ -77,10 +298,74 @@ function handleRadioClick(event) {
     vector_tile_layer.setStyle(vector_tile_layer.getStyle());
 }
 
+const DEFAULT_LOGIN_ICON = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+    </svg>
+`;
+
+function updateLoginButton() {
+    const btn = document.getElementById('login-button');
+    if (logged_in && current_user) {
+        btn.title = `Logged in as ${current_user.email} - click to log out`;
+        btn.innerHTML = current_user.photoURL ? `<img src="${current_user.photoURL}" alt="">` : DEFAULT_LOGIN_ICON;
+    } else {
+        btn.title = 'Login';
+        btn.innerHTML = DEFAULT_LOGIN_ICON;
+    }
+}
+
+function setLoggedIn(value) {
+    logged_in = value;
+    vector_tile_layer.setVisible(logged_in);
+    selection_layer.setVisible(logged_in);
+    updateLoginButton();
+    if (logged_in) {
+        // Clear previously-failed (unauthenticated) loads so they retry now that a token is available
+        vector_tile_source.refresh();
+    } else {
+        vector_tile_source.clear();
+    }
+}
+
+function logout() {
+    current_user = null;
+    setLoggedIn(false);
+}
+
+async function login_clicked() {
+    if (logged_in) {
+        logout();
+        return;
+    }
+
+    const result = await signInWithPopup(auth, provider);
+
+    const whitelistRef = doc(collection(firestore, "site-verify"), "whitelisted_emails");
+    const whitelistSnap = await getDoc(whitelistRef);
+    const whitelisted = Object.keys(whitelistSnap.data() || {});
+
+    if ((!whitelisted.includes(result.user.email)) && (!result.user.email?.endsWith('restor.eco'))) {
+        alert("Access Denied: Your email is not whitelisted.");
+        current_user = null;
+        logout();
+        return;
+    }
+
+    current_user = result.user;
+    setLoggedIn(true);
+}
+
 // Add the mouse move event
 map.on(['pointermove'], function (mapEvent) {
-    // Get the features which are under the mouse
-    const features = map.getFeaturesAtPixel(mapEvent.pixel, { hitTolerance: 5 });
+    // Get the features which are under the mouse, restricted to the sites layers
+    // (otherwise this also picks up basemap features, e.g. roads/boundaries, that
+    // happen to carry an 'id' property, causing bogus "Untitled site" popups)
+    const features = map.getFeaturesAtPixel(mapEvent.pixel, {
+        hitTolerance: 5,
+        layerFilter: (layer) => layer === vector_tile_layer || layer === selection_layer,
+    });
     // If there are some features
     if (features.length !== 0) {
         // Get the properties
@@ -94,69 +379,14 @@ map.on(['pointermove'], function (mapEvent) {
         var pu = document.getElementById('popup');
         if (props['id'] !== undefined) {
             pu.style.display = "block";
+            pu.innerHTML = buildPopupHtml(props);
         } else {
             pu.style.display = "none";
         }
-        pu.innerHTML = `
-        <div style='font-size:12px;width:300px;color:gray;overflow:truncate'}>
-            <table>
-                <tbody>
-                    <tr>
-                        <td>id</td>
-                        <td>` + props['id'] + `</td>
-                    </tr>
-                    <tr>
-                        <td>name</td>
-                        <td>` + props['name'] + `</td>
-                    </tr>
-                    <tr>
-                        <td>Description</td>
-                        <td>` + getText(props['desc']) + `</td>
-                    </tr>
-                    <tr>
-                        <td>Site type</td>
-                        <td>` + getText(props['site_type']) + `</td>
-                    </tr>
-                    <tr>
-                        <td>Area (Km2)</td>
-                        <td>` + getText(props['area_km2']) + `</td>
-                    </tr>
-                    <tr>
-                        <td>Country</td>
-                        <td>` + getText(props['iso2']) + `</td>
-                    </tr>
-                    <tr>
-                        <td>Visibility</td>
-                        <td>` + getText(props['visibility']) + `</td>
-                    </tr>
-                    <tr>
-                        <td>Intervention start date</td>
-                        <td>` + getText(props['intv_start']) + `</td>
-                    </tr>
-                    <tr>
-                        <td>Stage</td>
-                        <td>` + getText(props['stage']) + `</td>
-                    </tr>
-                    <tr>
-                        <td>Pre-intervention land use</td>
-                        <td>` + getText(props['pre_use']) + `</td>
-                    </tr>
-                    <tr>
-                        <td>Intervention type</td>
-                        <td>` + getText(props['intv_type']) + `</td>
-                    </tr>
-                    <tr>
-                        <td>Post-intervention land use</td>
-                        <td>` + getText(props['post_use']) + `</td>
-                    </tr>
-                    <tr>
-                        <td>Created</td>
-                        <td>` + getText(props['created']) + `</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        `;
+    } else {
+        selected_feature.current = undefined;
+        selection_layer.changed();
+        document.getElementById('popup').style.display = "none";
     }
 });
 
@@ -172,4 +402,5 @@ document.addEventListener("DOMContentLoaded", function () {
     radioButtons.forEach(radio => {
         radio.addEventListener("click", handleRadioClick);
     });
+    document.getElementById('login-button').addEventListener('click', login_clicked);
 });
