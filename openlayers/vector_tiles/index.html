@@ -157,6 +157,119 @@
       color: #666;
     }
 
+    #checks-modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #checks-modal-backdrop.open {
+      display: flex;
+    }
+
+    #checks-modal {
+      width: 420px;
+      max-width: 90vw;
+      max-height: 80vh;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.25);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #checks-modal .checks-modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid #eee;
+    }
+
+    #checks-modal .checks-modal-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #222;
+      overflow-wrap: break-word;
+    }
+
+    #checks-modal .checks-modal-close {
+      border: none;
+      background: none;
+      font-size: 20px;
+      line-height: 1;
+      color: #888;
+      cursor: pointer;
+      padding: 2px;
+      flex-shrink: 0;
+    }
+
+    #checks-modal .checks-modal-close:hover {
+      color: #333;
+    }
+
+    #checks-modal .checks-modal-body {
+      padding: 8px 18px 18px;
+      overflow-y: auto;
+    }
+
+    #checks-modal .check-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f2f2f2;
+    }
+
+    #checks-modal .check-row:last-child {
+      border-bottom: none;
+    }
+
+    #checks-modal .check-info {
+      min-width: 0;
+    }
+
+    #checks-modal .check-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #222;
+    }
+
+    #checks-modal .check-message {
+      font-size: 12px;
+      color: #777;
+      margin-top: 2px;
+    }
+
+    #checks-modal .check-status-pill {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 9px;
+      border-radius: 999px;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    #checks-modal .checks-modal-empty {
+      font-size: 13px;
+      color: #888;
+      padding: 12px 0;
+    }
+
     .lightbox2 {
       font-size: 14px;
       color: gray;
@@ -196,6 +309,15 @@
         <circle cx="12" cy="7" r="4"></circle>
       </svg>
     </button>
+  </div>
+  <div id="checks-modal-backdrop">
+    <div id="checks-modal">
+      <div class="checks-modal-header">
+        <div class="checks-modal-title" id="checks-modal-title"></div>
+        <button class="checks-modal-close" id="checks-modal-close" title="Close" aria-label="Close">&times;</button>
+      </div>
+      <div class="checks-modal-body" id="checks-modal-body"></div>
+    </div>
   </div>
   <script type="module" src="main.js"></script>
 </body>

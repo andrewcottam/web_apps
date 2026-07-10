@@ -254,6 +254,46 @@ function buildVerificationPillsHtml(checks) {
         .join('');
 }
 
+function buildChecksModalBody(checks) {
+    if (!checks.length) {
+        return '<div class="checks-modal-empty">No verification checks available for this site.</div>';
+    }
+    const sorted = [...checks].sort((a, b) => {
+        const statusA = (a && typeof a === 'object' ? a.status : a) || 'Unknown';
+        const statusB = (b && typeof b === 'object' ? b.status : b) || 'Unknown';
+        const rankA = CHECK_STATUS_ORDER.indexOf(statusA);
+        const rankB = CHECK_STATUS_ORDER.indexOf(statusB);
+        return (rankA === -1 ? CHECK_STATUS_ORDER.length : rankA) - (rankB === -1 ? CHECK_STATUS_ORDER.length : rankB);
+    });
+    return sorted.map((check) => {
+        const isObject = check && typeof check === 'object';
+        const name = isObject ? (check.name || 'Check') : String(check);
+        const status = (isObject ? check.status : check) || 'Unknown';
+        const message = isObject ? safe(check.status_message) : '';
+        const color = CHECK_STATUS_COLORS[status] || 'gray';
+        return `
+            <div class="check-row">
+                <div class="check-info">
+                    <div class="check-name">${escapeHtml(name)}</div>
+                    ${message ? `<div class="check-message">${escapeHtml(message)}</div>` : ''}
+                </div>
+                <span class="check-status-pill" style="background:${color}">${escapeHtml(status)}</span>
+            </div>
+        `;
+    }).join('');
+}
+
+function openChecksModal(props) {
+    const checks = parseListField(props['verification_checks']).filter(Boolean);
+    document.getElementById('checks-modal-title').textContent = props['name'] || 'Untitled site';
+    document.getElementById('checks-modal-body').innerHTML = buildChecksModalBody(checks);
+    document.getElementById('checks-modal-backdrop').classList.add('open');
+}
+
+function closeChecksModal() {
+    document.getElementById('checks-modal-backdrop').classList.remove('open');
+}
+
 function countryCodeToFlagEmoji(code) {
     if (!code || code.length !== 2 || !/^[a-zA-Z]{2}$/.test(code)) return '';
     const codePoints = code.toUpperCase().split('').map(c => 127397 + c.charCodeAt(0));
@@ -388,6 +428,28 @@ map.on(['pointermove'], function (mapEvent) {
         selection_layer.changed();
         document.getElementById('popup').style.display = "none";
     }
+});
+
+// Show the full verification checks list when a site is clicked
+map.on('click', function (mapEvent) {
+    const features = map.getFeaturesAtPixel(mapEvent.pixel, {
+        hitTolerance: 5,
+        layerFilter: (layer) => layer === vector_tile_layer || layer === selection_layer,
+    });
+    if (features.length !== 0) {
+        const props = features[0].getProperties();
+        if (props['id'] !== undefined) {
+            openChecksModal(props);
+        }
+    }
+});
+
+document.getElementById('checks-modal-close').addEventListener('click', closeChecksModal);
+document.getElementById('checks-modal-backdrop').addEventListener('click', function (event) {
+    if (event.target === this) closeChecksModal();
+});
+document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') closeChecksModal();
 });
 
 // Update layer style when slider changes
