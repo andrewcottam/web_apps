@@ -1,0 +1,293 @@
+swagger: "2.0"
+info:
+  title: Restor Site Verification API
+  description: >
+    Scores a restoration/conservation site by analysing its geometry and
+    metadata against multiple geospatial datasets (land cover, OpenStreetMap,
+    protected areas, mangroves, Restor site overlap, and profile
+    completeness). Returns a per-metric breakdown plus an overall
+    valid / needs-review / invalid status.
+  version: "1.0.0"
+host: site-verification-gateway-5z0jvrht.ew.gateway.dev
+schemes:
+  - https
+produces:
+  - application/json
+consumes:
+  - application/json
+
+securityDefinitions:
+  api_key:
+    type: apiKey
+    name: x-api-key
+    in: header
+
+security:
+  - api_key: []
+
+# Default per-key rate limit. Quota is enforced per consumer, and for
+# API-key auth the consumer identity is the key itself — so this applies
+# separately to each key (web app, playground, each customer), not as one
+# shared pool. To give a specific customer a higher limit, override it for
+# their consumer via `gcloud alpha services quota update` rather than
+# raising this default.
+x-google-management:
+  metrics:
+    - name: "site-verification-requests"
+      displayName: "Site verification requests"
+      valueType: INT64
+      metricKind: DELTA
+  quota:
+    limits:
+      - name: "site-verification-requests-per-minute"
+        metric: "site-verification-requests"
+        unit: "1/min/{project}"
+        values:
+          STANDARD: 60
+
+paths:
+  /site-verification:
+    post:
+      summary: Verify a site
+      description: >
+        Validates a site's geometry and runs the requested checks against it.
+      operationId: verifySite
+      # Routes to the underlying Cloud Function. Gateway calls this address
+      # using the service account passed via --backend-auth-service-account
+      # at api-config creation time (see gcp_setup.sh) — that's what lets it
+      # through once the function is --no-allow-unauthenticated.
+      x-google-backend:
+        address: https://europe-west6-restor-gis.cloudfunctions.net/site-verification
+      x-google-quota:
+        metricCosts:
+          "site-verification-requests": 1
+      parameters:
+        - name: body
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/VerifyRequest"
+      responses:
+        "200":
+          description: Verification results
+          schema:
+            $ref: "#/definitions/VerifyResponse"
+        "400":
+          description: Invalid request (e.g. malformed WKT, missing geometry)
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "401":
+          description: Missing or invalid API key
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "500":
+          description: Verification failed unexpectedly
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+    options:
+      summary: CORS preflight
+      description: >
+        Browsers never attach x-api-key to a preflight request, so this
+        operation is exempt from the api_key security requirement above —
+        otherwise the gateway would 403 the preflight before it reaches
+        main.py's own add_cors()/OPTIONS handling.
+      operationId: verifySiteCorsPreflight
+      security: []
+      x-google-backend:
+        address: https://europe-west6-restor-gis.cloudfunctions.net/site-verification
+      responses:
+        "204":
+          description: Preflight response with CORS headers
+
+definitions:
+  VerifyRequest:
+    type: object
+    required:
+      - site_data
+    properties:
+      site_data:
+        type: object
+        required:
+          - geometry
+        description: >
+          The site to verify. `geometry` is required; every other field is
+          optional metadata used only by the `profile_completeness` metric.
+        properties:
+          geometry:
+            type: string
+            description: WKT `POLYGON` or `MULTIPOLYGON`, in WGS84 (EPSG:4326)
+            example: "POLYGON((118.298 5.537, 118.298 5.531, 118.305 5.533, 118.298 5.537))"
+          id:
+            type: string
+          name:
+            type: string
+          description:
+            type: string
+          site_type:
+            type: string
+            enum: [RESTORATION, CONSERVATION, SUSTAINABLE_LAND_MANAGEMENT]
+          surface_area_km2:
+            type: number
+          country_code:
+            type: string
+            example: "MY"
+          intervention_start_date:
+            type: string
+            format: date
+          stage:
+            type: string
+          photo_ids:
+            type: array
+            items:
+              type: string
+          contact_email:
+            type: string
+            format: email
+        additionalProperties: true
+      config:
+        type: object
+        description: Controls which checks run and their thresholds. All fields optional.
+        properties:
+          optional_metrics:
+            type: array
+            description: Extra checks to run beyond the mandatory geometry check.
+            items:
+              type: string
+              enum:
+                - landcover
+                - osm
+                - osm_overpass
+                - profile_completeness
+                - sites
+                - wdpa
+                - mangroves
+          include_site_data:
+            type: boolean
+            default: false
+            description: Echo `site_data` back in the response.
+          include_checks:
+            type: boolean
+            default: true
+            description: Include the aggregated `checks` block in the response.
+          precision:
+            type: integer
+            default: 2
+          landcover_calculation_area_threshold:
+            type: number
+            description: Skip the landcover check above this site area (km²). Default 1000.
+          restor_sites_area_threshold:
+            type: number
+            description: Skip the Restor-site-overlap check above this overlapping area (km²). Default 1000.
+          osm_area_threshold:
+            type: number
+            description: Skip the OSM check above this site area (ha). Default 5000.
+          mangrove_radius_m:
+            type: number
+            description: Bounding-box expansion radius for the mangrove search, in metres. Default 10000.
+          mangrove_distance_thresholds:
+            type: array
+            items:
+              type: number
+            description: "[valid_m, needs_review_m] for the mangrove proximity check. Default [0, 500]."
+          mangrove_overlap_thresholds:
+            type: array
+            items:
+              type: number
+            description: "[valid_pct, needs_review_pct] for the mangrove overlap check. Default [0.9, 0.8]."
+
+  VerifyResponse:
+    type: object
+    properties:
+      results:
+        type: object
+        properties:
+          geometric:
+            type: object
+            description: Always present. Shape validity, area, perimeter, compactness.
+            properties:
+              original_is_valid:
+                type: boolean
+              is_valid:
+                type: boolean
+              points:
+                type: integer
+              area:
+                type: number
+                description: Square metres
+              area_str:
+                type: string
+                example: "646 Ha"
+              perimeter:
+                type: number
+              perimeter_str:
+                type: string
+              centroid:
+                type: array
+                items:
+                  type: number
+                example: [118.3122, 5.5438]
+              average_segment_length:
+                type: number
+              compactness:
+                type: number
+          landcover:
+            type: object
+            description: Present when `landcover` is requested. Fraction of area per land cover class.
+            example: { trees: 0.65, water: 0.05, grass: 0.2, "built area": 0.1 }
+          osm:
+            type: object
+            description: Present when `osm` or `osm_overpass` is requested. Best-match OSM landuse polygon overlap.
+          wdpa:
+            type: object
+            description: Present when `wdpa` is requested. Overlapping WDPA protected areas.
+          sites:
+            type: object
+            description: Present when `sites` is requested. Overlapping Restor sites.
+          profile_completeness:
+            type: object
+            description: Present when `profile_completeness` is requested. Metadata quality score.
+          mangroves:
+            type: object
+            description: Present when `mangroves` is requested. Proximity to / overlap with mangrove polygons.
+          checks:
+            type: object
+            description: Aggregated status across every check that ran, unless `config.include_checks` is false.
+            properties:
+              items:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    status:
+                      type: string
+                      enum: [Valid, "Needs Review", Invalid, "Not checked"]
+                    status_message:
+                      type: string
+                    value:
+                      type: number
+                    thresholds:
+                      type: array
+                      items:
+                        type: number
+              summary:
+                type: object
+                example: { Valid: 12, "Needs Review": 1, Invalid: 0, "Not checked": 3 }
+              overall_status:
+                type: string
+                enum: [Valid, "Needs Review", Invalid, "Not checked"]
+              overall_status_message:
+                type: string
+          site_data:
+            type: object
+            description: Echoed back only when `config.include_site_data` is true.
+
+  ErrorResponse:
+    type: object
+    properties:
+      error:
+        type: string
+      type:
+        type: string
+        description: Exception class name
