@@ -108,7 +108,9 @@ vector_tile_source.setLoader(async function (extent, _resolution, projection, su
 // matching the legend swatches next to the visibility switches.
 const public_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)', }), stroke: new Stroke({ color: 'rgba(99, 148, 69, 0.8)', width: 1.5 }) });
 const private_style = new Style({ fill: new Fill({ color: 'rgba(179, 140, 80, 0.18)', }), stroke: new Stroke({ color: 'rgba(179, 140, 80, 0.9)', width: 1.5, lineDash: [4, 4] }) });
-const mvt_highlight_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.3)', }), stroke: new Stroke({ color: 'rgba(99, 148, 69, 0.7)', width: 2 }) });
+// Hover highlight keeps each visibility's own color/dash, just heavier, rather than a single shared color.
+const public_highlight_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.3)', }), stroke: new Stroke({ color: 'rgba(99, 148, 69, 0.7)', width: 2 }) });
+const private_highlight_style = new Style({ fill: new Fill({ color: 'rgba(179, 140, 80, 0.28)', }), stroke: new Stroke({ color: 'rgba(179, 140, 80, 0.8)', width: 2, lineDash: [4, 4] }) });
 
 // Create the sites vector layer
 const vector_tile_layer = new VectorLayer({
@@ -170,7 +172,7 @@ var selected_feature = {};
 // Create a popup
 var map_popup = new Overlay({
     element: document.getElementById('popup'),
-    offset: [16, 16],
+    offset: [16, 24],
     positioning: 'top-left',
 });
 map.addOverlay(map_popup);
@@ -183,7 +185,7 @@ const selection_layer = new VectorLayer({
     style: function (feature) {
         const props = feature.getProperties();
         if (props['id'] === selected_feature.current) {
-            return mvt_highlight_style;
+            return props['site_visibility'] === 'PRIVATE' ? private_highlight_style : public_highlight_style;
         }
     }
 });
