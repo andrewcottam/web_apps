@@ -20,13 +20,78 @@
       height: 100%;
     }
 
-    #slider-container {
+    #filter-panel {
       position: absolute;
-      top: 10px;
-      left: 43px;
+      top: 62px;
+      left: 10px;
+      width: 220px;
       background: white;
-      padding: 10px;
-      border-radius: 5px;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      padding: 14px 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    #filter-panel .filter-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    #filter-panel .filter-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    #filter-panel .filter-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: #222;
+    }
+
+    #filter-panel input[type="range"] {
+      width: 100%;
+      margin: 0 0 14px 0;
+      accent-color: #6b9b5e;
+    }
+
+    #filter-panel .filter-toggle {
+      display: flex;
+      background: #f0f0f0;
+      border-radius: 8px;
+      padding: 3px;
+      gap: 3px;
+    }
+
+    #filter-panel .filter-toggle-option {
+      position: relative;
+      flex: 1;
+      display: block;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 600;
+      color: #777;
+      padding: 6px 0;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    #filter-panel .filter-toggle-option input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
+
+    #filter-panel .filter-toggle-option:has(input:checked) {
+      background: white;
+      color: #3d6b2c;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
     }
 
     #popup {
@@ -140,7 +205,7 @@
     #login-container {
       position: absolute;
       top: 10px;
-      right: 10px;
+      left: 10px;
       z-index: 10;
     }
 
@@ -283,19 +348,6 @@
       padding: 12px 0;
     }
 
-    .lightbox2 {
-      font-size: 14px;
-      color: gray;
-      background: white;
-      padding: 10px;
-      border-radius: 10px;
-      /* Optional: smooth corners */
-      box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
-      /* Soft light shadow */
-      transition: box-shadow 0.3s ease-in-out;
-      /* Smooth effect */
-    }
-
   </style>
 </head>
 
@@ -303,14 +355,21 @@
   <div class="map_container">
     <div id="map" class="map"></div>
   </div>
-  <div id="slider-container" class="lightbox2">
-    <label for="slider">Site area threshold in Km2</label>
+  <div id="filter-panel">
+    <div class="filter-row">
+      <label class="filter-label" for="slider">Max area</label>
+      <span><span class="filter-value" id="slider-value">2000</span> km²</span>
+    </div>
     <input type="range" id="slider" min="0" max="1000000" value="2000">
-    <span id="slider-value">2000</span>
-    <div>
-      <span></span>
-      <label><input type="radio" name="options" value="PRIVATE">Private</label>
-      <label><input type="radio" name="options" value="PUBLIC" checked>Public</label><br></span>
+    <div class="filter-toggle">
+      <label class="filter-toggle-option">
+        <input type="radio" name="options" value="PUBLIC" checked>
+        <span>Public</span>
+      </label>
+      <label class="filter-toggle-option">
+        <input type="radio" name="options" value="PRIVATE">
+        <span>Private</span>
+      </label>
     </div>
   </div>
   <div id="popup">
