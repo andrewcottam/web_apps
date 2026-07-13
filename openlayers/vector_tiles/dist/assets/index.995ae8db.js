@@ -3046,14 +3046,18 @@ This typically indicates that your device does not have a healthy Internet conne
                 <span class="check-status-pill" style="background:${a}">${Yn(s)}</span>
             </div>
         `}).join(""):'<div class="checks-modal-empty">No verification checks available for this site.</div>'}function i4(n){const e=_g(n.verification_checks).filter(Boolean);document.getElementById("checks-modal-title").textContent=n.name||"Untitled site",document.getElementById("checks-modal-body").innerHTML=n4(e),document.getElementById("checks-modal-backdrop").classList.add("open")}function Vm(){document.getElementById("checks-modal-backdrop").classList.remove("open")}function r4(n,e){return`https://restor2-prod-1-api.restor.eco/sites/5/${n}/photo/${e}`}function s4(n){if(!n||n.length!==2||!/^[a-zA-Z]{2}$/.test(n))return"";const e=n.toUpperCase().split("").map(t=>127397+t.charCodeAt(0));return String.fromCodePoint(...e)}function o4(n){const e=e4(n.surface_area_km2*100),t=_g(n.verification_checks).filter(Boolean),i=[["Country",Bc(n.country_code)],["Area",e?`${e} ha`:""],["Stage",io(n.stage)],["Intervention start",Bc(n.intervention_start_date)],["Intervention type",io(n.intervention_type)],["Pre-intervention use",io(n.pre_intervention_land_use)],["Post-intervention cover",io(n.post_intervention_land_cover)]].filter(([,c])=>c!==""),r=(n.site_visibility||"").toUpperCase(),s=[];n.site_type&&s.push(`<span class="popup-badge">${Yn(io(n.site_type))}</span>`),r&&s.push(`<span class="popup-badge${r==="PRIVATE"?" visibility-private":""}">${Yn(io(r))}</span>`);const o=s4(n.country_code),a=t4(t),l=_g(n.photo_ids).filter(Boolean),u=l.length&&n.id?r4(n.id,l[0]):"";return`
-        ${u?`<img class="popup-photo" src="${Yn(u)}" alt="">`:""}
+        <div class="popup-inner">
+            ${u?`<img class="popup-photo" src="${Yn(u)}" alt="">`:""}
+            <div class="popup-content">
+                <div class="popup-title">${Yn(n.name||"Untitled site")}</div>
+                <div class="popup-badges">${s.join("")}</div>
+                ${a?`<div class="popup-check-pills">${a}</div>`:""}
+                <dl class="popup-fields">
+                    ${i.map(([c,d])=>`<dt>${Yn(c)}</dt><dd>${Yn(d)}</dd>`).join("")}
+                </dl>
+            </div>
+        </div>
         ${o?`<span class="popup-flag" title="${Yn(n.country_code)}">${o}</span>`:""}
-        <div class="popup-title">${Yn(n.name||"Untitled site")}</div>
-        <div class="popup-badges">${s.join("")}</div>
-        ${a?`<div class="popup-check-pills">${a}</div>`:""}
-        <dl class="popup-fields">
-            ${i.map(([c,d])=>`<dt>${Yn(c)}</dt><dd>${Yn(d)}</dd>`).join("")}
-        </dl>
     `}function a4(n){n.target.checked?mg.add(n.target.value):mg.delete(n.target.value),is.setStyle(is.getStyle())}const Nv=`
     <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
