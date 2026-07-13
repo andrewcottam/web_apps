@@ -337,18 +337,16 @@ function buildPopupHtml(props) {
     const photoUrl = photoIds.length && props['id'] ? buildPhotoUrl(props['id'], photoIds[0]) : '';
 
     return `
-        <div class="popup-inner">
-            ${photoUrl ? `<img class="popup-photo" src="${escapeHtml(photoUrl)}" alt="">` : ''}
-            <div class="popup-content">
-                <div class="popup-title">${escapeHtml(props['name'] || 'Untitled site')}</div>
-                <div class="popup-badges">${badges.join('')}</div>
-                ${checkPills ? `<div class="popup-check-pills">${checkPills}</div>` : ''}
-                <dl class="popup-fields">
-                    ${fields.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join('')}
-                </dl>
-            </div>
+        ${photoUrl ? `<img class="popup-photo" src="${escapeHtml(photoUrl)}" alt="">` : ''}
+        <div class="popup-title-row">
+            <div class="popup-title">${escapeHtml(props['name'] || 'Untitled site')}</div>
+            ${flag ? `<span class="popup-flag" title="${escapeHtml(props['country_code'])}">${flag}</span>` : ''}
         </div>
-        ${flag ? `<span class="popup-flag" title="${escapeHtml(props['country_code'])}">${flag}</span>` : ''}
+        <div class="popup-badges">${badges.join('')}</div>
+        ${checkPills ? `<div class="popup-check-pills">${checkPills}</div>` : ''}
+        <dl class="popup-fields">
+            ${fields.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join('')}
+        </dl>
     `;
 }
 
