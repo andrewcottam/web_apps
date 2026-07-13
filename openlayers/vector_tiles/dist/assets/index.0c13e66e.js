@@ -3054,10 +3054,14 @@ This typically indicates that your device does not have a healthy Internet conne
                     ${o?`<span class="popup-flag" title="${Yn(n.country_code)}">${o}</span>`:""}
                 </div>
                 <div class="popup-badges">${s.join("")}</div>
-                ${a?`<div class="popup-check-pills">${a}</div>`:""}
                 <dl class="popup-fields">
                     ${i.map(([c,d])=>`<dt>${Yn(c)}</dt><dd>${Yn(d)}</dd>`).join("")}
                 </dl>
+                ${a?`
+                <hr class="popup-divider">
+                <div class="popup-section-header">Checks</div>
+                <div class="popup-check-pills">${a}</div>
+                `:""}
             </div>
         </div>
     `}function a4(n){n.target.checked?mg.add(n.target.value):mg.delete(n.target.value),is.setStyle(is.getStyle())}const Nv=`

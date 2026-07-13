@@ -345,10 +345,14 @@ function buildPopupHtml(props) {
                     ${flag ? `<span class="popup-flag" title="${escapeHtml(props['country_code'])}">${flag}</span>` : ''}
                 </div>
                 <div class="popup-badges">${badges.join('')}</div>
-                ${checkPills ? `<div class="popup-check-pills">${checkPills}</div>` : ''}
                 <dl class="popup-fields">
                     ${fields.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join('')}
                 </dl>
+                ${checkPills ? `
+                <hr class="popup-divider">
+                <div class="popup-section-header">Checks</div>
+                <div class="popup-check-pills">${checkPills}</div>
+                ` : ''}
             </div>
         </div>
     `;
