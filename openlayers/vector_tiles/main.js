@@ -65,7 +65,7 @@ function getUrlParameters() {
 }
 
 // variables
-var visibility = 'PUBLIC';
+var visibleStatuses = new Set(['PUBLIC']);
 var logged_in = false;
 var current_user = null;
 
@@ -114,7 +114,7 @@ const vector_tile_layer = new VectorLayer({
         const threshold = parseFloat(document.getElementById('slider').value);
         const featureValue = feature.get('surface_area_km2');
         const vis = feature.get('site_visibility');
-        return (featureValue <= threshold && vis==visibility)? mvt_layer_style : null; // Hide features that do not meet the threshold
+        return (featureValue <= threshold && visibleStatuses.has(vis)) ? mvt_layer_style : null; // Hide features that do not meet the threshold
     }
 });
 // Create the map
@@ -340,9 +340,12 @@ function buildPopupHtml(props) {
     `;
 }
 
-function handleRadioClick(event) {
-    // set the visibility
-    visibility = event.target.value;
+function handleVisibilityToggle(event) {
+    if (event.target.checked) {
+        visibleStatuses.add(event.target.value);
+    } else {
+        visibleStatuses.delete(event.target.value);
+    }
     vector_tile_layer.setStyle(vector_tile_layer.getStyle());
 }
 
@@ -369,6 +372,7 @@ function setLoggedIn(value) {
     vector_tile_layer.setVisible(logged_in);
     selection_layer.setVisible(logged_in);
     updateLoginButton();
+    document.getElementById('filter-panel').classList.toggle('visible', logged_in);
     if (logged_in) {
         // Clear previously-failed (unauthenticated) loads so they retry now that a token is available
         vector_tile_source.refresh();
@@ -468,9 +472,9 @@ document.getElementById('slider').addEventListener('input', function () {
 
 // Ensure the script runs after the DOM is fully loaded
 document.addEventListener("DOMContentLoaded", function () {
-    let radioButtons = document.querySelectorAll("input[name='options']");
-    radioButtons.forEach(radio => {
-        radio.addEventListener("click", handleRadioClick);
+    let visibilityCheckboxes = document.querySelectorAll("input[name='options']");
+    visibilityCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener("change", handleVisibilityToggle);
     });
     document.getElementById('login-button').addEventListener('click', login_clicked);
 });
