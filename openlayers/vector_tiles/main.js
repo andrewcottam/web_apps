@@ -294,6 +294,11 @@ function closeChecksModal() {
     document.getElementById('checks-modal-backdrop').classList.remove('open');
 }
 
+function buildPhotoUrl(siteId, photoId) {
+    // Same endpoint restor.eco's own frontend uses; redirects (307) to a public GCS object.
+    return `https://restor2-prod-1-api.restor.eco/sites/5/${siteId}/photo/${photoId}`;
+}
+
 function countryCodeToFlagEmoji(code) {
     if (!code || code.length !== 2 || !/^[a-zA-Z]{2}$/.test(code)) return '';
     const codePoints = code.toUpperCase().split('').map(c => 127397 + c.charCodeAt(0));
@@ -320,8 +325,11 @@ function buildPopupHtml(props) {
 
     const flag = countryCodeToFlagEmoji(props['country_code']);
     const checkPills = buildVerificationPillsHtml(verificationChecks);
+    const photoIds = parseListField(props['photo_ids']).filter(Boolean);
+    const photoUrl = photoIds.length && props['id'] ? buildPhotoUrl(props['id'], photoIds[0]) : '';
 
     return `
+        ${photoUrl ? `<img class="popup-photo" src="${escapeHtml(photoUrl)}" alt="">` : ''}
         ${flag ? `<span class="popup-flag" title="${escapeHtml(props['country_code'])}">${flag}</span>` : ''}
         <div class="popup-title">${escapeHtml(props['name'] || 'Untitled site')}</div>
         <div class="popup-badges">${badges.join('')}</div>
