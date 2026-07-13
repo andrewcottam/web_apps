@@ -6,8 +6,12 @@ import { Overlay } from 'ol';
 import { useGeographic, transformExtent } from "ol/proj";
 import TileLayer from 'ol/layer/WebGLTile';
 import VectorLayer from 'ol/layer/Vector';
+import VectorTileLayer from 'ol/layer/VectorTile';
 import VectorSource from 'ol/source/Vector';
+import VectorTileSource from 'ol/source/VectorTile';
 import GeoJSON from 'ol/format/GeoJSON';
+import MVT from 'ol/format/MVT';
+import TileState from 'ol/TileState';
 import { bbox as bboxStrategy } from 'ol/loadingstrategy';
 import { apply } from 'ol-mapbox-style';
 
@@ -41,6 +45,14 @@ const firestore = getFirestore(firebase_app);
 const FGB_PROXY_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://127.0.0.1:8082/fgb_proxy'
     : 'https://europe-west6-restor-gis.cloudfunctions.net/fgb_proxy';
+
+const MVT_PROXY_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://127.0.0.1:8083/mvt_proxy'
+    : 'https://europe-west6-restor-gis.cloudfunctions.net/mvt_proxy';
+
+// Cutover zoom between the two sites sources: below/at this level, tiles from the
+// pre-generated MVT pyramid (fast, zoom 0-8); above it, live FlatGeobuf features.
+const SOURCE_CUTOVER_ZOOM = 8;
 
 // Helper function to parse URL parameters
 function getUrlParameters() {
@@ -112,18 +124,62 @@ const private_style = new Style({ fill: new Fill({ color: 'rgba(179, 140, 80, 0.
 const public_highlight_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.3)', }), stroke: new Stroke({ color: 'rgba(99, 148, 69, 0.7)', width: 2 }) });
 const private_highlight_style = new Style({ fill: new Fill({ color: 'rgba(179, 140, 80, 0.28)', }), stroke: new Stroke({ color: 'rgba(179, 140, 80, 0.8)', width: 2, lineDash: [4, 4] }) });
 
-// Create the sites vector layer
+// Shared style logic for the sites layers, regardless of which source (MVT or FGB) they read from.
+function siteStyle(feature) {
+    const threshold = parseFloat(document.getElementById('slider').value);
+    const featureValue = feature.get('surface_area_km2');
+    const vis = feature.get('site_visibility');
+    if (featureValue > threshold || !visibleStatuses.has(vis)) return null; // Hide features that do not meet the threshold
+    return vis === 'PRIVATE' ? private_style : public_style;
+}
+
+// Sites vector tile source, reading the pre-generated MVT pyramid via mvt_proxy
+// (requires a logged-in, whitelisted user, same as the FGB source).
+const mvt_tile_source = new VectorTileSource({
+    format: new MVT(),
+    url: `${MVT_PROXY_URL}/tiles/{z}/{x}/{y}.pbf?source=sites`,
+});
+mvt_tile_source.setTileLoadFunction(async function (tile, url) {
+    if (!current_user) {
+        tile.setState(TileState.ERROR);
+        return;
+    }
+    try {
+        const idToken = await current_user.getIdToken();
+        const response = await fetch(url, { headers: { 'Authorization': `Bearer ${idToken}` } });
+        if (response.status === 204) {
+            tile.setFeatures([]);
+            tile.setState(TileState.LOADED);
+            return;
+        }
+        if (!response.ok) throw new Error(`MVT tile load failed: ${response.status}`);
+        const buffer = await response.arrayBuffer();
+        const format = tile.getFormat();
+        tile.setFeatures(format.readFeatures(buffer, {
+            extent: tile.extent,
+            featureProjection: tile.projection,
+        }));
+        tile.setState(TileState.LOADED);
+    } catch (e) {
+        console.error('MVT tile load error:', e);
+        tile.setState(TileState.ERROR);
+    }
+});
+
+// Create the sites vector tile layer (zoom 0-8, pre-generated MVT tiles)
+const mvt_tile_layer = new VectorTileLayer({
+    source: mvt_tile_source,
+    maxZoom: SOURCE_CUTOVER_ZOOM,
+    visible: false,
+    style: siteStyle,
+});
+
+// Create the sites vector layer (zoom >8, live FlatGeobuf features)
 const vector_tile_layer = new VectorLayer({
     source: vector_tile_source,
-    minZoom: 8,
+    minZoom: SOURCE_CUTOVER_ZOOM,
     visible: false,
-    style: function (feature) {
-        const threshold = parseFloat(document.getElementById('slider').value);
-        const featureValue = feature.get('surface_area_km2');
-        const vis = feature.get('site_visibility');
-        if (featureValue > threshold || !visibleStatuses.has(vis)) return null; // Hide features that do not meet the threshold
-        return vis === 'PRIVATE' ? private_style : public_style;
-    }
+    style: siteStyle,
 });
 // Create the map
 const urlParams = getUrlParameters();
@@ -161,6 +217,7 @@ map.on('moveend', () => {
 // const styleJson = 'https://api.maptiler.com/maps/dataviz/style.json?key=67VOA297U9cciigsJVvm'; // dataviz with green forests
 const styleJson = 'https://api.maptiler.com/maps/a1d2f17b-d57a-45ba-b7c6-4af845f758fb/style.json?key=67VOA297U9cciigsJVvm'; // forests 0% opacity
 apply(map, styleJson).then(() => {
+    map.addLayer(mvt_tile_layer);
     map.addLayer(vector_tile_layer);
     // Add the layer to the map
     map.addLayer(selection_layer);
@@ -367,7 +424,8 @@ function handleVisibilityToggle(event) {
     } else {
         visibleStatuses.delete(event.target.value);
     }
-    vector_tile_layer.setStyle(vector_tile_layer.getStyle());
+    mvt_tile_layer.changed();
+    vector_tile_layer.changed();
 }
 
 const DEFAULT_LOGIN_ICON = `
@@ -390,6 +448,7 @@ function updateLoginButton() {
 
 function setLoggedIn(value) {
     logged_in = value;
+    mvt_tile_layer.setVisible(logged_in);
     vector_tile_layer.setVisible(logged_in);
     selection_layer.setVisible(logged_in);
     updateLoginButton();
@@ -397,8 +456,10 @@ function setLoggedIn(value) {
     if (logged_in) {
         // Clear previously-failed (unauthenticated) loads so they retry now that a token is available
         vector_tile_source.refresh();
+        mvt_tile_source.refresh();
     } else {
         vector_tile_source.clear();
+        mvt_tile_source.refresh();
     }
 }
 
@@ -437,7 +498,7 @@ map.on(['pointermove'], function (mapEvent) {
     // happen to carry an 'id' property, causing bogus "Untitled site" popups)
     const features = map.getFeaturesAtPixel(mapEvent.pixel, {
         hitTolerance: 5,
-        layerFilter: (layer) => layer === vector_tile_layer || layer === selection_layer,
+        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer || layer === selection_layer,
     });
     // If there are some features
     if (features.length !== 0) {
@@ -467,7 +528,7 @@ map.on(['pointermove'], function (mapEvent) {
 map.on('click', function (mapEvent) {
     const features = map.getFeaturesAtPixel(mapEvent.pixel, {
         hitTolerance: 5,
-        layerFilter: (layer) => layer === vector_tile_layer || layer === selection_layer,
+        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer || layer === selection_layer,
     });
     if (features.length !== 0) {
         const props = features[0].getProperties();
@@ -488,7 +549,8 @@ document.addEventListener('keydown', function (event) {
 // Update layer style when slider changes
 document.getElementById('slider').addEventListener('input', function () {
     document.getElementById('slider-value').innerText = this.value;
-    vector_tile_layer.setStyle(vector_tile_layer.getStyle());
+    mvt_tile_layer.changed();
+    vector_tile_layer.changed();
 });
 
 // Ensure the script runs after the DOM is fully loaded
