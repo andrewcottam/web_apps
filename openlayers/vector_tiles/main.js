@@ -137,7 +137,7 @@ function siteStyle(feature) {
 // (requires a logged-in, whitelisted user, same as the FGB source).
 const mvt_tile_source = new VectorTileSource({
     format: new MVT(),
-    url: `${MVT_PROXY_URL}/tiles/{z}/{x}/{y}.pbf?source=sites`,
+    url: `${MVT_PROXY_URL}/tiles/{z}/{x}/{y}.pbf`,
 });
 mvt_tile_source.setTileLoadFunction(async function (tile, url) {
     if (!current_user) {
