@@ -66,37 +66,90 @@
 
     #filter-panel .filter-toggle {
       display: flex;
-      background: #f0f0f0;
-      border-radius: 8px;
-      padding: 3px;
-      gap: 3px;
+      flex-direction: column;
+      gap: 2px;
     }
 
-    #filter-panel .filter-toggle-option {
+    #filter-panel .switch-row {
       position: relative;
-      flex: 1;
-      display: block;
-      text-align: center;
-      font-size: 12px;
-      font-weight: 600;
-      color: #777;
-      padding: 6px 0;
-      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 2px;
       cursor: pointer;
-      transition: background 0.15s ease, color 0.15s ease;
     }
 
-    #filter-panel .filter-toggle-option input {
+    #filter-panel .legend-swatch {
+      width: 13px;
+      height: 13px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    #filter-panel .legend-swatch.legend-public {
+      background: rgba(99, 148, 69, 0.25);
+      border: 1.5px solid rgba(99, 148, 69, 0.9);
+    }
+
+    #filter-panel .legend-swatch.legend-private {
+      background: rgba(179, 140, 80, 0.2);
+      border: 1.5px dashed rgba(179, 140, 80, 0.9);
+    }
+
+    #filter-panel .switch-label {
+      flex: 1;
+      font-size: 13px;
+      font-weight: 500;
+      color: #444;
+    }
+
+    #filter-panel .switch {
+      position: relative;
+      display: inline-block;
+      width: 34px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    #filter-panel .switch input {
       position: absolute;
       width: 1px;
       height: 1px;
       opacity: 0;
     }
 
-    #filter-panel .filter-toggle-option:has(input:checked) {
+    #filter-panel .switch-slider {
+      position: absolute;
+      inset: 0;
+      background: #ccc;
+      border-radius: 999px;
+      transition: background 0.15s ease;
+    }
+
+    #filter-panel .switch-slider::before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      left: 2px;
+      top: 2px;
       background: white;
-      color: #3d6b2c;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+      transition: transform 0.15s ease;
+    }
+
+    #filter-panel .switch input:checked + .switch-slider {
+      background: #6b9b5e;
+    }
+
+    #filter-panel .switch input:checked + .switch-slider::before {
+      transform: translateX(14px);
+    }
+
+    #filter-panel .switch input:focus-visible + .switch-slider {
+      outline: 2px solid #6b9b5e;
+      outline-offset: 2px;
     }
 
     #popup {
@@ -104,7 +157,7 @@
       width: 280px;
       background-color: white;
       border-radius: 8px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.12), 0 8px 24px rgba(0, 0, 0, 0.18);
       padding: 14px 16px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       pointer-events: none;
@@ -354,7 +407,7 @@
     }
 
   </style>
-  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.45653ace.js"></script>
+  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.daa49ac5.js"></script>
   <link rel="stylesheet" href="/web_apps/openlayers/vector_tiles/dist/assets/index.5fd94eca.css">
 </head>
 
@@ -369,13 +422,21 @@
     </div>
     <input type="range" id="slider" min="0" max="1000000" value="2000">
     <div class="filter-toggle">
-      <label class="filter-toggle-option">
-        <input type="checkbox" name="options" value="PUBLIC" checked>
-        <span>Public</span>
+      <label class="switch-row">
+        <span class="legend-swatch legend-public"></span>
+        <span class="switch-label">Public</span>
+        <span class="switch">
+          <input type="checkbox" name="options" value="PUBLIC" checked>
+          <span class="switch-slider"></span>
+        </span>
       </label>
-      <label class="filter-toggle-option">
-        <input type="checkbox" name="options" value="PRIVATE">
-        <span>Private</span>
+      <label class="switch-row">
+        <span class="legend-swatch legend-private"></span>
+        <span class="switch-label">Private</span>
+        <span class="switch">
+          <input type="checkbox" name="options" value="PRIVATE">
+          <span class="switch-slider"></span>
+        </span>
       </label>
     </div>
   </div>

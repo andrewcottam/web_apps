@@ -34,6 +34,8 @@ const firebaseConfig = {
 const firebase_app = initializeApp(firebaseConfig);
 const auth = getAuth(firebase_app);
 const provider = new GoogleAuthProvider();
+// Restrict/hint the Google account chooser to the restor.eco Workspace account
+provider.setCustomParameters({ hd: 'restor.eco', login_hint: 'andrew@restor.eco' });
 const firestore = getFirestore(firebase_app);
 
 const FGB_PROXY_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -102,19 +104,23 @@ vector_tile_source.setLoader(async function (extent, _resolution, projection, su
     }
 });
 
-const mvt_layer_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)', }), stroke: new Stroke({ color: [99,148,69,0.3], width: 1 }) });
+// Public/private sites are rendered differently (solid green vs dashed amber),
+// matching the legend swatches next to the visibility switches.
+const public_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)', }), stroke: new Stroke({ color: 'rgba(99, 148, 69, 0.8)', width: 1.5 }) });
+const private_style = new Style({ fill: new Fill({ color: 'rgba(179, 140, 80, 0.18)', }), stroke: new Stroke({ color: 'rgba(179, 140, 80, 0.9)', width: 1.5, lineDash: [4, 4] }) });
 const mvt_highlight_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.3)', }), stroke: new Stroke({ color: 'rgba(99, 148, 69, 0.7)', width: 2 }) });
 
 // Create the sites vector layer
 const vector_tile_layer = new VectorLayer({
-    source: vector_tile_source, style: mvt_layer_style,
+    source: vector_tile_source,
     minZoom: 8,
     visible: false,
     style: function (feature) {
         const threshold = parseFloat(document.getElementById('slider').value);
         const featureValue = feature.get('surface_area_km2');
         const vis = feature.get('site_visibility');
-        return (featureValue <= threshold && visibleStatuses.has(vis)) ? mvt_layer_style : null; // Hide features that do not meet the threshold
+        if (featureValue > threshold || !visibleStatuses.has(vis)) return null; // Hide features that do not meet the threshold
+        return vis === 'PRIVATE' ? private_style : public_style;
     }
 });
 // Create the map
