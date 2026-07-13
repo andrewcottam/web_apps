@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EOX Sentinel-2 Cloudless Mosaics</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v10.3.1/ol.css">
+
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+        }
+        #title-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            background: #1a1a2e;
+            color: #f0f0f0;
+            padding: 10px 16px;
+            box-sizing: border-box;
+        }
+        #title-bar h1 {
+            margin: 0 0 2px 0;
+            font-size: 16px;
+        }
+        #title-bar h1 a {
+            color: #f0f0f0;
+        }
+        #title-bar .endpoint {
+            font-size: 12px;
+            font-family: monospace;
+            color: #b8b8c8;
+            word-break: break-all;
+        }
+        #map {
+            position: absolute;
+            top: 58px;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background-color: #f0f0f0;
+        }
+        #year-control {
+            position: absolute;
+            top: 68px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 16px;
+            border-radius: 6px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #year-label {
+            font-weight: bold;
+            min-width: 3em;
+            text-align: center;
+        }
+        #year-slider {
+            width: 260px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="title-bar">
+        <h1>Sentinel-2 Cloudless — <a href="https://s2maps.eu" target="_blank">EOX IT Services GmbH</a></h1>
+        <div class="endpoint">WMTS: https://tiles.maps.eox.at/wmts/1.0.0/{layer}/default/GoogleMapsCompatible/{TileMatrix}/{TileRow}/{TileCol}.jpg</div>
+    </div>
+
+    <div id="map"></div>
+
+    <div id="year-control">
+        <span>2016</span>
+        <input type="range" id="year-slider" min="2016" max="2025" step="1" value="2025">
+        <span>2025</span>
+        <span id="year-label">2025</span>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ol@v10.3.1/dist/ol.js"></script>
+
+    <script>
+        // Parse lat/lng/zoom/year from the URL query string (e.g. ?lat=51.5&lng=-0.1&zoom=10&year=2020)
+        function getUrlParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const lat = urlParams.get('lat');
+            const lng = urlParams.get('lng') || urlParams.get('lon'); // Accept both lng and lon
+            const zoom = urlParams.get('zoom');
+            const year = urlParams.get('year');
+
+            const result = {};
+
+            if (lat && !isNaN(parseFloat(lat))) {
+                result.lat = parseFloat(lat);
+            }
+
+            if (lng && !isNaN(parseFloat(lng))) {
+                result.lng = parseFloat(lng);
+            }
+
+            if (zoom && !isNaN(parseFloat(zoom))) {
+                result.zoom = parseFloat(zoom);
+            }
+
+            if (year && !isNaN(parseInt(year, 10))) {
+                result.year = parseInt(year, 10);
+            }
+
+            return result;
+        }
+
+        // Sentinel-2 cloudless annual mosaics, served by EOX (https://s2maps.eu) via WMTS.
+        // Layer naming: 2016 has no year suffix, all other years are "s2cloudless-YYYY_3857".
+        const wmtsUrl = 'https://tiles.maps.eox.at/wmts/1.0.0/{layer}/default/GoogleMapsCompatible/{TileMatrix}/{TileRow}/{TileCol}.jpg';
+
+        function layerIdForYear(year) {
+            return year === 2016 ? 's2cloudless_3857' : `s2cloudless-${year}_3857`;
+        }
+
+        const resolutions = [];
+        const matrixIds = [];
+        const maxZoom = 15;
+        for (let z = 0; z <= maxZoom; z++) {
+            resolutions.push(156543.03392804097 / Math.pow(2, z));
+            matrixIds.push(z.toString());
+        }
+
+        const tileGrid = new ol.tilegrid.WMTS({
+            origin: [-20037508.342789244, 20037508.342789244],
+            resolutions: resolutions,
+            matrixIds: matrixIds
+        });
+
+        function makeSource(year) {
+            return new ol.source.WMTS({
+                url: wmtsUrl.replace('{layer}', layerIdForYear(year)),
+                layer: layerIdForYear(year),
+                matrixSet: 'GoogleMapsCompatible',
+                format: 'image/jpeg',
+                projection: 'EPSG:3857',
+                tileGrid: tileGrid,
+                style: 'default',
+                requestEncoding: 'REST',
+                attributions: '&copy; <a href="https://s2maps.eu" target="_blank">Sentinel-2 cloudless</a> by EOX IT Services GmbH (Contains modified Copernicus Sentinel data)'
+            });
+        }
+
+        const urlParams = getUrlParameters();
+        const initialYear = urlParams.year !== undefined ? urlParams.year : 2025;
+
+        const s2Layer = new ol.layer.Tile({
+            source: makeSource(initialYear)
+        });
+
+        let initialCenter = ol.proj.fromLonLat([0, 20]);
+        let initialZoom = 3;
+
+        // If lat/lng are provided in the URL, use them
+        if (urlParams.lat !== undefined && urlParams.lng !== undefined) {
+            initialCenter = ol.proj.fromLonLat([urlParams.lng, urlParams.lat]);
+        }
+
+        // If zoom is provided in the URL, use it
+        if (urlParams.zoom !== undefined) {
+            initialZoom = urlParams.zoom;
+        }
+
+        const map = new ol.Map({
+            target: 'map',
+            layers: [s2Layer],
+            view: new ol.View({
+                center: initialCenter,
+                zoom: initialZoom
+            })
+        });
+
+        const slider = document.getElementById('year-slider');
+        const yearLabel = document.getElementById('year-label');
+        slider.value = initialYear;
+        yearLabel.textContent = initialYear;
+
+        function updateUrlParams() {
+            const view = map.getView();
+            const center = ol.proj.toLonLat(view.getCenter());
+            const zoom = view.getZoom();
+            const params = new URLSearchParams(window.location.search);
+            params.set('lng', center[0].toFixed(6));
+            params.set('lat', center[1].toFixed(6));
+            params.set('zoom', zoom.toFixed(2));
+            params.set('year', slider.value);
+            window.history.replaceState(null, '', `?${params.toString()}`);
+        }
+
+        slider.addEventListener('input', () => {
+            const year = parseInt(slider.value, 10);
+            yearLabel.textContent = year;
+            s2Layer.setSource(makeSource(year));
+            updateUrlParams();
+        });
+
+        // Update URL parameters on map move
+        map.on('moveend', updateUrlParams);
+
+        // Set the initial URL parameters
+        updateUrlParams();
+    </script>
+</body>
+</html>
