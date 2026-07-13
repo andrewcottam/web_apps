@@ -317,7 +317,6 @@ function buildPopupHtml(props) {
     const areaHa = formatNumber(props['surface_area_km2'] * 100);
     const verificationChecks = parseListField(props['verification_checks']).filter(Boolean);
     const fields = [
-        ['Country', safe(props['country_code'])],
         ['Area', areaHa ? `${areaHa} ha` : ''],
         ['Stage', formatEnum(props['stage'])],
         ['Intervention start', safe(props['intervention_start_date'])],
@@ -345,9 +344,13 @@ function buildPopupHtml(props) {
                     ${flag ? `<span class="popup-flag" title="${escapeHtml(props['country_code'])}">${flag}</span>` : ''}
                 </div>
                 <div class="popup-badges">${badges.join('')}</div>
+                ${fields.length ? `
+                <hr class="popup-divider">
+                <div class="popup-section-header">Metadata</div>
                 <dl class="popup-fields">
                     ${fields.map(([label, value]) => `<dt>${escapeHtml(label)}</dt><dd>${escapeHtml(value)}</dd>`).join('')}
                 </dl>
+                ` : ''}
                 ${checkPills ? `
                 <hr class="popup-divider">
                 <div class="popup-section-header">Checks</div>
