@@ -125,11 +125,17 @@ const public_highlight_style = new Style({ fill: new Fill({ color: 'rgba(99, 148
 const private_highlight_style = new Style({ fill: new Fill({ color: 'rgba(179, 140, 80, 0.28)', }), stroke: new Stroke({ color: 'rgba(179, 140, 80, 0.8)', width: 2, lineDash: [4, 4] }) });
 
 // Shared style logic for the sites layers, regardless of which source (MVT or FGB) they read from.
+// Styling the hovered feature in place (rather than via a separate highlight layer) means
+// hover highlighting works for both sources without needing a source-specific selection layer.
 function siteStyle(feature) {
     const threshold = parseFloat(document.getElementById('slider').value);
     const featureValue = feature.get('surface_area_km2');
     const vis = feature.get('site_visibility');
     if (featureValue > threshold || !visibleStatuses.has(vis)) return null; // Hide features that do not meet the threshold
+    const isSelected = feature.get('id') === selected_feature.current;
+    if (isSelected) {
+        return vis === 'PRIVATE' ? private_highlight_style : public_highlight_style;
+    }
     return vis === 'PRIVATE' ? private_style : public_style;
 }
 
@@ -219,9 +225,6 @@ const styleJson = 'https://api.maptiler.com/maps/a1d2f17b-d57a-45ba-b7c6-4af845f
 apply(map, styleJson).then(() => {
     map.addLayer(mvt_tile_layer);
     map.addLayer(vector_tile_layer);
-    // Add the layer to the map
-    map.addLayer(selection_layer);
-
 });
 
 // Create a selected feature
@@ -233,19 +236,6 @@ var map_popup = new Overlay({
     positioning: 'top-left',
 });
 map.addOverlay(map_popup);
-
-// Create the vector layer for the highlighted site
-const selection_layer = new VectorLayer({
-    source: vector_tile_source,
-    minZoom: 8,
-    visible: false,
-    style: function (feature) {
-        const props = feature.getProperties();
-        if (props['id'] === selected_feature.current) {
-            return props['site_visibility'] === 'PRIVATE' ? private_highlight_style : public_highlight_style;
-        }
-    }
-});
 
 function escapeHtml(str) {
     return String(str)
@@ -438,10 +428,8 @@ const DEFAULT_LOGIN_ICON = `
 function updateLoginButton() {
     const btn = document.getElementById('login-button');
     if (logged_in && current_user) {
-        btn.title = `Logged in as ${current_user.email} - click to log out`;
         btn.innerHTML = current_user.photoURL ? `<img src="${current_user.photoURL}" alt="">` : DEFAULT_LOGIN_ICON;
     } else {
-        btn.title = 'Login';
         btn.innerHTML = DEFAULT_LOGIN_ICON;
     }
 }
@@ -450,7 +438,6 @@ function setLoggedIn(value) {
     logged_in = value;
     mvt_tile_layer.setVisible(logged_in);
     vector_tile_layer.setVisible(logged_in);
-    selection_layer.setVisible(logged_in);
     updateLoginButton();
     document.getElementById('filter-panel').classList.toggle('visible', logged_in);
     if (logged_in) {
@@ -498,7 +485,7 @@ map.on(['pointermove'], function (mapEvent) {
     // happen to carry an 'id' property, causing bogus "Untitled site" popups)
     const features = map.getFeaturesAtPixel(mapEvent.pixel, {
         hitTolerance: 5,
-        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer || layer === selection_layer,
+        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer,
     });
     // If there are some features
     if (features.length !== 0) {
@@ -506,8 +493,9 @@ map.on(['pointermove'], function (mapEvent) {
         const props = features[0].getProperties();
         // Set the selection feature id
         selected_feature.current = props['id'];
-        // Invalidate the layer so that it repaints
-        selection_layer.changed();
+        // Invalidate the layers so they repaint with the hover highlight
+        mvt_tile_layer.changed();
+        vector_tile_layer.changed();
         // Set the position of the site popup
         map_popup.setPosition(mapEvent.coordinate);
         var pu = document.getElementById('popup');
@@ -519,7 +507,8 @@ map.on(['pointermove'], function (mapEvent) {
         }
     } else {
         selected_feature.current = undefined;
-        selection_layer.changed();
+        mvt_tile_layer.changed();
+        vector_tile_layer.changed();
         document.getElementById('popup').style.display = "none";
     }
 });
@@ -528,7 +517,7 @@ map.on(['pointermove'], function (mapEvent) {
 map.on('click', function (mapEvent) {
     const features = map.getFeaturesAtPixel(mapEvent.pixel, {
         hitTolerance: 5,
-        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer || layer === selection_layer,
+        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer,
     });
     if (features.length !== 0) {
         const props = features[0].getProperties();
