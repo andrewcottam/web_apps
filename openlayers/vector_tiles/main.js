@@ -51,8 +51,9 @@ const MVT_PROXY_URL = window.location.hostname === 'localhost' || window.locatio
     ? 'http://127.0.0.1:8083/mvt_proxy'
     : 'https://europe-west6-restor-gis.cloudfunctions.net/mvt_proxy';
 
-// Cutover zoom between the two sites sources: below/at this level, tiles from the
-// pre-generated MVT pyramid (fast, zoom 0-8); above it, live FlatGeobuf features.
+// Cutover zoom between the MVT and FlatGeobuf sources (used by both the polygon and
+// centroid layer pairs): below/at this level, tiles from the pre-generated MVT pyramid
+// (fast, zoom 0-8); above it, live FlatGeobuf features.
 const SOURCE_CUTOVER_ZOOM = 8;
 
 // Helper function to parse URL parameters
@@ -118,8 +119,8 @@ vector_tile_source.setLoader(async function (extent, _resolution, projection, su
 });
 
 // Site centroid vector source, loaded directly from sites_centroids.fgb via fgb_proxy.
-// Points instead of polygons, so this is cheap to stream at any zoom level — no
-// MVT pyramid/zoom cutover needed the way the polygon layers require.
+// Used above SOURCE_CUTOVER_ZOOM, where the viewport bbox is small enough that the
+// FGB spatial index keeps requests small (see mvt_centroid_source for the zoom 0-8 path).
 const centroid_source = new VectorSource({ strategy: bboxStrategy });
 centroid_source.setLoader(async function (extent, _resolution, projection, success, failure) {
     if (!current_user) {
@@ -186,6 +187,7 @@ function updateLayerVisibilityForRenderMode() {
     const showCentroids = logged_in && renderMode === 'centroids';
     mvt_tile_layer.setVisible(showGeometries);
     vector_tile_layer.setVisible(showGeometries);
+    mvt_centroid_layer.setVisible(showCentroids);
     centroid_layer.setVisible(showCentroids);
 }
 
@@ -219,38 +221,50 @@ function centroidSiteStyle(feature) {
     return vis === 'PRIVATE' ? centroid_private_style : centroid_style;
 }
 
-// Sites vector tile source, reading the pre-generated MVT pyramid via mvt_proxy
-// (requires a logged-in, whitelisted user, same as the FGB source).
-const mvt_tile_source = new VectorTileSource({
-    format: new MVT(),
-    url: `${MVT_PROXY_URL}/tiles/{z}/{x}/{y}.pbf`,
-});
-mvt_tile_source.setTileLoadFunction(async function (tile, url) {
+// Authenticated MVT tile-load function, shared by every VectorTileSource reading
+// pre-generated tiles from mvt_proxy (requires a logged-in, whitelisted user).
+function authenticatedMvtTileLoadFunction(tile, url) {
     if (!current_user) {
         tile.setState(TileState.ERROR);
         return;
     }
-    try {
-        const idToken = await current_user.getIdToken();
-        const response = await fetch(url, { headers: { 'Authorization': `Bearer ${idToken}` } });
-        if (response.status === 204) {
-            tile.setFeatures([]);
-            tile.setState(TileState.LOADED);
-            return;
-        }
-        if (!response.ok) throw new Error(`MVT tile load failed: ${response.status}`);
-        const buffer = await response.arrayBuffer();
-        const format = tile.getFormat();
-        tile.setFeatures(format.readFeatures(buffer, {
-            extent: tile.extent,
-            featureProjection: tile.projection,
-        }));
-        tile.setState(TileState.LOADED);
-    } catch (e) {
-        console.error('MVT tile load error:', e);
-        tile.setState(TileState.ERROR);
-    }
+    current_user.getIdToken()
+        .then((idToken) => fetch(url, { headers: { 'Authorization': `Bearer ${idToken}` } }))
+        .then((response) => {
+            if (response.status === 204) {
+                tile.setFeatures([]);
+                tile.setState(TileState.LOADED);
+                return;
+            }
+            if (!response.ok) throw new Error(`MVT tile load failed: ${response.status}`);
+            return response.arrayBuffer().then((buffer) => {
+                const format = tile.getFormat();
+                tile.setFeatures(format.readFeatures(buffer, {
+                    extent: tile.extent,
+                    featureProjection: tile.projection,
+                }));
+                tile.setState(TileState.LOADED);
+            });
+        })
+        .catch((e) => {
+            console.error('MVT tile load error:', e);
+            tile.setState(TileState.ERROR);
+        });
+}
+
+// Sites vector tile source, reading the pre-generated MVT pyramid via mvt_proxy.
+const mvt_tile_source = new VectorTileSource({
+    format: new MVT(),
+    url: `${MVT_PROXY_URL}/tiles/{z}/{x}/{y}.pbf`,
 });
+mvt_tile_source.setTileLoadFunction(authenticatedMvtTileLoadFunction);
+
+// Site centroid vector tile source, reading the pre-generated centroid MVT pyramid.
+const mvt_centroid_source = new VectorTileSource({
+    format: new MVT(),
+    url: `${MVT_PROXY_URL}/tiles/{z}/{x}/{y}.pbf?source=sites_centroids`,
+});
+mvt_centroid_source.setTileLoadFunction(authenticatedMvtTileLoadFunction);
 
 // Create the sites vector tile layer (zoom 0-8, pre-generated MVT tiles)
 const mvt_tile_layer = new VectorTileLayer({
@@ -268,9 +282,19 @@ const vector_tile_layer = new VectorLayer({
     style: siteStyle,
 });
 
-// Create the site centroid marker layer, shown in "centroids" render mode at all zooms
+// Create the site centroid marker layers: pre-generated MVT tiles at zoom 0-8 (small,
+// pre-clipped payloads — the viewport spans most of the dataset at low zoom, so a live
+// FlatGeobuf bbox request wouldn't save much), live FlatGeobuf features above that
+// (small viewport, so the FGB spatial index keeps requests small).
+const mvt_centroid_layer = new VectorTileLayer({
+    source: mvt_centroid_source,
+    maxZoom: SOURCE_CUTOVER_ZOOM,
+    visible: false,
+    style: centroidSiteStyle,
+});
 const centroid_layer = new VectorLayer({
     source: centroid_source,
+    minZoom: SOURCE_CUTOVER_ZOOM,
     visible: false,
     style: centroidSiteStyle,
 });
@@ -313,6 +337,7 @@ const styleJson = 'https://api.maptiler.com/maps/a1d2f17b-d57a-45ba-b7c6-4af845f
 apply(map, styleJson).then(() => {
     map.addLayer(mvt_tile_layer);
     map.addLayer(vector_tile_layer);
+    map.addLayer(mvt_centroid_layer);
     map.addLayer(centroid_layer);
 });
 
@@ -505,6 +530,7 @@ function handleVisibilityToggle(event) {
     }
     mvt_tile_layer.changed();
     vector_tile_layer.changed();
+    mvt_centroid_layer.changed();
     centroid_layer.changed();
 }
 
@@ -534,10 +560,12 @@ function setLoggedIn(value) {
         vector_tile_source.refresh();
         mvt_tile_source.refresh();
         centroid_source.refresh();
+        mvt_centroid_source.refresh();
     } else {
         vector_tile_source.clear();
         mvt_tile_source.refresh();
         centroid_source.clear();
+        mvt_centroid_source.refresh();
     }
 }
 
@@ -576,7 +604,7 @@ map.on(['pointermove'], function (mapEvent) {
     // happen to carry an 'id' property, causing bogus "Untitled site" popups)
     const features = map.getFeaturesAtPixel(mapEvent.pixel, {
         hitTolerance: 5,
-        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer || layer === centroid_layer,
+        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer || layer === centroid_layer || layer === mvt_centroid_layer,
     });
     // If there are some features
     if (features.length !== 0) {
@@ -587,6 +615,7 @@ map.on(['pointermove'], function (mapEvent) {
         // Invalidate the layers so they repaint with the hover highlight
         mvt_tile_layer.changed();
         vector_tile_layer.changed();
+        mvt_centroid_layer.changed();
         centroid_layer.changed();
         // Set the position of the site popup
         map_popup.setPosition(mapEvent.coordinate);
@@ -601,6 +630,7 @@ map.on(['pointermove'], function (mapEvent) {
         selected_feature.current = undefined;
         mvt_tile_layer.changed();
         vector_tile_layer.changed();
+        mvt_centroid_layer.changed();
         centroid_layer.changed();
         document.getElementById('popup').style.display = "none";
     }
@@ -610,7 +640,7 @@ map.on(['pointermove'], function (mapEvent) {
 map.on('click', function (mapEvent) {
     const features = map.getFeaturesAtPixel(mapEvent.pixel, {
         hitTolerance: 5,
-        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer || layer === centroid_layer,
+        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer || layer === centroid_layer || layer === mvt_centroid_layer,
     });
     if (features.length !== 0) {
         const props = features[0].getProperties();
@@ -633,6 +663,7 @@ document.getElementById('slider').addEventListener('input', function () {
     document.getElementById('slider-value').innerText = this.value;
     mvt_tile_layer.changed();
     vector_tile_layer.changed();
+    mvt_centroid_layer.changed();
     centroid_layer.changed();
 });
 
