@@ -3,7 +3,6 @@ import OSM from 'ol/source/OSM';
 import { Fill, Stroke } from 'ol/style';
 import Style from 'ol/style/Style';
 import CircleStyle from 'ol/style/Circle';
-import Point from 'ol/geom/Point';
 import { Overlay } from 'ol';
 import { useGeographic, transformExtent } from "ol/proj";
 import TileLayer from 'ol/layer/WebGLTile';
@@ -118,6 +117,38 @@ vector_tile_source.setLoader(async function (extent, _resolution, projection, su
     }
 });
 
+// Site centroid vector source, loaded directly from sites_centroids.fgb via fgb_proxy.
+// Points instead of polygons, so this is cheap to stream at any zoom level — no
+// MVT pyramid/zoom cutover needed the way the polygon layers require.
+const centroid_source = new VectorSource({ strategy: bboxStrategy });
+centroid_source.setLoader(async function (extent, _resolution, projection, success, failure) {
+    if (!current_user) {
+        centroid_source.removeLoadedExtent(extent);
+        return;
+    }
+    try {
+        const [minX, minY, maxX, maxY] = transformExtent(extent, projection, 'EPSG:4326');
+        const rect = { minX, minY, maxX, maxY };
+        const idToken = await current_user.getIdToken();
+        const headers = { 'Authorization': `Bearer ${idToken}` };
+
+        const features = [];
+        for await (const geoJsonFeature of fgbDeserialize(`${FGB_PROXY_URL}?source=sites_centroids`, rect, undefined, false, headers)) {
+            const olFeature = geoJsonFormat.readFeature(geoJsonFeature, {
+                featureProjection: projection,
+                dataProjection: 'EPSG:4326',
+            });
+            features.push(olFeature);
+        }
+        centroid_source.addFeatures(features);
+        success?.(features);
+    } catch (e) {
+        console.error('FGB centroids load error:', e);
+        failure?.();
+        centroid_source.removeLoadedExtent(extent);
+    }
+});
+
 // Public/private sites are rendered differently (solid green vs dashed amber),
 // matching the legend swatches next to the visibility switches.
 const public_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.2)', }), stroke: new Stroke({ color: 'rgba(99, 148, 69, 0.8)', width: 1.5 }) });
@@ -135,74 +166,57 @@ function isSiteVisible(feature) {
     return !(featureValue > threshold || !visibleStatuses.has(vis));
 }
 
-// Computes a point that lies inside a site's polygon, for the "centroids" render mode.
-// Uses getInteriorPoint()/getFlatInteriorPoint() (guaranteed inside the polygon) rather
-// than a bbox-center or area-weighted centroid, since site boundaries can be concave/
-// L-shaped, where a naive centroid can fall outside the polygon.
-//
-// The FGB source yields real ol/Feature objects with a Polygon or MultiPolygon geometry.
-// Only Polygon has getInteriorPoint() — MultiPolygon (common for FGB/GIS exports, even
-// for single-part sites) only has getInteriorPoints() (plural, one per part), so for
-// those we pick the interior point of the largest part by area. The MVT source, by
-// default, yields ol/render/Feature instead — a rendering-optimized type whose
-// getGeometry() returns itself and which has neither, only a flat-coordinate
-// getFlatInteriorPoint() API.
-function siteInteriorPoint(feature) {
-    const geom = feature.getGeometry ? feature.getGeometry() : null;
-    if (geom) {
-        if (typeof geom.getInteriorPoint === 'function') {
-            const coords = geom.getInteriorPoint().getCoordinates();
-            return new Point([coords[0], coords[1]]);
-        }
-        if (typeof geom.getPolygons === 'function') {
-            const polygons = geom.getPolygons();
-            if (polygons.length) {
-                const largest = polygons.reduce((a, b) => (b.getArea() > a.getArea() ? b : a));
-                const coords = largest.getInteriorPoint().getCoordinates();
-                return new Point([coords[0], coords[1]]);
-            }
-        }
-    }
-    if (typeof feature.getFlatInteriorPoint === 'function') {
-        const flat = feature.getFlatInteriorPoint();
-        return new Point([flat[0], flat[1]]);
-    }
-    return undefined;
-}
-
 // Public/private centroid marker styles, shown in "centroids" render mode. The
-// `geometry` function makes OL render/hit-test each feature at its interior point
-// instead of its actual polygon outline, without needing a separate derived layer/source.
-const centroid_style = new Style({ image: new CircleStyle({ radius: 4, fill: new Fill({ color: 'rgba(99, 148, 69, 0.9)' }), stroke: new Stroke({ color: 'white', width: 1 }) }), geometry: siteInteriorPoint });
-const centroid_private_style = new Style({ image: new CircleStyle({ radius: 4, fill: new Fill({ color: 'rgba(179, 140, 80, 0.9)' }), stroke: new Stroke({ color: 'white', width: 1 }) }), geometry: siteInteriorPoint });
+// centroid_layer's source (sites_centroids.fgb) already yields Point features, so no
+// geometry override is needed here (unlike the old client-side interior-point approach).
+const centroid_style = new Style({ image: new CircleStyle({ radius: 4, fill: new Fill({ color: 'rgba(99, 148, 69, 0.9)' }), stroke: new Stroke({ color: 'white', width: 1 }) }) });
+const centroid_private_style = new Style({ image: new CircleStyle({ radius: 4, fill: new Fill({ color: 'rgba(179, 140, 80, 0.9)' }), stroke: new Stroke({ color: 'white', width: 1 }) }) });
+const centroid_highlight_style = new Style({ image: new CircleStyle({ radius: 5, fill: new Fill({ color: 'rgba(99, 148, 69, 1)' }), stroke: new Stroke({ color: 'white', width: 1.5 }) }) });
+const centroid_private_highlight_style = new Style({ image: new CircleStyle({ radius: 5, fill: new Fill({ color: 'rgba(179, 140, 80, 1)' }), stroke: new Stroke({ color: 'white', width: 1.5 }) }) });
 
-// Render-mode switcher: "geometries" (default) styles sites as their actual polygons;
-// "centroids" styles them as a point marker at each polygon's interior point instead.
-// Structured so a future mode (e.g. "heatmap") is just one more branch here.
+// Render-mode switcher: "geometries" (default) shows sites as their actual polygons
+// (mvt_tile_layer/vector_tile_layer); "centroids" shows them as point markers from the
+// dedicated sites_centroids.fgb source (centroid_layer) instead. Structured so a future
+// mode (e.g. "heatmap") is just one more branch here.
 const RENDER_MODES = ['geometries', 'centroids'];
 let renderMode = 'geometries';
+
+function updateLayerVisibilityForRenderMode() {
+    const showGeometries = logged_in && renderMode === 'geometries';
+    const showCentroids = logged_in && renderMode === 'centroids';
+    mvt_tile_layer.setVisible(showGeometries);
+    vector_tile_layer.setVisible(showGeometries);
+    centroid_layer.setVisible(showCentroids);
+}
 
 function handleRenderModeChange(event) {
     if (!RENDER_MODES.includes(event.target.value)) return;
     renderMode = event.target.value;
-    mvt_tile_layer.changed();
-    vector_tile_layer.changed();
+    updateLayerVisibilityForRenderMode();
 }
 
-// Shared style logic for the sites layers, regardless of which source (MVT or FGB) they read from.
+// Shared style logic for the polygon sites layers (MVT or live FGB).
 // Styling the hovered feature in place (rather than via a separate highlight layer) means
 // hover highlighting works for both sources without needing a source-specific selection layer.
 function siteStyle(feature) {
     if (!isSiteVisible(feature)) return null;
     const vis = feature.get('site_visibility');
-    if (renderMode === 'centroids') {
-        return vis === 'PRIVATE' ? centroid_private_style : centroid_style;
-    }
     const isSelected = feature.get('id') === selected_feature.current;
     if (isSelected) {
         return vis === 'PRIVATE' ? private_highlight_style : public_highlight_style;
     }
     return vis === 'PRIVATE' ? private_style : public_style;
+}
+
+// Style logic for the centroid marker layer.
+function centroidSiteStyle(feature) {
+    if (!isSiteVisible(feature)) return null;
+    const vis = feature.get('site_visibility');
+    const isSelected = feature.get('id') === selected_feature.current;
+    if (isSelected) {
+        return vis === 'PRIVATE' ? centroid_private_highlight_style : centroid_highlight_style;
+    }
+    return vis === 'PRIVATE' ? centroid_private_style : centroid_style;
 }
 
 // Sites vector tile source, reading the pre-generated MVT pyramid via mvt_proxy
@@ -254,6 +268,13 @@ const vector_tile_layer = new VectorLayer({
     style: siteStyle,
 });
 
+// Create the site centroid marker layer, shown in "centroids" render mode at all zooms
+const centroid_layer = new VectorLayer({
+    source: centroid_source,
+    visible: false,
+    style: centroidSiteStyle,
+});
+
 // Create the map
 const urlParams = getUrlParameters();
 let initialCenter = [0, 0];
@@ -292,6 +313,7 @@ const styleJson = 'https://api.maptiler.com/maps/a1d2f17b-d57a-45ba-b7c6-4af845f
 apply(map, styleJson).then(() => {
     map.addLayer(mvt_tile_layer);
     map.addLayer(vector_tile_layer);
+    map.addLayer(centroid_layer);
 });
 
 // Create a selected feature
@@ -483,6 +505,7 @@ function handleVisibilityToggle(event) {
     }
     mvt_tile_layer.changed();
     vector_tile_layer.changed();
+    centroid_layer.changed();
 }
 
 const DEFAULT_LOGIN_ICON = `
@@ -503,17 +526,18 @@ function updateLoginButton() {
 
 function setLoggedIn(value) {
     logged_in = value;
-    mvt_tile_layer.setVisible(logged_in);
-    vector_tile_layer.setVisible(logged_in);
+    updateLayerVisibilityForRenderMode();
     updateLoginButton();
     document.getElementById('filter-panel').classList.toggle('visible', logged_in);
     if (logged_in) {
         // Clear previously-failed (unauthenticated) loads so they retry now that a token is available
         vector_tile_source.refresh();
         mvt_tile_source.refresh();
+        centroid_source.refresh();
     } else {
         vector_tile_source.clear();
         mvt_tile_source.refresh();
+        centroid_source.clear();
     }
 }
 
@@ -552,7 +576,7 @@ map.on(['pointermove'], function (mapEvent) {
     // happen to carry an 'id' property, causing bogus "Untitled site" popups)
     const features = map.getFeaturesAtPixel(mapEvent.pixel, {
         hitTolerance: 5,
-        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer,
+        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer || layer === centroid_layer,
     });
     // If there are some features
     if (features.length !== 0) {
@@ -563,6 +587,7 @@ map.on(['pointermove'], function (mapEvent) {
         // Invalidate the layers so they repaint with the hover highlight
         mvt_tile_layer.changed();
         vector_tile_layer.changed();
+        centroid_layer.changed();
         // Set the position of the site popup
         map_popup.setPosition(mapEvent.coordinate);
         var pu = document.getElementById('popup');
@@ -576,6 +601,7 @@ map.on(['pointermove'], function (mapEvent) {
         selected_feature.current = undefined;
         mvt_tile_layer.changed();
         vector_tile_layer.changed();
+        centroid_layer.changed();
         document.getElementById('popup').style.display = "none";
     }
 });
@@ -584,7 +610,7 @@ map.on(['pointermove'], function (mapEvent) {
 map.on('click', function (mapEvent) {
     const features = map.getFeaturesAtPixel(mapEvent.pixel, {
         hitTolerance: 5,
-        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer,
+        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer || layer === centroid_layer,
     });
     if (features.length !== 0) {
         const props = features[0].getProperties();
@@ -607,6 +633,7 @@ document.getElementById('slider').addEventListener('input', function () {
     document.getElementById('slider-value').innerText = this.value;
     mvt_tile_layer.changed();
     vector_tile_layer.changed();
+    centroid_layer.changed();
 });
 
 // Ensure the script runs after the DOM is fully loaded
