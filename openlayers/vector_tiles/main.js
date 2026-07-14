@@ -140,15 +140,28 @@ function isSiteVisible(feature) {
 // than a bbox-center or area-weighted centroid, since site boundaries can be concave/
 // L-shaped, where a naive centroid can fall outside the polygon.
 //
-// The FGB source yields real ol/Feature objects with a Polygon/MultiPolygon geometry
-// (getInteriorPoint()). The MVT source, by default, yields ol/render/Feature instead —
-// a rendering-optimized type whose getGeometry() returns itself and which has no
-// getInteriorPoint(), only a flat-coordinate getFlatInteriorPoint() API.
+// The FGB source yields real ol/Feature objects with a Polygon or MultiPolygon geometry.
+// Only Polygon has getInteriorPoint() — MultiPolygon (common for FGB/GIS exports, even
+// for single-part sites) only has getInteriorPoints() (plural, one per part), so for
+// those we pick the interior point of the largest part by area. The MVT source, by
+// default, yields ol/render/Feature instead — a rendering-optimized type whose
+// getGeometry() returns itself and which has neither, only a flat-coordinate
+// getFlatInteriorPoint() API.
 function siteInteriorPoint(feature) {
     const geom = feature.getGeometry ? feature.getGeometry() : null;
-    if (geom && typeof geom.getInteriorPoint === 'function') {
-        const coords = geom.getInteriorPoint().getCoordinates();
-        return new Point([coords[0], coords[1]]);
+    if (geom) {
+        if (typeof geom.getInteriorPoint === 'function') {
+            const coords = geom.getInteriorPoint().getCoordinates();
+            return new Point([coords[0], coords[1]]);
+        }
+        if (typeof geom.getPolygons === 'function') {
+            const polygons = geom.getPolygons();
+            if (polygons.length) {
+                const largest = polygons.reduce((a, b) => (b.getArea() > a.getArea() ? b : a));
+                const coords = largest.getInteriorPoint().getCoordinates();
+                return new Point([coords[0], coords[1]]);
+            }
+        }
     }
     if (typeof feature.getFlatInteriorPoint === 'function') {
         const flat = feature.getFlatInteriorPoint();
