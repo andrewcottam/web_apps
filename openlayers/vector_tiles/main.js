@@ -2,6 +2,8 @@ import { Map, View } from 'ol';
 import OSM from 'ol/source/OSM';
 import { Fill, Stroke } from 'ol/style';
 import Style from 'ol/style/Style';
+import CircleStyle from 'ol/style/Circle';
+import Point from 'ol/geom/Point';
 import { Overlay } from 'ol';
 import { useGeographic, transformExtent } from "ol/proj";
 import TileLayer from 'ol/layer/WebGLTile';
@@ -124,14 +126,65 @@ const private_style = new Style({ fill: new Fill({ color: 'rgba(179, 140, 80, 0.
 const public_highlight_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.3)', }), stroke: new Stroke({ color: 'rgba(99, 148, 69, 0.7)', width: 2 }) });
 const private_highlight_style = new Style({ fill: new Fill({ color: 'rgba(179, 140, 80, 0.28)', }), stroke: new Stroke({ color: 'rgba(179, 140, 80, 0.8)', width: 2, lineDash: [4, 4] }) });
 
+// Shared visibility predicate for the sites layers, so both respect the same
+// area threshold/status filters without duplicating logic.
+function isSiteVisible(feature) {
+    const threshold = parseFloat(document.getElementById('slider').value);
+    const featureValue = feature.get('surface_area_km2');
+    const vis = feature.get('site_visibility');
+    return !(featureValue > threshold || !visibleStatuses.has(vis));
+}
+
+// Computes a point that lies inside a site's polygon, for the "centroids" render mode.
+// Uses getInteriorPoint()/getFlatInteriorPoint() (guaranteed inside the polygon) rather
+// than a bbox-center or area-weighted centroid, since site boundaries can be concave/
+// L-shaped, where a naive centroid can fall outside the polygon.
+//
+// The FGB source yields real ol/Feature objects with a Polygon/MultiPolygon geometry
+// (getInteriorPoint()). The MVT source, by default, yields ol/render/Feature instead —
+// a rendering-optimized type whose getGeometry() returns itself and which has no
+// getInteriorPoint(), only a flat-coordinate getFlatInteriorPoint() API.
+function siteInteriorPoint(feature) {
+    const geom = feature.getGeometry ? feature.getGeometry() : null;
+    if (geom && typeof geom.getInteriorPoint === 'function') {
+        const coords = geom.getInteriorPoint().getCoordinates();
+        return new Point([coords[0], coords[1]]);
+    }
+    if (typeof feature.getFlatInteriorPoint === 'function') {
+        const flat = feature.getFlatInteriorPoint();
+        return new Point([flat[0], flat[1]]);
+    }
+    return undefined;
+}
+
+// Public/private centroid marker styles, shown in "centroids" render mode. The
+// `geometry` function makes OL render/hit-test each feature at its interior point
+// instead of its actual polygon outline, without needing a separate derived layer/source.
+const centroid_style = new Style({ image: new CircleStyle({ radius: 4, fill: new Fill({ color: 'rgba(99, 148, 69, 0.9)' }), stroke: new Stroke({ color: 'white', width: 1 }) }), geometry: siteInteriorPoint });
+const centroid_private_style = new Style({ image: new CircleStyle({ radius: 4, fill: new Fill({ color: 'rgba(179, 140, 80, 0.9)' }), stroke: new Stroke({ color: 'white', width: 1 }) }), geometry: siteInteriorPoint });
+
+// Render-mode switcher: "geometries" (default) styles sites as their actual polygons;
+// "centroids" styles them as a point marker at each polygon's interior point instead.
+// Structured so a future mode (e.g. "heatmap") is just one more branch here.
+const RENDER_MODES = ['geometries', 'centroids'];
+let renderMode = 'geometries';
+
+function handleRenderModeChange(event) {
+    if (!RENDER_MODES.includes(event.target.value)) return;
+    renderMode = event.target.value;
+    mvt_tile_layer.changed();
+    vector_tile_layer.changed();
+}
+
 // Shared style logic for the sites layers, regardless of which source (MVT or FGB) they read from.
 // Styling the hovered feature in place (rather than via a separate highlight layer) means
 // hover highlighting works for both sources without needing a source-specific selection layer.
 function siteStyle(feature) {
-    const threshold = parseFloat(document.getElementById('slider').value);
-    const featureValue = feature.get('surface_area_km2');
+    if (!isSiteVisible(feature)) return null;
     const vis = feature.get('site_visibility');
-    if (featureValue > threshold || !visibleStatuses.has(vis)) return null; // Hide features that do not meet the threshold
+    if (renderMode === 'centroids') {
+        return vis === 'PRIVATE' ? centroid_private_style : centroid_style;
+    }
     const isSelected = feature.get('id') === selected_feature.current;
     if (isSelected) {
         return vis === 'PRIVATE' ? private_highlight_style : public_highlight_style;
@@ -187,6 +240,7 @@ const vector_tile_layer = new VectorLayer({
     visible: false,
     style: siteStyle,
 });
+
 // Create the map
 const urlParams = getUrlParameters();
 let initialCenter = [0, 0];
@@ -547,6 +601,9 @@ document.addEventListener("DOMContentLoaded", function () {
     let visibilityCheckboxes = document.querySelectorAll("input[name='options']");
     visibilityCheckboxes.forEach(checkbox => {
         checkbox.addEventListener("change", handleVisibilityToggle);
+    });
+    document.querySelectorAll("input[name='render-mode']").forEach(radio => {
+        radio.addEventListener("change", handleRenderModeChange);
     });
     document.getElementById('login-button').addEventListener('click', login_clicked);
 });

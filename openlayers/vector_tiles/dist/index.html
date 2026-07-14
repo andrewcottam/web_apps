@@ -70,6 +70,43 @@
       gap: 2px;
     }
 
+    #filter-panel .mode-switch {
+      display: flex;
+      background: #f0f0f0;
+      border-radius: 8px;
+      padding: 2px;
+      margin-bottom: 14px;
+    }
+
+    #filter-panel .mode-switch input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
+
+    #filter-panel .mode-switch label {
+      flex: 1;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 500;
+      color: #666;
+      padding: 6px 4px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #filter-panel .mode-switch input:checked + label {
+      background: white;
+      color: #222;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+    }
+
+    #filter-panel .mode-switch input:focus-visible + label {
+      outline: 2px solid #6b9b5e;
+      outline-offset: 1px;
+    }
+
     #filter-panel .switch-row {
       position: relative;
       display: flex;
@@ -432,7 +469,7 @@
     }
 
   </style>
-  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.f8e2a643.js"></script>
+  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.1c5167ea.js"></script>
   <link rel="stylesheet" href="/web_apps/openlayers/vector_tiles/dist/assets/index.5fd94eca.css">
 </head>
 
@@ -441,6 +478,12 @@
     <div id="map" class="map"></div>
   </div>
   <div id="filter-panel">
+    <div class="mode-switch" id="render-mode-switch">
+      <input type="radio" name="render-mode" id="mode-geometries" value="geometries" checked>
+      <label for="mode-geometries">Geometries</label>
+      <input type="radio" name="render-mode" id="mode-centroids" value="centroids">
+      <label for="mode-centroids">Centroids</label>
+    </div>
     <div class="filter-row">
       <label class="filter-label" for="slider">Max area</label>
       <span><span class="filter-value" id="slider-value">2000</span> km²</span>
