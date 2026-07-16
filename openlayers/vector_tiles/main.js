@@ -270,16 +270,21 @@ function isSiteVisible(feature) {
     const threshold = parseFloat(document.getElementById('slider').value);
     const areaKm2 = getSurfaceAreaKm2(feature);
     const vis = decodeEnum(feature.get('site_visibility'), SITE_VISIBILITY_LABELS);
-    return !(areaKm2 > threshold || !visibleStatuses.has(vis));
+    // A negative area is bad/invalid data (e.g. a malformed polygon), never a real
+    // site size — always hide it rather than let it slip through as "smaller than
+    // any threshold".
+    return !(areaKm2 > threshold || areaKm2 < 0 || !visibleStatuses.has(vis));
 }
 
 // Public/private centroid marker styles, shown in "centroids" render mode. The
 // centroid_layer's source (sites_centroids.fgb) already yields Point features, so no
 // geometry override is needed here (unlike the old client-side interior-point approach).
-const centroid_style = new Style({ image: new CircleStyle({ radius: 4, fill: new Fill({ color: 'rgba(99, 148, 69, 0.9)' }), stroke: new Stroke({ color: 'white', width: 1 }) }) });
-const centroid_private_style = new Style({ image: new CircleStyle({ radius: 4, fill: new Fill({ color: 'rgba(179, 140, 80, 0.9)' }), stroke: new Stroke({ color: 'white', width: 1 }) }) });
-const centroid_highlight_style = new Style({ image: new CircleStyle({ radius: 5, fill: new Fill({ color: 'rgba(99, 148, 69, 1)' }), stroke: new Stroke({ color: 'white', width: 1.5 }) }) });
-const centroid_private_highlight_style = new Style({ image: new CircleStyle({ radius: 5, fill: new Fill({ color: 'rgba(179, 140, 80, 1)' }), stroke: new Stroke({ color: 'white', width: 1.5 }) }) });
+// Radius kept small since at low zoom hundreds of thousands of these overlap on
+// screen — smaller circles mean less overdraw/alpha-blending work per repaint.
+const centroid_style = new Style({ image: new CircleStyle({ radius: 2, fill: new Fill({ color: 'rgba(99, 148, 69, 0.9)' }), stroke: new Stroke({ color: 'white', width: 0.5 }) }) });
+const centroid_private_style = new Style({ image: new CircleStyle({ radius: 2, fill: new Fill({ color: 'rgba(179, 140, 80, 0.9)' }), stroke: new Stroke({ color: 'white', width: 0.5 }) }) });
+const centroid_highlight_style = new Style({ image: new CircleStyle({ radius: 3, fill: new Fill({ color: 'rgba(99, 148, 69, 1)' }), stroke: new Stroke({ color: 'white', width: 1 }) }) });
+const centroid_private_highlight_style = new Style({ image: new CircleStyle({ radius: 3, fill: new Fill({ color: 'rgba(179, 140, 80, 1)' }), stroke: new Stroke({ color: 'white', width: 1 }) }) });
 
 // Render-mode switcher: "geometries" (default) shows sites as their actual polygons
 // (mvt_tile_layer/vector_tile_layer); "centroids" shows them as point markers from the
