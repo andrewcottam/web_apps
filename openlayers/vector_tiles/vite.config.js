@@ -4,6 +4,6 @@ import { defineConfig } from 'vite'
 export default defineConfig({
   base: "/web_apps/openlayers/vector_tiles/dist/",
   server: {
-    open: 'web_apps/openlayers/vector_tiles/dist',
-  },  
+    open: true,
+  },
 })

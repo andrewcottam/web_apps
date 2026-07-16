@@ -43,13 +43,10 @@ const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ hd: 'restor.eco', login_hint: 'andrew@restor.eco' });
 const firestore = getFirestore(firebase_app);
 
-const FGB_PROXY_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://127.0.0.1:8082/fgb_proxy'
-    : 'https://europe-west6-restor-gis.cloudfunctions.net/fgb_proxy';
-
-const MVT_PROXY_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://127.0.0.1:8083/mvt_proxy'
-    : 'https://europe-west6-restor-gis.cloudfunctions.net/mvt_proxy';
+// Always call the deployed GCP cloud functions, even when running the frontend
+// locally — there's no local emulator for these proxies to fall back to.
+const FGB_PROXY_URL = 'https://europe-west6-restor-gis.cloudfunctions.net/fgb_proxy';
+const MVT_PROXY_URL = 'https://europe-west6-restor-gis.cloudfunctions.net/mvt_proxy';
 
 // Cutover zoom between the MVT and FlatGeobuf sources (used by both the polygon and
 // centroid layer pairs): below/at this level, tiles from the pre-generated MVT pyramid
