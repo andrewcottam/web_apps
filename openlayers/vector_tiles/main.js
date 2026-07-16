@@ -156,13 +156,121 @@ const private_style = new Style({ fill: new Fill({ color: 'rgba(179, 140, 80, 0.
 const public_highlight_style = new Style({ fill: new Fill({ color: 'rgba(99, 148, 69, 0.3)', }), stroke: new Stroke({ color: 'rgba(99, 148, 69, 0.7)', width: 2 }) });
 const private_highlight_style = new Style({ fill: new Fill({ color: 'rgba(179, 140, 80, 0.28)', }), stroke: new Stroke({ color: 'rgba(179, 140, 80, 0.8)', width: 2, lineDash: [4, 4] }) });
 
+// Integer-code -> label mappings for the enum columns that sites_centroids.fgb and
+// sites_plus_checks.fgb now store as small ints instead of repeating full text per
+// row (see cloud_functions/export-sites-to-fgb/main.py's matching *_CODES dicts,
+// which these must stay in sync with). The MVT tile pyramid (export-sites-to-mvt,
+// not yet migrated) still stores these columns as plain text — decodeEnum() below
+// passes text values through unchanged, so both schemas work through the same code.
+const SITE_TYPE_LABELS = {
+    0: 'RESTORATION',
+    1: 'CONSERVATION',
+    2: 'LANDSCAPE',
+    3: 'AREA_OF_INTEREST',
+    4: 'SUSTAINABLE_LAND_MANAGEMENT',
+};
+const STAGE_LABELS = {
+    0: 'PLANNING',
+    1: 'ONGOING',
+    2: 'COMPLETED',
+};
+const PRE_INTERVENTION_LAND_USE_LABELS = {
+    0: 'DEFORESTED_LAND',
+    1: 'GRAZING_LAND',
+    2: 'DEGRADED_FOREST',
+    3: 'URBAN',
+    4: 'NOT_USED_FOR_PRODUCTION',
+    5: 'MINING_OR_EXTRACTIVES',
+    6: 'NOT_APPLICABLE',
+    7: 'DEGRADED_AQUATIC_HABITATS',
+    8: 'INDUSTRIAL',
+    9: 'CROPLAND',
+    10: 'OTHER',
+};
+const INTERVENTION_TYPE_LABELS = {
+    0: 'ACTIVE_RESTORATION',
+    1: 'AGROFORESTRY',
+    2: 'ASSISTED_NATURAL_REGENERATION',
+    3: 'CONSERVATION_AND_ECOSYSTEM_PROTECTION',
+    4: 'HUMAN_DISTURBANCE_REMOVAL',
+    5: 'PASSIVE_NATURAL_REGENERATION',
+    6: 'RESTORING_NATURAL_DISTURBANCE_REGIMES',
+    7: 'SUSTAINABLE_AGRICULTURE',
+    8: 'SUSTAINABLE_FORESTRY',
+    9: 'OTHER_SUSTAINABLE_PRODUCTION',
+    10: 'OTHER',
+    // -1 (unmapped/legacy, e.g. a stray LANDSCAPE_SCALE_INTERVENTION row) intentionally
+    // has no entry, so decodeEnum() returns undefined for it, same as a missing value.
+};
+const POST_INTERVENTION_LAND_COVER_LABELS = {
+    0: 'ARID',
+    1: 'COASTAL',
+    2: 'CROPLAND',
+    3: 'GRASSLAND',
+    4: 'GRAZING_LAND',
+    5: 'LAKE',
+    6: 'MANGROVE',
+    7: 'MARINE',
+    8: 'NATURAL_FOREST',
+    9: 'PEATLAND',
+    10: 'PRODUCTION_FOREST',
+    11: 'RIPARIAN',
+    12: 'RIVER',
+    13: 'SAVANNAH',
+    14: 'SEMI_ARID',
+    15: 'SHRUBLAND',
+    16: 'TUNDRA',
+    17: 'WETLAND',
+    18: 'MULTIPLE_HABITATS',
+    19: 'OTHER',
+};
+const SITE_VISIBILITY_LABELS = {
+    0: 'PUBLIC',
+    1: 'PRIVATE',
+};
+
+// Decodes a possibly int-coded enum property back to its text label. `value` is
+// passed through unchanged if it's not a number, so features from the (not yet
+// migrated) MVT tile sources, which still store plain text, work the same way.
+function decodeEnum(value, labels) {
+    if (typeof value !== 'number') return value;
+    return labels[value];
+}
+
+// Returns a site's area in km², regardless of which schema its feature came from:
+// the MVT tile sources still carry full-precision surface_area_km2; the newer FGB
+// centroids/plus-checks exports carry a pre-rounded surface_area_ha instead (with a
+// sentinel 0 meaning "<1 ha" — safely treated as its true minimum here, since that
+// only ever makes a site look smaller than it is, never hides one that should show).
+function getSurfaceAreaKm2(feature) {
+    const km2 = feature.get('surface_area_km2');
+    if (km2 !== undefined) return km2;
+    const ha = feature.get('surface_area_ha');
+    return ha !== undefined ? ha / 100 : undefined;
+}
+
+// Same area lookup as getSurfaceAreaKm2, but formatted for display and operating on
+// a plain properties object (as buildPopupHtml receives) rather than a feature.
+function formatSurfaceAreaHa(props) {
+    const ha = props['surface_area_ha'];
+    if (ha !== undefined) {
+        return ha === 0 ? '<1 ha' : `${formatNumber(ha)} ha`;
+    }
+    const km2 = props['surface_area_km2'];
+    if (km2 === undefined) return '';
+    const haFromKm2 = km2 * 100;
+    if (haFromKm2 < 1) return '<1 ha';
+    const formatted = formatNumber(haFromKm2);
+    return formatted ? `${formatted} ha` : '';
+}
+
 // Shared visibility predicate for the sites layers, so both respect the same
 // area threshold/status filters without duplicating logic.
 function isSiteVisible(feature) {
     const threshold = parseFloat(document.getElementById('slider').value);
-    const featureValue = feature.get('surface_area_km2');
-    const vis = feature.get('site_visibility');
-    return !(featureValue > threshold || !visibleStatuses.has(vis));
+    const areaKm2 = getSurfaceAreaKm2(feature);
+    const vis = decodeEnum(feature.get('site_visibility'), SITE_VISIBILITY_LABELS);
+    return !(areaKm2 > threshold || !visibleStatuses.has(vis));
 }
 
 // Public/private centroid marker styles, shown in "centroids" render mode. The
@@ -200,7 +308,7 @@ function handleRenderModeChange(event) {
 // hover highlighting works for both sources without needing a source-specific selection layer.
 function siteStyle(feature) {
     if (!isSiteVisible(feature)) return null;
-    const vis = feature.get('site_visibility');
+    const vis = decodeEnum(feature.get('site_visibility'), SITE_VISIBILITY_LABELS);
     const isSelected = feature.get('id') === selected_feature.current;
     if (isSelected) {
         return vis === 'PRIVATE' ? private_highlight_style : public_highlight_style;
@@ -211,7 +319,7 @@ function siteStyle(feature) {
 // Style logic for the centroid marker layer.
 function centroidSiteStyle(feature) {
     if (!isSiteVisible(feature)) return null;
-    const vis = feature.get('site_visibility');
+    const vis = decodeEnum(feature.get('site_visibility'), SITE_VISIBILITY_LABELS);
     const isSelected = feature.get('id') === selected_feature.current;
     if (isSelected) {
         return vis === 'PRIVATE' ? centroid_private_highlight_style : centroid_highlight_style;
@@ -375,8 +483,8 @@ function formatNumber(value) {
 }
 
 function parseListField(value) {
-    // Some list-valued columns (goals, support_sought, certificate_types, ...) are
-    // stored as Python-repr strings with single quotes, e.g. "['CONSERVING_BIODIVERSITY']".
+    // Some list-valued columns (e.g. photo_ids) are stored as Python-repr strings
+    // with single quotes, e.g. "['abc123']".
     // Others (verification_checks) are proper JSON, whose string values may contain
     // apostrophes (e.g. "Pete's patch") — try real JSON first so those aren't corrupted
     // by a blind single-quote-to-double-quote replacement.
@@ -473,20 +581,23 @@ function countryCodeToFlagEmoji(code) {
 }
 
 function buildPopupHtml(props) {
-    const areaHa = formatNumber(props['surface_area_km2'] * 100);
+    const areaHa = formatSurfaceAreaHa(props);
     const verificationChecks = parseListField(props['verification_checks']).filter(Boolean);
     const fields = [
-        ['Area', areaHa ? `${areaHa} ha` : ''],
-        ['Stage', formatEnum(props['stage'])],
+        ['Area', areaHa],
+        ['Stage', formatEnum(decodeEnum(props['stage'], STAGE_LABELS))],
         ['Intervention start', safe(props['intervention_start_date'])],
-        ['Intervention type', formatEnum(props['intervention_type'])],
-        ['Pre-intervention use', formatEnum(props['pre_intervention_land_use'])],
-        ['Post-intervention cover', formatEnum(props['post_intervention_land_cover'])],
+        ['Intervention type', formatEnum(decodeEnum(props['intervention_type'], INTERVENTION_TYPE_LABELS))],
+        ['Pre-intervention use', formatEnum(decodeEnum(props['pre_intervention_land_use'], PRE_INTERVENTION_LAND_USE_LABELS))],
+        ['Post-intervention cover', formatEnum(decodeEnum(props['post_intervention_land_cover'], POST_INTERVENTION_LAND_COVER_LABELS))],
     ].filter(([, value]) => value !== '');
 
-    const visibility = (props['site_visibility'] || '').toUpperCase();
+    const visibility = (decodeEnum(props['site_visibility'], SITE_VISIBILITY_LABELS) || '').toUpperCase();
     const badges = [];
-    if (props['site_type']) badges.push(`<span class="popup-badge">${escapeHtml(formatEnum(props['site_type']))}</span>`);
+    // formatEnum() first, then check truthiness of the resulting label string — not
+    // the raw props['site_type'] value, since code 0 (RESTORATION) is falsy in JS.
+    const siteTypeLabel = formatEnum(decodeEnum(props['site_type'], SITE_TYPE_LABELS));
+    if (siteTypeLabel) badges.push(`<span class="popup-badge">${escapeHtml(siteTypeLabel)}</span>`);
     if (visibility) badges.push(`<span class="popup-badge${visibility === 'PRIVATE' ? ' visibility-private' : ''}">${escapeHtml(formatEnum(visibility))}</span>`);
 
     const flag = countryCodeToFlagEmoji(props['country_code']);
