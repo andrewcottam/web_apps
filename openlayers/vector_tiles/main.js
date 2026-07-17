@@ -2,12 +2,14 @@ import { Map, View } from 'ol';
 import OSM from 'ol/source/OSM';
 import { Fill, Stroke } from 'ol/style';
 import Style from 'ol/style/Style';
-import CircleStyle from 'ol/style/Circle';
 import { Overlay } from 'ol';
 import { useGeographic, transformExtent } from "ol/proj";
 import TileLayer from 'ol/layer/WebGLTile';
 import VectorLayer from 'ol/layer/Vector';
 import VectorTileLayer from 'ol/layer/VectorTile';
+import WebGLPointsLayer from 'ol/layer/WebGLPoints';
+import ZoomToExtent from 'ol/control/ZoomToExtent';
+import { defaults as defaultControls } from 'ol/control/defaults';
 import VectorSource from 'ol/source/Vector';
 import VectorTileSource from 'ol/source/VectorTile';
 import GeoJSON from 'ol/format/GeoJSON';
@@ -116,37 +118,100 @@ vector_tile_source.setLoader(async function (extent, _resolution, projection, su
     }
 });
 
-// Site centroid vector source, loaded directly from sites_centroids.fgb via fgb_proxy.
-// Used above SOURCE_CUTOVER_ZOOM, where the viewport bbox is small enough that the
-// FGB spatial index keeps requests small (see mvt_centroid_source for the zoom 0-10 path).
-const centroid_source = new VectorSource({ strategy: bboxStrategy });
-centroid_source.setLoader(async function (extent, _resolution, projection, success, failure) {
-    if (!current_user) {
-        centroid_source.removeLoadedExtent(extent);
-        return;
+// Site centroid vector source: loaded once, in full, from sites_centroids.fgb (a
+// deliberately narrow schema — see cloud_functions/export-sites-to-fgb — small enough
+// to load entirely up front) rather than per-viewport like the polygon sources. A
+// WebGLPointsLayer wants its whole dataset in one GPU buffer and shows it at every
+// zoom, so there's no viewport-scoped bbox to load against here.
+const centroid_source = new VectorSource();
+
+// Fetched in bounded chunks (rather than one request for the whole file, or via
+// FlatGeobuf's spatial-index reader with a world-covering bbox) since either of those
+// collapses into one or a few enormous byte-range requests — fgb_proxy just does
+// blob.download_as_bytes(start, end) and returns that whole span as a single
+// response, which trips "Response size was too large" and fails to deliver data.
+// Chunking keeps every individual response small regardless of the file's total size.
+const FGB_CHUNK_SIZE = 8 * 1024 * 1024; // 8MB
+const CONTENT_RANGE_TOTAL_RE = /bytes \d+-\d+\/(\d+)/;
+
+async function fetchEntireFile(url, headers, onProgress) {
+    const chunks = [];
+    let start = 0;
+    let total = Infinity;
+    while (start < total) {
+        const end = start + FGB_CHUNK_SIZE - 1;
+        const response = await fetch(url, { headers: { ...headers, Range: `bytes=${start}-${end}` } });
+        if (!response.ok) throw new Error(`FGB chunk fetch failed: ${response.status}`);
+        const contentRange = response.headers.get('Content-Range');
+        const match = contentRange && contentRange.match(CONTENT_RANGE_TOTAL_RE);
+        if (match) total = parseInt(match[1], 10);
+        const chunk = new Uint8Array(await response.arrayBuffer());
+        chunks.push(chunk);
+        if (!match) break; // server didn't honor the Range request; treat this as the whole file
+        start = end + 1;
+        onProgress?.(Math.min(start, total), total);
     }
+    const buffer = new Uint8Array(chunks.reduce((sum, c) => sum + c.length, 0));
+    let offset = 0;
+    for (const chunk of chunks) {
+        buffer.set(chunk, offset);
+        offset += chunk.length;
+    }
+    return buffer;
+}
+
+function setCentroidLoadingIndicator(visible, percent) {
+    const el = document.getElementById('centroid-loading');
+    if (!el) return;
+    el.hidden = !visible;
+    if (visible && percent !== undefined) {
+        document.getElementById('centroid-loading-pct').textContent = `${percent}%`;
+    }
+}
+
+// Disabled by default in index.html and whenever centroid_source is cleared (logout,
+// or a fresh load in progress) — there's nothing to show in "centroids" mode until
+// loadAllCentroids has actually populated the source, so switching to it early would
+// just render an empty layer with no indication why.
+function setCentroidsModeEnabled(enabled) {
+    const radio = document.getElementById('mode-centroids');
+    if (radio) radio.disabled = !enabled;
+}
+
+async function loadAllCentroids() {
+    if (!current_user) return;
+    setCentroidsModeEnabled(false);
+    setCentroidLoadingIndicator(true, 0);
     try {
-        const [minX, minY, maxX, maxY] = transformExtent(extent, projection, 'EPSG:4326');
-        const rect = { minX, minY, maxX, maxY };
         const idToken = await current_user.getIdToken();
         const headers = { 'Authorization': `Bearer ${idToken}` };
+        const buffer = await fetchEntireFile(`${FGB_PROXY_URL}?source=sites_centroids`, headers, (loaded, total) => {
+            setCentroidLoadingIndicator(true, Math.round((loaded / total) * 100));
+        });
 
+        // A plain Uint8Array (rather than a bbox rect) makes fgbDeserialize read the
+        // file sequentially front-to-back with no spatial-index/range-request involved.
         const features = [];
-        for await (const geoJsonFeature of fgbDeserialize(`${FGB_PROXY_URL}?source=sites_centroids`, rect, undefined, false, headers)) {
+        for await (const geoJsonFeature of fgbDeserialize(buffer)) {
             const olFeature = geoJsonFormat.readFeature(geoJsonFeature, {
-                featureProjection: projection,
+                featureProjection: 'EPSG:4326',
                 dataProjection: 'EPSG:4326',
             });
+            // Initialized on every feature up front (rather than left undefined until
+            // first hovered) so the WebGL style's ['get', 'hovered'] attribute has a
+            // consistent numeric type to compile against from the start.
+            olFeature.set('hovered', 0);
             features.push(olFeature);
         }
+        centroid_source.clear();
         centroid_source.addFeatures(features);
-        success?.(features);
+        setCentroidsModeEnabled(true);
     } catch (e) {
         console.error('FGB centroids load error:', e);
-        failure?.();
-        centroid_source.removeLoadedExtent(extent);
+    } finally {
+        setCentroidLoadingIndicator(false);
     }
-});
+}
 
 // Public/private sites are rendered differently (solid green vs dashed amber),
 // matching the legend swatches next to the visibility switches.
@@ -276,20 +341,132 @@ function isSiteVisible(feature) {
     return !(areaKm2 > threshold || areaKm2 < 0 || !visibleStatuses.has(vis));
 }
 
-// Public/private centroid marker styles, shown in "centroids" render mode. The
-// centroid_layer's source (sites_centroids.fgb) already yields Point features, so no
-// geometry override is needed here (unlike the old client-side interior-point approach).
+// Centroid layer style: a literal WebGL expression style, not an ol/style/Style
+// function — variables are pushed via centroid_webgl_layer.updateStyleVariables()
+// whenever the area slider/status checkboxes change, since WebGL styles can't run
+// arbitrary JS per feature the way siteStyle() does for the polygon layers.
+// site_visibility's 0/1 codes are hardcoded here (rather than going through
+// decodeEnum/SITE_VISIBILITY_LABELS) since expressions can't call into JS — keep this
+// in sync with SITE_VISIBILITY_LABELS and export-sites-to-fgb's SITE_VISIBILITY_CODES.
+//
+// Hover highlighting is driven by a per-feature `hovered` attribute (0/1, set directly
+// on the hit ol/Feature via setHoveredCentroidFeature) rather than a style variable
+// compared against feature id: the WebGL/GPU expression compiler has no "to-string"
+// operator (unlike the general expression language), so there's no safe way to compare
+// an id of unknown numeric-vs-string type against a variable at the GPU level.
+//
 // Radius kept small since at low zoom hundreds of thousands of these overlap on
 // screen — smaller circles mean less overdraw/alpha-blending work per repaint.
-const centroid_style = new Style({ image: new CircleStyle({ radius: 2, fill: new Fill({ color: 'rgba(99, 148, 69, 0.9)' }), stroke: new Stroke({ color: 'white', width: 0.5 }) }) });
-const centroid_private_style = new Style({ image: new CircleStyle({ radius: 2, fill: new Fill({ color: 'rgba(179, 140, 80, 0.9)' }), stroke: new Stroke({ color: 'white', width: 0.5 }) }) });
-const centroid_highlight_style = new Style({ image: new CircleStyle({ radius: 3, fill: new Fill({ color: 'rgba(99, 148, 69, 1)' }), stroke: new Stroke({ color: 'white', width: 1 }) }) });
-const centroid_private_highlight_style = new Style({ image: new CircleStyle({ radius: 3, fill: new Fill({ color: 'rgba(179, 140, 80, 1)' }), stroke: new Stroke({ color: 'white', width: 1 }) }) });
+//
+// Neither circle-radius NOR circle-stroke-width depend on `hovered` (an earlier
+// version changed one, then the other, and both caused the same problem):
+// WebGLPointsLayer's hit-test picking pass samples the same rendered footprint as the
+// visual style, including the stroke, not just the fill radius — so making the circle
+// *or its outline* bigger on hover changes the hit-test footprint for the very next
+// pointermove. Near densely overlapping points that created a feedback loop (hover
+// enlarges the marker -> picking geometry shifts -> a different/no feature hit ->
+// un-hover shrinks it back -> re-hit -> grows again), which looked like the marker
+// rapidly growing/shrinking and the popup flickering in lockstep. Keeping the entire
+// footprint (radius + stroke width) constant and indicating hover with color alone
+// (which doesn't feed the picking geometry) avoids that loop entirely.
+const centroid_webgl_style = {
+    variables: {
+        // thresholdHa mirrors the slider's km² value converted to hectares, since
+        // sites_centroids.fgb stores surface_area_ha, not surface_area_km2.
+        thresholdHa: parseFloat(document.getElementById('slider').value) * 100,
+        showPublic: visibleStatuses.has('PUBLIC') ? 1 : 0,
+        showPrivate: visibleStatuses.has('PRIVATE') ? 1 : 0,
+    },
+    filter: ['all',
+        ['<=', ['get', 'surface_area_ha'], ['var', 'thresholdHa']],
+        ['any',
+            ['all', ['==', ['get', 'site_visibility'], 0], ['==', ['var', 'showPublic'], 1]],
+            ['all', ['==', ['get', 'site_visibility'], 1], ['==', ['var', 'showPrivate'], 1]],
+        ],
+    ],
+    'circle-radius': 2,
+    'circle-fill-color': ['case',
+        ['==', ['get', 'hovered'], 1],
+        ['case', ['==', ['get', 'site_visibility'], 1], 'rgba(179, 140, 80, 1)', 'rgba(99, 148, 69, 1)'],
+        ['==', ['get', 'site_visibility'], 1], 'rgba(179, 140, 80, 0.9)',
+        'rgba(99, 148, 69, 0.9)',
+    ],
+    'circle-stroke-color': ['case', ['==', ['get', 'hovered'], 1], '#222222', 'white'],
+    'circle-stroke-width': 0.5,
+};
+
+// The single "confirmed" hover target driving both the popup (content/visibility)
+// and the centroid marker highlight. Both used to react directly to each pointermove
+// event's raw hit-test result, but near densely packed/overlapping points, which
+// feature "wins" the hit-test can flip between consecutive events even when the
+// cursor hasn't meaningfully moved — that showed up as both the popup content and the
+// marker highlight flickering in lockstep with that noise.
+//
+// Acquiring a new hover (including switching directly between two different features)
+// commits quickly, for a responsive feel. Clearing to "nothing hovered" uses a much
+// longer timer instead: brief gaps in the raw hit-test between competing overlapping
+// points (typically lasting only a couple of frames) never actually reach "nothing
+// hovered" within that window, so the popup stays visibly stable instead of blinking
+// off every time the picking result briefly wavers. It only really disappears once the
+// cursor has genuinely been off every site for HOVER_CLEAR_DEBOUNCE_MS.
+let hoveredFeature = null;
+let hoveredIsCentroid = false;
+let pendingHoverFeature; // undefined = no pending change (distinct from null = "nothing hit")
+let pendingHoverLayer = null;
+let hoverDebounceTimeout = null;
+const HOVER_SET_DEBOUNCE_MS = 50;
+const HOVER_CLEAR_DEBOUNCE_MS = 1200;
+
+function applyConfirmedHover(feature, layer) {
+    if (hoveredFeature === feature) return;
+    if (hoveredFeature && hoveredIsCentroid) hoveredFeature.set('hovered', 0);
+    hoveredFeature = feature || null;
+    hoveredIsCentroid = hoveredFeature !== null && layer === centroid_webgl_layer;
+    if (hoveredIsCentroid) hoveredFeature.set('hovered', 1);
+
+    selected_feature.current = hoveredFeature ? hoveredFeature.get('id') : undefined;
+    mvt_tile_layer.changed();
+    vector_tile_layer.changed();
+
+    var pu = document.getElementById('popup');
+    if (hoveredFeature && hoveredFeature.get('id') !== undefined) {
+        pu.style.display = "block";
+        pu.innerHTML = buildPopupHtml(hoveredFeature.getProperties());
+    } else {
+        pu.style.display = "none";
+    }
+}
+
+function updateHoverCandidate(feature, layer) {
+    if (feature === hoveredFeature) {
+        // Already confirmed; cancel any pending switch away from it.
+        if (hoverDebounceTimeout && pendingHoverFeature !== hoveredFeature) {
+            clearTimeout(hoverDebounceTimeout);
+            hoverDebounceTimeout = null;
+            pendingHoverFeature = undefined;
+        }
+        return;
+    }
+    if (pendingHoverFeature === feature) return; // already debouncing towards this
+    if (hoverDebounceTimeout) clearTimeout(hoverDebounceTimeout);
+    pendingHoverFeature = feature;
+    pendingHoverLayer = layer;
+    // Only clearing (feature === null) away from a *centroid* gets the long grace
+    // period — that's the noisy WebGL hit-test case. Clearing away from a polygon
+    // (Canvas-based, deterministic hit-test) doesn't need protection and should hide
+    // the popup right away, or it just looks like it's stuck open.
+    const delay = feature ? HOVER_SET_DEBOUNCE_MS : (hoveredIsCentroid ? HOVER_CLEAR_DEBOUNCE_MS : 0);
+    hoverDebounceTimeout = setTimeout(() => {
+        applyConfirmedHover(pendingHoverFeature, pendingHoverLayer);
+        hoverDebounceTimeout = null;
+        pendingHoverFeature = undefined;
+    }, delay);
+}
 
 // Render-mode switcher: "geometries" (default) shows sites as their actual polygons
 // (mvt_tile_layer/vector_tile_layer); "centroids" shows them as point markers from the
-// dedicated sites_centroids.fgb source (centroid_layer) instead. Structured so a future
-// mode (e.g. "heatmap") is just one more branch here.
+// dedicated sites_centroids.fgb source (centroid_webgl_layer) instead. Structured so a
+// future mode (e.g. "heatmap") is just one more branch here.
 const RENDER_MODES = ['geometries', 'centroids'];
 let renderMode = 'geometries';
 
@@ -298,8 +475,7 @@ function updateLayerVisibilityForRenderMode() {
     const showCentroids = logged_in && renderMode === 'centroids';
     mvt_tile_layer.setVisible(showGeometries);
     vector_tile_layer.setVisible(showGeometries);
-    mvt_centroid_layer.setVisible(showCentroids);
-    centroid_layer.setVisible(showCentroids);
+    centroid_webgl_layer.setVisible(showCentroids);
 }
 
 function handleRenderModeChange(event) {
@@ -319,17 +495,6 @@ function siteStyle(feature) {
         return vis === 'PRIVATE' ? private_highlight_style : public_highlight_style;
     }
     return vis === 'PRIVATE' ? private_style : public_style;
-}
-
-// Style logic for the centroid marker layer.
-function centroidSiteStyle(feature) {
-    if (!isSiteVisible(feature)) return null;
-    const vis = decodeEnum(feature.get('site_visibility'), SITE_VISIBILITY_LABELS);
-    const isSelected = feature.get('id') === selected_feature.current;
-    if (isSelected) {
-        return vis === 'PRIVATE' ? centroid_private_highlight_style : centroid_highlight_style;
-    }
-    return vis === 'PRIVATE' ? centroid_private_style : centroid_style;
 }
 
 // Authenticated MVT tile-load function, shared by every VectorTileSource reading
@@ -370,13 +535,6 @@ const mvt_tile_source = new VectorTileSource({
 });
 mvt_tile_source.setTileLoadFunction(authenticatedMvtTileLoadFunction);
 
-// Site centroid vector tile source, reading the pre-generated centroid MVT pyramid.
-const mvt_centroid_source = new VectorTileSource({
-    format: new MVT(),
-    url: `${MVT_PROXY_URL}/tiles/{z}/{x}/{y}.pbf?source=sites_centroids`,
-});
-mvt_centroid_source.setTileLoadFunction(authenticatedMvtTileLoadFunction);
-
 // Create the sites vector tile layer (zoom 0-10, pre-generated MVT tiles)
 const mvt_tile_layer = new VectorTileLayer({
     source: mvt_tile_source,
@@ -393,21 +551,15 @@ const vector_tile_layer = new VectorLayer({
     style: siteStyle,
 });
 
-// Create the site centroid marker layers: pre-generated MVT tiles at zoom 0-10 (small,
-// pre-clipped payloads — the viewport spans most of the dataset at low zoom, so a live
-// FlatGeobuf bbox request wouldn't save much), live FlatGeobuf features above that
-// (small viewport, so the FGB spatial index keeps requests small).
-const mvt_centroid_layer = new VectorTileLayer({
-    source: mvt_centroid_source,
-    maxZoom: SOURCE_CUTOVER_ZOOM,
-    visible: false,
-    style: centroidSiteStyle,
-});
-const centroid_layer = new VectorLayer({
+// Centroid layer: a single WebGLPointsLayer covering the whole dataset at every zoom
+// (no MVT/FGB zoom split — see loadAllCentroids), since sites_centroids.fgb is small
+// enough to load in full and WebGL rendering comfortably handles the ~300k+ points
+// without the per-feature JS style-callback + Canvas overdraw cost a regular
+// VectorLayer/VectorTileLayer would pay at low zoom.
+const centroid_webgl_layer = new WebGLPointsLayer({
     source: centroid_source,
-    minZoom: SOURCE_CUTOVER_ZOOM,
     visible: false,
-    style: centroidSiteStyle,
+    style: centroid_webgl_style,
 });
 
 // Create the map
@@ -427,7 +579,11 @@ const map = new Map({
     target: 'map',
     // layers: [new TileLayer({ source: new OSM() }), vector_tile_layer],
     view: new View({ center: initialCenter, zoom: initialZoom }),
-
+    // Positioned above the default zoom in/out buttons via the .ol-zoom-extent /
+    // .ol-zoom CSS overrides below.
+    controls: defaultControls().extend([
+        new ZoomToExtent({ extent: [-180, -90, 180, 90], label: '⤢', tipLabel: 'Zoom to full extent' }),
+    ]),
 });
 
 map.on('moveend', () => {
@@ -448,8 +604,7 @@ const styleJson = 'https://api.maptiler.com/maps/a1d2f17b-d57a-45ba-b7c6-4af845f
 apply(map, styleJson).then(() => {
     map.addLayer(mvt_tile_layer);
     map.addLayer(vector_tile_layer);
-    map.addLayer(mvt_centroid_layer);
-    map.addLayer(centroid_layer);
+    map.addLayer(centroid_webgl_layer);
 });
 
 // Create a selected feature
@@ -644,8 +799,10 @@ function handleVisibilityToggle(event) {
     }
     mvt_tile_layer.changed();
     vector_tile_layer.changed();
-    mvt_centroid_layer.changed();
-    centroid_layer.changed();
+    centroid_webgl_layer.updateStyleVariables({
+        showPublic: visibleStatuses.has('PUBLIC') ? 1 : 0,
+        showPrivate: visibleStatuses.has('PRIVATE') ? 1 : 0,
+    });
 }
 
 const DEFAULT_LOGIN_ICON = `
@@ -673,13 +830,12 @@ function setLoggedIn(value) {
         // Clear previously-failed (unauthenticated) loads so they retry now that a token is available
         vector_tile_source.refresh();
         mvt_tile_source.refresh();
-        centroid_source.refresh();
-        mvt_centroid_source.refresh();
+        loadAllCentroids();
     } else {
         vector_tile_source.clear();
         mvt_tile_source.refresh();
         centroid_source.clear();
-        mvt_centroid_source.refresh();
+        setCentroidsModeEnabled(false);
     }
 }
 
@@ -713,48 +869,33 @@ async function login_clicked() {
 
 // Add the mouse move event
 map.on(['pointermove'], function (mapEvent) {
-    // Get the features which are under the mouse, restricted to the sites layers
+    // Find the topmost feature under the mouse, restricted to the sites layers
     // (otherwise this also picks up basemap features, e.g. roads/boundaries, that
-    // happen to carry an 'id' property, causing bogus "Untitled site" popups)
-    const features = map.getFeaturesAtPixel(mapEvent.pixel, {
+    // happen to carry an 'id' property, causing bogus "Untitled site" popups).
+    // Uses forEachFeatureAtPixel (rather than getFeaturesAtPixel) so we know which
+    // layer the hit came from, needed to drive the centroid layer's hover highlight.
+    let hitFeature = null, hitLayer = null;
+    map.forEachFeatureAtPixel(mapEvent.pixel, (feature, layer) => {
+        hitFeature = feature;
+        hitLayer = layer;
+        return true; // stop at the topmost hit
+    }, {
         hitTolerance: 5,
-        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer || layer === centroid_layer || layer === mvt_centroid_layer,
+        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer || layer === centroid_webgl_layer,
     });
-    // If there are some features
-    if (features.length !== 0) {
-        // Get the properties
-        const props = features[0].getProperties();
-        // Set the selection feature id
-        selected_feature.current = props['id'];
-        // Invalidate the layers so they repaint with the hover highlight
-        mvt_tile_layer.changed();
-        vector_tile_layer.changed();
-        mvt_centroid_layer.changed();
-        centroid_layer.changed();
-        // Set the position of the site popup
-        map_popup.setPosition(mapEvent.coordinate);
-        var pu = document.getElementById('popup');
-        if (props['id'] !== undefined) {
-            pu.style.display = "block";
-            pu.innerHTML = buildPopupHtml(props);
-        } else {
-            pu.style.display = "none";
-        }
-    } else {
-        selected_feature.current = undefined;
-        mvt_tile_layer.changed();
-        vector_tile_layer.changed();
-        mvt_centroid_layer.changed();
-        centroid_layer.changed();
-        document.getElementById('popup').style.display = "none";
-    }
+    // Popup position tracks the raw mouse position every event (so it follows the
+    // cursor smoothly); its content/visibility is driven by the debounced, "confirmed"
+    // hover target instead (see updateHoverCandidate/applyConfirmedHover above), so a
+    // noisy raw hit-test doesn't flicker the popup or the marker highlight.
+    map_popup.setPosition(mapEvent.coordinate);
+    updateHoverCandidate(hitFeature, hitLayer);
 });
 
 // Show the full verification checks list when a site is clicked
 map.on('click', function (mapEvent) {
     const features = map.getFeaturesAtPixel(mapEvent.pixel, {
         hitTolerance: 5,
-        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer || layer === centroid_layer || layer === mvt_centroid_layer,
+        layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer || layer === centroid_webgl_layer,
     });
     if (features.length !== 0) {
         const props = features[0].getProperties();
@@ -777,8 +918,7 @@ document.getElementById('slider').addEventListener('input', function () {
     document.getElementById('slider-value').innerText = this.value;
     mvt_tile_layer.changed();
     vector_tile_layer.changed();
-    mvt_centroid_layer.changed();
-    centroid_layer.changed();
+    centroid_webgl_layer.updateStyleVariables({ thresholdHa: parseFloat(this.value) * 100 });
 });
 
 // Ensure the script runs after the DOM is fully loaded

@@ -15,6 +15,16 @@
       background-color: lightblue;
     }
 
+    /* Swap the default stacking order so "zoom to full extent" sits above the
+       zoom in/out buttons instead of OL's default placement below them. */
+    .ol-zoom-extent {
+      top: .5em;
+    }
+
+    .ol-zoom {
+      top: 2.6em;
+    }
+
     .map_container {
       width: 100%;
       height: 100%;
@@ -105,6 +115,40 @@
     #filter-panel .mode-switch input:focus-visible + label {
       outline: 2px solid #6b9b5e;
       outline-offset: 1px;
+    }
+
+    #filter-panel .mode-switch input:disabled + label {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    #centroid-loading {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #888;
+      margin: -8px 0 12px;
+    }
+
+    #centroid-loading[hidden] {
+      display: none;
+    }
+
+    #centroid-loading .centroid-loading-spinner {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1.5px solid #ddd;
+      border-top-color: #6b9b5e;
+      animation: centroid-loading-spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes centroid-loading-spin {
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     #filter-panel .switch-row {
@@ -479,8 +523,12 @@
     <div class="mode-switch" id="render-mode-switch">
       <input type="radio" name="render-mode" id="mode-geometries" value="geometries" checked>
       <label for="mode-geometries">Geometries</label>
-      <input type="radio" name="render-mode" id="mode-centroids" value="centroids">
+      <input type="radio" name="render-mode" id="mode-centroids" value="centroids" disabled>
       <label for="mode-centroids">Centroids</label>
+    </div>
+    <div id="centroid-loading" hidden>
+      <span class="centroid-loading-spinner"></span>
+      <span>Loading centroids… <span id="centroid-loading-pct">0%</span></span>
     </div>
     <div class="filter-row">
       <label class="filter-label" for="slider">Max area</label>
