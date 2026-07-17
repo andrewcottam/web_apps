@@ -125,6 +125,7 @@
     #centroid-loading {
       display: flex;
       align-items: center;
+      justify-content: flex-end;
       gap: 6px;
       font-size: 11px;
       color: #888;
@@ -366,6 +367,51 @@
       text-overflow: ellipsis;
     }
 
+    /* Boosts the whole overlay container (not just the #feature-menu content div,
+       which is nested inside it) above the hover popup's overlay container — the
+       popup was added to the map first, so without this it paints on top by default
+       DOM-order stacking. */
+    .feature-menu-overlay {
+      z-index: 20;
+    }
+
+    #feature-menu {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-width: 160px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 3px rgba(0, 0, 0, 0.4), 0 0 10px rgba(0, 0, 0, 0.28), 0 8px 24px rgba(0, 0, 0, 0.18);
+      padding: 4px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+    }
+
+    #feature-menu[hidden] {
+      display: none;
+    }
+
+    #feature-menu .feature-menu-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      border-radius: 5px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #222;
+      cursor: pointer;
+    }
+
+    #feature-menu .feature-menu-item:hover,
+    #feature-menu .feature-menu-item:focus-visible {
+      background: rgba(99, 148, 69, 0.12);
+      outline: none;
+    }
+
     #login-container {
       position: absolute;
       top: 10px;
@@ -513,7 +559,7 @@
     }
 
   </style>
-  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.7ca659cf.js"></script>
+  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.2b119893.js"></script>
   <link rel="stylesheet" href="/web_apps/openlayers/vector_tiles/dist/assets/index.5fd94eca.css">
 </head>
 
@@ -557,6 +603,10 @@
     </div>
   </div>
   <div id="popup">
+  </div>
+  <div id="feature-menu" hidden>
+    <button type="button" class="feature-menu-item" id="feature-menu-zoom">Zoom to site</button>
+    <button type="button" class="feature-menu-item" id="feature-menu-checks">Show site checks</button>
   </div>
   <div id="login-container">
     <button id="login-button">

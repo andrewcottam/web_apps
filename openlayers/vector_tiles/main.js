@@ -428,6 +428,11 @@ function applyConfirmedHover(feature, layer) {
     mvt_tile_layer.changed();
     vector_tile_layer.changed();
 
+    // While the click context menu is open, leave the popup showing the clicked
+    // feature's info alone — it should stay visible until an action is taken, not
+    // disappear just because the cursor moved off that feature (e.g. towards the menu).
+    if (feature_menu_feature) return;
+
     var pu = document.getElementById('popup');
     if (hoveredFeature && hoveredFeature.get('id') !== undefined) {
         pu.style.display = "block";
@@ -586,6 +591,12 @@ const map = new Map({
     ]),
 });
 
+// Set when a popstate (browser back/forward) handler is applying a URL's lat/lng/zoom
+// to the view — the resulting moveend must not itself push a new history entry, or
+// every back/forward navigation would immediately re-push a duplicate ahead of it.
+let suppressNextHistoryPush = false;
+let moveendHistoryTimeout = null;
+
 map.on('moveend', () => {
     const view = map.getView();
     const center = view.getCenter();
@@ -594,7 +605,33 @@ map.on('moveend', () => {
     params.set('lng', center[0].toFixed(6));
     params.set('lat', center[1].toFixed(6));
     params.set('zoom', zoom.toFixed(2));
-    window.history.replaceState(null, '', `?${params.toString()}`);
+    const url = `?${params.toString()}`;
+
+    // Debounced so a flurry of moveend events (e.g. scroll-zooming, or a drag
+    // immediately followed by small adjustments) collapses into one history entry,
+    // rather than flooding back/forward with every intermediate step.
+    if (moveendHistoryTimeout) clearTimeout(moveendHistoryTimeout);
+    moveendHistoryTimeout = setTimeout(() => {
+        moveendHistoryTimeout = null;
+        if (suppressNextHistoryPush) {
+            suppressNextHistoryPush = false;
+            return;
+        }
+        window.history.pushState(null, '', url);
+    }, 500);
+});
+
+// Restore the view when the user navigates back/forward through the pan/zoom history
+// pushState above builds up.
+window.addEventListener('popstate', () => {
+    const poppedParams = getUrlParameters();
+    if (poppedParams.lat === undefined || poppedParams.lng === undefined) return;
+    suppressNextHistoryPush = true;
+    map.getView().animate({
+        center: [poppedParams.lng, poppedParams.lat],
+        zoom: poppedParams.zoom !== undefined ? poppedParams.zoom : map.getView().getZoom(),
+        duration: 300,
+    });
 });
 
 // Apply the MapTiler style
@@ -616,6 +653,47 @@ var map_popup = new Overlay({
     positioning: 'top-left',
 });
 map.addOverlay(map_popup);
+
+// Context menu shown on click (rather than immediately opening the checks modal),
+// offering "Zoom to site" and "Show site checks" for whichever feature was clicked —
+// works the same for polygon (mvt/vector_tile_layer) and centroid (centroid_webgl_layer)
+// features.
+var feature_menu_feature = null;
+var feature_menu_layer = null;
+var feature_menu_popup = new Overlay({
+    element: document.getElementById('feature-menu'),
+    offset: [8, 8],
+    positioning: 'top-left',
+    // Custom class (in addition to OL's default overlay-container classes) so this
+    // overlay's own CSS z-index rule can lift it above the hover popup's overlay
+    // container, which otherwise sits on top since it was added to the map first.
+    className: 'ol-overlay-container ol-selectable feature-menu-overlay',
+});
+map.addOverlay(feature_menu_popup);
+
+function showFeatureMenu(feature, layer, coordinate) {
+    feature_menu_feature = feature;
+    feature_menu_layer = layer;
+    feature_menu_popup.setPosition(coordinate);
+    document.getElementById('feature-menu').hidden = false;
+
+    // Guarantee the info popup shows this feature (rather than relying on whatever
+    // hover state happened to be active already) — it then stays put until an action
+    // is taken, per applyConfirmedHover's feature_menu_feature check above.
+    const props = feature.getProperties();
+    if (props['id'] !== undefined) {
+        map_popup.setPosition(coordinate);
+        const pu = document.getElementById('popup');
+        pu.style.display = "block";
+        pu.innerHTML = buildPopupHtml(props);
+    }
+}
+
+function hideFeatureMenu() {
+    document.getElementById('feature-menu').hidden = true;
+    feature_menu_feature = null;
+    feature_menu_layer = null;
+}
 
 function escapeHtml(str) {
     return String(str)
@@ -886,31 +964,85 @@ map.on(['pointermove'], function (mapEvent) {
     // Popup position tracks the raw mouse position every event (so it follows the
     // cursor smoothly); its content/visibility is driven by the debounced, "confirmed"
     // hover target instead (see updateHoverCandidate/applyConfirmedHover above), so a
-    // noisy raw hit-test doesn't flicker the popup or the marker highlight.
-    map_popup.setPosition(mapEvent.coordinate);
+    // noisy raw hit-test doesn't flicker the popup or the marker highlight. While the
+    // click context menu is open, the popup is fully pinned in place — position included —
+    // until an action is taken, so it doesn't drift as the cursor moves toward the menu.
+    if (!feature_menu_feature) {
+        map_popup.setPosition(mapEvent.coordinate);
+    }
     updateHoverCandidate(hitFeature, hitLayer);
 });
 
-// Show the full verification checks list when a site is clicked
+// Show a small context menu (Zoom to site / Show site checks) when a site is clicked,
+// for both polygon and centroid features. Uses forEachFeatureAtPixel (rather than
+// getFeaturesAtPixel) so we know which layer was hit — mvt_tile_layer's features need
+// different handling when zooming (see feature-menu-zoom below).
 map.on('click', function (mapEvent) {
-    const features = map.getFeaturesAtPixel(mapEvent.pixel, {
+    let hitFeature = null, hitLayer = null;
+    map.forEachFeatureAtPixel(mapEvent.pixel, (feature, layer) => {
+        hitFeature = feature;
+        hitLayer = layer;
+        return true;
+    }, {
         hitTolerance: 5,
         layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer || layer === centroid_webgl_layer,
     });
-    if (features.length !== 0) {
-        const props = features[0].getProperties();
-        if (props['id'] !== undefined) {
-            openChecksModal(props);
-        }
+    if (hitFeature && hitFeature.get('id') !== undefined) {
+        showFeatureMenu(hitFeature, hitLayer, mapEvent.coordinate);
+    } else {
+        hideFeatureMenu();
     }
+});
+
+document.getElementById('feature-menu-zoom').addEventListener('click', function () {
+    if (!feature_menu_feature) return;
+    const geom = feature_menu_feature.getGeometry();
+    const view = map.getView();
+    if (geom.getType() === 'Point') {
+        // Centroid features only carry a point, not the site's actual footprint —
+        // zoom in on it at a reasonable fixed level rather than fitting a zero-area extent.
+        view.animate({ center: geom.getCoordinates(), zoom: Math.max(view.getZoom(), 14), duration: 400 });
+    } else {
+        // mvt_tile_layer's VectorTileSource defaults to EPSG:3857 (Web Mercator) —
+        // unlike vector_tile_layer's FGB-sourced ol/Feature objects (read with
+        // featureProjection explicitly set to the view's EPSG:4326), its
+        // ol/render/Feature geometries are left in that tile-native EPSG:3857 space.
+        // OL's tile renderer reprojects on the fly at draw time, but raw .getExtent()
+        // access here doesn't, so feeding it straight to view.fit() (which expects
+        // view-projection EPSG:4326 coordinates) produced NaN. Reproject first.
+        let extent = geom.getExtent();
+        if (feature_menu_layer === mvt_tile_layer) {
+            extent = transformExtent(extent, 'EPSG:3857', 'EPSG:4326');
+        }
+        view.fit(extent, { padding: [80, 80, 80, 80], duration: 400, maxZoom: 16 });
+    }
+    hideFeatureMenu();
+});
+
+document.getElementById('feature-menu-checks').addEventListener('click', function () {
+    if (!feature_menu_feature) return;
+    openChecksModal(feature_menu_feature.getProperties());
+    hideFeatureMenu();
 });
 
 document.getElementById('checks-modal-close').addEventListener('click', closeChecksModal);
 document.getElementById('checks-modal-backdrop').addEventListener('click', function (event) {
     if (event.target === this) closeChecksModal();
 });
+// Escape closes one layer at a time — the topmost/most specific thing currently
+// open — rather than closing everything at once regardless of what's showing.
 document.addEventListener('keydown', function (event) {
-    if (event.key === 'Escape') closeChecksModal();
+    if (event.key !== 'Escape') return;
+    if (document.getElementById('checks-modal-backdrop').classList.contains('open')) {
+        closeChecksModal();
+        return;
+    }
+    if (feature_menu_feature) {
+        hideFeatureMenu();
+        document.getElementById('popup').style.display = "none";
+        return;
+    }
+    document.getElementById('popup').style.display = "none";
 });
 
 // Update layer style when slider changes
