@@ -365,22 +365,22 @@ function getAreaThresholdKm2() {
 // A site with no such check at all (e.g. it predates the check, wasn't run for it, or
 // came from mvt_tile_layer's pre-generated MVT pyramid, which doesn't carry
 // verification_checks the way sites_plus_checks.fgb does — see parseListField's
-// comment on that column) is always excluded: getMangroveProximityStatus returns
-// undefined for it, which never matches any of the three real statuses, so
-// Set.has(undefined) is false regardless of which boxes are checked. It has no effect
-// in Centroids mode either way; the switch is disabled there (see
+// comment on that column) is treated as Invalid: it's lumped in with the "Invalid"
+// bucket rather than a separate always-shown/always-hidden case, so it stays visible
+// until "Invalid" is unchecked, same as a site the check actually flagged. It has no
+// effect in Centroids mode either way; the switch is disabled there (see
 // updateMangroveFilterAvailability) rather than silently doing nothing.
 const MANGROVE_PROXIMITY_CHECK_NAME = 'Proximity to mangroves';
 const MANGROVE_STATUSES = ['Valid', 'Needs Review', 'Invalid'];
 var visibleMangroveStatuses = new Set(MANGROVE_STATUSES);
 
-// Returns the "Proximity to mangroves" check's status, or undefined if the site has no
-// such check (e.g. it predates the check, or wasn't run for it) — distinct from any of
-// the three real statuses so it isn't accidentally treated as a match.
+// Returns the "Proximity to mangroves" check's status — 'Invalid' if the site has no
+// such check (e.g. it predates the check, or wasn't run for it), rather than a
+// separate undefined case (see the block comment above).
 function getMangroveProximityStatus(feature) {
     const checks = parseListField(feature.get('verification_checks')).filter(Boolean);
     const check = checks.find((c) => c && typeof c === 'object' && c.name === MANGROVE_PROXIMITY_CHECK_NAME);
-    return check ? check.status : undefined;
+    return check ? check.status : 'Invalid';
 }
 
 // Shared visibility predicate for the sites layers, so both respect the same
