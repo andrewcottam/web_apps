@@ -35,7 +35,7 @@
       position: absolute;
       top: 62px;
       right: 10px;
-      width: 220px;
+      width: 235px;
       /* With "More filters" expanded the panel can outgrow the viewport on shorter
          screens — scroll the whole panel rather than letting it run off the bottom
          edge. overscroll-behavior keeps that scroll from chaining into the map
@@ -357,6 +357,11 @@
     }
 
     #check-filters-list .filter-row {
+      /* Overrides #filter-panel .filter-row's align-items: baseline — with a two-line
+         wrapped check name (e.g. "Overlap with Protected Areas") next to the 3-button
+         switch, baseline alignment left the buttons sitting noticeably below the
+         label's vertical center. */
+      align-items: center;
       gap: 10px;
     }
 
