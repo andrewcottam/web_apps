@@ -226,7 +226,7 @@
     #filter-panel .site-search-input {
       width: 100%;
       box-sizing: border-box;
-      padding: 7px 10px;
+      padding: 7px 26px 7px 10px;
       border: 1px solid #ddd;
       border-radius: 8px;
       font-size: 13px;
@@ -237,6 +237,34 @@
     #filter-panel .site-search-input:focus {
       outline: none;
       border-color: #6b9b5e;
+    }
+
+    #filter-panel .site-search-clear {
+      display: none;
+      position: absolute;
+      top: 50%;
+      right: 6px;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      border: none;
+      background: none;
+      border-radius: 50%;
+      color: #999;
+      font-size: 14px;
+      line-height: 1;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #filter-panel .site-search-clear:hover {
+      background: #f0f0f0;
+      color: #555;
+    }
+
+    #filter-panel .site-search.has-value .site-search-clear {
+      display: flex;
     }
 
     #filter-panel .site-search-results {
@@ -891,7 +919,7 @@
     }
 
   </style>
-  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.a0112930.js"></script>
+  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.fe0b4751.js"></script>
   <link rel="stylesheet" href="/web_apps/openlayers/vector_tiles/dist/assets/index.5fd94eca.css">
 </head>
 
@@ -903,6 +931,7 @@
   <div id="filter-panel">
     <div class="site-search" id="site-search-wrapper">
       <input type="text" id="site-search-input" class="site-search-input" placeholder="Search sites by name…" autocomplete="off">
+      <button type="button" id="site-search-clear" class="site-search-clear" title="Clear search" aria-label="Clear search">&times;</button>
       <div id="site-search-results" class="site-search-results" hidden></div>
     </div>
     <div class="mode-switch" id="render-mode-switch">

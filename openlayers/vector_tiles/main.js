@@ -1718,6 +1718,7 @@ function renderSiteSearchResults(matches, query) {
         button.addEventListener('click', () => {
             jumpToSearchResult(feature);
             document.getElementById('site-search-input').value = feature.get('name') || '';
+            document.getElementById('site-search-wrapper').classList.toggle('has-value', document.getElementById('site-search-input').value.length > 0);
             closeSiteSearchResults();
         });
         el.appendChild(button);
@@ -1728,15 +1729,24 @@ function renderSiteSearchResults(matches, query) {
 function initSiteSearch() {
     const input = document.getElementById('site-search-input');
     const resultsEl = siteSearchResultsEl();
+    const wrapper = document.getElementById('site-search-wrapper');
+    const clearButton = document.getElementById('site-search-clear');
 
     let debounceTimeout = null;
     const runSearch = () => {
+        wrapper.classList.toggle('has-value', input.value.length > 0);
         if (debounceTimeout) clearTimeout(debounceTimeout);
         debounceTimeout = setTimeout(() => {
             renderSiteSearchResults(searchSites(input.value), input.value.trim());
         }, 150);
     };
     input.addEventListener('input', runSearch);
+    clearButton.addEventListener('click', () => {
+        input.value = '';
+        wrapper.classList.remove('has-value');
+        closeSiteSearchResults();
+        input.focus();
+    });
     input.addEventListener('focus', () => {
         if (input.value.trim() || !current_user || centroid_source.getFeatures().length === 0) runSearch();
     });
