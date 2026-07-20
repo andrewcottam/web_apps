@@ -218,6 +218,30 @@
       }
     }
 
+    #geometries-loading {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 6px;
+      font-size: 11px;
+      color: #888;
+      margin: -8px 0 12px;
+    }
+
+    #geometries-loading[hidden] {
+      display: none;
+    }
+
+    #geometries-loading .centroid-loading-spinner {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1.5px solid #ddd;
+      border-top-color: #6b9b5e;
+      animation: centroid-loading-spin 0.7s linear infinite;
+      flex-shrink: 0;
+    }
+
     /* Only shown in Centroids mode (see updateStatusBar in main.js) — sites_centroids.fgb
        is loaded once, in full, up front (see loadAllCentroids's comment), so counting
        its features gives an accurate total. Geometries mode's mvt_tile_layer/
@@ -804,7 +828,7 @@
     }
 
   </style>
-  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.6c11e473.js"></script>
+  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.7d413f98.js"></script>
   <link rel="stylesheet" href="/web_apps/openlayers/vector_tiles/dist/assets/index.5fd94eca.css">
 </head>
 
@@ -823,6 +847,10 @@
     <div id="centroid-loading" hidden>
       <span class="centroid-loading-spinner"></span>
       <span>Loading centroids… <span id="centroid-loading-pct">0%</span></span>
+    </div>
+    <div id="geometries-loading" hidden>
+      <span class="centroid-loading-spinner"></span>
+      <span>Loading geometries…</span>
     </div>
     <div class="filter-row">
       <span class="filter-label-row">
