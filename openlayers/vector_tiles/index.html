@@ -160,18 +160,25 @@
       cursor: not-allowed;
     }
 
+    /* #filter-panel scrolls internally once "More filters" pushes it past the viewport
+       (see that rule's comment) — pin this to the bottom of that scroll area so it's
+       reachable without having to scroll all the way down to find it, rather than
+       drifting off wherever the content happens to end. */
     #reset-filters-button {
+      position: sticky;
+      bottom: 0;
       display: block;
       width: 100%;
       margin-top: 14px;
       padding: 7px 0;
-      background: none;
+      background: white;
       border: 1px solid #ddd;
       border-radius: 6px;
       font-size: 12px;
       font-weight: 600;
       color: #666;
       cursor: pointer;
+      box-shadow: 0 -6px 6px -6px rgba(0, 0, 0, 0.15);
     }
 
     #reset-filters-button:hover,
