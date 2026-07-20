@@ -213,37 +213,59 @@
        shown in the popup and checks modal. */
     #filter-panel .mangrove-status-switch {
       display: flex;
-      gap: 4px;
+      gap: 2px;
     }
 
+    /* The visible swatch stays 16x16 (matches the Public/Private legend swatches), but
+       each <button>'s real hit area is 24x24 — a bare 16x16 color chip is an easy
+       target to miss with a real mouse. Negative margins pull the layout box back down
+       to the swatch's own footprint, so the row's total width is unaffected. The swatch
+       itself is a separate inner span (rather than sized via padding on the button) so
+       its border/background stay pinned to exactly 16x16 regardless of the button's hit
+       area, with no box-shadow/clip edge cases to fight. */
     #filter-panel .mangrove-status-btn {
+      width: 24px;
+      height: 24px;
+      margin: -4px;
+      padding: 0;
+      border: none;
+      background: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    #filter-panel .mangrove-status-swatch {
       width: 16px;
       height: 16px;
       border-radius: 4px;
-      padding: 0;
-      cursor: pointer;
       background: #e2e2e2;
       border: 1.5px solid #e2e2e2;
       transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+      pointer-events: none;
     }
 
-    #filter-panel .mangrove-status-btn.mangrove-status-valid[aria-pressed="true"] {
+    #filter-panel .mangrove-status-btn.mangrove-status-valid[aria-pressed="true"] .mangrove-status-swatch {
       background: rgba(107, 155, 94, 0.35);
       border-color: #6b9b5e;
     }
 
-    #filter-panel .mangrove-status-btn.mangrove-status-needs-review[aria-pressed="true"] {
+    #filter-panel .mangrove-status-btn.mangrove-status-needs-review[aria-pressed="true"] .mangrove-status-swatch {
       background: rgba(211, 154, 78, 0.35);
       border-color: #d39a4e;
     }
 
-    #filter-panel .mangrove-status-btn.mangrove-status-invalid[aria-pressed="true"] {
+    #filter-panel .mangrove-status-btn.mangrove-status-invalid[aria-pressed="true"] .mangrove-status-swatch {
       background: rgba(192, 96, 92, 0.35);
       border-color: #c0605c;
     }
 
     #filter-panel .mangrove-status-btn:disabled {
       cursor: not-allowed;
+    }
+
+    #filter-panel .mangrove-status-btn:disabled .mangrove-status-swatch {
       opacity: 0.5;
     }
 
@@ -701,9 +723,9 @@
         <span class="filter-info-icon" title="Only show sites where the &quot;Overlap with mangroves&quot; check has one of the selected statuses. Only available in Geometries mode.">i</span>
       </span>
       <div class="mangrove-status-switch" id="mangrove-status-switch">
-        <button type="button" class="mangrove-status-btn mangrove-status-valid" data-status="Valid" aria-pressed="true" title="Valid"></button>
-        <button type="button" class="mangrove-status-btn mangrove-status-needs-review" data-status="Needs Review" aria-pressed="true" title="Needs Review"></button>
-        <button type="button" class="mangrove-status-btn mangrove-status-invalid" data-status="Invalid" aria-pressed="true" title="Invalid"></button>
+        <button type="button" class="mangrove-status-btn mangrove-status-valid" data-status="Valid" aria-pressed="true" title="Valid"><span class="mangrove-status-swatch"></span></button>
+        <button type="button" class="mangrove-status-btn mangrove-status-needs-review" data-status="Needs Review" aria-pressed="true" title="Needs Review"><span class="mangrove-status-swatch"></span></button>
+        <button type="button" class="mangrove-status-btn mangrove-status-invalid" data-status="Invalid" aria-pressed="true" title="Invalid"><span class="mangrove-status-swatch"></span></button>
       </div>
     </div>
   </div>
