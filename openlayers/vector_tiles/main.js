@@ -945,6 +945,27 @@ async function login_clicked() {
     setLoggedIn(true);
 }
 
+// WebGLPointsLayer's hit detection (ol/renderer/webgl/PointsLayer.js) decodes the
+// picked pixel's color into a feature-buffer index, then reads that index straight out
+// of its render-instructions array as if it were always a valid encoded feature id.
+// Real feature ids are encoded starting at 5 (`colorEncodeId(idx + 5, ...)`), but an
+// empty/background pixel decodes to id 0 — index 0 of that array isn't a "no feature"
+// sentinel, it's just the x-pixel-coordinate of whichever feature happens to be first
+// in the buffer. That float gets floored and treated as a feature UID, so hovering over
+// blank space can resolve to a real, unrelated feature (reported as: hovering off a
+// Cameroon site anywhere else on the map kept showing a fixed, unrelated Australian
+// site). This is an ol 9.1.0 bug, not something fixable from application code, so guard
+// against it here: reject a centroid hit whose feature isn't actually near the pixel
+// that was hit-tested.
+const CENTROID_HIT_PIXEL_TOLERANCE = 6;
+function isGenuineCentroidHit(feature, pixel) {
+    const featurePixel = map.getPixelFromCoordinate(feature.getGeometry().getCoordinates());
+    if (!featurePixel) return false;
+    const dx = featurePixel[0] - pixel[0];
+    const dy = featurePixel[1] - pixel[1];
+    return Math.sqrt(dx * dx + dy * dy) <= CENTROID_HIT_PIXEL_TOLERANCE;
+}
+
 // Add the mouse move event
 map.on(['pointermove'], function (mapEvent) {
     // Find the topmost feature under the mouse, restricted to the sites layers
@@ -961,6 +982,10 @@ map.on(['pointermove'], function (mapEvent) {
         hitTolerance: 5,
         layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer || layer === centroid_webgl_layer,
     });
+    if (hitLayer === centroid_webgl_layer && hitFeature && !isGenuineCentroidHit(hitFeature, mapEvent.pixel)) {
+        hitFeature = null;
+        hitLayer = null;
+    }
     // Popup position tracks the raw mouse position every event (so it follows the
     // cursor smoothly); its content/visibility is driven by the debounced, "confirmed"
     // hover target instead (see updateHoverCandidate/applyConfirmedHover above), so a
@@ -987,6 +1012,10 @@ map.on('click', function (mapEvent) {
         hitTolerance: 5,
         layerFilter: (layer) => layer === vector_tile_layer || layer === mvt_tile_layer || layer === centroid_webgl_layer,
     });
+    if (hitLayer === centroid_webgl_layer && hitFeature && !isGenuineCentroidHit(hitFeature, mapEvent.pixel)) {
+        hitFeature = null;
+        hitLayer = null;
+    }
     if (hitFeature && hitFeature.get('id') !== undefined) {
         showFeatureMenu(hitFeature, hitLayer, mapEvent.coordinate);
     } else {
