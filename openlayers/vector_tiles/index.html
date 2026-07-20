@@ -248,6 +248,19 @@
       background: #6b9b5e;
     }
 
+    #filter-panel .switch input:disabled + .switch-slider {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #filter-panel .switch-row:has(input:disabled) {
+      cursor: not-allowed;
+    }
+
+    #filter-panel .switch-row:has(input:disabled) .switch-label {
+      color: #aaa;
+    }
+
     #filter-panel .switch input:checked + .switch-slider::before {
       transform: translateX(14px);
     }
@@ -630,6 +643,13 @@
         <span class="switch-label">Private</span>
         <span class="switch">
           <input type="checkbox" name="options" value="PRIVATE">
+          <span class="switch-slider"></span>
+        </span>
+      </label>
+      <label class="switch-row" id="mangrove-proximity-row">
+        <span class="switch-label">Mangrove proximity <span class="filter-info-icon" title="Only show sites where the &quot;Proximity to mangroves&quot; check is Valid. Only available in Geometries mode.">i</span></span>
+        <span class="switch">
+          <input type="checkbox" id="mangrove-proximity-toggle">
           <span class="switch-slider"></span>
         </span>
       </label>

@@ -357,6 +357,24 @@ function getAreaThresholdKm2() {
     return sliderPositionToAreaKm2(parseFloat(document.getElementById('slider').value));
 }
 
+// Toggled by the "Mangrove proximity" switch — when on, only sites whose
+// verification_checks includes a "Proximity to mangroves" check with status "Valid"
+// are shown. Only sites_plus_checks.fgb/the MVT pyramid carry verification_checks
+// (see parseListField's comment on that column) — sites_centroids.fgb's narrow schema
+// doesn't, so this filter has no effect in Centroids mode; the toggle is disabled
+// there (see updateMangroveFilterAvailability) rather than silently doing nothing.
+var mangroveProximityOnly = false;
+const MANGROVE_PROXIMITY_CHECK_NAME = 'Proximity to mangroves';
+
+function hasValidMangroveProximityCheck(feature) {
+    const checks = parseListField(feature.get('verification_checks')).filter(Boolean);
+    return checks.some((check) =>
+        check && typeof check === 'object' &&
+        check.name === MANGROVE_PROXIMITY_CHECK_NAME &&
+        check.status === 'Valid'
+    );
+}
+
 // Shared visibility predicate for the sites layers, so both respect the same
 // area threshold/status filters without duplicating logic.
 function isSiteVisible(feature) {
@@ -366,7 +384,10 @@ function isSiteVisible(feature) {
     // A negative area is bad/invalid data (e.g. a malformed polygon), never a real
     // site size — always hide it rather than let it slip through as "smaller than
     // any threshold".
-    return !(areaKm2 > threshold || areaKm2 < 0 || !visibleStatuses.has(vis));
+    return !(
+        areaKm2 > threshold || areaKm2 < 0 || !visibleStatuses.has(vis) ||
+        (mangroveProximityOnly && !hasValidMangroveProximityCheck(feature))
+    );
 }
 
 // Centroid layer style: a literal WebGL expression style, not an ol/style/Style
@@ -515,6 +536,14 @@ function handleRenderModeChange(event) {
     if (!RENDER_MODES.includes(event.target.value)) return;
     renderMode = event.target.value;
     updateLayerVisibilityForRenderMode();
+    updateMangroveFilterAvailability();
+}
+
+// The mangrove-proximity filter only has data to work with in Geometries mode (see
+// isSiteVisible) — disable rather than hide it in Centroids mode, matching the
+// "Show site checks" context-menu item's treatment of the same schema gap.
+function updateMangroveFilterAvailability() {
+    document.getElementById('mangrove-proximity-toggle').disabled = renderMode !== 'geometries';
 }
 
 // Shared style logic for the polygon sites layers (MVT or live FGB).
@@ -1143,6 +1172,12 @@ document.getElementById('slider').addEventListener('input', function () {
     centroid_webgl_layer.updateStyleVariables({ thresholdHa: areaKm2 * 100 });
 });
 
+document.getElementById('mangrove-proximity-toggle').addEventListener('change', function () {
+    mangroveProximityOnly = this.checked;
+    mvt_tile_layer.changed();
+    vector_tile_layer.changed();
+});
+
 // Ensure the script runs after the DOM is fully loaded
 document.addEventListener("DOMContentLoaded", function () {
     let visibilityCheckboxes = document.querySelectorAll("input[name='options']");
@@ -1154,4 +1189,5 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     document.getElementById('login-button').addEventListener('click', login_clicked);
     updateSliderLabel(getAreaThresholdKm2());
+    updateMangroveFilterAvailability();
 });
