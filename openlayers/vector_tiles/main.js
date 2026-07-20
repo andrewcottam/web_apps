@@ -357,7 +357,7 @@ function getAreaThresholdKm2() {
     return sliderPositionToAreaKm2(parseFloat(document.getElementById('slider').value));
 }
 
-// Driven by the "Mangrove proximity" switch — a site whose "Overlap with mangroves"
+// Driven by the "Mangrove proximity" switch — a site whose "Proximity to mangroves"
 // verification check (see MANGROVE_PROXIMITY_CHECK_NAME) has a status is shown only if
 // that status is in this set. All three statuses start selected, matching every other
 // status filter's "nothing excluded until you narrow it" default.
@@ -373,11 +373,11 @@ function getAreaThresholdKm2() {
 // unaffected in a way that matters: it has no effect in Centroids mode; the switch is
 // disabled there (see updateMangroveFilterAvailability) rather than silently doing
 // nothing.
-const MANGROVE_PROXIMITY_CHECK_NAME = 'Overlap with mangroves';
+const MANGROVE_PROXIMITY_CHECK_NAME = 'Proximity to mangroves';
 const MANGROVE_STATUSES = ['Valid', 'Needs Review', 'Invalid'];
 var visibleMangroveStatuses = new Set(MANGROVE_STATUSES);
 
-// Returns the "Overlap with mangroves" check's status, or undefined if the site has no
+// Returns the "Proximity to mangroves" check's status, or undefined if the site has no
 // such check (e.g. it predates the check, or wasn't run for it) — distinct from any of
 // the three real statuses so it isn't accidentally treated as a match.
 function getMangroveProximityStatus(feature) {
