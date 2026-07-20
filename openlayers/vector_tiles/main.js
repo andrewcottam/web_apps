@@ -206,6 +206,7 @@ async function loadAllCentroids() {
         centroid_source.clear();
         centroid_source.addFeatures(features);
         setCentroidsModeEnabled(true);
+        updateStatusBar();
     } catch (e) {
         console.error('FGB centroids load error:', e);
     } finally {
@@ -464,6 +465,49 @@ function isSiteVisible(feature) {
     );
 }
 
+// Same as isSiteVisible, minus the check filters — centroid_webgl_style's filter
+// expression (below) never includes verification_checks, since sites_centroids.fgb's
+// narrow schema doesn't carry it (see getCheckStatus's comment) and the check switches
+// are disabled in Centroids mode. Used to compute the status bar's counts against
+// exactly what's actually rendered, not what isSiteVisible would additionally exclude
+// on checks that don't apply here.
+function isCentroidFeatureVisible(feature) {
+    const threshold = getAreaThresholdKm2();
+    const areaKm2 = getSurfaceAreaKm2(feature);
+    const vis = decodeEnum(feature.get('site_visibility'), SITE_VISIBILITY_LABELS);
+    const siteType = decodeEnum(feature.get('site_type'), SITE_TYPE_LABELS);
+    return !(areaKm2 > threshold || areaKm2 < 0 || !visibleStatuses.has(vis) || !visibleSiteTypes.has(siteType));
+}
+
+// Status bar showing how many sites currently match the filters — only in Centroids
+// mode. sites_centroids.fgb is loaded once, in full, up front (see loadAllCentroids),
+// so counting its features gives an accurate total; Geometries mode's
+// mvt_tile_layer/vector_tile_layer only ever hold whatever tiles/bbox have loaded so
+// far, so the same count from them wouldn't represent every matching site.
+function updateStatusBar() {
+    const bar = document.getElementById('status-bar');
+    const shouldShow = logged_in && renderMode === 'centroids' && centroid_source.getFeatures().length > 0;
+    bar.hidden = !shouldShow;
+    if (!shouldShow) return;
+
+    let publicCount = 0;
+    let privateCount = 0;
+    centroid_source.getFeatures().forEach((feature) => {
+        if (!isCentroidFeatureVisible(feature)) return;
+        const vis = decodeEnum(feature.get('site_visibility'), SITE_VISIBILITY_LABELS);
+        if (vis === 'PUBLIC') publicCount++;
+        else if (vis === 'PRIVATE') privateCount++;
+    });
+    const total = publicCount + privateCount;
+
+    const siteWord = total === 1 ? 'site' : 'sites';
+    if (visibleStatuses.has('PUBLIC') && visibleStatuses.has('PRIVATE')) {
+        bar.textContent = `${formatNumber(total)} ${siteWord} (${formatNumber(publicCount)} public, ${formatNumber(privateCount)} private)`;
+    } else {
+        bar.textContent = `${formatNumber(total)} ${siteWord}`;
+    }
+}
+
 // Centroid layer style: a literal WebGL expression style, not an ol/style/Style
 // function — variables are pushed via centroid_webgl_layer.updateStyleVariables()
 // whenever the area slider/status checkboxes change, since WebGL styles can't run
@@ -623,6 +667,7 @@ function handleRenderModeChange(event) {
     renderMode = event.target.value;
     updateLayerVisibilityForRenderMode();
     updateCheckFiltersAvailability();
+    updateStatusBar();
 }
 
 // The check filters only have data to work with in Geometries mode (see
@@ -1034,6 +1079,7 @@ function handleVisibilityToggle(event) {
         showPublic: visibleStatuses.has('PUBLIC') ? 1 : 0,
         showPrivate: visibleStatuses.has('PRIVATE') ? 1 : 0,
     });
+    updateStatusBar();
 }
 
 const DEFAULT_LOGIN_ICON = `
@@ -1068,6 +1114,7 @@ function setLoggedIn(value) {
         centroid_source.clear();
         setCentroidsModeEnabled(false);
     }
+    updateStatusBar();
 }
 
 function logout() {
@@ -1252,12 +1299,25 @@ function updateSliderLabel(areaKm2) {
 }
 
 // Update layer style when slider changes
+// Debounced separately from the map re-style above — updateStatusBar scans every
+// loaded centroid feature, which is cheap once but would add up fired on every 'input'
+// tick while the slider is being dragged.
+let statusBarUpdateTimeout = null;
+function scheduleStatusBarUpdate() {
+    if (statusBarUpdateTimeout) clearTimeout(statusBarUpdateTimeout);
+    statusBarUpdateTimeout = setTimeout(() => {
+        statusBarUpdateTimeout = null;
+        updateStatusBar();
+    }, 150);
+}
+
 document.getElementById('slider').addEventListener('input', function () {
     const areaKm2 = sliderPositionToAreaKm2(parseFloat(this.value));
     updateSliderLabel(areaKm2);
     mvt_tile_layer.changed();
     vector_tile_layer.changed();
     centroid_webgl_layer.updateStyleVariables({ thresholdHa: areaKm2 * 100 });
+    scheduleStatusBarUpdate();
 });
 
 function handleCheckStatusToggle(event) {
@@ -1325,6 +1385,7 @@ function handleSiteTypeToggle(event) {
     mvt_tile_layer.changed();
     vector_tile_layer.changed();
     centroid_webgl_layer.updateStyleVariables({ [SITE_TYPE_VAR_NAMES[siteType]]: checkbox.checked ? 1 : 0 });
+    updateStatusBar();
 }
 
 // Builds one "More filters" Site type row — reuses the same switch-row/switch markup
@@ -1393,6 +1454,7 @@ function resetFilters() {
         showAreaOfInterest: visibleSiteTypes.has('AREA_OF_INTEREST') ? 1 : 0,
         showSustainableLandManagement: visibleSiteTypes.has('SUSTAINABLE_LAND_MANAGEMENT') ? 1 : 0,
     });
+    updateStatusBar();
 }
 
 // Ensure the script runs after the DOM is fully loaded
@@ -1425,4 +1487,5 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById('reset-filters-button').addEventListener('click', resetFilters);
     updateSliderLabel(getAreaThresholdKm2());
     updateCheckFiltersAvailability();
+    updateStatusBar();
 });
