@@ -118,6 +118,24 @@ vector_tile_source.setLoader(async function (extent, _resolution, projection, su
     }
 });
 
+function setGeometriesLoadingIndicator(visible) {
+    const el = document.getElementById('geometries-loading');
+    if (el) el.hidden = !visible;
+}
+
+// A viewport can straddle multiple extents that load concurrently (e.g. panning
+// while a previous load is still in flight), so track an in-flight count rather
+// than toggling on a single start/end pair.
+let geometriesLoadCount = 0;
+vector_tile_source.on('featuresloadstart', () => {
+    geometriesLoadCount++;
+    setGeometriesLoadingIndicator(true);
+});
+vector_tile_source.on(['featuresloadend', 'featuresloaderror'], () => {
+    geometriesLoadCount = Math.max(0, geometriesLoadCount - 1);
+    if (geometriesLoadCount === 0) setGeometriesLoadingIndicator(false);
+});
+
 // Site centroid vector source: loaded once, in full, from sites_centroids.fgb (a
 // deliberately narrow schema — see cloud_functions/export-sites-to-fgb — small enough
 // to load entirely up front) rather than per-viewport like the polygon sources. A
