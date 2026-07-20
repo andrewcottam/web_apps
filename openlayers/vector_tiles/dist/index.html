@@ -36,6 +36,16 @@
       top: 62px;
       right: 10px;
       width: 220px;
+      /* With "More filters" expanded the panel can outgrow the viewport on shorter
+         screens — scroll the whole panel rather than letting it run off the bottom
+         edge. overscroll-behavior keeps that scroll from chaining into the map
+         underneath. box-sizing: border-box so max-height bounds the padded box (to
+         match the "62px top + 18px margin" budget below) rather than just the content,
+         which content-box's default would let padding push past. */
+      box-sizing: border-box;
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
+      overscroll-behavior: contain;
       background: white;
       border-radius: 10px;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
@@ -91,7 +101,7 @@
     }
 
     #filter-panel .filter-value {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 600;
       color: #222;
     }
@@ -345,7 +355,7 @@
 
     #check-filters-list .filter-label {
       text-transform: none;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
       color: #444;
       letter-spacing: normal;
@@ -354,7 +364,7 @@
 
     #filter-panel .switch-label {
       flex: 1;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 500;
       color: #444;
     }
@@ -755,7 +765,7 @@
     }
 
   </style>
-  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.a74bf881.js"></script>
+  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.745e6fab.js"></script>
   <link rel="stylesheet" href="/web_apps/openlayers/vector_tiles/dist/assets/index.5fd94eca.css">
 </head>
 

@@ -358,18 +358,22 @@ function getAreaThresholdKm2() {
 }
 
 // Driven by the always-visible Site type switches — a site is shown only if its
-// site_type is in this set. Sorted alphabetically by display label (not by
-// SITE_TYPE_LABELS' code order) since that's the order it's rendered in. Defaults to
-// Restoration/Conservation/Sustainable Land Management selected — Landscape and Area
-// Of Interest start unchecked, unlike every other status filter's usual "nothing
-// excluded until you narrow it" default (per explicit request). Unlike the check
-// filters below, this one also applies in Centroids mode: sites_centroids.fgb carries
-// site_type same as sites_plus_checks.fgb (see the *_LABELS block comment above), so
-// centroid_webgl_style mirrors this set via its own show* variables rather than being
-// disabled the way updateCheckFiltersAvailability disables the check switches.
+// site_type is in this set. Alphabetical by display label (not SITE_TYPE_LABELS' code
+// order), except Landscape and Area Of Interest are pinned to the bottom rather than
+// sorted in place (per explicit request), since that's the order it's rendered in.
+// Defaults to Restoration/Conservation/Sustainable Land Management selected —
+// Landscape and Area Of Interest start unchecked, unlike every other status filter's
+// usual "nothing excluded until you narrow it" default (also per explicit request).
+// Unlike the check filters below, this one also applies in Centroids mode:
+// sites_centroids.fgb carries site_type same as sites_plus_checks.fgb (see the
+// *_LABELS block comment above), so centroid_webgl_style mirrors this set via its own
+// show* variables rather than being disabled the way updateCheckFiltersAvailability
+// disables the check switches.
+const SITE_TYPE_BOTTOM_PINNED = ['AREA_OF_INTEREST', 'LANDSCAPE'];
 const SITE_TYPE_VALUES = Object.values(SITE_TYPE_LABELS)
-    .slice()
-    .sort((a, b) => formatEnum(a).localeCompare(formatEnum(b)));
+    .filter((name) => !SITE_TYPE_BOTTOM_PINNED.includes(name))
+    .sort((a, b) => formatEnum(a).localeCompare(formatEnum(b)))
+    .concat(SITE_TYPE_BOTTOM_PINNED);
 const SITE_TYPE_DEFAULT_VISIBLE = ['RESTORATION', 'CONSERVATION', 'SUSTAINABLE_LAND_MANAGEMENT'];
 var visibleSiteTypes = new Set(SITE_TYPE_DEFAULT_VISIBLE);
 
