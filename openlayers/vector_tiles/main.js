@@ -357,29 +357,54 @@ function getAreaThresholdKm2() {
     return sliderPositionToAreaKm2(parseFloat(document.getElementById('slider').value));
 }
 
-// Driven by the "Mangrove proximity" switch — a site is shown only if its "Proximity
-// to mangroves" verification check (see MANGROVE_PROXIMITY_CHECK_NAME) has a status in
-// this set. All three statuses start selected, matching every other status filter's
-// "nothing excluded until you narrow it" default.
-//
-// A site with no such check at all (e.g. it predates the check, wasn't run for it, or
-// came from mvt_tile_layer's pre-generated MVT pyramid, which doesn't carry
-// verification_checks the way sites_plus_checks.fgb does — see parseListField's
-// comment on that column) is treated as Invalid: it's lumped in with the "Invalid"
-// bucket rather than a separate always-shown/always-hidden case, so it stays visible
-// until "Invalid" is unchecked, same as a site the check actually flagged. It has no
-// effect in Centroids mode either way; the switch is disabled there (see
-// updateMangroveFilterAvailability) rather than silently doing nothing.
-const MANGROVE_PROXIMITY_CHECK_NAME = 'Proximity to mangroves';
-const MANGROVE_STATUSES = ['Valid', 'Needs Review', 'Invalid'];
-var visibleMangroveStatuses = new Set(MANGROVE_STATUSES);
+// Driven by the "More filters" section's per-check switches — a site is shown only if
+// every listed check's status is in that check's own visible-statuses set. `label`
+// defaults to the check name itself when omitted (only "Proximity to mangroves" reads
+// better under its filter's own name, "Mangrove proximity"). All three statuses start
+// selected per check, matching every other status filter's "nothing excluded until you
+// narrow it" default.
+const CHECK_FILTERS = [
+    { name: 'Proximity to mangroves', label: 'Mangrove proximity' },
+    { name: 'Average segment length' },
+    { name: 'Overlap with Restor sites' },
+    { name: 'Overlap with Protected Areas' },
+    { name: 'Name Check' },
+    { name: 'Geometry validity' },
+    { name: 'Geometry shape' },
+    { name: 'Triangle check' },
+    { name: 'Overlap with water' },
+    { name: 'Overlap with built area' },
+    { name: 'Profile Completeness' },
+];
+const CHECK_FILTER_STATUSES = ['Valid', 'Needs Review', 'Invalid'];
 
-// Returns the "Proximity to mangroves" check's status — 'Invalid' if the site has no
-// such check (e.g. it predates the check, or wasn't run for it), rather than a
-// separate undefined case (see the block comment above).
-function getMangroveProximityStatus(feature) {
+// One visible-statuses Set per check, keyed by check name (not by the filter's display
+// label, since that's all getCheckStatus has to match against verification_checks). A
+// plain object, not a JS Map — main.js imports ol's own `Map` class (`import { Map,
+// View } from 'ol'`), which shadows the global constructor, so `new Map(...)` here
+// would silently build a broken ol.Map instead.
+function buildCheckFilterVisibleStatuses() {
+    const result = {};
+    CHECK_FILTERS.forEach((cf) => {
+        result[cf.name] = new Set(CHECK_FILTER_STATUSES);
+    });
+    return result;
+}
+var checkFilterVisibleStatuses = buildCheckFilterVisibleStatuses();
+
+// Returns a named verification check's status for a feature — 'Invalid' if the site
+// has no such check at all (e.g. it predates the check, wasn't run for it, or came
+// from mvt_tile_layer's pre-generated MVT pyramid, which doesn't carry
+// verification_checks the way sites_plus_checks.fgb does — see parseListField's
+// comment on that column). Sites missing the check are lumped in with "Invalid" rather
+// than kept in some separate always-shown/always-hidden case, so they stay visible
+// until "Invalid" is unchecked for that filter, same as a site the check actually
+// flagged. Every one of these filters has no effect in Centroids mode either way; the
+// switches are disabled there (see updateCheckFiltersAvailability) rather than
+// silently doing nothing.
+function getCheckStatus(feature, checkName) {
     const checks = parseListField(feature.get('verification_checks')).filter(Boolean);
-    const check = checks.find((c) => c && typeof c === 'object' && c.name === MANGROVE_PROXIMITY_CHECK_NAME);
+    const check = checks.find((c) => c && typeof c === 'object' && c.name === checkName);
     return check ? check.status : 'Invalid';
 }
 
@@ -389,11 +414,13 @@ function isSiteVisible(feature) {
     const threshold = getAreaThresholdKm2();
     const areaKm2 = getSurfaceAreaKm2(feature);
     const vis = decodeEnum(feature.get('site_visibility'), SITE_VISIBILITY_LABELS);
-    const mangroveOk = visibleMangroveStatuses.has(getMangroveProximityStatus(feature));
+    const checksOk = CHECK_FILTERS.every((cf) =>
+        checkFilterVisibleStatuses[cf.name].has(getCheckStatus(feature, cf.name))
+    );
     // A negative area is bad/invalid data (e.g. a malformed polygon), never a real
     // site size — always hide it rather than let it slip through as "smaller than
     // any threshold".
-    return !(areaKm2 > threshold || areaKm2 < 0 || !visibleStatuses.has(vis) || !mangroveOk);
+    return !(areaKm2 > threshold || areaKm2 < 0 || !visibleStatuses.has(vis) || !checksOk);
 }
 
 // Centroid layer style: a literal WebGL expression style, not an ol/style/Style
@@ -542,14 +569,14 @@ function handleRenderModeChange(event) {
     if (!RENDER_MODES.includes(event.target.value)) return;
     renderMode = event.target.value;
     updateLayerVisibilityForRenderMode();
-    updateMangroveFilterAvailability();
+    updateCheckFiltersAvailability();
 }
 
-// The mangrove-proximity filter only has data to work with in Geometries mode (see
-// isSiteVisible) — disable rather than hide it in Centroids mode, matching the
+// The check filters only have data to work with in Geometries mode (see
+// isSiteVisible) — disable rather than hide them in Centroids mode, matching the
 // "Show site checks" context-menu item's treatment of the same schema gap.
-function updateMangroveFilterAvailability() {
-    document.querySelectorAll('.mangrove-status-btn').forEach((button) => {
+function updateCheckFiltersAvailability() {
+    document.querySelectorAll('.check-status-btn').forEach((button) => {
         button.disabled = renderMode !== 'geometries';
     });
 }
@@ -1180,25 +1207,66 @@ document.getElementById('slider').addEventListener('input', function () {
     centroid_webgl_layer.updateStyleVariables({ thresholdHa: areaKm2 * 100 });
 });
 
-function handleMangroveStatusToggle(event) {
+function handleCheckStatusToggle(event) {
     const button = event.currentTarget;
     const nowPressed = button.getAttribute('aria-pressed') !== 'true';
     button.setAttribute('aria-pressed', String(nowPressed));
+    const statuses = checkFilterVisibleStatuses[button.dataset.check];
     if (nowPressed) {
-        visibleMangroveStatuses.add(button.dataset.status);
+        statuses.add(button.dataset.status);
     } else {
-        visibleMangroveStatuses.delete(button.dataset.status);
+        statuses.delete(button.dataset.status);
     }
     mvt_tile_layer.changed();
     vector_tile_layer.changed();
 }
 
+// 'Needs Review' -> 'needs-review', for building each status button's modifier class.
+function statusSlug(status) {
+    return status.toLowerCase().replace(/\s+/g, '-');
+}
+
+// Builds one "More filters" row: a label plus the same 3-way Valid/Needs
+// Review/Invalid switch used throughout — see CHECK_FILTERS for the full list this is
+// called for.
+function buildCheckFilterRow(checkName, label) {
+    const row = document.createElement('div');
+    row.className = 'filter-row';
+
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'filter-label';
+    labelSpan.textContent = label;
+    row.appendChild(labelSpan);
+
+    const switchGroup = document.createElement('div');
+    switchGroup.className = 'check-status-switch';
+    CHECK_FILTER_STATUSES.forEach((status) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `check-status-btn check-status-${statusSlug(status)}`;
+        button.dataset.check = checkName;
+        button.dataset.status = status;
+        button.setAttribute('aria-pressed', 'true');
+        button.title = status;
+        button.addEventListener('click', handleCheckStatusToggle);
+
+        const swatch = document.createElement('span');
+        swatch.className = 'check-status-swatch';
+        button.appendChild(swatch);
+
+        switchGroup.appendChild(button);
+    });
+    row.appendChild(switchGroup);
+
+    return row;
+}
+
 const RESET_AREA_KM2 = 3000;
 
-// Restores every filter control (area, public/private, mangrove status) to its
-// default — public-only sites up to 3000 km², all three mangrove statuses — and
-// re-applies each one exactly the way its own change handler would, rather than only
-// resetting the underlying state, so the UI never drifts out of sync with it.
+// Restores every filter control (area, public/private, every check filter) to its
+// default — public-only sites up to 3000 km², all three statuses selected for every
+// check — and re-applies each one exactly the way its own change handler would, rather
+// than only resetting the underlying state, so the UI never drifts out of sync with it.
 function resetFilters() {
     const slider = document.getElementById('slider');
     slider.value = areaKm2ToSliderPosition(RESET_AREA_KM2);
@@ -1209,8 +1277,8 @@ function resetFilters() {
         checkbox.checked = visibleStatuses.has(checkbox.value);
     });
 
-    visibleMangroveStatuses = new Set(MANGROVE_STATUSES);
-    document.querySelectorAll('.mangrove-status-btn').forEach((button) => {
+    checkFilterVisibleStatuses = buildCheckFilterVisibleStatuses();
+    document.querySelectorAll('.check-status-btn').forEach((button) => {
         button.setAttribute('aria-pressed', 'true');
     });
 
@@ -1229,14 +1297,22 @@ document.addEventListener("DOMContentLoaded", function () {
     visibilityCheckboxes.forEach(checkbox => {
         checkbox.addEventListener("change", handleVisibilityToggle);
     });
-    document.querySelectorAll('.mangrove-status-btn').forEach(button => {
-        button.addEventListener("click", handleMangroveStatusToggle);
+
+    const checkFiltersList = document.getElementById('check-filters-list');
+    CHECK_FILTERS.forEach((cf) => {
+        checkFiltersList.appendChild(buildCheckFilterRow(cf.name, cf.label || cf.name));
     });
+    document.getElementById('more-filters-toggle').addEventListener('click', function () {
+        const expanded = this.getAttribute('aria-expanded') === 'true';
+        this.setAttribute('aria-expanded', String(!expanded));
+        checkFiltersList.hidden = expanded;
+    });
+
     document.querySelectorAll("input[name='render-mode']").forEach(radio => {
         radio.addEventListener("change", handleRenderModeChange);
     });
     document.getElementById('login-button').addEventListener('click', login_clicked);
     document.getElementById('reset-filters-button').addEventListener('click', resetFilters);
     updateSliderLabel(getAreaThresholdKm2());
-    updateMangroveFilterAvailability();
+    updateCheckFiltersAvailability();
 });

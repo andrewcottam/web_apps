@@ -227,14 +227,15 @@
       border: 1.5px dashed rgba(179, 140, 80, 0.9);
     }
 
-    /* A single compact 3-way switch (rather than three separate switch-rows) for the
-       mangrove-proximity filter, so it fits on the same line as its label. Each segment
+    /* A single compact 3-way switch (rather than three separate switch-rows) per
+       verification check, so each fits on one line with its label. Each segment
        toggles independently (not exclusive, unlike #render-mode-switch) — colors match
        CHECK_STATUS_COLORS in main.js so this reads the same as the check-status pills
        shown in the popup and checks modal. */
-    #filter-panel .mangrove-status-switch {
+    #filter-panel .check-status-switch {
       display: flex;
       gap: 6px;
+      flex-shrink: 0;
     }
 
     /* The visible swatch stays 16x16 (matches the Public/Private legend swatches), but
@@ -244,7 +245,7 @@
        itself is a separate inner span (rather than sized via padding on the button) so
        its border/background stay pinned to exactly 16x16 regardless of the button's hit
        area, with no box-shadow/clip edge cases to fight. */
-    #filter-panel .mangrove-status-btn {
+    #filter-panel .check-status-btn {
       width: 24px;
       height: 24px;
       margin: -4px;
@@ -257,7 +258,7 @@
       cursor: pointer;
     }
 
-    #filter-panel .mangrove-status-swatch {
+    #filter-panel .check-status-swatch {
       width: 16px;
       height: 16px;
       border-radius: 4px;
@@ -267,27 +268,85 @@
       pointer-events: none;
     }
 
-    #filter-panel .mangrove-status-btn.mangrove-status-valid[aria-pressed="true"] .mangrove-status-swatch {
+    #filter-panel .check-status-btn.check-status-valid[aria-pressed="true"] .check-status-swatch {
       background: rgba(107, 155, 94, 0.35);
       border-color: #6b9b5e;
     }
 
-    #filter-panel .mangrove-status-btn.mangrove-status-needs-review[aria-pressed="true"] .mangrove-status-swatch {
+    #filter-panel .check-status-btn.check-status-needs-review[aria-pressed="true"] .check-status-swatch {
       background: rgba(211, 154, 78, 0.35);
       border-color: #d39a4e;
     }
 
-    #filter-panel .mangrove-status-btn.mangrove-status-invalid[aria-pressed="true"] .mangrove-status-swatch {
+    #filter-panel .check-status-btn.check-status-invalid[aria-pressed="true"] .check-status-swatch {
       background: rgba(192, 96, 92, 0.35);
       border-color: #c0605c;
     }
 
-    #filter-panel .mangrove-status-btn:disabled {
+    #filter-panel .check-status-btn:disabled {
       cursor: not-allowed;
     }
 
-    #filter-panel .mangrove-status-btn:disabled .mangrove-status-swatch {
+    #filter-panel .check-status-btn:disabled .check-status-swatch {
       opacity: 0.5;
+    }
+
+    /* "More filters" is collapsed by default (see CHECK_FILTERS in main.js) — eleven
+       per-check switches at once, on top of the always-visible area/public/private
+       controls, was too much to take in as a flat list. */
+    #more-filters-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      margin-top: 12px;
+      padding: 6px 2px;
+      background: none;
+      border: none;
+      font-size: 11px;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      cursor: pointer;
+    }
+
+    #more-filters-toggle:hover,
+    #more-filters-toggle:focus-visible {
+      color: #333;
+      outline: none;
+    }
+
+    #more-filters-chevron {
+      transition: transform 0.15s ease;
+    }
+
+    #more-filters-toggle[aria-expanded="true"] #more-filters-chevron {
+      transform: rotate(180deg);
+    }
+
+    #check-filters-list {
+      max-height: 260px;
+      overflow-y: auto;
+      margin: 4px 0 0;
+      padding-right: 2px;
+    }
+
+    #check-filters-list[hidden] {
+      display: none;
+    }
+
+    #check-filters-list .filter-row {
+      gap: 10px;
+    }
+
+    #check-filters-list .filter-label {
+      text-transform: none;
+      font-size: 13px;
+      font-weight: 500;
+      color: #444;
+      letter-spacing: normal;
+      overflow-wrap: break-word;
     }
 
     #filter-panel .switch-label {
@@ -736,17 +795,11 @@
         </span>
       </label>
     </div>
-    <div class="filter-row filter-row-spaced">
-      <span class="filter-label-row">
-        <span class="filter-label">Mangrove proximity</span>
-        <span class="filter-info-icon" title="Only show sites where the &quot;Proximity to mangroves&quot; check has one of the selected statuses. Only available in Geometries mode.">i</span>
-      </span>
-      <div class="mangrove-status-switch" id="mangrove-status-switch">
-        <button type="button" class="mangrove-status-btn mangrove-status-valid" data-status="Valid" aria-pressed="true" title="Valid"><span class="mangrove-status-swatch"></span></button>
-        <button type="button" class="mangrove-status-btn mangrove-status-needs-review" data-status="Needs Review" aria-pressed="true" title="Needs Review"><span class="mangrove-status-swatch"></span></button>
-        <button type="button" class="mangrove-status-btn mangrove-status-invalid" data-status="Invalid" aria-pressed="true" title="Invalid"><span class="mangrove-status-swatch"></span></button>
-      </div>
-    </div>
+    <button type="button" id="more-filters-toggle" aria-expanded="false" aria-controls="check-filters-list">
+      <span>More filters</span>
+      <span id="more-filters-chevron">▾</span>
+    </button>
+    <div id="check-filters-list" hidden></div>
     <button type="button" id="reset-filters-button">Reset filters</button>
   </div>
   <div id="popup">
