@@ -357,22 +357,19 @@ function getAreaThresholdKm2() {
     return sliderPositionToAreaKm2(parseFloat(document.getElementById('slider').value));
 }
 
-// Driven by the "Mangrove proximity" switch — a site whose "Proximity to mangroves"
-// verification check (see MANGROVE_PROXIMITY_CHECK_NAME) has a status is shown only if
-// that status is in this set. All three statuses start selected, matching every other
-// status filter's "nothing excluded until you narrow it" default.
+// Driven by the "Mangrove proximity" switch — a site is shown only if its "Proximity
+// to mangroves" verification check (see MANGROVE_PROXIMITY_CHECK_NAME) has a status in
+// this set. All three statuses start selected, matching every other status filter's
+// "nothing excluded until you narrow it" default.
 //
-// A site with no such check at all (e.g. mvt_tile_layer's pre-generated MVT pyramid
-// doesn't carry verification_checks the way sites_plus_checks.fgb does — see
-// parseListField's comment on that column) always stays visible regardless of this
-// filter's state, rather than being gated on whether the filter happens to be at its
-// all-checked default. An earlier version tied undefined-check visibility to that
-// default, which meant narrowing the filter at all (e.g. unchecking just "Invalid")
-// hid every MVT-served site outright, since none of them carry the check — it looked
-// like the whole filter was broken. Only sites_centroids.fgb's narrower schema is
-// unaffected in a way that matters: it has no effect in Centroids mode; the switch is
-// disabled there (see updateMangroveFilterAvailability) rather than silently doing
-// nothing.
+// A site with no such check at all (e.g. it predates the check, wasn't run for it, or
+// came from mvt_tile_layer's pre-generated MVT pyramid, which doesn't carry
+// verification_checks the way sites_plus_checks.fgb does — see parseListField's
+// comment on that column) is always excluded: getMangroveProximityStatus returns
+// undefined for it, which never matches any of the three real statuses, so
+// Set.has(undefined) is false regardless of which boxes are checked. It has no effect
+// in Centroids mode either way; the switch is disabled there (see
+// updateMangroveFilterAvailability) rather than silently doing nothing.
 const MANGROVE_PROXIMITY_CHECK_NAME = 'Proximity to mangroves';
 const MANGROVE_STATUSES = ['Valid', 'Needs Review', 'Invalid'];
 var visibleMangroveStatuses = new Set(MANGROVE_STATUSES);
@@ -392,8 +389,7 @@ function isSiteVisible(feature) {
     const threshold = getAreaThresholdKm2();
     const areaKm2 = getSurfaceAreaKm2(feature);
     const vis = decodeEnum(feature.get('site_visibility'), SITE_VISIBILITY_LABELS);
-    const mangroveStatus = getMangroveProximityStatus(feature);
-    const mangroveOk = mangroveStatus === undefined || visibleMangroveStatuses.has(mangroveStatus);
+    const mangroveOk = visibleMangroveStatuses.has(getMangroveProximityStatus(feature));
     // A negative area is bad/invalid data (e.g. a malformed polygon), never a real
     // site size — always hide it rather than let it slip through as "smaller than
     // any threshold".
