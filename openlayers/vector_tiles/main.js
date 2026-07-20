@@ -77,6 +77,38 @@ function getUrlParameters() {
         result.zoom = parseFloat(zoom);
     }
 
+    const mode = urlParams.get('mode');
+    if (mode === 'geometries' || mode === 'centroids') {
+        result.mode = mode;
+    }
+
+    const area = urlParams.get('area');
+    if (area && !isNaN(parseFloat(area)) && parseFloat(area) > 0) {
+        result.area = parseFloat(area);
+    }
+
+    const vis = urlParams.get('vis');
+    if (vis) {
+        result.vis = vis.split(',').filter(Boolean);
+    }
+
+    const types = urlParams.get('types');
+    if (types) {
+        result.types = types.split(',').filter(Boolean);
+    }
+
+    // Per check that excludes at least one status, "<name>:<codes>" (codes = 1-2
+    // letters from CHECK_STATUS_CODES), joined with ';' — see buildStateParams.
+    const checks = urlParams.get('checks');
+    if (checks) {
+        result.checks = {};
+        checks.split(';').forEach((part) => {
+            const [name, codes] = part.split(':');
+            if (!name || !codes) return;
+            result.checks[name] = codes.split('');
+        });
+    }
+
     return result;
 }
 
@@ -225,6 +257,12 @@ async function loadAllCentroids() {
         centroid_source.addFeatures(features);
         setCentroidsModeEnabled(true);
         updateStatusBar();
+        // Site search runs against centroid_source (see searchSites) — if the box was
+        // showing its "Loading sites…" placeholder, refresh now that data has arrived.
+        const searchInput = document.getElementById('site-search-input');
+        if (searchInput && document.activeElement === searchInput) {
+            searchInput.dispatchEvent(new Event('input'));
+        }
     } catch (e) {
         console.error('FGB centroids load error:', e);
     } finally {
@@ -312,6 +350,7 @@ const SITE_VISIBILITY_LABELS = {
     0: 'PUBLIC',
     1: 'PRIVATE',
 };
+const SITE_VISIBILITY_VALUES = Object.values(SITE_VISIBILITY_LABELS);
 
 // Decodes a possibly int-coded enum property back to its text label. `value` is
 // passed through unchanged if it's not a number, so features from the (not yet
@@ -433,6 +472,13 @@ const CHECK_FILTERS = [
     { name: 'Triangle check' },
 ];
 const CHECK_FILTER_STATUSES = ['Valid', 'Needs Review', 'Invalid'];
+
+// Single-letter codes for compact "checks" URL encoding — see buildStateParams/
+// getUrlParameters.
+const CHECK_STATUS_CODES = { 'Valid': 'V', 'Needs Review': 'N', 'Invalid': 'I' };
+const CHECK_STATUS_CODES_INVERSE = Object.fromEntries(
+    Object.entries(CHECK_STATUS_CODES).map(([status, code]) => [code, status])
+);
 
 // One visible-statuses Set per check, keyed by check name (not by the filter's display
 // label, since that's all getCheckStatus has to match against verification_checks). A
@@ -686,6 +732,7 @@ function handleRenderModeChange(event) {
     updateLayerVisibilityForRenderMode();
     updateCheckFiltersAvailability();
     updateStatusBar();
+    scheduleUrlSync();
 }
 
 // The check filters only have data to work with in Geometries mode (see
@@ -799,47 +846,84 @@ const map = new Map({
     ]),
 });
 
-// Set when a popstate (browser back/forward) handler is applying a URL's lat/lng/zoom
-// to the view — the resulting moveend must not itself push a new history entry, or
-// every back/forward navigation would immediately re-push a duplicate ahead of it.
-let suppressNextHistoryPush = false;
-let moveendHistoryTimeout = null;
-
-map.on('moveend', () => {
+// Builds the full shareable URL query string for the current view + filters (render
+// mode, area threshold, visibility/site-type/check filters) — each filter is omitted
+// whenever it's still at its default, so a plain unfiltered view keeps the short
+// lat/lng/zoom-only URL this used to always produce.
+function buildStateParams() {
     const view = map.getView();
     const center = view.getCenter();
     const zoom = view.getZoom();
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams();
     params.set('lng', center[0].toFixed(6));
     params.set('lat', center[1].toFixed(6));
     params.set('zoom', zoom.toFixed(2));
-    const url = `?${params.toString()}`;
 
-    // Debounced so a flurry of moveend events (e.g. scroll-zooming, or a drag
-    // immediately followed by small adjustments) collapses into one history entry,
-    // rather than flooding back/forward with every intermediate step.
-    if (moveendHistoryTimeout) clearTimeout(moveendHistoryTimeout);
-    moveendHistoryTimeout = setTimeout(() => {
-        moveendHistoryTimeout = null;
+    if (renderMode !== 'geometries') params.set('mode', renderMode);
+
+    const areaKm2 = getAreaThresholdKm2();
+    if (Math.round(areaKm2 * 1000) !== Math.round(RESET_AREA_ACTUAL_KM2 * 1000)) {
+        params.set('area', areaKm2.toPrecision(6));
+    }
+
+    const visSorted = [...visibleStatuses].sort().join(',');
+    if (visSorted !== 'PUBLIC') params.set('vis', visSorted);
+
+    const typesSorted = [...visibleSiteTypes].sort().join(',');
+    const defaultTypesSorted = [...SITE_TYPE_DEFAULT_VISIBLE].sort().join(',');
+    if (typesSorted !== defaultTypesSorted) params.set('types', typesSorted);
+
+    const checksParts = [];
+    CHECK_FILTERS.forEach((cf) => {
+        const statuses = checkFilterVisibleStatuses[cf.name];
+        if (statuses.size === CHECK_FILTER_STATUSES.length) return; // default: nothing excluded
+        const codes = [...statuses].map((s) => CHECK_STATUS_CODES[s]).sort().join('');
+        checksParts.push(`${cf.name}:${codes}`);
+    });
+    if (checksParts.length) params.set('checks', checksParts.join(';'));
+
+    return params;
+}
+
+// Set while a popstate (browser back/forward) handler is restoring a URL's view and
+// filters — the resulting moveend/filter-change handlers must not themselves push a
+// new history entry, or every back/forward navigation would immediately re-push a
+// duplicate ahead of it.
+let suppressNextHistoryPush = false;
+let urlSyncTimeout = null;
+
+// Debounced so a flurry of state changes (scroll-zooming, dragging the area slider,
+// toggling several switches in a row) collapses into one history entry, rather than
+// flooding back/forward with every intermediate step.
+function scheduleUrlSync(delay = 400) {
+    if (urlSyncTimeout) clearTimeout(urlSyncTimeout);
+    urlSyncTimeout = setTimeout(() => {
+        urlSyncTimeout = null;
         if (suppressNextHistoryPush) {
             suppressNextHistoryPush = false;
             return;
         }
-        window.history.pushState(null, '', url);
-    }, 500);
-});
+        window.history.pushState(null, '', `?${buildStateParams().toString()}`);
+    }, delay);
+}
 
-// Restore the view when the user navigates back/forward through the pan/zoom history
-// pushState above builds up.
+map.on('moveend', () => scheduleUrlSync(500));
+
+// Restore the view and filters when the user navigates back/forward through the
+// pan/zoom/filter history scheduleUrlSync above builds up. Runs applyUrlFilters even
+// when the popped URL has no filter params, so going back to the very first (default)
+// entry actually clears any filters applied since — not just leaves them as-is.
 window.addEventListener('popstate', () => {
     const poppedParams = getUrlParameters();
-    if (poppedParams.lat === undefined || poppedParams.lng === undefined) return;
     suppressNextHistoryPush = true;
-    map.getView().animate({
-        center: [poppedParams.lng, poppedParams.lat],
-        zoom: poppedParams.zoom !== undefined ? poppedParams.zoom : map.getView().getZoom(),
-        duration: 300,
-    });
+    if (poppedParams.lat !== undefined && poppedParams.lng !== undefined) {
+        map.getView().animate({
+            center: [poppedParams.lng, poppedParams.lat],
+            zoom: poppedParams.zoom !== undefined ? poppedParams.zoom : map.getView().getZoom(),
+            duration: 300,
+        });
+    }
+    applyUrlFilters(poppedParams);
 });
 
 // Apply the MapTiler style
@@ -1098,6 +1182,7 @@ function handleVisibilityToggle(event) {
         showPrivate: visibleStatuses.has('PRIVATE') ? 1 : 0,
     });
     updateStatusBar();
+    scheduleUrlSync();
 }
 
 const DEFAULT_LOGIN_ICON = `
@@ -1288,6 +1373,10 @@ document.getElementById('checks-modal-backdrop').addEventListener('click', funct
 // open — rather than closing everything at once regardless of what's showing.
 document.addEventListener('keydown', function (event) {
     if (event.key !== 'Escape') return;
+    if (!document.getElementById('site-search-results').hidden) {
+        closeSiteSearchResults();
+        return;
+    }
     if (document.getElementById('checks-modal-backdrop').classList.contains('open')) {
         closeChecksModal();
         return;
@@ -1336,6 +1425,7 @@ document.getElementById('slider').addEventListener('input', function () {
     vector_tile_layer.changed();
     centroid_webgl_layer.updateStyleVariables({ thresholdHa: areaKm2 * 100 });
     scheduleStatusBarUpdate();
+    scheduleUrlSync();
 });
 
 function handleCheckStatusToggle(event) {
@@ -1350,6 +1440,7 @@ function handleCheckStatusToggle(event) {
     }
     mvt_tile_layer.changed();
     vector_tile_layer.changed();
+    scheduleUrlSync();
 }
 
 // 'Needs Review' -> 'needs-review', for building each status button's modifier class.
@@ -1404,6 +1495,7 @@ function handleSiteTypeToggle(event) {
     vector_tile_layer.changed();
     centroid_webgl_layer.updateStyleVariables({ [SITE_TYPE_VAR_NAMES[siteType]]: checkbox.checked ? 1 : 0 });
     updateStatusBar();
+    scheduleUrlSync();
 }
 
 // Builds one "More filters" Site type row — reuses the same switch-row/switch markup
@@ -1435,6 +1527,12 @@ function buildSiteTypeRow(siteType) {
 }
 
 const RESET_AREA_KM2 = 3000;
+// The area slider only has AREA_SLIDER_STEPS discrete positions, so
+// sliderPositionToAreaKm2(areaKm2ToSliderPosition(RESET_AREA_KM2)) doesn't round-trip
+// back to exactly 3000 — it's what getAreaThresholdKm2() actually reads off the slider
+// right after a reset. buildStateParams compares against this (not RESET_AREA_KM2
+// itself), or a freshly reset panel would always have a stray non-default `area` param.
+const RESET_AREA_ACTUAL_KM2 = sliderPositionToAreaKm2(areaKm2ToSliderPosition(RESET_AREA_KM2));
 
 // Restores every filter control (area, public/private, every check filter) to its
 // default — public-only sites up to 3000 km², all three statuses selected for every
@@ -1473,6 +1571,205 @@ function resetFilters() {
         showSustainableLandManagement: visibleSiteTypes.has('SUSTAINABLE_LAND_MANAGEMENT') ? 1 : 0,
     });
     updateStatusBar();
+    scheduleUrlSync();
+}
+
+// Applies a parsed URL params object (see getUrlParameters) to the render mode and
+// every filter's state + UI controls, resetting anything not present in `params` back
+// to its default first — so this is safe to call both on initial page load (nothing
+// set yet) and from the popstate handler (must land on exactly what that history entry
+// encoded, not layer on top of whatever's currently set). Mirrors resetFilters in
+// re-applying each value through the same paths its own change handler would, rather
+// than only touching the underlying state.
+function applyUrlFilters(params) {
+    renderMode = RENDER_MODES.includes(params.mode) ? params.mode : RENDER_MODES[0];
+    document.querySelectorAll("input[name='render-mode']").forEach((radio) => {
+        radio.checked = radio.value === renderMode;
+    });
+    updateLayerVisibilityForRenderMode();
+    updateCheckFiltersAvailability();
+
+    const areaKm2 = params.area !== undefined ? params.area : RESET_AREA_KM2;
+    const slider = document.getElementById('slider');
+    slider.value = areaKm2ToSliderPosition(areaKm2);
+    updateSliderLabel(areaKm2);
+
+    const validVis = (params.vis || []).filter((v) => SITE_VISIBILITY_VALUES.includes(v));
+    visibleStatuses = new Set(validVis.length ? validVis : ['PUBLIC']);
+    document.querySelectorAll("input[name='options']").forEach((checkbox) => {
+        checkbox.checked = visibleStatuses.has(checkbox.value);
+    });
+
+    const validTypes = (params.types || []).filter((t) => SITE_TYPE_VALUES.includes(t));
+    visibleSiteTypes = new Set(validTypes.length ? validTypes : SITE_TYPE_DEFAULT_VISIBLE);
+    document.querySelectorAll("input[data-site-type]").forEach((checkbox) => {
+        checkbox.checked = visibleSiteTypes.has(checkbox.dataset.siteType);
+    });
+
+    checkFilterVisibleStatuses = buildCheckFilterVisibleStatuses();
+    if (params.checks) {
+        Object.entries(params.checks).forEach(([name, codes]) => {
+            if (!checkFilterVisibleStatuses[name]) return; // unknown check name — ignore
+            const statuses = codes.map((c) => CHECK_STATUS_CODES_INVERSE[c]).filter(Boolean);
+            checkFilterVisibleStatuses[name] = new Set(statuses);
+        });
+    }
+    document.querySelectorAll('.check-status-btn').forEach((button) => {
+        const pressed = checkFilterVisibleStatuses[button.dataset.check].has(button.dataset.status);
+        button.setAttribute('aria-pressed', String(pressed));
+    });
+
+    mvt_tile_layer.changed();
+    vector_tile_layer.changed();
+    centroid_webgl_layer.updateStyleVariables({
+        thresholdHa: areaKm2 * 100,
+        showPublic: visibleStatuses.has('PUBLIC') ? 1 : 0,
+        showPrivate: visibleStatuses.has('PRIVATE') ? 1 : 0,
+        showRestoration: visibleSiteTypes.has('RESTORATION') ? 1 : 0,
+        showConservation: visibleSiteTypes.has('CONSERVATION') ? 1 : 0,
+        showLandscape: visibleSiteTypes.has('LANDSCAPE') ? 1 : 0,
+        showAreaOfInterest: visibleSiteTypes.has('AREA_OF_INTEREST') ? 1 : 0,
+        showSustainableLandManagement: visibleSiteTypes.has('SUSTAINABLE_LAND_MANAGEMENT') ? 1 : 0,
+    });
+    updateStatusBar();
+}
+
+const SITE_SEARCH_MAX_RESULTS = 8;
+let siteSearchActiveIndex = -1;
+
+function siteSearchResultsEl() {
+    return document.getElementById('site-search-results');
+}
+
+function closeSiteSearchResults() {
+    const el = siteSearchResultsEl();
+    el.hidden = true;
+    el.innerHTML = '';
+    siteSearchActiveIndex = -1;
+}
+
+// Jumps the map to a searched site and highlights it the same way hovering a polygon
+// does (siteStyle's isSelected check) — works even before that site's polygon has
+// loaded, since the jump target comes from centroid_source (loaded once, in full, up
+// front — see loadAllCentroids) rather than the per-viewport polygon sources.
+function jumpToSearchResult(feature) {
+    const view = map.getView();
+    view.animate({
+        center: feature.getGeometry().getCoordinates(),
+        zoom: Math.max(view.getZoom(), 14),
+        duration: 400,
+    });
+    selected_feature.current = feature.get('id');
+    mvt_tile_layer.changed();
+    vector_tile_layer.changed();
+}
+
+// Matches are ranked name-starts-with-query first (then alphabetically within each
+// group), rather than plain substring order, so typing e.g. "Green" surfaces "Green
+// Valley" ahead of "Restor Green Belt".
+function searchSites(query) {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+    const startsWith = [];
+    const contains = [];
+    centroid_source.getFeatures().forEach((feature) => {
+        const name = (feature.get('name') || '').toLowerCase();
+        if (!name) return;
+        if (name.startsWith(q)) startsWith.push(feature);
+        else if (name.includes(q)) contains.push(feature);
+    });
+    const byName = (a, b) => (a.get('name') || '').localeCompare(b.get('name') || '');
+    return [...startsWith.sort(byName), ...contains.sort(byName)].slice(0, SITE_SEARCH_MAX_RESULTS);
+}
+
+function renderSiteSearchResults(matches, query) {
+    const el = siteSearchResultsEl();
+    el.innerHTML = '';
+    siteSearchActiveIndex = -1;
+
+    // Search runs against centroid_source, which is only ever populated for a
+    // logged-in user (see setLoggedIn/loadAllCentroids) — explain why there's nothing
+    // to search yet rather than silently showing "No sites match".
+    if (!current_user) {
+        el.innerHTML = '<div class="site-search-empty">Sign in to search sites</div>';
+        el.hidden = false;
+        return;
+    }
+    if (centroid_source.getFeatures().length === 0) {
+        el.innerHTML = '<div class="site-search-empty">Loading sites…</div>';
+        el.hidden = false;
+        return;
+    }
+    if (!query) {
+        el.hidden = true;
+        return;
+    }
+    if (matches.length === 0) {
+        el.innerHTML = '<div class="site-search-empty">No sites match</div>';
+        el.hidden = false;
+        return;
+    }
+
+    matches.forEach((feature) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'site-search-result';
+        button.textContent = feature.get('name') || 'Untitled site';
+        button.addEventListener('click', () => {
+            jumpToSearchResult(feature);
+            document.getElementById('site-search-input').value = feature.get('name') || '';
+            closeSiteSearchResults();
+        });
+        el.appendChild(button);
+    });
+    el.hidden = false;
+}
+
+function initSiteSearch() {
+    const input = document.getElementById('site-search-input');
+    const resultsEl = siteSearchResultsEl();
+
+    let debounceTimeout = null;
+    const runSearch = () => {
+        if (debounceTimeout) clearTimeout(debounceTimeout);
+        debounceTimeout = setTimeout(() => {
+            renderSiteSearchResults(searchSites(input.value), input.value.trim());
+        }, 150);
+    };
+    input.addEventListener('input', runSearch);
+    input.addEventListener('focus', () => {
+        if (input.value.trim() || !current_user || centroid_source.getFeatures().length === 0) runSearch();
+    });
+
+    // Arrow keys move a keyboard-selection cursor through the currently rendered
+    // results; Enter activates it. Escape is handled by the shared document-level
+    // handler below (it closes the topmost open UI layer, of which this is one).
+    input.addEventListener('keydown', (event) => {
+        const options = resultsEl.querySelectorAll('.site-search-result');
+        if (!options.length) return;
+        if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            siteSearchActiveIndex = Math.min(siteSearchActiveIndex + 1, options.length - 1);
+        } else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            siteSearchActiveIndex = Math.max(siteSearchActiveIndex - 1, 0);
+        } else if (event.key === 'Enter') {
+            if (siteSearchActiveIndex < 0) return;
+            event.preventDefault();
+            options[siteSearchActiveIndex].click();
+            return;
+        } else {
+            return;
+        }
+        options.forEach((opt, i) => opt.classList.toggle('active', i === siteSearchActiveIndex));
+        options[siteSearchActiveIndex].scrollIntoView({ block: 'nearest' });
+    });
+
+    // Clicking anywhere outside the search box (but not selecting a result, which
+    // closes it itself after acting) dismisses the open dropdown.
+    document.addEventListener('click', (event) => {
+        if (!event.target.closest('#site-search-wrapper')) closeSiteSearchResults();
+    });
 }
 
 // Ensure the script runs after the DOM is fully loaded
@@ -1503,7 +1800,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     document.getElementById('login-button').addEventListener('click', login_clicked);
     document.getElementById('reset-filters-button').addEventListener('click', resetFilters);
-    updateSliderLabel(getAreaThresholdKm2());
-    updateCheckFiltersAvailability();
-    updateStatusBar();
+    // Restores mode/area/vis/types/checks from the initial URL (if present) and applies
+    // each through the same paths its own change handler would, same as resetFilters —
+    // also covers updateSliderLabel/updateCheckFiltersAvailability/updateStatusBar,
+    // which used to be called separately here.
+    applyUrlFilters(urlParams);
+
+    initSiteSearch();
 });
