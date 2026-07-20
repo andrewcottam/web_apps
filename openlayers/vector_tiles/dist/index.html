@@ -62,6 +62,29 @@
       letter-spacing: 0.04em;
     }
 
+    #filter-panel .filter-label-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    #filter-panel .filter-info-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #ccc;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      font-style: normal;
+      text-transform: none;
+      letter-spacing: normal;
+      cursor: help;
+    }
+
     #filter-panel .filter-value {
       font-size: 13px;
       font-weight: 600;
@@ -579,7 +602,10 @@
       <span>Loading centroids… <span id="centroid-loading-pct">0%</span></span>
     </div>
     <div class="filter-row">
-      <label class="filter-label" for="slider">Max area</label>
+      <span class="filter-label-row">
+        <label class="filter-label" for="slider">Max area</label>
+        <span class="filter-info-icon" title="Filter the visible sites by area (logarithmic scale)">i</span>
+      </span>
       <span><span class="filter-value" id="slider-value">2000</span> <span id="slider-unit">km²</span></span>
     </div>
     <input type="range" id="slider" min="0" max="1000" value="663">
