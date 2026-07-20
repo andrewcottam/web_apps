@@ -357,15 +357,21 @@ function getAreaThresholdKm2() {
     return sliderPositionToAreaKm2(parseFloat(document.getElementById('slider').value));
 }
 
-// Driven by the "More filters" section's Site type switches — a site is shown only if
-// its site_type is in this set. All five types start selected, same "nothing excluded
-// until you narrow it" default as every other status filter. Unlike the check filters
-// below, this one also applies in Centroids mode: sites_centroids.fgb carries site_type
-// same as sites_plus_checks.fgb (see the *_LABELS block comment above), so
+// Driven by the always-visible Site type switches — a site is shown only if its
+// site_type is in this set. Sorted alphabetically by display label (not by
+// SITE_TYPE_LABELS' code order) since that's the order it's rendered in. Defaults to
+// Restoration/Conservation/Sustainable Land Management selected — Landscape and Area
+// Of Interest start unchecked, unlike every other status filter's usual "nothing
+// excluded until you narrow it" default (per explicit request). Unlike the check
+// filters below, this one also applies in Centroids mode: sites_centroids.fgb carries
+// site_type same as sites_plus_checks.fgb (see the *_LABELS block comment above), so
 // centroid_webgl_style mirrors this set via its own show* variables rather than being
 // disabled the way updateCheckFiltersAvailability disables the check switches.
-const SITE_TYPE_VALUES = Object.values(SITE_TYPE_LABELS);
-var visibleSiteTypes = new Set(SITE_TYPE_VALUES);
+const SITE_TYPE_VALUES = Object.values(SITE_TYPE_LABELS)
+    .slice()
+    .sort((a, b) => formatEnum(a).localeCompare(formatEnum(b)));
+const SITE_TYPE_DEFAULT_VISIBLE = ['RESTORATION', 'CONSERVATION', 'SUSTAINABLE_LAND_MANAGEMENT'];
+var visibleSiteTypes = new Set(SITE_TYPE_DEFAULT_VISIBLE);
 
 // Centroid-style variable name for each site type, used by centroid_webgl_style's
 // filter expression and pushed via updateStyleVariables() on toggle.
@@ -388,19 +394,20 @@ const SITE_TYPE_CODES = Object.fromEntries(
 // defaults to the check name itself when omitted (only "Proximity to mangroves" reads
 // better under its filter's own name, "Mangrove proximity"). All three statuses start
 // selected per check, matching every other status filter's "nothing excluded until you
-// narrow it" default.
+// narrow it" default. Listed alphabetically by label, since that's the order it's
+// rendered in.
 const CHECK_FILTERS = [
-    { name: 'Proximity to mangroves', label: 'Mangrove proximity' },
     { name: 'Average segment length' },
-    { name: 'Overlap with Restor sites' },
-    { name: 'Overlap with Protected Areas' },
-    { name: 'Name Check' },
-    { name: 'Geometry validity' },
     { name: 'Geometry shape' },
-    { name: 'Triangle check' },
-    { name: 'Overlap with water' },
+    { name: 'Geometry validity' },
+    { name: 'Proximity to mangroves', label: 'Mangrove proximity' },
+    { name: 'Name Check' },
     { name: 'Overlap with built area' },
+    { name: 'Overlap with Protected Areas' },
+    { name: 'Overlap with Restor sites' },
+    { name: 'Overlap with water' },
     { name: 'Profile Completeness' },
+    { name: 'Triangle check' },
 ];
 const CHECK_FILTER_STATUSES = ['Valid', 'Needs Review', 'Invalid'];
 
@@ -1332,7 +1339,7 @@ function buildSiteTypeRow(siteType) {
     switchWrap.className = 'switch';
     const input = document.createElement('input');
     input.type = 'checkbox';
-    input.checked = true;
+    input.checked = visibleSiteTypes.has(siteType);
     input.dataset.siteType = siteType;
     input.addEventListener('change', handleSiteTypeToggle);
     const slider = document.createElement('span');
@@ -1360,9 +1367,9 @@ function resetFilters() {
         checkbox.checked = visibleStatuses.has(checkbox.value);
     });
 
-    visibleSiteTypes = new Set(SITE_TYPE_VALUES);
+    visibleSiteTypes = new Set(SITE_TYPE_DEFAULT_VISIBLE);
     document.querySelectorAll("input[data-site-type]").forEach((checkbox) => {
-        checkbox.checked = true;
+        checkbox.checked = visibleSiteTypes.has(checkbox.dataset.siteType);
     });
 
     checkFilterVisibleStatuses = buildCheckFilterVisibleStatuses();
@@ -1376,11 +1383,11 @@ function resetFilters() {
         thresholdHa: RESET_AREA_KM2 * 100,
         showPublic: 1,
         showPrivate: 0,
-        showRestoration: 1,
-        showConservation: 1,
-        showLandscape: 1,
-        showAreaOfInterest: 1,
-        showSustainableLandManagement: 1,
+        showRestoration: visibleSiteTypes.has('RESTORATION') ? 1 : 0,
+        showConservation: visibleSiteTypes.has('CONSERVATION') ? 1 : 0,
+        showLandscape: visibleSiteTypes.has('LANDSCAPE') ? 1 : 0,
+        showAreaOfInterest: visibleSiteTypes.has('AREA_OF_INTEREST') ? 1 : 0,
+        showSustainableLandManagement: visibleSiteTypes.has('SUSTAINABLE_LAND_MANAGEMENT') ? 1 : 0,
     });
 }
 
@@ -1391,20 +1398,12 @@ document.addEventListener("DOMContentLoaded", function () {
         checkbox.addEventListener("change", handleVisibilityToggle);
     });
 
-    const checkFiltersList = document.getElementById('check-filters-list');
-
-    const siteTypeHeading = document.createElement('div');
-    siteTypeHeading.className = 'filter-section-heading';
-    siteTypeHeading.textContent = 'Site type';
-    checkFiltersList.appendChild(siteTypeHeading);
+    const siteTypeList = document.getElementById('site-type-list');
     SITE_TYPE_VALUES.forEach((siteType) => {
-        checkFiltersList.appendChild(buildSiteTypeRow(siteType));
+        siteTypeList.appendChild(buildSiteTypeRow(siteType));
     });
 
-    const checksHeading = document.createElement('div');
-    checksHeading.className = 'filter-section-heading';
-    checksHeading.textContent = 'Checks';
-    checkFiltersList.appendChild(checksHeading);
+    const checkFiltersList = document.getElementById('check-filters-list');
     CHECK_FILTERS.forEach((cf) => {
         checkFiltersList.appendChild(buildCheckFilterRow(cf.name, cf.label || cf.name));
     });

@@ -352,25 +352,6 @@
       overflow-wrap: break-word;
     }
 
-    /* Groups "More filters" into labeled sections (Site type, Checks) rather than one
-       undifferentiated list, now that it holds more than one kind of filter. */
-    #check-filters-list .filter-section-heading {
-      font-size: 11px;
-      font-weight: 600;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      margin: 10px 0 2px;
-    }
-
-    #check-filters-list .filter-section-heading:first-child {
-      margin-top: 0;
-    }
-
-    #check-filters-list .switch-row {
-      padding: 5px 2px;
-    }
-
     #filter-panel .switch-label {
       flex: 1;
       font-size: 13px;
@@ -774,7 +755,7 @@
     }
 
   </style>
-  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.61bb62c3.js"></script>
+  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.a74bf881.js"></script>
   <link rel="stylesheet" href="/web_apps/openlayers/vector_tiles/dist/assets/index.5fd94eca.css">
 </head>
 
@@ -819,6 +800,12 @@
         </span>
       </label>
     </div>
+    <div class="filter-row filter-row-spaced">
+      <span class="filter-label-row">
+        <span class="filter-label">Site type</span>
+      </span>
+    </div>
+    <div class="filter-toggle" id="site-type-list"></div>
     <button type="button" id="more-filters-toggle" aria-expanded="false" aria-controls="check-filters-list">
       <span>More filters</span>
       <span id="more-filters-chevron">▾</span>
