@@ -357,19 +357,19 @@ function getAreaThresholdKm2() {
     return sliderPositionToAreaKm2(parseFloat(document.getElementById('slider').value));
 }
 
-// Driven by the "Mangrove proximity" switches — a site is shown only if its
-// "Proximity to mangroves" verification check (see MANGROVE_PROXIMITY_CHECK_NAME) has
-// a status in this set. All three statuses start checked, matching every other status
+// Driven by the "Mangrove proximity" switch — a site is shown only if its
+// "Overlap with mangroves" verification check (see MANGROVE_PROXIMITY_CHECK_NAME) has
+// a status in this set. All three statuses start selected, matching every other status
 // filter's "nothing excluded until you narrow it" default. Only sites_plus_checks.fgb/
 // the MVT pyramid carry verification_checks (see parseListField's comment on that
 // column) — sites_centroids.fgb's narrow schema doesn't, so this filter has no effect
-// in Centroids mode; the switches are disabled there (see
+// in Centroids mode; the switch is disabled there (see
 // updateMangroveFilterAvailability) rather than silently doing nothing.
-const MANGROVE_PROXIMITY_CHECK_NAME = 'Proximity to mangroves';
+const MANGROVE_PROXIMITY_CHECK_NAME = 'Overlap with mangroves';
 const MANGROVE_STATUSES = ['Valid', 'Needs Review', 'Invalid'];
 var visibleMangroveStatuses = new Set(MANGROVE_STATUSES);
 
-// Returns the "Proximity to mangroves" check's status, or undefined if the site has no
+// Returns the "Overlap with mangroves" check's status, or undefined if the site has no
 // such check (e.g. it predates the check, or wasn't run for it) — distinct from any of
 // the three real statuses so it isn't accidentally treated as a match.
 function getMangroveProximityStatus(feature) {
@@ -551,8 +551,8 @@ function handleRenderModeChange(event) {
 // isSiteVisible) — disable rather than hide it in Centroids mode, matching the
 // "Show site checks" context-menu item's treatment of the same schema gap.
 function updateMangroveFilterAvailability() {
-    document.querySelectorAll("input[name='mangrove-status']").forEach((checkbox) => {
-        checkbox.disabled = renderMode !== 'geometries';
+    document.querySelectorAll('.mangrove-status-btn').forEach((button) => {
+        button.disabled = renderMode !== 'geometries';
     });
 }
 
@@ -1183,10 +1183,13 @@ document.getElementById('slider').addEventListener('input', function () {
 });
 
 function handleMangroveStatusToggle(event) {
-    if (event.target.checked) {
-        visibleMangroveStatuses.add(event.target.value);
+    const button = event.currentTarget;
+    const nowPressed = button.getAttribute('aria-pressed') !== 'true';
+    button.setAttribute('aria-pressed', String(nowPressed));
+    if (nowPressed) {
+        visibleMangroveStatuses.add(button.dataset.status);
     } else {
-        visibleMangroveStatuses.delete(event.target.value);
+        visibleMangroveStatuses.delete(button.dataset.status);
     }
     mvt_tile_layer.changed();
     vector_tile_layer.changed();
@@ -1198,8 +1201,8 @@ document.addEventListener("DOMContentLoaded", function () {
     visibilityCheckboxes.forEach(checkbox => {
         checkbox.addEventListener("change", handleVisibilityToggle);
     });
-    document.querySelectorAll("input[name='mangrove-status']").forEach(checkbox => {
-        checkbox.addEventListener("change", handleMangroveStatusToggle);
+    document.querySelectorAll('.mangrove-status-btn').forEach(button => {
+        button.addEventListener("click", handleMangroveStatusToggle);
     });
     document.querySelectorAll("input[name='render-mode']").forEach(radio => {
         radio.addEventListener("change", handleRenderModeChange);

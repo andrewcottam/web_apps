@@ -56,6 +56,7 @@
 
     #filter-panel .filter-row-spaced {
       margin-top: 10px;
+      align-items: center;
     }
 
     #filter-panel .filter-label {
@@ -205,21 +206,45 @@
       border: 1.5px dashed rgba(179, 140, 80, 0.9);
     }
 
-    /* Matches CHECK_STATUS_COLORS in main.js, so this legend reads the same as the
-       check-status pills shown in the popup and checks modal. */
-    #filter-panel .legend-swatch.legend-mangrove-valid {
-      background: rgba(107, 155, 94, 0.25);
-      border: 1.5px solid #6b9b5e;
+    /* A single compact 3-way switch (rather than three separate switch-rows) for the
+       mangrove-proximity filter, so it fits on the same line as its label. Each segment
+       toggles independently (not exclusive, unlike #render-mode-switch) — colors match
+       CHECK_STATUS_COLORS in main.js so this reads the same as the check-status pills
+       shown in the popup and checks modal. */
+    #filter-panel .mangrove-status-switch {
+      display: flex;
+      gap: 4px;
     }
 
-    #filter-panel .legend-swatch.legend-mangrove-needs-review {
-      background: rgba(211, 154, 78, 0.25);
-      border: 1.5px solid #d39a4e;
+    #filter-panel .mangrove-status-btn {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      padding: 0;
+      cursor: pointer;
+      background: #e2e2e2;
+      border: 1.5px solid #e2e2e2;
+      transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
     }
 
-    #filter-panel .legend-swatch.legend-mangrove-invalid {
-      background: rgba(192, 96, 92, 0.25);
-      border: 1.5px solid #c0605c;
+    #filter-panel .mangrove-status-btn.mangrove-status-valid[aria-pressed="true"] {
+      background: rgba(107, 155, 94, 0.35);
+      border-color: #6b9b5e;
+    }
+
+    #filter-panel .mangrove-status-btn.mangrove-status-needs-review[aria-pressed="true"] {
+      background: rgba(211, 154, 78, 0.35);
+      border-color: #d39a4e;
+    }
+
+    #filter-panel .mangrove-status-btn.mangrove-status-invalid[aria-pressed="true"] {
+      background: rgba(192, 96, 92, 0.35);
+      border-color: #c0605c;
+    }
+
+    #filter-panel .mangrove-status-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
     }
 
     #filter-panel .switch-label {
@@ -671,34 +696,13 @@
     <div class="filter-row filter-row-spaced">
       <span class="filter-label-row">
         <span class="filter-label">Mangrove proximity</span>
-        <span class="filter-info-icon" title="Only show sites where the &quot;Proximity to mangroves&quot; check has one of the selected statuses. Only available in Geometries mode.">i</span>
+        <span class="filter-info-icon" title="Only show sites where the &quot;Overlap with mangroves&quot; check has one of the selected statuses. Only available in Geometries mode.">i</span>
       </span>
-    </div>
-    <div class="filter-toggle" id="mangrove-status-toggle-group">
-      <label class="switch-row">
-        <span class="legend-swatch legend-mangrove-valid"></span>
-        <span class="switch-label">Valid</span>
-        <span class="switch">
-          <input type="checkbox" name="mangrove-status" value="Valid" checked>
-          <span class="switch-slider"></span>
-        </span>
-      </label>
-      <label class="switch-row">
-        <span class="legend-swatch legend-mangrove-needs-review"></span>
-        <span class="switch-label">Needs Review</span>
-        <span class="switch">
-          <input type="checkbox" name="mangrove-status" value="Needs Review" checked>
-          <span class="switch-slider"></span>
-        </span>
-      </label>
-      <label class="switch-row">
-        <span class="legend-swatch legend-mangrove-invalid"></span>
-        <span class="switch-label">Invalid</span>
-        <span class="switch">
-          <input type="checkbox" name="mangrove-status" value="Invalid" checked>
-          <span class="switch-slider"></span>
-        </span>
-      </label>
+      <div class="mangrove-status-switch" id="mangrove-status-switch">
+        <button type="button" class="mangrove-status-btn mangrove-status-valid" data-status="Valid" aria-pressed="true" title="Valid"></button>
+        <button type="button" class="mangrove-status-btn mangrove-status-needs-review" data-status="Needs Review" aria-pressed="true" title="Needs Review"></button>
+        <button type="button" class="mangrove-status-btn mangrove-status-invalid" data-status="Invalid" aria-pressed="true" title="Invalid"></button>
+      </div>
     </div>
   </div>
   <div id="popup">
