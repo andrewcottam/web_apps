@@ -329,10 +329,38 @@ function formatSurfaceAreaHa(props) {
     return formatted ? `${formatted} ha` : '';
 }
 
+// The area slider's native <input type="range"> value is a *position* (0..
+// AREA_SLIDER_STEPS), not the km² threshold itself — mapped through an exponential
+// curve so it stays linear in decades rather than in km². Real sites span from ~1 ha
+// up to thousands of km², so a slider linear in km² leaves everything below ~1000 km²
+// crammed into the first couple of pixels: values like 1/10/100/1000 ha were all the
+// same leftmost slider pixel. Mapping position -> 10^(log(min) + t*(log(max)-log(min)))
+// instead gives each order of magnitude equal space on the track.
+const AREA_SLIDER_MIN_KM2 = 0.01; // 1 ha — the practical floor; below this nothing new becomes selectable anyway
+const AREA_SLIDER_MAX_KM2 = 1000000; // unchanged from the slider's previous linear max
+const AREA_SLIDER_STEPS = 1000;
+const AREA_SLIDER_LOG_MIN = Math.log10(AREA_SLIDER_MIN_KM2);
+const AREA_SLIDER_LOG_MAX = Math.log10(AREA_SLIDER_MAX_KM2);
+
+function sliderPositionToAreaKm2(position) {
+    const t = position / AREA_SLIDER_STEPS;
+    return Math.pow(10, AREA_SLIDER_LOG_MIN + t * (AREA_SLIDER_LOG_MAX - AREA_SLIDER_LOG_MIN));
+}
+
+function areaKm2ToSliderPosition(areaKm2) {
+    const clamped = Math.min(Math.max(areaKm2, AREA_SLIDER_MIN_KM2), AREA_SLIDER_MAX_KM2);
+    const t = (Math.log10(clamped) - AREA_SLIDER_LOG_MIN) / (AREA_SLIDER_LOG_MAX - AREA_SLIDER_LOG_MIN);
+    return Math.round(t * AREA_SLIDER_STEPS);
+}
+
+function getAreaThresholdKm2() {
+    return sliderPositionToAreaKm2(parseFloat(document.getElementById('slider').value));
+}
+
 // Shared visibility predicate for the sites layers, so both respect the same
 // area threshold/status filters without duplicating logic.
 function isSiteVisible(feature) {
-    const threshold = parseFloat(document.getElementById('slider').value);
+    const threshold = getAreaThresholdKm2();
     const areaKm2 = getSurfaceAreaKm2(feature);
     const vis = decodeEnum(feature.get('site_visibility'), SITE_VISIBILITY_LABELS);
     // A negative area is bad/invalid data (e.g. a malformed polygon), never a real
@@ -371,9 +399,9 @@ function isSiteVisible(feature) {
 // (which doesn't feed the picking geometry) avoids that loop entirely.
 const centroid_webgl_style = {
     variables: {
-        // thresholdHa mirrors the slider's km² value converted to hectares, since
+        // thresholdHa mirrors the slider's km² threshold converted to hectares, since
         // sites_centroids.fgb stores surface_area_ha, not surface_area_km2.
-        thresholdHa: parseFloat(document.getElementById('slider').value) * 100,
+        thresholdHa: getAreaThresholdKm2() * 100,
         showPublic: visibleStatuses.has('PUBLIC') ? 1 : 0,
         showPrivate: visibleStatuses.has('PRIVATE') ? 1 : 0,
     },
@@ -1074,12 +1102,29 @@ document.addEventListener('keydown', function (event) {
     document.getElementById('popup').style.display = "none";
 });
 
+// Displays the slider's underlying km² threshold in whichever unit reads more
+// naturally at that size — ha below 1 km² (where the exponential slider spends most of
+// its range), km² at or above it — rather than always km², which would round tiny
+// thresholds like "1 ha" down to "0 km²".
+function updateSliderLabel(areaKm2) {
+    const valueEl = document.getElementById('slider-value');
+    const unitEl = document.getElementById('slider-unit');
+    if (areaKm2 < 1) {
+        valueEl.innerText = formatNumber(areaKm2 * 100);
+        unitEl.innerText = 'ha';
+    } else {
+        valueEl.innerText = formatNumber(areaKm2);
+        unitEl.innerText = 'km²';
+    }
+}
+
 // Update layer style when slider changes
 document.getElementById('slider').addEventListener('input', function () {
-    document.getElementById('slider-value').innerText = this.value;
+    const areaKm2 = sliderPositionToAreaKm2(parseFloat(this.value));
+    updateSliderLabel(areaKm2);
     mvt_tile_layer.changed();
     vector_tile_layer.changed();
-    centroid_webgl_layer.updateStyleVariables({ thresholdHa: parseFloat(this.value) * 100 });
+    centroid_webgl_layer.updateStyleVariables({ thresholdHa: areaKm2 * 100 });
 });
 
 // Ensure the script runs after the DOM is fully loaded
@@ -1092,4 +1137,5 @@ document.addEventListener("DOMContentLoaded", function () {
         radio.addEventListener("change", handleRenderModeChange);
     });
     document.getElementById('login-button').addEventListener('click', login_clicked);
+    updateSliderLabel(getAreaThresholdKm2());
 });
