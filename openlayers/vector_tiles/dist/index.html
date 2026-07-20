@@ -150,6 +150,27 @@
       cursor: not-allowed;
     }
 
+    #reset-filters-button {
+      display: block;
+      width: 100%;
+      margin-top: 14px;
+      padding: 7px 0;
+      background: none;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+    }
+
+    #reset-filters-button:hover,
+    #reset-filters-button:focus-visible {
+      background: #f5f5f5;
+      color: #333;
+      outline: none;
+    }
+
     #centroid-loading {
       display: flex;
       align-items: center;
@@ -672,7 +693,7 @@
     }
 
   </style>
-  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.f7416d98.js"></script>
+  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.7735499c.js"></script>
   <link rel="stylesheet" href="/web_apps/openlayers/vector_tiles/dist/assets/index.5fd94eca.css">
 </head>
 
@@ -728,6 +749,7 @@
         <button type="button" class="mangrove-status-btn mangrove-status-invalid" data-status="Invalid" aria-pressed="true" title="Invalid"><span class="mangrove-status-swatch"></span></button>
       </div>
     </div>
+    <button type="button" id="reset-filters-button">Reset filters</button>
   </div>
   <div id="popup">
   </div>
