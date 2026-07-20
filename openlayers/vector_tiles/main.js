@@ -357,6 +357,32 @@ function getAreaThresholdKm2() {
     return sliderPositionToAreaKm2(parseFloat(document.getElementById('slider').value));
 }
 
+// Driven by the "More filters" section's Site type switches — a site is shown only if
+// its site_type is in this set. All five types start selected, same "nothing excluded
+// until you narrow it" default as every other status filter. Unlike the check filters
+// below, this one also applies in Centroids mode: sites_centroids.fgb carries site_type
+// same as sites_plus_checks.fgb (see the *_LABELS block comment above), so
+// centroid_webgl_style mirrors this set via its own show* variables rather than being
+// disabled the way updateCheckFiltersAvailability disables the check switches.
+const SITE_TYPE_VALUES = Object.values(SITE_TYPE_LABELS);
+var visibleSiteTypes = new Set(SITE_TYPE_VALUES);
+
+// Centroid-style variable name for each site type, used by centroid_webgl_style's
+// filter expression and pushed via updateStyleVariables() on toggle.
+const SITE_TYPE_VAR_NAMES = {
+    RESTORATION: 'showRestoration',
+    CONSERVATION: 'showConservation',
+    LANDSCAPE: 'showLandscape',
+    AREA_OF_INTEREST: 'showAreaOfInterest',
+    SUSTAINABLE_LAND_MANAGEMENT: 'showSustainableLandManagement',
+};
+
+// SITE_TYPE_LABELS inverted (name -> code), since centroid_webgl_style's filter
+// expression matches the raw int-coded 'site_type' property, not the decoded label.
+const SITE_TYPE_CODES = Object.fromEntries(
+    Object.entries(SITE_TYPE_LABELS).map(([code, name]) => [name, Number(code)])
+);
+
 // Driven by the "More filters" section's per-check switches — a site is shown only if
 // every listed check's status is in that check's own visible-statuses set. `label`
 // defaults to the check name itself when omitted (only "Proximity to mangroves" reads
@@ -414,13 +440,17 @@ function isSiteVisible(feature) {
     const threshold = getAreaThresholdKm2();
     const areaKm2 = getSurfaceAreaKm2(feature);
     const vis = decodeEnum(feature.get('site_visibility'), SITE_VISIBILITY_LABELS);
+    const siteType = decodeEnum(feature.get('site_type'), SITE_TYPE_LABELS);
     const checksOk = CHECK_FILTERS.every((cf) =>
         checkFilterVisibleStatuses[cf.name].has(getCheckStatus(feature, cf.name))
     );
     // A negative area is bad/invalid data (e.g. a malformed polygon), never a real
     // site size — always hide it rather than let it slip through as "smaller than
     // any threshold".
-    return !(areaKm2 > threshold || areaKm2 < 0 || !visibleStatuses.has(vis) || !checksOk);
+    return !(
+        areaKm2 > threshold || areaKm2 < 0 || !visibleStatuses.has(vis) ||
+        !visibleSiteTypes.has(siteType) || !checksOk
+    );
 }
 
 // Centroid layer style: a literal WebGL expression style, not an ol/style/Style
@@ -458,12 +488,24 @@ const centroid_webgl_style = {
         thresholdHa: getAreaThresholdKm2() * 100,
         showPublic: visibleStatuses.has('PUBLIC') ? 1 : 0,
         showPrivate: visibleStatuses.has('PRIVATE') ? 1 : 0,
+        showRestoration: visibleSiteTypes.has('RESTORATION') ? 1 : 0,
+        showConservation: visibleSiteTypes.has('CONSERVATION') ? 1 : 0,
+        showLandscape: visibleSiteTypes.has('LANDSCAPE') ? 1 : 0,
+        showAreaOfInterest: visibleSiteTypes.has('AREA_OF_INTEREST') ? 1 : 0,
+        showSustainableLandManagement: visibleSiteTypes.has('SUSTAINABLE_LAND_MANAGEMENT') ? 1 : 0,
     },
     filter: ['all',
         ['<=', ['get', 'surface_area_ha'], ['var', 'thresholdHa']],
         ['any',
             ['all', ['==', ['get', 'site_visibility'], 0], ['==', ['var', 'showPublic'], 1]],
             ['all', ['==', ['get', 'site_visibility'], 1], ['==', ['var', 'showPrivate'], 1]],
+        ],
+        ['any',
+            ['all', ['==', ['get', 'site_type'], 0], ['==', ['var', 'showRestoration'], 1]],
+            ['all', ['==', ['get', 'site_type'], 1], ['==', ['var', 'showConservation'], 1]],
+            ['all', ['==', ['get', 'site_type'], 2], ['==', ['var', 'showLandscape'], 1]],
+            ['all', ['==', ['get', 'site_type'], 3], ['==', ['var', 'showAreaOfInterest'], 1]],
+            ['all', ['==', ['get', 'site_type'], 4], ['==', ['var', 'showSustainableLandManagement'], 1]],
         ],
     ],
     'circle-radius': 2,
@@ -1261,6 +1303,47 @@ function buildCheckFilterRow(checkName, label) {
     return row;
 }
 
+function handleSiteTypeToggle(event) {
+    const checkbox = event.target;
+    const siteType = checkbox.dataset.siteType;
+    if (checkbox.checked) {
+        visibleSiteTypes.add(siteType);
+    } else {
+        visibleSiteTypes.delete(siteType);
+    }
+    mvt_tile_layer.changed();
+    vector_tile_layer.changed();
+    centroid_webgl_layer.updateStyleVariables({ [SITE_TYPE_VAR_NAMES[siteType]]: checkbox.checked ? 1 : 0 });
+}
+
+// Builds one "More filters" Site type row — reuses the same switch-row/switch markup
+// as the always-visible Public/Private toggles, just without their color swatch (site
+// types have no natural per-value color the way public/private visibility does).
+function buildSiteTypeRow(siteType) {
+    const row = document.createElement('label');
+    row.className = 'switch-row';
+
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'switch-label';
+    labelSpan.textContent = formatEnum(siteType);
+    row.appendChild(labelSpan);
+
+    const switchWrap = document.createElement('span');
+    switchWrap.className = 'switch';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.checked = true;
+    input.dataset.siteType = siteType;
+    input.addEventListener('change', handleSiteTypeToggle);
+    const slider = document.createElement('span');
+    slider.className = 'switch-slider';
+    switchWrap.appendChild(input);
+    switchWrap.appendChild(slider);
+    row.appendChild(switchWrap);
+
+    return row;
+}
+
 const RESET_AREA_KM2 = 3000;
 
 // Restores every filter control (area, public/private, every check filter) to its
@@ -1277,6 +1360,11 @@ function resetFilters() {
         checkbox.checked = visibleStatuses.has(checkbox.value);
     });
 
+    visibleSiteTypes = new Set(SITE_TYPE_VALUES);
+    document.querySelectorAll("input[data-site-type]").forEach((checkbox) => {
+        checkbox.checked = true;
+    });
+
     checkFilterVisibleStatuses = buildCheckFilterVisibleStatuses();
     document.querySelectorAll('.check-status-btn').forEach((button) => {
         button.setAttribute('aria-pressed', 'true');
@@ -1288,6 +1376,11 @@ function resetFilters() {
         thresholdHa: RESET_AREA_KM2 * 100,
         showPublic: 1,
         showPrivate: 0,
+        showRestoration: 1,
+        showConservation: 1,
+        showLandscape: 1,
+        showAreaOfInterest: 1,
+        showSustainableLandManagement: 1,
     });
 }
 
@@ -1299,9 +1392,23 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     const checkFiltersList = document.getElementById('check-filters-list');
+
+    const siteTypeHeading = document.createElement('div');
+    siteTypeHeading.className = 'filter-section-heading';
+    siteTypeHeading.textContent = 'Site type';
+    checkFiltersList.appendChild(siteTypeHeading);
+    SITE_TYPE_VALUES.forEach((siteType) => {
+        checkFiltersList.appendChild(buildSiteTypeRow(siteType));
+    });
+
+    const checksHeading = document.createElement('div');
+    checksHeading.className = 'filter-section-heading';
+    checksHeading.textContent = 'Checks';
+    checkFiltersList.appendChild(checksHeading);
     CHECK_FILTERS.forEach((cf) => {
         checkFiltersList.appendChild(buildCheckFilterRow(cf.name, cf.label || cf.name));
     });
+
     document.getElementById('more-filters-toggle').addEventListener('click', function () {
         const expanded = this.getAttribute('aria-expanded') === 'true';
         this.setAttribute('aria-expanded', String(!expanded));
