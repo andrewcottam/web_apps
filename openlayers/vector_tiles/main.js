@@ -1082,6 +1082,14 @@ document.getElementById('feature-menu-checks').addEventListener('click', functio
     hideFeatureMenu();
 });
 
+document.getElementById('feature-menu-restor').addEventListener('click', function () {
+    if (!feature_menu_feature) return;
+    const siteId = feature_menu_feature.get('id');
+    if (siteId === undefined) return;
+    window.open(`https://restor.eco/sites/${siteId}`, '_blank', 'noopener');
+    hideFeatureMenu();
+});
+
 document.getElementById('checks-modal-close').addEventListener('click', closeChecksModal);
 document.getElementById('checks-modal-backdrop').addEventListener('click', function (event) {
     if (event.target === this) closeChecksModal();
