@@ -705,6 +705,14 @@ function showFeatureMenu(feature, layer, coordinate) {
     feature_menu_popup.setPosition(coordinate);
     document.getElementById('feature-menu').hidden = false;
 
+    // Centroid features come from sites_centroids.fgb's deliberately narrow schema
+    // (see loadAllCentroids), which doesn't carry check data — only the polygon
+    // sources (mvt_tile_layer/vector_tile_layer) do. Disable rather than hide so the
+    // menu's layout/item order stays consistent regardless of render mode.
+    const checksButton = document.getElementById('feature-menu-checks');
+    checksButton.disabled = layer === centroid_webgl_layer;
+    checksButton.title = checksButton.disabled ? 'Only available in Geometries mode' : '';
+
     // Guarantee the info popup shows this feature (rather than relying on whatever
     // hover state happened to be active already) — it then stays put until an action
     // is taken, per applyConfirmedHover's feature_menu_feature check above.
