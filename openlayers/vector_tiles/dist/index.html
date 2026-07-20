@@ -329,7 +329,10 @@
       max-height: 260px;
       overflow-y: auto;
       margin: 4px 0 0;
-      padding-right: 2px;
+      /* Top padding matches .check-status-btn's -4px margin (see that rule's comment)
+         — without it, the negative margin pulls each row's status buttons up past this
+         container's own top edge, and overflow-y clips their tops off. */
+      padding: 4px 2px 0 0;
     }
 
     #check-filters-list[hidden] {
