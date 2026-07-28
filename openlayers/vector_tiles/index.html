@@ -339,6 +339,17 @@
        vector_tile_layer only ever hold whichever tiles/bbox are currently loaded, so a
        count from them wouldn't represent all matching sites, only what's happened to
        load so far. */
+    #build-version {
+      position: absolute;
+      left: 8px;
+      bottom: 4px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 10px;
+      color: rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+      z-index: 1;
+    }
+
     #status-bar {
       position: absolute;
       left: 50%;
@@ -925,6 +936,7 @@
   <div class="map_container">
     <div id="map" class="map"></div>
   </div>
+  <div id="build-version"></div>
   <div id="status-bar" hidden></div>
   <div id="filter-panel">
     <div class="site-search" id="site-search-wrapper">

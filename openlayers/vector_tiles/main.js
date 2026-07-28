@@ -1782,6 +1782,10 @@ function initSiteSearch() {
     });
 }
 
+// __COMMIT_SHA__ is a build-time string constant (see vite.config.js's `define`) —
+// not a real identifier, so no import/declaration exists for it in this file.
+document.getElementById('build-version').textContent = typeof __COMMIT_SHA__ !== 'undefined' ? __COMMIT_SHA__ : 'dev';
+
 // Ensure the script runs after the DOM is fully loaded
 document.addEventListener("DOMContentLoaded", function () {
     let visibilityCheckboxes = document.querySelectorAll("input[name='options']");
