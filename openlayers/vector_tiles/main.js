@@ -480,9 +480,33 @@ const CHECK_STATUS_CODES_INVERSE = Object.fromEntries(
     Object.entries(CHECK_STATUS_CODES).map(([status, code]) => [code, status])
 );
 
+// Maps each CHECK_FILTERS name to the compact tile property that carries its
+// status, matching cloud_functions/export-sites-to-mvt's VERIFICATION_CHECK_TILE_KEYS.
+// The MVT tiles encode verification status this way (one V/N/I/X-coded property per
+// check) rather than as a full verification_checks JSON blob — a JSON blob per
+// feature doesn't scale to ~344k features in a single zoom-0 tile (see that
+// function's readme for the full story).
+const CHECK_TILE_PROPERTY_KEYS = {
+    'Average segment length': 'check_avg_seg_len',
+    'Geometry shape': 'check_geom_shape',
+    'Geometry validity': 'check_geom_valid',
+    'Proximity to mangroves': 'check_mangrove_prox',
+    'Name Check': 'check_name',
+    'Overlap with built area': 'check_built_area',
+    'Overlap with Protected Areas': 'check_pa_overlap',
+    'Overlap with Restor sites': 'check_restor_overlap',
+    'Overlap with water': 'check_water',
+    'Profile Completeness': 'check_profile',
+    'Triangle check': 'check_triangle',
+};
+// CHECK_STATUS_CODES_INVERSE plus 'X', the tile-only code for the real (but
+// non-filterable) "Not checked" status — never offered as a filter button, so it's
+// not part of CHECK_STATUS_CODES/CHECK_FILTER_STATUSES.
+const CHECK_CODE_TO_STATUS = { ...CHECK_STATUS_CODES_INVERSE, X: 'Not checked' };
+
 // One visible-statuses Set per check, keyed by check name (not by the filter's display
-// label, since that's all getCheckStatus has to match against verification_checks). A
-// plain object, not a JS Map — main.js imports ol's own `Map` class (`import { Map,
+// label, since that's all getCheckStatus/CHECK_TILE_PROPERTY_KEYS have to match
+// against). A plain object, not a JS Map — main.js imports ol's own `Map` class (`import { Map,
 // View } from 'ol'`), which shadows the global constructor, so `new Map(...)` here
 // would silently build a broken ol.Map instead.
 function buildCheckFilterVisibleStatuses() {
@@ -494,20 +518,19 @@ function buildCheckFilterVisibleStatuses() {
 }
 var checkFilterVisibleStatuses = buildCheckFilterVisibleStatuses();
 
-// Returns a named verification check's status for a feature — 'Invalid' if the site
-// has no such check at all (e.g. it predates the check, wasn't run for it, or came
-// from mvt_tile_layer's pre-generated MVT pyramid, which doesn't carry
-// verification_checks the way sites_plus_checks.fgb does — see parseListField's
-// comment on that column). Sites missing the check are lumped in with "Invalid" rather
-// than kept in some separate always-shown/always-hidden case, so they stay visible
-// until "Invalid" is unchecked for that filter, same as a site the check actually
-// flagged. Every one of these filters has no effect in Centroids mode either way; the
-// switches are disabled there (see updateCheckFiltersAvailability) rather than
-// silently doing nothing.
+// Returns a named verification check's status for a feature, decoded from its
+// compact tile property (see CHECK_TILE_PROPERTY_KEYS) — 'Invalid' if the property
+// is unset (the site has no verification data at all, e.g. it predates the check or
+// wasn't run for it) or holds an unrecognized code. Sites missing the check are
+// lumped in with "Invalid" rather than kept in some separate always-shown/
+// always-hidden case, so they stay visible until "Invalid" is unchecked for that
+// filter, same as a site the check actually flagged. Every one of these filters has
+// no effect in Centroids mode either way; the switches are disabled there (see
+// updateCheckFiltersAvailability) rather than silently doing nothing.
 function getCheckStatus(feature, checkName) {
-    const checks = parseListField(feature.get('verification_checks')).filter(Boolean);
-    const check = checks.find((c) => c && typeof c === 'object' && c.name === checkName);
-    return check ? check.status : 'Invalid';
+    const key = CHECK_TILE_PROPERTY_KEYS[checkName];
+    const code = key ? feature.get(key) : undefined;
+    return CHECK_CODE_TO_STATUS[code] || 'Invalid';
 }
 
 // Shared visibility predicate for the sites layers, so both respect the same
