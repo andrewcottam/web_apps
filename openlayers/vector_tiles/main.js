@@ -473,6 +473,13 @@ const CHECK_FILTERS = [
 ];
 const CHECK_FILTER_STATUSES = ['Valid', 'Needs Review', 'Invalid'];
 
+// Default visible set per check: the 3 toggleable statuses above, plus 'Not
+// checked' (e.g. landcover checks skipped for very large sites) — there's no
+// button for it yet, but a site shouldn't be hidden by default just because a
+// check didn't run. See getCheckStatus's comment for the toggleable/default
+// distinction; TODO: add a real 4th toggle for this instead of always-on.
+const DEFAULT_VISIBLE_CHECK_STATUSES = [...CHECK_FILTER_STATUSES, 'Not checked'];
+
 // Single-letter codes for compact "checks" URL encoding — see buildStateParams/
 // getUrlParameters.
 const CHECK_STATUS_CODES = { 'Valid': 'V', 'Needs Review': 'N', 'Invalid': 'I' };
@@ -512,7 +519,7 @@ const CHECK_CODE_TO_STATUS = { ...CHECK_STATUS_CODES_INVERSE, X: 'Not checked' }
 function buildCheckFilterVisibleStatuses() {
     const result = {};
     CHECK_FILTERS.forEach((cf) => {
-        result[cf.name] = new Set(CHECK_FILTER_STATUSES);
+        result[cf.name] = new Set(DEFAULT_VISIBLE_CHECK_STATUSES);
     });
     return result;
 }
@@ -899,8 +906,10 @@ function buildStateParams() {
     const checksParts = [];
     CHECK_FILTERS.forEach((cf) => {
         const statuses = checkFilterVisibleStatuses[cf.name];
-        if (statuses.size === CHECK_FILTER_STATUSES.length) return; // default: nothing excluded
-        const codes = [...statuses].map((s) => CHECK_STATUS_CODES[s]).sort().join('');
+        if (statuses.size === DEFAULT_VISIBLE_CHECK_STATUSES.length) return; // default: nothing excluded
+        // 'Not checked' has no URL code (no toggle button controls it — see
+        // DEFAULT_VISIBLE_CHECK_STATUSES) and is dropped from the encoded set here.
+        const codes = [...statuses].filter((s) => CHECK_STATUS_CODES[s]).map((s) => CHECK_STATUS_CODES[s]).sort().join('');
         checksParts.push(`${cf.name}:${codes}`);
     });
     if (checksParts.length) params.set('checks', checksParts.join(';'));
@@ -1634,7 +1643,9 @@ function applyUrlFilters(params) {
         Object.entries(params.checks).forEach(([name, codes]) => {
             if (!checkFilterVisibleStatuses[name]) return; // unknown check name — ignore
             const statuses = codes.map((c) => CHECK_STATUS_CODES_INVERSE[c]).filter(Boolean);
-            checkFilterVisibleStatuses[name] = new Set(statuses);
+            // 'Not checked' has no URL code (see buildStateParams) and stays
+            // always-on regardless of what this URL encodes for the toggleable statuses.
+            checkFilterVisibleStatuses[name] = new Set([...statuses, 'Not checked']);
         });
     }
     document.querySelectorAll('.check-status-btn').forEach((button) => {
