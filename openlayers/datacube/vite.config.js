@@ -14,7 +14,7 @@ function getCommitSha() {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: "/web_apps/openlayers/zarr_ndvi/dist/",
+  base: "/web_apps/openlayers/datacube/dist/",
   server: {
     open: true,
   },

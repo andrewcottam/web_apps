@@ -1,7 +1,7 @@
 # NDVI Timeseries Explorer
 
 Draw a polygon anywhere over `restor-datacube/sentinel2_ndvi/site-123_timeseries.zarr`
-and see its NDVI aggregated into a per-year bar chart. Reads the zarr store (public
+and see its NDVI aggregated into a per-year seasonal chart. Reads the zarr store (public
 GCS, zarr v2, consolidated metadata) directly from the browser with
 [zarrita](https://github.com/manzt/zarrita.js) — no backend involved.
 
@@ -32,7 +32,7 @@ Add any other origins (e.g. a different local dev port) you need to `origin`.
 # Running
 Rename vite.config.js to _vite.config.js
 ```
-cd openlayers/zarr_ndvi
+cd openlayers/datacube
 npm install
 npx vite
 ```
@@ -40,11 +40,11 @@ npx vite
 # Deploying
 Rename _vite.config.js to vite.config.js
 ```
-cd openlayers/zarr_ndvi
+cd openlayers/datacube
 npm run build
 ```
 Commit and push to GitHub.
 
 # Live site
 Is available at:
-https://andrewcottam.github.io/web_apps/openlayers/zarr_ndvi/dist/index.html
+https://andrewcottam.github.io/web_apps/openlayers/datacube/dist/index.html

@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>NDVI Timeseries Explorer</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+    }
+
+    .map {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: lightblue;
+    }
+
+    #build-version {
+      position: absolute;
+      left: 8px;
+      bottom: 4px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 10px;
+      color: rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #login-container {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 10;
+    }
+
+    #login-button {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      background: white;
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    #login-button img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    #login-button svg {
+      color: #666;
+    }
+
+    #draw-toolbar {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 8px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      padding: 6px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    #draw-toolbar button {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+      background: none;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #444;
+      cursor: pointer;
+    }
+
+    #draw-toolbar button:hover {
+      background: #f2f2f2;
+    }
+
+    #draw-toolbar button.active {
+      background: rgba(107, 155, 94, 0.18);
+      color: #3d6b2c;
+    }
+
+    #draw-toolbar button:disabled {
+      color: #bbb;
+      cursor: not-allowed;
+      background: none;
+    }
+
+    #ndvi-panel {
+      display: none;
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 460px;
+      max-width: calc(100vw - 40px);
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      padding: 14px 18px 10px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      z-index: 10;
+      box-sizing: border-box;
+    }
+
+    #ndvi-panel.visible {
+      display: block;
+    }
+
+    #ndvi-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    #ndvi-panel-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #222;
+    }
+
+    #ndvi-panel-close {
+      border: none;
+      background: none;
+      font-size: 18px;
+      line-height: 1;
+      color: #888;
+      cursor: pointer;
+      padding: 2px;
+    }
+
+    #ndvi-panel-close:hover {
+      color: #333;
+    }
+
+    #ndvi-panel-header-buttons {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    #ndvi-settings-button {
+      border: none;
+      background: none;
+      color: #888;
+      cursor: pointer;
+      padding: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+    }
+
+    #ndvi-settings-button:hover {
+      color: #333;
+      background: #f2f2f2;
+    }
+
+    #ndvi-settings-panel {
+      background: #fafafa;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      font-size: 11px;
+    }
+
+    #ndvi-settings-panel .ndvi-settings-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 0;
+      color: #444;
+      cursor: pointer;
+    }
+
+    #ndvi-settings-panel .ndvi-settings-row input[type="checkbox"],
+    #ndvi-settings-panel .ndvi-settings-row input[type="radio"] {
+      cursor: pointer;
+      accent-color: #6b9b5e;
+    }
+
+    #ndvi-settings-panel .ndvi-settings-yaxis-inputs {
+      gap: 12px;
+      padding-left: 18px;
+      cursor: default;
+    }
+
+    #ndvi-settings-panel .ndvi-settings-yaxis-inputs label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      cursor: default;
+    }
+
+    #ndvi-settings-panel .ndvi-settings-yaxis-inputs input[type="number"] {
+      width: 52px;
+      font-size: 11px;
+      padding: 2px 4px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    #ndvi-settings-panel .ndvi-settings-divider {
+      border-top: 1px solid #eee;
+      margin: 6px 0;
+    }
+
+    #ndvi-settings-panel .ndvi-settings-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      padding: 2px 0;
+    }
+
+    #ndvi-panel-body {
+      min-height: 40px;
+      max-height: calc(100vh - 120px);
+      overflow-y: auto;
+    }
+
+    #ndvi-status {
+      font-size: 12px;
+      color: #888;
+      padding: 10px 0;
+    }
+
+    #ndvi-status.error {
+      color: #c0605c;
+    }
+
+    #ndvi-chart {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    #ndvi-chart .ndvi-marker,
+    #ndvi-chart .ndvi-marker-hit {
+      cursor: pointer;
+    }
+
+    #ndvi-chart .ndvi-marker:hover {
+      opacity: 0.75;
+    }
+
+    #ndvi-chart .ndvi-series-line {
+      pointer-events: none;
+    }
+
+    #ndvi-chart .year-hidden {
+      display: none;
+    }
+
+    #ndvi-chart .ndvi-month-label {
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    #ndvi-chart .ndvi-month-label.month-off {
+      opacity: 0.35;
+      text-decoration: line-through;
+    }
+
+    #ndvi-chart .ndvi-month-all-toggle {
+      cursor: pointer;
+      pointer-events: auto;
+      font-weight: 700;
+    }
+
+    #ndvi-chart .ndvi-series-dimmed {
+      opacity: 0.25;
+    }
+
+    #ndvi-chart .ndvi-series-line.ndvi-series-hovered {
+      stroke-width: 3;
+    }
+
+    #ndvi-chart .ndvi-marker.ndvi-series-hovered {
+      transform-box: fill-box;
+      transform-origin: center;
+      transform: scale(1.5);
+    }
+
+    #ndvi-selection-ring {
+      pointer-events: none;
+    }
+
+    #ndvi-chart .ndvi-axis {
+      stroke: #ccc;
+      stroke-width: 1;
+    }
+
+    #ndvi-chart .ndvi-gridline {
+      stroke: #eee;
+      stroke-width: 1;
+    }
+
+    #ndvi-chart text {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 10px;
+      fill: #888;
+      pointer-events: none;
+    }
+
+    .ndvi-chart-hint {
+      font-size: 11px;
+      color: #999;
+      margin-bottom: 2px;
+    }
+
+    .ndvi-chart-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .ndvi-chart-svg-wrap {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ndvi-legend-list {
+      display: flex;
+      flex-direction: column;
+      flex-wrap: nowrap;
+      gap: 1px;
+      flex-shrink: 0;
+      max-height: 250px;
+      overflow-y: auto;
+      padding-left: 8px;
+      border-left: 1px solid #eee;
+    }
+
+    .ndvi-year-toggle {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      padding: 1px;
+      font-size: 9px;
+      color: #444;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      line-height: 1.2;
+    }
+
+    /* Visually hidden but still focusable/functional — clicking the label (which
+       wraps it) still toggles it and fires the change event our JS listens for. */
+    .ndvi-year-toggle input[type="checkbox"] {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
+
+    /* Since the checkbox itself isn't visible, "off" is shown by dimming the
+       whole label (swatch + text) instead. */
+    .ndvi-year-toggle:has(input:not(:checked)) {
+      opacity: 0.4;
+    }
+
+    .ndvi-year-toggle-all {
+      font-weight: 600;
+      color: #666;
+      padding-bottom: 3px;
+      margin-bottom: 2px;
+      border-bottom: 1px solid #f2f2f2;
+    }
+
+    .ndvi-year-swatch {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    #ndvi-legend {
+      display: none;
+      position: absolute;
+      bottom: 20px;
+      right: 10px;
+      z-index: 10;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      padding: 10px 12px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      width: 160px;
+      box-sizing: border-box;
+    }
+
+    #ndvi-legend.visible {
+      display: block;
+    }
+
+    #ndvi-legend-date {
+      font-size: 13px;
+      font-weight: 600;
+      color: #222;
+      margin-bottom: 4px;
+    }
+
+    #ndvi-legend-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 6px;
+    }
+
+    #ndvi-legend-bar {
+      height: 10px;
+      border-radius: 3px;
+      background: linear-gradient(to right, rgb(165, 0, 38), rgb(215, 48, 39), rgb(244, 109, 67), rgb(253, 174, 97), rgb(254, 224, 139), rgb(255, 255, 191), rgb(217, 239, 139), rgb(166, 217, 106), rgb(102, 189, 99), rgb(26, 152, 80), rgb(0, 104, 55));
+    }
+
+    #ndvi-legend-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #888;
+      margin-top: 3px;
+    }
+
+    #ndvi-hover-tooltip {
+      display: none;
+      position: fixed;
+      z-index: 20;
+      background: #222;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 7px;
+      border-radius: 5px;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    #ndvi-hover-tooltip.visible {
+      display: block;
+    }
+  </style>
+  <script type="module" crossorigin src="/web_apps/openlayers/datacube/dist/assets/index-vUmAzGTi.js"></script>
+  <link rel="stylesheet" crossorigin href="/web_apps/openlayers/datacube/dist/assets/index-CmhLOP92.css">
+</head>
+
+<body>
+  <div class="map" id="map"></div>
+  <div id="build-version"></div>
+  <div id="ndvi-hover-tooltip"></div>
+  <div id="ndvi-legend">
+    <div id="ndvi-legend-date"></div>
+    <div id="ndvi-legend-title">NDVI</div>
+    <div id="ndvi-legend-bar"></div>
+    <div id="ndvi-legend-labels">
+      <span>-0.2</span>
+      <span>1.0</span>
+    </div>
+  </div>
+
+  <div id="draw-toolbar">
+    <button id="draw-button" type="button" title="Draw a polygon to sample NDVI">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 3l4 18 5-7 7-5z"></path>
+      </svg>
+      Draw polygon
+    </button>
+    <button id="clear-button" type="button" title="Clear the drawn polygon" disabled>Clear</button>
+  </div>
+
+  <div id="login-container">
+    <button id="login-button">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+    </button>
+  </div>
+
+  <div id="ndvi-panel">
+    <div id="ndvi-panel-header">
+      <span id="ndvi-panel-title">NDVI timeseries</span>
+      <div id="ndvi-panel-header-buttons">
+        <button id="ndvi-settings-button" title="Chart settings" aria-label="Chart settings">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+        <button id="ndvi-panel-close" title="Close" aria-label="Close">&times;</button>
+      </div>
+    </div>
+    <div id="ndvi-settings-panel" hidden>
+      <label class="ndvi-settings-row">
+        <input type="checkbox" id="ndvi-settings-fixed-yaxis">
+        <span>Fix Y-axis range</span>
+      </label>
+      <div id="ndvi-settings-yaxis-inputs" class="ndvi-settings-row ndvi-settings-yaxis-inputs" hidden>
+        <label>Min <input type="number" id="ndvi-settings-ymin" step="0.05"></label>
+        <label>Max <input type="number" id="ndvi-settings-ymax" step="0.05"></label>
+      </div>
+      <div class="ndvi-settings-divider"></div>
+      <div class="ndvi-settings-label">Line color</div>
+      <label class="ndvi-settings-row">
+        <input type="radio" name="ndvi-color-mode" value="year" checked>
+        <span>By year (default)</span>
+      </label>
+      <label class="ndvi-settings-row">
+        <input type="radio" name="ndvi-color-mode" value="ndvi">
+        <span>By NDVI value</span>
+      </label>
+    </div>
+    <div id="ndvi-panel-body">
+      <div id="ndvi-status"></div>
+    </div>
+  </div>
+
+</body>
+
+</html>
