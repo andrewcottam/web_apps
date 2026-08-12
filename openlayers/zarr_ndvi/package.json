@@ -1,0 +1,17 @@
+{
+    "name": "zarr_ndvi",
+    "dependencies": {
+        "firebase": "^11.10.0",
+        "ol": "9.1.0",
+        "ol-mapbox-style": "^12.5.0",
+        "proj4": "^2.11.0",
+        "zarrita": "^0.7.4"
+    },
+    "devDependencies": {
+        "vite": "^5.4.11"
+    },
+    "scripts": {
+        "start": "vite",
+        "build": "vite build"
+    }
+}
