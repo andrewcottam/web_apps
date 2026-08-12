@@ -35,9 +35,9 @@ const provider = new GoogleAuthProvider();
 // Fixed zarr store this app samples — a per-site Sentinel-2 NDVI timeseries datacube.
 const ZARR_STORE_URL = 'https://storage.googleapis.com/restor-datacube/sentinel2_ndvi/site-123_timeseries.zarr';
 
-const DEFAULT_LAT = 46.95416;
-const DEFAULT_LON = 7.45139;
-const DEFAULT_ZOOM = 13;
+const DEFAULT_LAT = 46.942460;
+const DEFAULT_LON = 7.448329;
+const DEFAULT_ZOOM = 16.38;
 
 function getUrlParameters() {
     const urlParams = new URLSearchParams(window.location.search);
