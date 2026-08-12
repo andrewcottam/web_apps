@@ -445,7 +445,7 @@ let visibleYears = new Set();
 
 // Calendar months (0-11) currently shown, independent of visibleYears. A hidden
 // month's observations are left out of buildSeriesMarkup's output entirely
-// (redrawSeries regenerates #ndvi-series-group whenever this changes), rather
+// (redrawChartVisuals regenerates the chart whenever this changes), rather
 // than being display:none'd, so the polyline actually skips the gap instead of
 // visually passing through a hidden point. Reset to "all visible" per chart
 // render, then toggled by clicking a month label or the month row's "All".
@@ -473,25 +473,56 @@ let chartConfig = {
     yAxisMin: -0.2,
     yAxisMax: 1,
     colorMode: 'year', // 'year' = flat per-year palette (default); 'ndvi' = colored by NDVI value
+    valueMode: 'absolute', // 'absolute' = each point's own NDVI (default); 'cumulative' = running yearly total
 };
 
+// Returns, for one year's chronologically-sorted, currently-visible-months-only
+// points, the value that should actually be plotted for each — its own NDVI in
+// 'absolute' mode, or a running sum of the year's NDVI so far in 'cumulative'
+// mode. The running total only ever includes months currently in
+// visibleMonths, so toggling a month off doesn't just remove its own point but
+// also correctly lowers every later point's cumulative total — matching what
+// "hide this month" ought to mean for a running total.
+function plotValuesForYearPoints(points) {
+    if (chartConfig.valueMode !== 'cumulative') {
+        return points.map(({ d }) => d.ndvi);
+    }
+    let running = 0;
+    return points.map(({ d }) => (running += d.ndvi));
+}
+
 // The y-axis' auto-computed domain depends on every observation regardless of
-// which months are toggled on, so the axis doesn't jump around as points are
-// added/removed from the plotted line — only computed from `observations` (not
-// affected by visibleMonths). Capped at 1 since that's NDVI's theoretical
-// ceiling — real data can get close enough that the usual 10% padding would
-// otherwise push the axis past a meaningful bound. Bypassed entirely when
-// chartConfig.fixedYAxis is on, in favor of the user's own min/max.
-function computeYDomain(observations) {
+// which months are toggled on (in 'absolute' mode — see plotValuesForYearPoints
+// for why 'cumulative' mode's running totals *do* depend on it), so the axis
+// doesn't jump around as points are added/removed from the plotted line — only
+// computed from `observations`. Capped at 1 in 'absolute' mode since that's
+// NDVI's theoretical ceiling (a cumulative total has no such ceiling, so that
+// cap is skipped there). Bypassed entirely when chartConfig.fixedYAxis is on,
+// in favor of the user's own min/max.
+function computeYDomain(observations, years) {
     if (chartConfig.fixedYAxis) {
         return { yMin: chartConfig.yAxisMin, yMax: chartConfig.yAxisMax };
     }
-    const values = observations.map((d) => d.ndvi);
+    let values;
+    if (chartConfig.valueMode === 'cumulative') {
+        values = years.flatMap((year) => {
+            const points = observations
+                .map((d, i) => ({ d, i }))
+                .filter(({ d }) => d.date.getUTCFullYear() === year && visibleMonths.has(d.date.getUTCMonth()))
+                .sort((a, b) => a.d.date - b.d.date);
+            return plotValuesForYearPoints(points);
+        });
+    } else {
+        values = observations.map((d) => d.ndvi);
+    }
+    if (values.length === 0) values = [0]; // every year/month toggled off — fall back to a bare 0..0.05 axis rather than NaN
     let yMin = Math.min(0, ...values);
     let yMax = Math.max(...values);
     if (yMax - yMin < 0.05) yMax = yMin + 0.05; // avoid a degenerate/zero-height axis
     const yPad = (yMax - yMin) * 0.1;
-    return { yMin: yMin - yPad, yMax: Math.min(1, yMax + yPad) };
+    yMax += yPad;
+    if (chartConfig.valueMode !== 'cumulative') yMax = Math.min(1, yMax);
+    return { yMin: yMin - yPad, yMax };
 }
 
 function chartYToPx(v, yMin, yMax) {
@@ -539,7 +570,7 @@ function buildYAxisMarkup(yMin, yMax) {
 // for the initial chart render and to regenerate just the series (via #ndvi-
 // series-group's innerHTML) whenever a month or display-config toggle changes.
 function buildSeriesMarkup(observations, years) {
-    const { yMin, yMax } = computeYDomain(observations);
+    const { yMin, yMax } = computeYDomain(observations, years);
     let series = '';
     years.forEach((year, yearIndex) => {
         const flatColor = yearColor(yearIndex);
@@ -548,23 +579,29 @@ function buildSeriesMarkup(observations, years) {
             .map((d, i) => ({ d, i }))
             .filter(({ d }) => d.date.getUTCFullYear() === year && visibleMonths.has(d.date.getUTCMonth()))
             .sort((a, b) => a.d.date - b.d.date);
+        // The y-value actually plotted for each point — its own NDVI, or (in
+        // 'cumulative' mode) a running total of the year's NDVI so far. Colors
+        // always reflect a point's own NDVI regardless of mode (see below) —
+        // only the *position* changes here, not what "NDVI value" means for
+        // color-by-value.
+        const plotValues = plotValuesForYearPoints(points);
 
         if (chartConfig.colorMode === 'ndvi') {
             for (let k = 0; k < points.length - 1; k++) {
                 const a = points[k].d, b = points[k + 1].d;
-                const x1 = chartXToPx(dayOfYear(a.date)), y1 = chartYToPx(a.ndvi, yMin, yMax);
-                const x2 = chartXToPx(dayOfYear(b.date)), y2 = chartYToPx(b.ndvi, yMin, yMax);
+                const x1 = chartXToPx(dayOfYear(a.date)), y1 = chartYToPx(plotValues[k], yMin, yMax);
+                const x2 = chartXToPx(dayOfYear(b.date)), y2 = chartYToPx(plotValues[k + 1], yMin, yMax);
                 const segColor = ndviToRgbString((a.ndvi + b.ndvi) / 2);
                 series += `<line class="ndvi-series-line${yearHiddenClass}" data-year="${year}" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${segColor}" stroke-width="1.5"/>`;
             }
         } else {
-            const linePoints = points.map(({ d }) => `${chartXToPx(dayOfYear(d.date)).toFixed(1)},${chartYToPx(d.ndvi, yMin, yMax).toFixed(1)}`).join(' ');
+            const linePoints = points.map(({ d }, k) => `${chartXToPx(dayOfYear(d.date)).toFixed(1)},${chartYToPx(plotValues[k], yMin, yMax).toFixed(1)}`).join(' ');
             series += `<polyline class="ndvi-series-line${yearHiddenClass}" data-year="${year}" points="${linePoints}" fill="none" stroke="${flatColor}" stroke-width="1.5"/>`;
         }
 
-        points.forEach(({ d, i }) => {
+        points.forEach(({ d, i }, k) => {
             const cx = chartXToPx(dayOfYear(d.date));
-            const cy = chartYToPx(d.ndvi, yMin, yMax);
+            const cy = chartYToPx(plotValues[k], yMin, yMax);
             const month = d.date.getUTCMonth();
             // data-cx/data-cy is how the click handler recovers a clicked marker's
             // position for the selection ring.
@@ -593,25 +630,18 @@ function repositionSelectionRing() {
     }
 }
 
-// Regenerates #ndvi-series-group's contents from currentAnalysis after a month
-// toggle — cheaper and simpler than a full renderNdviChart call, and preserves
-// everything else (axes, month labels, legend, selection ring position).
-function redrawSeries() {
-    if (!currentAnalysis) return;
-    const { observations } = currentAnalysis;
-    const years = [...new Set(observations.map((d) => d.date.getUTCFullYear()))].sort();
-    document.getElementById('ndvi-series-group').innerHTML = buildSeriesMarkup(observations, years);
-    repositionSelectionRing();
-}
-
-// Regenerates both the y-axis and the series — used after a display-config
-// change (fixed y-axis range, color mode) that can move points, unlike a plain
-// month toggle (see redrawSeries).
+// Regenerates both the y-axis and the series from currentAnalysis — cheaper and
+// simpler than a full renderNdviChart call, and preserves everything else (month
+// labels, legend, year/month toggle state, current selection). The y-axis has
+// to be included even for a plain month toggle, not just a display-config
+// change, because 'cumulative' mode's running totals (see
+// plotValuesForYearPoints) depend on which months are currently visible — an
+// axis that only redrew the series would drift out of sync with the line.
 function redrawChartVisuals() {
     if (!currentAnalysis) return;
     const { observations } = currentAnalysis;
     const years = [...new Set(observations.map((d) => d.date.getUTCFullYear()))].sort();
-    const { yMin, yMax } = computeYDomain(observations);
+    const { yMin, yMax } = computeYDomain(observations, years);
     document.getElementById('ndvi-yaxis-group').innerHTML = buildYAxisMarkup(yMin, yMax);
     document.getElementById('ndvi-series-group').innerHTML = buildSeriesMarkup(observations, years);
     repositionSelectionRing();
@@ -636,7 +666,7 @@ function renderNdviChart(observations, ndviData) {
     visibleMonths = new Set(MONTH_ABBR.map((_, i) => i));
 
     const width = CHART_WIDTH, height = CHART_HEIGHT, margin = CHART_MARGIN;
-    const { yMin, yMax } = computeYDomain(observations);
+    const { yMin, yMax } = computeYDomain(observations, years);
     const xToPx = chartXToPx;
 
     const monthLabelY = height - margin.bottom + 14;
@@ -709,13 +739,13 @@ function setYearVisible(year, visible) {
 }
 
 // Shows/hides one calendar month's observations, across every year, by
-// regenerating the series (see buildSeriesMarkup/redrawSeries) rather than a
-// simple CSS class flip — the point actually needs to drop out of its year's
-// polyline, not just stop being drawn on top of it.
+// regenerating the series (see buildSeriesMarkup/redrawChartVisuals) rather
+// than a simple CSS class flip — the point actually needs to drop out of its
+// year's polyline, not just stop being drawn on top of it.
 function setMonthVisible(month, visible) {
     if (visible) visibleMonths.add(month); else visibleMonths.delete(month);
     document.querySelector(`.ndvi-month-label[data-month="${month}"]`)?.classList.toggle('month-off', !visible);
-    redrawSeries();
+    redrawChartVisuals();
     reconcileSelectionVisibility();
 }
 
@@ -724,7 +754,7 @@ function setAllMonthsVisible(visible) {
         if (visible) visibleMonths.add(month); else visibleMonths.delete(month);
         document.querySelector(`.ndvi-month-label[data-month="${month}"]`)?.classList.toggle('month-off', !visible);
     }
-    redrawSeries(); // one redraw for all twelve, not twelve redundant ones
+    redrawChartVisuals(); // one redraw for all twelve, not twelve redundant ones
     reconcileSelectionVisibility();
 }
 
@@ -966,6 +996,13 @@ document.addEventListener('DOMContentLoaded', () => {
         radio.addEventListener('change', (event) => {
             if (!event.target.checked) return;
             chartConfig.colorMode = event.target.value;
+            redrawChartVisuals();
+        });
+    });
+    document.querySelectorAll('input[name="ndvi-value-mode"]').forEach((radio) => {
+        radio.addEventListener('change', (event) => {
+            if (!event.target.checked) return;
+            chartConfig.valueMode = event.target.value;
             redrawChartVisuals();
         });
     });
