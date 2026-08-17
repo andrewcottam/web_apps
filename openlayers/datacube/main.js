@@ -909,6 +909,7 @@ function redrawChartVisuals() {
 function renderNdviChart(observations, ndviData) {
     currentAnalysis = { observations, ndviData };
     selectedIndex = null; // fresh chart, nothing selected yet — see selectObservation
+    hoveredYearIndex = null;
 
     const years = [...new Set(observations.map((d) => d.date.getUTCFullYear()))].sort();
     visibleYears = new Set(years);
@@ -1010,9 +1011,18 @@ function setAllMonthsVisible(visible) {
 // If the currently selected observation just got hidden by a year/month toggle,
 // moves the selection to the nearest still-visible one (checking forward, then
 // backward) — or clears it entirely if nothing is visible at all — rather than
-// leaving the raster/ring pointing at a point that's no longer plotted.
+// leaving the raster/ring pointing at a point that's no longer plotted. Also
+// clears a keyboard year-hover (see hoveredYearIndex) whose year just got
+// hidden, for the same reason — otherwise it'd keep "highlighting" a line
+// that's no longer drawn.
 function reconcileSelectionVisibility() {
-    if (selectedIndex === null || !currentAnalysis) return;
+    if (hoveredYearIndex !== null && !visibleYears.has(currentYears()[hoveredYearIndex])) {
+        hoveredYearIndex = null;
+    }
+    if (selectedIndex === null || !currentAnalysis) {
+        applyRestingHighlight();
+        return;
+    }
     const { observations } = currentAnalysis;
     if (isObservationVisible(observations[selectedIndex])) return;
     for (let i = selectedIndex + 1; i < observations.length; i++) {
@@ -1024,6 +1034,7 @@ function reconcileSelectionVisibility() {
     selectedIndex = null;
     document.getElementById('ndvi-selection-ring').style.display = 'none';
     hideNdviLegend();
+    applyRestingHighlight();
 }
 
 // Highlights `year`'s line+markers and dims every other year's, so hovering one
@@ -1059,8 +1070,11 @@ function hideYearTooltip() {
 
 // Re-applies the highlight/tooltip for whichever observation is currently
 // selected (or clears both if none) — the "resting" state that a mouse hover
-// temporarily overrides and mouseout reverts back to, and what arrow-key
-// navigation drives directly since there's no mouse position to hover from.
+// temporarily overrides and mouseout reverts back to, and what left/right
+// arrow-key navigation drives directly since there's no mouse position to
+// hover from. Takes priority over a keyboard year-hover (see
+// applyRestingHighlight) since it pins an actual raster on the map, not just
+// a highlighted line.
 function applySelectionHighlight() {
     if (selectedIndex === null || !currentAnalysis) {
         clearYearHover();
@@ -1075,6 +1089,32 @@ function applySelectionHighlight() {
     showYearTooltip(year, rect.right, rect.top);
 }
 
+// The actual "resting" state a mouse hover temporarily overrides and
+// mouseout reverts back to: an observation selection (applySelectionHighlight)
+// if there is one, otherwise a keyboard year-hover (up/down arrow keys) if
+// there is one, otherwise nothing. Also what up/down arrow-key navigation
+// calls directly, mirroring how left/right calls applySelectionHighlight.
+function applyRestingHighlight() {
+    if (selectedIndex !== null) {
+        applySelectionHighlight();
+        return;
+    }
+    if (hoveredYearIndex !== null) {
+        const year = currentYears()[hoveredYearIndex];
+        if (year !== undefined) {
+            setYearHovered(year);
+            const legendRow = document.querySelector(`.ndvi-year-toggle[data-year="${year}"]`);
+            if (legendRow) {
+                const rect = legendRow.getBoundingClientRect();
+                showYearTooltip(year, rect.right, rect.top);
+            }
+            return;
+        }
+    }
+    clearYearHover();
+    hideYearTooltip();
+}
+
 // The chronological index (into currentAnalysis.observations, which is already
 // sorted by date) of whichever marker's raster is currently shown on the map —
 // null when nothing is selected. Left/right arrow-key navigation (bound once in
@@ -1087,6 +1127,21 @@ let selectedIndex = null;
 // isn't even visible in the chart.
 function isObservationVisible(obs) {
     return visibleYears.has(obs.date.getUTCFullYear()) && visibleMonths.has(obs.date.getUTCMonth());
+}
+
+// Index into currentYears() of whichever year's line is highlighted via
+// up/down arrow-key navigation — null when nothing is keyboard-hovered.
+// Mirrors selectedIndex, but for a whole year's line rather than a single
+// observation's raster; the two are independent (see applyRestingHighlight
+// for how they combine when reverting from a mouse hover).
+let hoveredYearIndex = null;
+
+// The chart's years, chronologically ascending — same computation
+// renderNdviChart/redrawChartVisuals already do inline, exposed here so
+// up/down arrow-key navigation can step through the same list.
+function currentYears() {
+    if (!currentAnalysis) return [];
+    return [...new Set(currentAnalysis.observations.map((d) => d.date.getUTCFullYear()))].sort();
 }
 
 // Positions the selection ring on observation `index`'s marker, loads its raster
@@ -1214,6 +1269,7 @@ function startDrawing() {
     hideNdviLegend();
     currentAnalysis = null;
     selectedIndex = null;
+    hoveredYearIndex = null;
     document.getElementById('clear-button').disabled = true;
     setDrawActive(true);
 }
@@ -1224,6 +1280,7 @@ function clearDrawing() {
     hideNdviLegend();
     currentAnalysis = null;
     selectedIndex = null;
+    hoveredYearIndex = null;
     document.getElementById('clear-button').disabled = true;
     setDrawActive(false);
 }
@@ -1360,22 +1417,48 @@ document.addEventListener('DOMContentLoaded', () => {
     // Left/right arrow keys step the current raster selection through the
     // chronological observation list — only once a marker has actually been
     // clicked (selectedIndex set), so arrow keys don't do anything unexpected
-    // before then. Not scoped to the panel having focus: with no text inputs in
-    // this app, there's nothing else on the page arrow keys would otherwise do.
+    // before then. Up/down arrow keys instead step a keyboard "year hover"
+    // through the chart's years (see hoveredYearIndex/currentYears),
+    // highlighting that year's line without touching the map/raster
+    // selection — a keyboard equivalent of hovering a legend row, usable
+    // even before anything's been clicked. Both skip past toggled-off
+    // entries rather than landing on one that isn't visible, and both clamp
+    // at the ends rather than wrapping. Not scoped to the panel having
+    // focus: with no text inputs in this app, there's nothing else on the
+    // page arrow keys would otherwise do.
     document.addEventListener('keydown', (event) => {
-        if (selectedIndex === null || !currentAnalysis) return;
-        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-        event.preventDefault();
-        const { observations } = currentAnalysis;
-        const step = event.key === 'ArrowRight' ? 1 : -1;
-        let next = selectedIndex + step;
-        while (next >= 0 && next < observations.length && !isObservationVisible(observations[next])) {
-            next += step;
+        if (!currentAnalysis) return;
+        if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+            if (selectedIndex === null) return;
+            event.preventDefault();
+            const { observations } = currentAnalysis;
+            const step = event.key === 'ArrowRight' ? 1 : -1;
+            let next = selectedIndex + step;
+            while (next >= 0 && next < observations.length && !isObservationVisible(observations[next])) {
+                next += step;
+            }
+            // Ran off the end without finding a visible observation in that
+            // direction — stay put rather than selecting one that's hidden.
+            if (next < 0 || next >= observations.length) return;
+            selectObservation(next);
+            return;
         }
-        // Ran off the end without finding a visible observation in that
-        // direction — stay put rather than selecting one that's hidden.
-        if (next < 0 || next >= observations.length) return;
-        selectObservation(next);
+        if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+            const years = currentYears();
+            if (years.length === 0) return;
+            event.preventDefault();
+            const step = event.key === 'ArrowUp' ? 1 : -1;
+            // Nothing hovered yet — anchor at the end the step is heading
+            // away from, so the very first press lands on the first year in
+            // that direction rather than skipping straight to the second.
+            let next = hoveredYearIndex === null ? (step === 1 ? 0 : years.length - 1) : hoveredYearIndex + step;
+            while (next >= 0 && next < years.length && !visibleYears.has(years[next])) {
+                next += step;
+            }
+            if (next < 0 || next >= years.length) return;
+            hoveredYearIndex = next;
+            applyRestingHighlight();
+        }
     });
 
     // Delegated hover handlers — cover both the chart's own markers/lines and the
@@ -1401,8 +1484,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!leavingYearEl) return;
         const enteringYearEl = event.relatedTarget?.closest?.('[data-year]');
         if (enteringYearEl && Number(enteringYearEl.dataset.year) === Number(leavingYearEl.dataset.year)) return;
-        // Revert to whatever's actually selected (arrow-key/click), rather than
-        // clearing outright — hover is a temporary look, not a reset.
-        applySelectionHighlight();
+        // Revert to whatever's actually selected/hovered (arrow-key/click),
+        // rather than clearing outright — hover is a temporary look, not a
+        // reset.
+        applyRestingHighlight();
     });
 });
