@@ -4,3 +4,4 @@ openlayers/verify/.claude/launch.json
 .gitignore
 openlayers/linear-regression/.claude/launch.json
 .claude/launch.json
+.vite/
