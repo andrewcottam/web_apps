@@ -631,19 +631,34 @@ function buildYearPlotPoints(points) {
 
 // Turns one year's plotted entries (see buildYearPlotPoints) into the values
 // actually positioned on the y-axis — each entry's own `value` in 'absolute'
-// mode, or a running sum of them in 'cumulative' mode (summing the
+// mode, or a running trapezoidal integral (area under the NDVI-vs-day-of-year
+// curve) in 'cumulative' mode. Integrating rather than summing points matters
+// because observation dates are irregular and their count varies year to
+// year: a plain running sum of point values grows with the *number* of
+// observations, so a year with denser sampling racks up a bigger total even
+// with an identical underlying curve — it ends up measuring sampling density,
+// not vegetation. Trapezoidal area between consecutive points instead
+// converges to the same total regardless of how finely that curve happens to
+// be sampled, so the result is comparable across years. Uses the
 // *interpolated* values where applicable, so a smoothed-over low-coverage
-// point doesn't throw off every later point's running total the way its own
-// noisy raw value might). The running total only ever includes months
-// currently in visibleMonths (points already reflects that filter), so
-// toggling a month off doesn't just remove its own point but also correctly
-// lowers every later point's cumulative total.
+// point doesn't throw off the integral the way its own noisy raw value
+// might. The integral only ever includes months currently in visibleMonths
+// (points already reflects that filter), so toggling a month off doesn't
+// just remove its own point but also correctly lowers every later point's
+// cumulative total.
 function plotValuesFromEffective(plotted) {
     if (chartConfig.valueMode !== 'cumulative') {
         return plotted.map((p) => p.value);
     }
     let running = 0;
-    return plotted.map((p) => (running += p.value));
+    let prevDay = null, prevValue = null;
+    return plotted.map((p) => {
+        const day = dayOfYear(p.d.date);
+        if (prevDay !== null) running += 0.5 * (prevValue + p.value) * (day - prevDay);
+        prevDay = day;
+        prevValue = p.value;
+        return running;
+    });
 }
 
 // The y-axis' auto-computed domain depends on every observation regardless of
