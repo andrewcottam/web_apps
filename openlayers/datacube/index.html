@@ -189,6 +189,22 @@
       font-size: 11px;
     }
 
+    /* :not([hidden]), not a bare display:grid on #ndvi-settings-panel — an
+       unconditional rule there would outrank the browser's default
+       [hidden] { display: none } (an ID selector beats an attribute selector),
+       making the hidden attribute the settings-button toggle relies on inert. */
+    #ndvi-settings-panel:not([hidden]) {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      column-gap: 16px;
+      row-gap: 10px;
+      align-items: start;
+    }
+
+    #ndvi-settings-panel .ndvi-settings-group {
+      min-width: 0;
+    }
+
     #ndvi-settings-panel .ndvi-settings-row {
       display: flex;
       align-items: center;
@@ -205,8 +221,9 @@
     }
 
     #ndvi-settings-panel .ndvi-settings-yaxis-inputs {
-      gap: 12px;
+      gap: 8px;
       padding-left: 18px;
+      margin-top: -2px;
       cursor: default;
     }
 
@@ -218,16 +235,11 @@
     }
 
     #ndvi-settings-panel .ndvi-settings-yaxis-inputs input[type="number"] {
-      width: 52px;
+      width: 34px;
       font-size: 11px;
-      padding: 2px 4px;
+      padding: 2px 3px;
       border: 1px solid #ddd;
       border-radius: 4px;
-    }
-
-    #ndvi-settings-panel .ndvi-settings-divider {
-      border-top: 1px solid #eee;
-      margin: 6px 0;
     }
 
     #ndvi-settings-panel .ndvi-settings-label {
@@ -585,34 +597,46 @@
       </div>
     </div>
     <div id="ndvi-settings-panel" hidden>
-      <label class="ndvi-settings-row">
-        <input type="checkbox" id="ndvi-settings-fixed-yaxis">
-        <span>Fix Y-axis range</span>
-      </label>
-      <div id="ndvi-settings-yaxis-inputs" class="ndvi-settings-row ndvi-settings-yaxis-inputs" hidden>
-        <label>Min <input type="number" id="ndvi-settings-ymin" step="0.05"></label>
-        <label>Max <input type="number" id="ndvi-settings-ymax" step="0.05"></label>
+      <div class="ndvi-settings-group">
+        <div class="ndvi-settings-label">Values</div>
+        <label class="ndvi-settings-row">
+          <input type="radio" name="ndvi-value-mode" value="absolute" checked>
+          <span>Absolute (default)</span>
+        </label>
+        <label class="ndvi-settings-row">
+          <input type="radio" name="ndvi-value-mode" value="cumulative">
+          <span>Cumulative per year</span>
+        </label>
       </div>
-      <div class="ndvi-settings-divider"></div>
-      <div class="ndvi-settings-label">Line color</div>
-      <label class="ndvi-settings-row">
-        <input type="radio" name="ndvi-color-mode" value="year" checked>
-        <span>By year (default)</span>
-      </label>
-      <label class="ndvi-settings-row">
-        <input type="radio" name="ndvi-color-mode" value="ndvi">
-        <span>By NDVI value</span>
-      </label>
-      <div class="ndvi-settings-divider"></div>
-      <div class="ndvi-settings-label">Values</div>
-      <label class="ndvi-settings-row">
-        <input type="radio" name="ndvi-value-mode" value="absolute" checked>
-        <span>Absolute (default)</span>
-      </label>
-      <label class="ndvi-settings-row">
-        <input type="radio" name="ndvi-value-mode" value="cumulative">
-        <span>Cumulative per year</span>
-      </label>
+      <div class="ndvi-settings-group">
+        <div class="ndvi-settings-label">Data quality</div>
+        <label class="ndvi-settings-row">
+          <input type="checkbox" id="ndvi-settings-interpolate">
+          <span>Interpolate low-coverage</span>
+        </label>
+      </div>
+      <div class="ndvi-settings-group">
+        <div class="ndvi-settings-label">Line color</div>
+        <label class="ndvi-settings-row">
+          <input type="radio" name="ndvi-color-mode" value="year" checked>
+          <span>By year (default)</span>
+        </label>
+        <label class="ndvi-settings-row">
+          <input type="radio" name="ndvi-color-mode" value="ndvi">
+          <span>By NDVI value</span>
+        </label>
+      </div>
+      <div class="ndvi-settings-group">
+        <div class="ndvi-settings-label">Y-axis</div>
+        <label class="ndvi-settings-row">
+          <input type="checkbox" id="ndvi-settings-fixed-yaxis">
+          <span>Fix range</span>
+        </label>
+        <div id="ndvi-settings-yaxis-inputs" class="ndvi-settings-row ndvi-settings-yaxis-inputs" hidden>
+          <label>Min <input type="number" id="ndvi-settings-ymin" step="0.05"></label>
+          <label>Max <input type="number" id="ndvi-settings-ymax" step="0.05"></label>
+        </div>
+      </div>
     </div>
     <div id="ndvi-panel-body">
       <div id="ndvi-status"></div>

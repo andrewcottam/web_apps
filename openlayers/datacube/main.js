@@ -71,11 +71,11 @@ const drawSource = new VectorSource();
 const drawLayer = new VectorLayer({
     source: drawSource,
     zIndex: OVERLAY_Z_INDEX + 1,
-    // Same drawn-polygon colors as openlayers/verify's default (pre-validation)
-    // feature style — a plain white fill with a grey outline.
+    // Same drawn-polygon colors as openlayers/verify's draw-source layer
+    // (App.tsx) — red fill and red outline.
     style: new Style({
-        fill: new Fill({ color: 'rgba(255, 255, 255, 0.4)' }),
-        stroke: new Stroke({ color: '#888', width: 2 }),
+        fill: new Fill({ color: 'rgba(255, 0, 0, 0.3)' }),
+        stroke: new Stroke({ color: '#ff0000', width: 2 }),
     }),
 });
 
@@ -323,8 +323,11 @@ function computeObservations(ndviData, polygon) {
         if (count === 0) continue; // every pixel cloud-masked at this timestep
         // tIndex (the original position along the ndvi array's time axis) is kept
         // alongside the aggregated mean so a later raster click can slice the full
-        // grid for this exact timestep — see renderNdviRaster.
-        observations.push({ date: dates[t], ndvi: sum / count, tIndex: t });
+        // grid for this exact timestep — see renderNdviRaster. coverage (the
+        // fraction of the polygon's pixels that actually had data at this
+        // timestep, as opposed to cloud-masked) drives the chart's optional
+        // low-coverage interpolation — see chartConfig.interpolateLowCoverage.
+        observations.push({ date: dates[t], ndvi: sum / count, tIndex: t, coverage: count / insideIdx.length });
     }
 
     return observations.sort((a, b) => a.date - b.date);
@@ -571,31 +574,88 @@ let chartConfig = {
     colorMode: 'year', // 'year' = flat per-year palette (default); 'ndvi' = colored by NDVI value
     valueMode: 'absolute', // 'absolute' = each point's own NDVI (default); 'cumulative' = running yearly total
     layerMode: 'ndvi', // 'ndvi' = NDVI colormap raster (default); 'rgb' = true-color composite, see loadRgbData
+    interpolateLowCoverage: false, // see buildYearPlotPoints
 };
 
-// Returns, for one year's chronologically-sorted, currently-visible-months-only
-// points, the value that should actually be plotted for each — its own NDVI in
-// 'absolute' mode, or a running sum of the year's NDVI so far in 'cumulative'
-// mode. The running total only ever includes months currently in
-// visibleMonths, so toggling a month off doesn't just remove its own point but
-// also correctly lowers every later point's cumulative total — matching what
-// "hide this month" ought to mean for a running total.
-function plotValuesForYearPoints(points) {
+// A point's polygon coverage (the fraction of the drawn polygon's pixels that
+// actually had data — see computeObservations) below which it's considered
+// unreliable enough to interpolate rather than plot as-is, when
+// chartConfig.interpolateLowCoverage is on.
+const LOW_COVERAGE_THRESHOLD = 0.5;
+
+function isLowCoverage(d) {
+    return chartConfig.interpolateLowCoverage && d.coverage < LOW_COVERAGE_THRESHOLD;
+}
+
+// Builds one year's chronologically-sorted, currently-visible-months-only
+// `points` (see buildSeriesMarkup) into plottable entries: `{ d, i, value,
+// isInterpolated, dottedBefore, dottedAfter }`.
+//
+// When chartConfig.interpolateLowCoverage is off (the default), this is a
+// no-op wrapper — `value` is always the observation's own raw NDVI, nothing is
+// ever interpolated, and no segment is ever dashed, i.e. identical to the
+// chart's pre-existing behavior.
+//
+// When it's on, a point whose polygon coverage is below LOW_COVERAGE_THRESHOLD
+// isn't plotted at its own (unreliable) value — instead `value` is linearly
+// interpolated, by day-of-year, from its immediate chart-neighbors' own *raw*
+// NDVI (not their own possibly-interpolated value, so uncertainty doesn't
+// compound across a run of several low-coverage points in a row). A boundary
+// point (first/last in the year's visible sequence) has no neighbor on one
+// side and can't be interpolated, so it just keeps its raw value.
+// `dottedBefore`/`dottedAfter` flag the adjacent segment for a dashed line
+// when *both* of the points it connects are low-coverage — signaling that the
+// whole stretch, not just one point, is running on thin data — see
+// buildSeriesMarkup for how that's rendered.
+function buildYearPlotPoints(points) {
+    const plotted = points.map((p, k) => {
+        let value = p.d.ndvi;
+        let isInterpolated = false;
+        if (isLowCoverage(p.d)) {
+            const prev = points[k - 1], next = points[k + 1];
+            if (prev && next) {
+                const prevDay = dayOfYear(prev.d.date), nextDay = dayOfYear(next.d.date), day = dayOfYear(p.d.date);
+                const t = (day - prevDay) / (nextDay - prevDay);
+                value = prev.d.ndvi + t * (next.d.ndvi - prev.d.ndvi);
+                isInterpolated = true;
+            }
+        }
+        return { d: p.d, i: p.i, value, isInterpolated };
+    });
+    plotted.forEach((p, k) => {
+        p.dottedBefore = k > 0 && isLowCoverage(points[k - 1].d) && isLowCoverage(points[k].d);
+        p.dottedAfter = k < points.length - 1 && isLowCoverage(points[k].d) && isLowCoverage(points[k + 1].d);
+    });
+    return plotted;
+}
+
+// Turns one year's plotted entries (see buildYearPlotPoints) into the values
+// actually positioned on the y-axis — each entry's own `value` in 'absolute'
+// mode, or a running sum of them in 'cumulative' mode (summing the
+// *interpolated* values where applicable, so a smoothed-over low-coverage
+// point doesn't throw off every later point's running total the way its own
+// noisy raw value might). The running total only ever includes months
+// currently in visibleMonths (points already reflects that filter), so
+// toggling a month off doesn't just remove its own point but also correctly
+// lowers every later point's cumulative total.
+function plotValuesFromEffective(plotted) {
     if (chartConfig.valueMode !== 'cumulative') {
-        return points.map(({ d }) => d.ndvi);
+        return plotted.map((p) => p.value);
     }
     let running = 0;
-    return points.map(({ d }) => (running += d.ndvi));
+    return plotted.map((p) => (running += p.value));
 }
 
 // The y-axis' auto-computed domain depends on every observation regardless of
-// which months are toggled on (in 'absolute' mode — see plotValuesForYearPoints
-// for why 'cumulative' mode's running totals *do* depend on it), so the axis
-// doesn't jump around as points are added/removed from the plotted line — only
-// computed from `observations`. Capped at 1 in 'absolute' mode since that's
-// NDVI's theoretical ceiling (a cumulative total has no such ceiling, so that
-// cap is skipped there). Bypassed entirely when chartConfig.fixedYAxis is on,
-// in favor of the user's own min/max.
+// which months are toggled on (in 'absolute' mode — see
+// plotValuesFromEffective for why 'cumulative' mode's running totals *do*
+// depend on it), so the axis doesn't jump around as points are added/removed
+// from the plotted line — only computed from `observations`. Interpolated
+// values are never more extreme than the real neighbors they're derived from,
+// so 'absolute' mode's domain doesn't need to special-case them. Capped at 1
+// in 'absolute' mode since that's NDVI's theoretical ceiling (a cumulative
+// total has no such ceiling, so that cap is skipped there). Bypassed entirely
+// when chartConfig.fixedYAxis is on, in favor of the user's own min/max.
 function computeYDomain(observations, years) {
     if (chartConfig.fixedYAxis) {
         return { yMin: chartConfig.yAxisMin, yMax: chartConfig.yAxisMax };
@@ -607,7 +667,7 @@ function computeYDomain(observations, years) {
                 .map((d, i) => ({ d, i }))
                 .filter(({ d }) => d.date.getUTCFullYear() === year && visibleMonths.has(d.date.getUTCMonth()))
                 .sort((a, b) => a.d.date - b.d.date);
-            return plotValuesForYearPoints(points);
+            return plotValuesFromEffective(buildYearPlotPoints(points));
         });
     } else {
         values = observations.map((d) => d.ndvi);
@@ -676,27 +736,37 @@ function buildSeriesMarkup(observations, years) {
             .map((d, i) => ({ d, i }))
             .filter(({ d }) => d.date.getUTCFullYear() === year && visibleMonths.has(d.date.getUTCMonth()))
             .sort((a, b) => a.d.date - b.d.date);
-        // The y-value actually plotted for each point — its own NDVI, or (in
-        // 'cumulative' mode) a running total of the year's NDVI so far. Colors
-        // always reflect a point's own NDVI regardless of mode (see below) —
-        // only the *position* changes here, not what "NDVI value" means for
+        // Each point's plotted position (see buildYearPlotPoints: its own NDVI,
+        // or an interpolated stand-in when low-coverage interpolation is on)
+        // and, from that, the y-value actually plotted — in 'cumulative' mode a
+        // running total of those, otherwise unchanged. Colors always reflect a
+        // point's own *raw* NDVI regardless of mode (see below) — only the
+        // *position* changes here, not what "NDVI value" means for
         // color-by-value.
-        const plotValues = plotValuesForYearPoints(points);
+        const plotted = buildYearPlotPoints(points);
+        const plotValues = plotValuesFromEffective(plotted);
 
-        if (chartConfig.colorMode === 'ndvi') {
+        // Segments need individual <line> elements (rather than one shared
+        // <polyline>) whenever they can vary per-segment: colorMode 'ndvi'
+        // (color) or interpolateLowCoverage (dashing across low-coverage
+        // stretches — see buildYearPlotPoints' dottedBefore/dottedAfter).
+        // Falls back to a single <polyline> otherwise, since that's simpler
+        // markup for what's still the common case.
+        if (chartConfig.colorMode === 'ndvi' || chartConfig.interpolateLowCoverage) {
             for (let k = 0; k < points.length - 1; k++) {
                 const a = points[k].d, b = points[k + 1].d;
                 const x1 = chartXToPx(dayOfYear(a.date)), y1 = chartYToPx(plotValues[k], yMin, yMax);
                 const x2 = chartXToPx(dayOfYear(b.date)), y2 = chartYToPx(plotValues[k + 1], yMin, yMax);
-                const segColor = ndviToRgbString((a.ndvi + b.ndvi) / 2);
-                series += `<line class="ndvi-series-line${yearHiddenClass}" data-year="${year}" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${segColor}" stroke-width="1.5"/>`;
+                const segColor = chartConfig.colorMode === 'ndvi' ? ndviToRgbString((a.ndvi + b.ndvi) / 2) : flatColor;
+                const dashAttr = plotted[k].dottedAfter ? ' stroke-dasharray="3,3"' : '';
+                series += `<line class="ndvi-series-line${yearHiddenClass}" data-year="${year}" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${segColor}" stroke-width="1.5"${dashAttr}/>`;
             }
         } else {
             const linePoints = points.map(({ d }, k) => `${chartXToPx(dayOfYear(d.date)).toFixed(1)},${chartYToPx(plotValues[k], yMin, yMax).toFixed(1)}`).join(' ');
             series += `<polyline class="ndvi-series-line${yearHiddenClass}" data-year="${year}" points="${linePoints}" fill="none" stroke="${flatColor}" stroke-width="1.5"/>`;
         }
 
-        points.forEach(({ d, i }, k) => {
+        plotted.forEach(({ d, i, isInterpolated }, k) => {
             const cx = chartXToPx(dayOfYear(d.date));
             const cy = chartYToPx(plotValues[k], yMin, yMax);
             const month = d.date.getUTCMonth();
@@ -707,7 +777,14 @@ function buildSeriesMarkup(observations, years) {
             // A larger transparent hit-circle sits behind each marker so the small
             // dot is still easy to click, not just its own tiny radius.
             series += `<circle class="ndvi-marker-hit${yearHiddenClass}" data-index="${i}" data-year="${year}" ${posAttrs} cx="${cx}" cy="${cy}" r="6.5" fill="transparent"/>`;
-            series += `<circle class="ndvi-marker${yearHiddenClass}" data-index="${i}" data-year="${year}" ${posAttrs} cx="${cx}" cy="${cy}" r="${CHART_MARKER_R}" fill="${markerColor}" stroke="white" stroke-width="1"/>`;
+            // Interpolated (low-polygon-coverage) points render hollow — an
+            // outlined ring in the marker's usual color rather than a solid
+            // dot — so they read as "estimated", not "measured".
+            const markerAttrs = isInterpolated
+                ? `fill="white" stroke="${markerColor}" stroke-width="1.5"`
+                : `fill="${markerColor}" stroke="white" stroke-width="1"`;
+            const interpolatedClass = isInterpolated ? ' ndvi-marker-interpolated' : '';
+            series += `<circle class="ndvi-marker${interpolatedClass}${yearHiddenClass}" data-index="${i}" data-year="${year}" ${posAttrs} cx="${cx}" cy="${cy}" r="${CHART_MARKER_R}" ${markerAttrs}/>`;
         });
     });
     return series;
@@ -732,7 +809,7 @@ function repositionSelectionRing() {
 // labels, legend, year/month toggle state, current selection). The y-axis has
 // to be included even for a plain month toggle, not just a display-config
 // change, because 'cumulative' mode's running totals (see
-// plotValuesForYearPoints) depend on which months are currently visible — an
+// plotValuesFromEffective) depend on which months are currently visible — an
 // axis that only redrew the series would drift out of sync with the line.
 function redrawChartVisuals() {
     if (!currentAnalysis) return;
@@ -1141,6 +1218,10 @@ document.addEventListener('DOMContentLoaded', () => {
             chartConfig.valueMode = event.target.value;
             redrawChartVisuals();
         });
+    });
+    document.getElementById('ndvi-settings-interpolate').addEventListener('change', (event) => {
+        chartConfig.interpolateLowCoverage = event.target.checked;
+        redrawChartVisuals();
     });
 
     // NDVI/Visible raster layer toggle, in the legend widget rather than the
