@@ -702,23 +702,53 @@ function chartYToPx(v, yMin, yMax) {
     return CHART_MARGIN.top + CHART_PLOT_HEIGHT * (1 - (v - yMin) / (yMax - yMin));
 }
 
-// Converts a sequence of {x,y} chart-pixel points into cubic-Bezier segments
-// that pass through every point via a uniform Catmull-Rom spline, so series
-// lines render as a gentle curve rather than sharp polyline joins. Each
-// segment's control points are derived from its endpoints' immediate
-// neighbors (clamped to the endpoint itself at the ends, where there is no
-// neighbor) — the standard Catmull-Rom-to-Bezier conversion.
-function catmullRomSegments(pts) {
+// Converts a sequence of {x,y} chart-pixel points (sorted by ascending x,
+// which every caller already guarantees since points are date-sorted) into
+// cubic-Bezier segments that pass through every point via a monotone cubic
+// Hermite spline (Fritsch-Carlson), so series lines render as a gentle curve
+// rather than sharp polyline joins. A plain (Catmull-Rom-style) spline was
+// tried first, but its control points are derived from neighboring points
+// without regard for the curve's own slope, so near a sharp peak/trough it
+// routinely overshoots past the data's actual range — a bump or dip between
+// two points that isn't in the data. Fritsch-Carlson instead picks each
+// point's tangent from the secant slopes on either side and then clamps it
+// (per Fritsch & Carlson 1980 / the same algorithm behind d3's
+// curveMonotoneX) so the curve never overshoots a local min/max.
+function monotoneCubicSegments(pts) {
+    const n = pts.length;
     const segs = [];
-    for (let k = 0; k < pts.length - 1; k++) {
-        const p0 = pts[k - 1] || pts[k];
-        const p1 = pts[k];
-        const p2 = pts[k + 1];
-        const p3 = pts[k + 2] || pts[k + 1];
+    if (n < 2) return segs;
+    // Secant slope of each x-consecutive pair; dx is never 0 since points are
+    // distinct dates within the same year.
+    const d = [];
+    for (let k = 0; k < n - 1; k++) d.push((pts[k + 1].y - pts[k].y) / (pts[k + 1].x - pts[k].x));
+    const m = new Array(n);
+    m[0] = d[0];
+    m[n - 1] = d[n - 2];
+    for (let k = 1; k < n - 1; k++) {
+        m[k] = (d[k - 1] === 0 || d[k] === 0 || (d[k - 1] < 0) !== (d[k] < 0)) ? 0 : (d[k - 1] + d[k]) / 2;
+    }
+    for (let k = 0; k < n - 1; k++) {
+        if (d[k] === 0) {
+            m[k] = 0;
+            m[k + 1] = 0;
+            continue;
+        }
+        const a = m[k] / d[k], b = m[k + 1] / d[k];
+        const s = a * a + b * b;
+        if (s > 9) {
+            const t = 3 / Math.sqrt(s);
+            m[k] = t * a * d[k];
+            m[k + 1] = t * b * d[k];
+        }
+    }
+    for (let k = 0; k < n - 1; k++) {
+        const p1 = pts[k], p2 = pts[k + 1];
+        const dx = p2.x - p1.x;
         segs.push({
             x1: p1.x, y1: p1.y,
-            cp1x: p1.x + (p2.x - p0.x) / 6, cp1y: p1.y + (p2.y - p0.y) / 6,
-            cp2x: p2.x - (p3.x - p1.x) / 6, cp2y: p2.y - (p3.y - p1.y) / 6,
+            cp1x: p1.x + dx / 3, cp1y: p1.y + m[k] * dx / 3,
+            cp2x: p2.x - dx / 3, cp2y: p2.y - m[k + 1] * dx / 3,
             x2: p2.x, y2: p2.y,
         });
     }
@@ -795,10 +825,10 @@ function buildSeriesMarkup(observations, years) {
         // see buildYearPlotPoints' dottedBefore/dottedAfter). Falls back to a
         // single path otherwise, since that's simpler markup for what's
         // still the common case. Either way each segment is drawn as a
-        // Catmull-Rom cubic-Bezier curve (see catmullRomSegments) rather
-        // than a straight line, so the series reads as a gentle curve.
+        // monotone cubic curve (see monotoneCubicSegments) rather than a
+        // straight line, so the series reads as a gentle curve.
         const pxPoints = points.map(({ d }, k) => ({ x: chartXToPx(dayOfYear(d.date)), y: chartYToPx(plotValues[k], yMin, yMax) }));
-        const curveSegments = catmullRomSegments(pxPoints);
+        const curveSegments = monotoneCubicSegments(pxPoints);
         if (chartConfig.colorMode === 'ndvi' || chartConfig.interpolateLowCoverage) {
             for (let k = 0; k < points.length - 1; k++) {
                 const a = points[k].d, b = points[k + 1].d;
