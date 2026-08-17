@@ -574,6 +574,7 @@ let chartConfig = {
     valueMode: 'absolute', // 'absolute' = each point's own NDVI (default); 'cumulative' = running yearly total
     layerMode: 'ndvi', // 'ndvi' = NDVI colormap raster (default); 'rgb' = true-color composite, see loadRgbData
     interpolateLowCoverage: false, // see buildYearPlotPoints
+    wrapYears: false, // see buildWrapExtensionSegment — extends each year's line to Jan 1/Dec 31
 };
 
 // A point's polygon coverage (the fraction of the drawn polygon's pixels that
@@ -758,6 +759,24 @@ function segmentToPathD(seg) {
     return `M${seg.x1.toFixed(1)},${seg.y1.toFixed(1)} C${seg.cp1x.toFixed(1)},${seg.cp1y.toFixed(1)} ${seg.cp2x.toFixed(1)},${seg.cp2y.toFixed(1)} ${seg.x2.toFixed(1)},${seg.y2.toFixed(1)}`;
 }
 
+function isLeapYear(year) {
+    return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
+function daysInYear(year) {
+    return isLeapYear(year) ? 366 : 365;
+}
+
+// Linearly interpolates the value at `atDate` between two plotted entries
+// (see buildYearPlotPoints) `pA`/`pB`, which must be chronologically ordered
+// (pA.d.date < pB.d.date) but need not be in the same year — used by
+// buildWrapExtension to interpolate a year-boundary value from the real
+// observations straddling it, which are usually in different years.
+function lerpValueAtDate(pA, pB, atDate) {
+    const t = (atDate.getTime() - pA.d.date.getTime()) / (pB.d.date.getTime() - pA.d.date.getTime());
+    return pA.value + t * (pB.value - pA.value);
+}
+
 // rgb(...) string for one of ndviToColor's [r,g,b] arrays — used when
 // chartConfig.colorMode is 'ndvi' to color chart markers/segments the same way
 // the raster overlay is colored.
@@ -787,6 +806,44 @@ function buildYAxisMarkup(yMin, yMax) {
     return markup;
 }
 
+// One year's chronologically-sorted, currently-visible-months-only
+// observations — the raw material buildSeriesMarkup turns into a line, and
+// also what buildWrapExtension looks up on the *adjacent* year to find the
+// real observation a year-boundary extension should interpolate toward.
+function pointsForYear(observations, year) {
+    return observations
+        .map((d, i) => ({ d, i }))
+        .filter(({ d }) => d.date.getUTCFullYear() === year && visibleMonths.has(d.date.getUTCMonth()))
+        .sort((a, b) => a.d.date - b.d.date);
+}
+
+// When chartConfig.wrapYears is on, extends a year's line past its own
+// first/last real point to that year's Jan 1/Dec 31 boundary — a dashed
+// straight segment, not a real plotted point. The boundary's value is
+// linearly interpolated using the two real observations that actually
+// straddle it: `edge` (this year's own first/last point) and `neighborEdge`
+// (the adjacent year's nearest point, which is usually what's on the other
+// side of that boundary — e.g. a Nov 2025 observation extended to Dec 31
+// 2025 using the slope toward the next real point, in Feb 2026). Returns
+// null if the adjacent year has no visible points to interpolate toward,
+// rather than guessing.
+// `boundaryDate` is the Jan 1 (this year)/Jan 1 (next year, i.e. this year's
+// Dec 31 instant) to interpolate at; `virtualDay` is that instant's
+// x-position in this year's own day-of-year coordinate space — 1 for the
+// start, or daysInYear(year)+1 (one day past this year's own last day) for
+// the end.
+function buildWrapExtension(edge, neighborEdge, boundaryDate, virtualDay, yMin, yMax) {
+    if (!neighborEdge) return null;
+    const [pA, pB] = edge.d.date < neighborEdge.d.date ? [edge, neighborEdge] : [neighborEdge, edge];
+    if (pA.d.date.getTime() === pB.d.date.getTime()) return null; // no elapsed time to derive a slope from
+    const boundaryValue = lerpValueAtDate(pA, pB, boundaryDate);
+    return {
+        x1: chartXToPx(dayOfYear(edge.d.date)), y1: chartYToPx(edge.value, yMin, yMax),
+        x2: chartXToPx(virtualDay), y2: chartYToPx(boundaryValue, yMin, yMax),
+        avgNdvi: (edge.d.ndvi + neighborEdge.d.ndvi) / 2,
+    };
+}
+
 // Builds just the per-year lines+markers SVG markup — every month currently in
 // visibleMonths contributes a point to both its year's polyline and its own
 // marker; a hidden month's observations are left out of the polyline's points
@@ -804,10 +861,7 @@ function buildSeriesMarkup(observations, years) {
     years.forEach((year, yearIndex) => {
         const flatColor = yearColor(yearIndex);
         const yearHiddenClass = visibleYears.has(year) ? '' : ' year-hidden';
-        const points = observations
-            .map((d, i) => ({ d, i }))
-            .filter(({ d }) => d.date.getUTCFullYear() === year && visibleMonths.has(d.date.getUTCMonth()))
-            .sort((a, b) => a.d.date - b.d.date);
+        const points = pointsForYear(observations, year);
         // Each point's plotted position (see buildYearPlotPoints: its own NDVI,
         // or an interpolated stand-in when low-coverage interpolation is on)
         // and, from that, the y-value actually plotted — in 'cumulative' mode a
@@ -838,6 +892,27 @@ function buildSeriesMarkup(observations, years) {
         } else {
             const d = pxPoints.length ? `M${pxPoints[0].x.toFixed(1)},${pxPoints[0].y.toFixed(1)} ${curveSegments.map((seg) => `C${seg.cp1x.toFixed(1)},${seg.cp1y.toFixed(1)} ${seg.cp2x.toFixed(1)},${seg.cp2y.toFixed(1)} ${seg.x2.toFixed(1)},${seg.y2.toFixed(1)}`).join(' ')}` : '';
             series += `<path class="ndvi-series-line${yearHiddenClass}" data-year="${year}" d="${d}" fill="none" stroke="${flatColor}" stroke-width="1.5"/>`;
+        }
+
+        // Wrap-years extensions — dashed straight segments (not part of the
+        // curve above, and adding no real point) from this year's own first/
+        // last point out to Jan 1/Dec 31, interpolated toward the nearest
+        // real observation on the other side of that boundary (see
+        // buildWrapExtension). Only meaningful in 'absolute' mode: a
+        // cumulative running total resets to 0 at each year's Jan 1 by
+        // definition, so there's nothing sensible to extrapolate there.
+        if (chartConfig.wrapYears && chartConfig.valueMode === 'absolute' && plotted.length > 0) {
+            const prevYearPoints = pointsForYear(observations, year - 1);
+            const nextYearPoints = pointsForYear(observations, year + 1);
+            const prevEdge = prevYearPoints.length ? buildYearPlotPoints(prevYearPoints).pop() : null;
+            const nextEdge = nextYearPoints.length ? buildYearPlotPoints(nextYearPoints)[0] : null;
+            const startExt = buildWrapExtension(plotted[0], prevEdge, new Date(Date.UTC(year, 0, 1)), 1, yMin, yMax);
+            const endExt = buildWrapExtension(plotted[plotted.length - 1], nextEdge, new Date(Date.UTC(year + 1, 0, 1)), daysInYear(year) + 1, yMin, yMax);
+            [startExt, endExt].forEach((ext) => {
+                if (!ext) return;
+                const segColor = chartConfig.colorMode === 'ndvi' ? ndviToRgbString(ext.avgNdvi) : flatColor;
+                series += `<line class="ndvi-series-line${yearHiddenClass}" data-year="${year}" x1="${ext.x1.toFixed(1)}" y1="${ext.y1.toFixed(1)}" x2="${ext.x2.toFixed(1)}" y2="${ext.y2.toFixed(1)}" stroke="${segColor}" stroke-width="1.5" stroke-dasharray="3,3"/>`;
+            });
         }
 
         plotted.forEach(({ d, i, isInterpolated }, k) => {
@@ -1342,6 +1417,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('ndvi-settings-interpolate').addEventListener('change', (event) => {
         chartConfig.interpolateLowCoverage = event.target.checked;
+        redrawChartVisuals();
+    });
+    document.getElementById('ndvi-settings-wrap-years').addEventListener('change', (event) => {
+        chartConfig.wrapYears = event.target.checked;
         redrawChartVisuals();
     });
 
