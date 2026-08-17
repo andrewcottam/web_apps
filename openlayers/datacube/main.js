@@ -371,7 +371,6 @@ function hideNdviLegend() {
     document.getElementById('ndvi-legend').classList.remove('visible');
     document.getElementById('ndvi-legend-date').textContent = '';
     document.getElementById('ndvi-layer-loading').classList.remove('visible');
-    document.getElementById('ndvi-hover-tooltip').classList.remove('visible');
     ndviRasterLayer.setSource(null);
 }
 
@@ -1037,10 +1036,15 @@ function reconcileSelectionVisibility() {
     applyRestingHighlight();
 }
 
-// Highlights `year`'s line+markers and dims every other year's, so hovering one
-// point makes its whole seasonal trajectory easy to trace against the others. The
-// selection ring is excluded so it stays a consistent marker of "currently on the
-// map" regardless of whatever's being hovered.
+// Highlights `year`'s line+markers and dims every other year's on the chart, so
+// hovering one point makes its whole seasonal trajectory easy to trace against
+// the others. The selection ring is excluded so it stays a consistent marker of
+// "currently on the map" regardless of whatever's being hovered. Also
+// highlights `year`'s row in the legend list and grays out every other row —
+// the legend itself doubling as the "which year is this?" indicator instead of
+// a floating tooltip. A row already toggled off (unchecked) keeps its own
+// fully-grayed appearance via CSS regardless of this dimming, so there are
+// three distinguishable states: hovered, visible-but-not-hovered, and hidden.
 function setYearHovered(year) {
     document.querySelectorAll('#ndvi-chart [data-year]').forEach((el) => {
         if (el.id === 'ndvi-selection-ring') return;
@@ -1048,45 +1052,36 @@ function setYearHovered(year) {
         el.classList.toggle('ndvi-series-hovered', isThisYear);
         el.classList.toggle('ndvi-series-dimmed', !isThisYear);
     });
+    document.querySelectorAll('.ndvi-year-toggle').forEach((el) => {
+        const isThisYear = Number(el.dataset.year) === year;
+        el.classList.toggle('year-hover-active', isThisYear);
+        el.classList.toggle('year-hover-dimmed', !isThisYear);
+    });
 }
 
 function clearYearHover() {
     document.querySelectorAll('#ndvi-chart [data-year]').forEach((el) => {
         el.classList.remove('ndvi-series-hovered', 'ndvi-series-dimmed');
     });
+    document.querySelectorAll('.ndvi-year-toggle').forEach((el) => {
+        el.classList.remove('year-hover-active', 'year-hover-dimmed');
+    });
 }
 
-function showYearTooltip(year, clientX, clientY) {
-    const tooltip = document.getElementById('ndvi-hover-tooltip');
-    tooltip.textContent = year;
-    tooltip.style.left = `${clientX + 12}px`;
-    tooltip.style.top = `${clientY - 10}px`;
-    tooltip.classList.add('visible');
-}
-
-function hideYearTooltip() {
-    document.getElementById('ndvi-hover-tooltip').classList.remove('visible');
-}
-
-// Re-applies the highlight/tooltip for whichever observation is currently
-// selected (or clears both if none) — the "resting" state that a mouse hover
-// temporarily overrides and mouseout reverts back to, and what left/right
-// arrow-key navigation drives directly since there's no mouse position to
-// hover from. Takes priority over a keyboard year-hover (see
-// applyRestingHighlight) since it pins an actual raster on the map, not just
-// a highlighted line.
+// Re-applies the highlight for whichever observation is currently selected (or
+// clears it if none) — the "resting" state that a mouse hover temporarily
+// overrides and mouseout reverts back to, and what left/right arrow-key
+// navigation drives directly since there's no mouse position to hover from.
+// Takes priority over a keyboard year-hover (see applyRestingHighlight) since
+// it pins an actual raster on the map, not just a highlighted line.
 function applySelectionHighlight() {
     if (selectedIndex === null || !currentAnalysis) {
         clearYearHover();
-        hideYearTooltip();
         return;
     }
     const marker = document.querySelector(`#ndvi-chart .ndvi-marker[data-index="${selectedIndex}"]`);
     if (!marker) return;
-    const year = Number(marker.dataset.year);
-    setYearHovered(year);
-    const rect = marker.getBoundingClientRect();
-    showYearTooltip(year, rect.right, rect.top);
+    setYearHovered(Number(marker.dataset.year));
 }
 
 // The actual "resting" state a mouse hover temporarily overrides and
@@ -1103,16 +1098,10 @@ function applyRestingHighlight() {
         const year = currentYears()[hoveredYearIndex];
         if (year !== undefined) {
             setYearHovered(year);
-            const legendRow = document.querySelector(`.ndvi-year-toggle[data-year="${year}"]`);
-            if (legendRow) {
-                const rect = legendRow.getBoundingClientRect();
-                showYearTooltip(year, rect.right, rect.top);
-            }
             return;
         }
     }
     clearYearHover();
-    hideYearTooltip();
 }
 
 // The chronological index (into currentAnalysis.observations, which is already
@@ -1422,10 +1411,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // highlighting that year's line without touching the map/raster
     // selection — a keyboard equivalent of hovering a legend row, usable
     // even before anything's been clicked. Both skip past toggled-off
-    // entries rather than landing on one that isn't visible, and both clamp
-    // at the ends rather than wrapping. Not scoped to the panel having
-    // focus: with no text inputs in this app, there's nothing else on the
-    // page arrow keys would otherwise do.
+    // entries rather than landing on one that isn't visible. Left/right
+    // clamp at the ends (there's nothing sensible to land on beyond the
+    // observation list); up/down instead wrap through "nothing hovered" at
+    // the ends, so continuing past the last/first year clears the highlight
+    // back to the default all-years look rather than getting stuck there.
+    // Not scoped to the panel having focus: with no text inputs in this app,
+    // there's nothing else on the page arrow keys would otherwise do.
     document.addEventListener('keydown', (event) => {
         if (!currentAnalysis) return;
         if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
@@ -1455,8 +1447,10 @@ document.addEventListener('DOMContentLoaded', () => {
             while (next >= 0 && next < years.length && !visibleYears.has(years[next])) {
                 next += step;
             }
-            if (next < 0 || next >= years.length) return;
-            hoveredYearIndex = next;
+            // Ran past the last/first year — clear the hover rather than
+            // sticking at the end, so one more press in the same direction
+            // starts back over from that end.
+            hoveredYearIndex = (next < 0 || next >= years.length) ? null : next;
             applyRestingHighlight();
         }
     });
@@ -1477,7 +1471,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const year = Number(yearEl.dataset.year);
         if (!visibleYears.has(year)) return; // nothing to highlight if it's toggled off
         setYearHovered(year);
-        showYearTooltip(year, event.clientX, event.clientY);
     });
     document.getElementById('ndvi-panel-body').addEventListener('mouseout', (event) => {
         const leavingYearEl = event.target.closest('[data-year]');

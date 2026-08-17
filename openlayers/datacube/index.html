@@ -362,7 +362,6 @@
       display: flex;
       flex-direction: column;
       flex-wrap: nowrap;
-      gap: 1px;
       flex-shrink: 0;
       max-height: 250px;
       overflow-y: auto;
@@ -370,11 +369,16 @@
       border-left: 1px solid #eee;
     }
 
+    /* No gap between rows (padding provides the visual spacing instead) so
+       each row's own hoverable/hit area is contiguous with its neighbors —
+       a flex `gap` here would be dead space belonging to no row, and the
+       cursor crossing it mid-move would flicker the hover highlight off and
+       back on as it briefly left every data-year element. */
     .ndvi-year-toggle {
       display: flex;
       align-items: center;
       gap: 3px;
-      padding: 1px;
+      padding: 2px 1px;
       font-size: 9px;
       color: #444;
       cursor: pointer;
@@ -393,9 +397,28 @@
     }
 
     /* Since the checkbox itself isn't visible, "off" is shown by dimming the
-       whole label (swatch + text) instead. */
+       whole label (swatch + text) instead. Stays this dim even while another
+       year is hover-highlighted (below) — toggled-off is a stronger, distinct
+       state from merely "not the one currently hovered", so it needs to read
+       as fainter than that dimming too. */
     .ndvi-year-toggle:has(input:not(:checked)) {
-      opacity: 0.4;
+      opacity: 0.22;
+    }
+
+    /* Hover highlight (mouse, or up/down arrow keys — see setYearHovered in
+       main.js) replaces a floating tooltip: the hovered year's own row stands
+       out (background tint rather than bold, which would shift the label's
+       width and visibly resize the chart/legend box around it) and every
+       other still-visible row grays down partway, distinct from the
+       stronger dimming already applied to toggled-off rows above. */
+    .ndvi-year-toggle.year-hover-active {
+      opacity: 1;
+      background: rgba(0, 0, 0, 0.08);
+      border-radius: 3px;
+    }
+
+    .ndvi-year-toggle.year-hover-dimmed:has(input:checked) {
+      opacity: 0.55;
     }
 
     .ndvi-year-toggle-all {
@@ -519,31 +542,12 @@
       margin-top: 3px;
     }
 
-    #ndvi-hover-tooltip {
-      display: none;
-      position: fixed;
-      z-index: 20;
-      background: #222;
-      color: white;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 7px;
-      border-radius: 5px;
-      pointer-events: none;
-      white-space: nowrap;
-    }
-
-    #ndvi-hover-tooltip.visible {
-      display: block;
-    }
   </style>
 </head>
 
 <body>
   <div class="map" id="map"></div>
   <div id="build-version"></div>
-  <div id="ndvi-hover-tooltip"></div>
   <div id="ndvi-legend">
     <div id="ndvi-layer-toggle">
       <button type="button" class="ndvi-layer-toggle-btn active" data-layer="ndvi">NDVI</button>
