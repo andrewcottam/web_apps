@@ -702,6 +702,33 @@ function chartYToPx(v, yMin, yMax) {
     return CHART_MARGIN.top + CHART_PLOT_HEIGHT * (1 - (v - yMin) / (yMax - yMin));
 }
 
+// Converts a sequence of {x,y} chart-pixel points into cubic-Bezier segments
+// that pass through every point via a uniform Catmull-Rom spline, so series
+// lines render as a gentle curve rather than sharp polyline joins. Each
+// segment's control points are derived from its endpoints' immediate
+// neighbors (clamped to the endpoint itself at the ends, where there is no
+// neighbor) — the standard Catmull-Rom-to-Bezier conversion.
+function catmullRomSegments(pts) {
+    const segs = [];
+    for (let k = 0; k < pts.length - 1; k++) {
+        const p0 = pts[k - 1] || pts[k];
+        const p1 = pts[k];
+        const p2 = pts[k + 1];
+        const p3 = pts[k + 2] || pts[k + 1];
+        segs.push({
+            x1: p1.x, y1: p1.y,
+            cp1x: p1.x + (p2.x - p0.x) / 6, cp1y: p1.y + (p2.y - p0.y) / 6,
+            cp2x: p2.x - (p3.x - p1.x) / 6, cp2y: p2.y - (p3.y - p1.y) / 6,
+            x2: p2.x, y2: p2.y,
+        });
+    }
+    return segs;
+}
+
+function segmentToPathD(seg) {
+    return `M${seg.x1.toFixed(1)},${seg.y1.toFixed(1)} C${seg.cp1x.toFixed(1)},${seg.cp1y.toFixed(1)} ${seg.cp2x.toFixed(1)},${seg.cp2y.toFixed(1)} ${seg.x2.toFixed(1)},${seg.y2.toFixed(1)}`;
+}
+
 // rgb(...) string for one of ndviToColor's [r,g,b] arrays — used when
 // chartConfig.colorMode is 'ndvi' to color chart markers/segments the same way
 // the raster overlay is colored.
@@ -762,24 +789,26 @@ function buildSeriesMarkup(observations, years) {
         const plotted = buildYearPlotPoints(points);
         const plotValues = plotValuesFromEffective(plotted);
 
-        // Segments need individual <line> elements (rather than one shared
-        // <polyline>) whenever they can vary per-segment: colorMode 'ndvi'
-        // (color) or interpolateLowCoverage (dashing across low-coverage
-        // stretches — see buildYearPlotPoints' dottedBefore/dottedAfter).
-        // Falls back to a single <polyline> otherwise, since that's simpler
-        // markup for what's still the common case.
+        // Segments need individual elements (rather than one shared path)
+        // whenever they can vary per-segment: colorMode 'ndvi' (color) or
+        // interpolateLowCoverage (dashing across low-coverage stretches —
+        // see buildYearPlotPoints' dottedBefore/dottedAfter). Falls back to a
+        // single path otherwise, since that's simpler markup for what's
+        // still the common case. Either way each segment is drawn as a
+        // Catmull-Rom cubic-Bezier curve (see catmullRomSegments) rather
+        // than a straight line, so the series reads as a gentle curve.
+        const pxPoints = points.map(({ d }, k) => ({ x: chartXToPx(dayOfYear(d.date)), y: chartYToPx(plotValues[k], yMin, yMax) }));
+        const curveSegments = catmullRomSegments(pxPoints);
         if (chartConfig.colorMode === 'ndvi' || chartConfig.interpolateLowCoverage) {
             for (let k = 0; k < points.length - 1; k++) {
                 const a = points[k].d, b = points[k + 1].d;
-                const x1 = chartXToPx(dayOfYear(a.date)), y1 = chartYToPx(plotValues[k], yMin, yMax);
-                const x2 = chartXToPx(dayOfYear(b.date)), y2 = chartYToPx(plotValues[k + 1], yMin, yMax);
                 const segColor = chartConfig.colorMode === 'ndvi' ? ndviToRgbString((a.ndvi + b.ndvi) / 2) : flatColor;
                 const dashAttr = plotted[k].dottedAfter ? ' stroke-dasharray="3,3"' : '';
-                series += `<line class="ndvi-series-line${yearHiddenClass}" data-year="${year}" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${segColor}" stroke-width="1.5"${dashAttr}/>`;
+                series += `<path class="ndvi-series-line${yearHiddenClass}" data-year="${year}" d="${segmentToPathD(curveSegments[k])}" fill="none" stroke="${segColor}" stroke-width="1.5"${dashAttr}/>`;
             }
         } else {
-            const linePoints = points.map(({ d }, k) => `${chartXToPx(dayOfYear(d.date)).toFixed(1)},${chartYToPx(plotValues[k], yMin, yMax).toFixed(1)}`).join(' ');
-            series += `<polyline class="ndvi-series-line${yearHiddenClass}" data-year="${year}" points="${linePoints}" fill="none" stroke="${flatColor}" stroke-width="1.5"/>`;
+            const d = pxPoints.length ? `M${pxPoints[0].x.toFixed(1)},${pxPoints[0].y.toFixed(1)} ${curveSegments.map((seg) => `C${seg.cp1x.toFixed(1)},${seg.cp1y.toFixed(1)} ${seg.cp2x.toFixed(1)},${seg.cp2y.toFixed(1)} ${seg.x2.toFixed(1)},${seg.y2.toFixed(1)}`).join(' ')}` : '';
+            series += `<path class="ndvi-series-line${yearHiddenClass}" data-year="${year}" d="${d}" fill="none" stroke="${flatColor}" stroke-width="1.5"/>`;
         }
 
         plotted.forEach(({ d, i, isInterpolated }, k) => {
