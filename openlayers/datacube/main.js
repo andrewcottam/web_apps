@@ -34,8 +34,11 @@ const firebase_app = initializeApp(firebaseConfig);
 const auth = getAuth(firebase_app);
 const provider = new GoogleAuthProvider();
 
-// Fixed zarr store this app samples — a per-site Sentinel-2 NDVI timeseries datacube.
+// Fixed zarr stores this app samples — two independently-generated per-site
+// datacubes: a derived NDVI timeseries, and a true-color RGB composite (see
+// loadRgbData). Switchable in the UI via the legend's NDVI/Visible toggle.
 const ZARR_STORE_URL = 'https://storage.googleapis.com/restor-datacube/sentinel2_ndvi/site-123_timeseries.zarr';
+const RGB_STORE_URL = 'https://storage.googleapis.com/restor-datacube/sentinel2_rgb/site-123_timeseries.zarr';
 
 const DEFAULT_LAT = 50.254264;
 const DEFAULT_LON = -3.786267;
@@ -188,6 +191,63 @@ function loadNdviData() {
     return ndviDataPromise;
 }
 
+// A second, independently-generated datacube for the same site — a true-color
+// RGB composite rather than a derived index. Loaded lazily (only once the user
+// actually switches to "Visible" mode — see chartConfig.layerMode) rather than
+// eagerly alongside the NDVI cube, since most sessions won't need it. Its own
+// time axis is a different length (103 dates vs. NDVI's, at last count, 138)
+// and doesn't line up 1:1 with the NDVI series' dates — a separate acquisition/
+// cloud-masking run — so selecting an NDVI observation looks up the *nearest*
+// RGB date rather than assuming a matching index (see findNearestDateIndex).
+let rgbDataPromise = null;
+
+function loadRgbData() {
+    if (!rgbDataPromise) {
+        rgbDataPromise = (async () => {
+            const rawStore = new zarr.FetchStore(RGB_STORE_URL);
+            const store = await zarr.withMaybeConsolidatedMetadata(rawStore);
+            const root = await zarr.open(store, { kind: 'group' });
+
+            const rgbNode = await zarr.open(root.resolve('rgb'), { kind: 'array' });
+            const xNode = await zarr.open(root.resolve('x'), { kind: 'array' });
+            const yNode = await zarr.open(root.resolve('y'), { kind: 'array' });
+            const timeNode = await zarr.open(root.resolve('time'), { kind: 'array' });
+
+            const [rgb, x, y, time] = await Promise.all([
+                zarr.get(rgbNode), zarr.get(xNode), zarr.get(yNode), zarr.get(timeNode),
+            ]);
+
+            const dims = rgbNode.attrs['_ARRAY_DIMENSIONS'] || ['time', 'band', 'y', 'x'];
+            if (dims.join(',') !== 'time,band,y,x') {
+                throw new Error(`Unsupported rgb array dimension order: ${dims.join(',')}`);
+            }
+
+            const crs = rgbNode.attrs['crs'];
+            if (!crs) throw new Error('rgb array has no "crs" attribute');
+
+            const dates = decodeTimeCoordinate(time, timeNode.attrs);
+
+            return { rgb, x, y, dates, crs };
+        })();
+    }
+    return rgbDataPromise;
+}
+
+// Index of whichever entry in `dates` is closest in time to `targetDate` —
+// used to map an NDVI observation's date onto the RGB cube's own, differently-
+// dated time axis (see loadRgbData's comment).
+function findNearestDateIndex(dates, targetDate) {
+    let bestIndex = 0, bestDiffMs = Infinity;
+    dates.forEach((d, i) => {
+        const diffMs = Math.abs(d.getTime() - targetDate.getTime());
+        if (diffMs < bestDiffMs) {
+            bestDiffMs = diffMs;
+            bestIndex = i;
+        }
+    });
+    return bestIndex;
+}
+
 // Decodes a CF-style ("<n> <unit> since <origin>") integer time coordinate into
 // JS Dates. zarrita reads int64 data as a BigInt64Array, hence the Number() cast.
 function decodeTimeCoordinate(time, attrs) {
@@ -309,19 +369,38 @@ function hideNdviLegend() {
     ndviRasterLayer.setSource(null);
 }
 
-// Rasterizes the ndvi grid at `tIndex` (the full site grid, not just the drawn
-// polygon — a click is "show me this date's data", not a re-aggregation) into a
-// canvas colored with ndviToColor, and displays it as an ImageStatic layer
-// reprojected on the fly from the array's own CRS into the map's view projection.
-function renderNdviRaster(ndviData, tIndex) {
-    const { ndvi, x, y, crs } = ndviData;
-    const [, ny, nx] = ndvi.shape;
-    const data = ndvi.data;
-    const base = tIndex * ny * nx;
-
-    // Canvas row 0 must be the northernmost row for the image to appear upright;
-    // sort each axis' indices into ascending/descending order rather than assuming
-    // the coordinate arrays are already stored that way.
+// Shared by renderNdviRaster/renderRgbRaster: rasterizes a (y,x) grid into a
+// canvas via a per-pixel `getPixelColor(j, i)` callback (returning an [r,g,b]
+// array, or a falsy value for a transparent/no-data pixel), reprojects its
+// extent from `crs` into EPSG:3857, and sets it as ndviRasterLayer's source.
+//
+// Canvas row 0 must be the northernmost row for the image to appear upright;
+// sort each axis' indices into ascending/descending order rather than assuming
+// the coordinate arrays are already stored that way.
+//
+// Reprojecting just the two extent corners into EPSG:3857 ourselves — via the
+// same `transform` already proven correct by the polygon aggregation — rather
+// than handing ImageStatic the source `crs` (e.g. EPSG:32630) and letting OL's
+// generic reproj/Image machinery warp it on the fly. A site this small (~2km) is
+// effectively rigid under any of these transforms, so this corner-only
+// approximation is visually exact; it's the *destination* projection that
+// matters here, not the source, and EPSG:3857 is deliberate, not 4326:
+//
+// useGeographic() only sets ol/proj's *user* projection (so view.getCenter()/
+// Draw output read as lon/lat) — a vector-tile basemap's View still renders
+// internally in EPSG:3857 (Web Mercator), confirmed empirically via
+// CanvasImageLayerRenderer's prepareFrame: frameState.extent came back in Web
+// Mercator meters like [828483, 5932320, ...], not degrees. Reprojecting to
+// EPSG:3857 up front and passing `projection: 'EPSG:3857'` (matching the frame's
+// real projection exactly) makes OL's own equivalence check treat this as
+// "already in the target projection" and skip its ReprojImage warp path — which,
+// for reasons not fully tracked down, renders a blank canvas here even for the
+// otherwise well-supported EPSG:4326<->3857 pair (confirmed by directly reading
+// back 0 opaque pixels from ReprojImage's own internal canvas). Feeding
+// ImageStatic coordinates that are already in the frame's exact projection
+// sidesteps that path entirely and uses the simple, direct draw instead.
+function renderRasterLayer(x, y, crs, getPixelColor) {
+    const nx = x.data.length, ny = y.data.length;
     const yOrder = [...y.data.keys()].sort((a, b) => y.data[b] - y.data[a]); // descending (north first)
     const xOrder = [...x.data.keys()].sort((a, b) => x.data[a] - x.data[b]); // ascending (west first)
 
@@ -334,15 +413,14 @@ function renderNdviRaster(ndviData, tIndex) {
         const j = yOrder[row];
         for (let col = 0; col < nx; col++) {
             const i = xOrder[col];
-            const v = data[base + j * nx + i];
             const px = (row * nx + col) * 4;
-            if (isNaN(v)) {
+            const color = getPixelColor(j, i);
+            if (!color) {
                 imageData.data[px + 3] = 0; // transparent — cloud-masked/no data
             } else {
-                const [r, g, b] = ndviToColor(v);
-                imageData.data[px] = r;
-                imageData.data[px + 1] = g;
-                imageData.data[px + 2] = b;
+                imageData.data[px] = color[0];
+                imageData.data[px + 1] = color[1];
+                imageData.data[px + 2] = color[2];
                 imageData.data[px + 3] = 255;
             }
         }
@@ -358,27 +436,6 @@ function renderNdviRaster(ndviData, tIndex) {
     const minY = Math.min(...y.data) - dy / 2;
     const maxY = Math.max(...y.data) + dy / 2;
 
-    // Reproject just the two extent corners into EPSG:3857 ourselves — via the same
-    // `transform` already proven correct by the polygon aggregation — rather than
-    // handing ImageStatic the source `crs` (e.g. EPSG:32632) and letting OL's
-    // generic reproj/Image machinery warp it on the fly. A site this small (~2km) is
-    // effectively rigid under any of these transforms, so this corner-only
-    // approximation is visually exact; it's the *destination* projection that
-    // matters here, not the source, and EPSG:3857 is deliberate, not 4326:
-    //
-    // useGeographic() only sets ol/proj's *user* projection (so view.getCenter()/
-    // Draw output read as lon/lat) — a vector-tile basemap's View still renders
-    // internally in EPSG:3857 (Web Mercator), confirmed empirically via
-    // CanvasImageLayerRenderer's prepareFrame: frameState.extent came back in Web
-    // Mercator meters like [828483, 5932320, ...], not degrees. Reprojecting to
-    // EPSG:3857 up front and passing `projection: 'EPSG:3857'` (matching the frame's
-    // real projection exactly) makes OL's own equivalence check treat this as
-    // "already in the target projection" and skip its ReprojImage warp path — which,
-    // for reasons not fully tracked down, renders a blank canvas here even for the
-    // otherwise well-supported EPSG:4326<->3857 pair (confirmed by directly reading
-    // back 0 opaque pixels from ReprojImage's own internal canvas). Feeding
-    // ImageStatic coordinates that are already in the frame's exact projection
-    // sidesteps that path entirely and uses the simple, direct draw instead.
     const [xMin3857, yMin3857] = transform([minX, minY], crs, 'EPSG:3857');
     const [xMax3857, yMax3857] = transform([maxX, maxY], crs, 'EPSG:3857');
 
@@ -388,6 +445,41 @@ function renderNdviRaster(ndviData, tIndex) {
         projection: 'EPSG:3857',
     }));
     showNdviLegend();
+}
+
+// Rasterizes the ndvi grid at `tIndex` (the full site grid, not just the drawn
+// polygon — a click is "show me this date's data", not a re-aggregation),
+// colored with ndviToColor.
+function renderNdviRaster(ndviData, tIndex) {
+    const { ndvi, x, y, crs } = ndviData;
+    const [, ny, nx] = ndvi.shape;
+    const data = ndvi.data;
+    const base = tIndex * ny * nx;
+    renderRasterLayer(x, y, crs, (j, i) => {
+        const v = data[base + j * nx + i];
+        return isNaN(v) ? null : ndviToColor(v);
+    });
+}
+
+// Rasterizes the rgb grid (shape [time, band, y, x], band order red/green/blue —
+// see readme) at `tIndex` — true-color, no colormap needed, just the raw
+// 0-255 bytes. There's no explicit zarr fill_value for this uint8 array, so
+// pure black (0,0,0) is treated as the cloud-masked/no-data marker — the same
+// convention the generating pipeline uses for the NDVI array's NaN fill,
+// carried over here since uint8 has no NaN of its own.
+function renderRgbRaster(rgbData, tIndex) {
+    const { rgb, x, y, crs } = rgbData;
+    const [, nb, ny, nx] = rgb.shape;
+    const data = rgb.data;
+    const bandStride = ny * nx;
+    const base = tIndex * nb * bandStride;
+    renderRasterLayer(x, y, crs, (j, i) => {
+        const pixelIdx = j * nx + i;
+        const r = data[base + pixelIdx];
+        const g = data[base + bandStride + pixelIdx];
+        const b = data[base + 2 * bandStride + pixelIdx];
+        return (r === 0 && g === 0 && b === 0) ? null : [r, g, b];
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -474,6 +566,7 @@ let chartConfig = {
     yAxisMax: 1,
     colorMode: 'year', // 'year' = flat per-year palette (default); 'ndvi' = colored by NDVI value
     valueMode: 'absolute', // 'absolute' = each point's own NDVI (default); 'cumulative' = running yearly total
+    layerMode: 'ndvi', // 'ndvi' = NDVI colormap raster (default); 'rgb' = true-color composite, see loadRgbData
 };
 
 // Returns, for one year's chronologically-sorted, currently-visible-months-only
@@ -846,7 +939,7 @@ function isObservationVisible(obs) {
 // `index` is clamped to the valid range rather than ignored when out of bounds, so
 // holding an arrow key at either end of the series just stops at the first/last
 // observation instead of doing nothing.
-function selectObservation(index) {
+async function selectObservation(index) {
     if (!currentAnalysis) return;
     const { observations, ndviData } = currentAnalysis;
     const clamped = Math.max(0, Math.min(index, observations.length - 1));
@@ -866,10 +959,41 @@ function selectObservation(index) {
 
     applySelectionHighlight();
 
-    document.getElementById('ndvi-legend-date').textContent =
-        observations[clamped].date.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+    await renderSelectedRaster(observations[clamped], ndviData);
+}
 
-    renderNdviRaster(ndviData, observations[clamped].tIndex);
+// Renders whichever raster layer chartConfig.layerMode currently selects, for
+// `observation`, and updates the legend's date label to match whatever was
+// actually rendered. In 'rgb' mode that's the *nearest* date in the RGB cube's
+// own time axis (see loadRgbData), not necessarily `observation.date` itself —
+// the label calls this out ("nearest") whenever the two diverge, so it's clear
+// the image isn't from the exact date the chart point represents.
+async function renderSelectedRaster(observation, ndviData) {
+    const dateLabel = document.getElementById('ndvi-legend-date');
+    let renderedDate = observation.date;
+    try {
+        if (chartConfig.layerMode === 'rgb') {
+            const rgbData = await loadRgbData();
+            if (!ensureProjectionRegistered(rgbData.crs)) {
+                dateLabel.textContent = `Unsupported CRS for the RGB datacube: ${rgbData.crs}`;
+                return;
+            }
+            const rgbIndex = findNearestDateIndex(rgbData.dates, observation.date);
+            renderedDate = rgbData.dates[rgbIndex];
+            renderRgbRaster(rgbData, rgbIndex);
+        } else {
+            renderNdviRaster(ndviData, observation.tIndex);
+        }
+    } catch (e) {
+        console.error('Failed to render raster layer:', e);
+        dateLabel.textContent = `Failed to load ${chartConfig.layerMode === 'rgb' ? 'RGB' : 'NDVI'} raster: ${e.message}`;
+        return;
+    }
+
+    const isNearestRgb = chartConfig.layerMode === 'rgb' && renderedDate.getTime() !== observation.date.getTime();
+    dateLabel.textContent =
+        renderedDate.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) +
+        (isNearestRgb ? ' (nearest RGB image)' : '');
 }
 
 // Runs the whole "polygon drawn" pipeline: load (or reuse) the cached zarr data,
@@ -1004,6 +1128,26 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!event.target.checked) return;
             chartConfig.valueMode = event.target.value;
             redrawChartVisuals();
+        });
+    });
+
+    // NDVI/Visible raster layer toggle, in the legend widget rather than the
+    // settings popover — unlike the other display options, this is a frequent,
+    // immediate switch (like changing a basemap), not a set-and-forget
+    // preference. The NDVI-only colorbar (title/gradient/labels) only makes
+    // sense in 'ndvi' mode, so it's hidden in 'rgb' mode.
+    document.querySelectorAll('.ndvi-layer-toggle-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            const layer = btn.dataset.layer;
+            if (layer === chartConfig.layerMode) return;
+            chartConfig.layerMode = layer;
+            document.querySelectorAll('.ndvi-layer-toggle-btn').forEach((b) => b.classList.toggle('active', b.dataset.layer === layer));
+            ['ndvi-legend-title', 'ndvi-legend-bar', 'ndvi-legend-labels'].forEach((id) => {
+                document.getElementById(id).style.display = layer === 'ndvi' ? '' : 'none';
+            });
+            if (selectedIndex !== null && currentAnalysis) {
+                renderSelectedRaster(currentAnalysis.observations[selectedIndex], currentAnalysis.ndviData);
+            }
         });
     });
 
