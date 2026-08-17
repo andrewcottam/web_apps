@@ -569,7 +569,7 @@ function chartXToPx(day) {
 // renderNdviChart, so year/month toggle state and the current selection survive.
 let chartConfig = {
     fixedYAxis: false, // when true, use yAxisMin/yAxisMax instead of the auto-computed domain
-    yAxisMin: -0.2,
+    yAxisMin: 0,
     yAxisMax: 1,
     colorMode: 'year', // 'year' = flat per-year palette (default); 'ndvi' = colored by NDVI value
     valueMode: 'absolute', // 'absolute' = each point's own NDVI (default); 'cumulative' = running yearly total
@@ -679,7 +679,8 @@ function computeYDomain(observations, years) {
     const yPad = (yMax - yMin) * 0.1;
     yMax += yPad;
     if (chartConfig.valueMode !== 'cumulative') yMax = Math.min(1, yMax);
-    return { yMin: yMin - yPad, yMax };
+    if (yMin < 0) yMin -= yPad; // only pad below 0 when the data actually goes negative
+    return { yMin, yMax };
 }
 
 function chartYToPx(v, yMin, yMax) {
