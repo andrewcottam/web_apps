@@ -40,9 +40,9 @@ const provider = new GoogleAuthProvider();
 const ZARR_STORE_URL = 'https://storage.googleapis.com/restor-datacube/sentinel2_ndvi/site-123_timeseries.zarr';
 const RGB_STORE_URL = 'https://storage.googleapis.com/restor-datacube/sentinel2_rgb/site-123_timeseries.zarr';
 
-const DEFAULT_LAT = 50.254264;
-const DEFAULT_LON = -3.786267;
-const DEFAULT_ZOOM = 15.30;
+const DEFAULT_LAT = 50.256360;
+const DEFAULT_LON = -3.794742;
+const DEFAULT_ZOOM = 14.26;
 
 function getUrlParameters() {
     const urlParams = new URLSearchParams(window.location.search);
