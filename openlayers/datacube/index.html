@@ -447,6 +447,38 @@
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
     }
 
+    #ndvi-layer-loading {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #888;
+      margin-bottom: 6px;
+    }
+
+    #ndvi-layer-loading.visible {
+      display: flex;
+    }
+
+    .ndvi-spinner {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid #ddd;
+      border-top-color: #6b9b5e;
+      animation: ndvi-spin 0.7s linear infinite;
+      flex-shrink: 0;
+      vertical-align: -1px;
+      margin-right: 6px;
+    }
+
+    @keyframes ndvi-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
     #ndvi-legend-date {
       font-size: 13px;
       font-weight: 600;
@@ -504,6 +536,10 @@
     <div id="ndvi-layer-toggle">
       <button type="button" class="ndvi-layer-toggle-btn active" data-layer="ndvi">NDVI</button>
       <button type="button" class="ndvi-layer-toggle-btn" data-layer="rgb">Visible</button>
+    </div>
+    <div id="ndvi-layer-loading">
+      <span class="ndvi-spinner"></span>
+      <span id="ndvi-layer-loading-text"></span>
     </div>
     <div id="ndvi-legend-date"></div>
     <div id="ndvi-legend-title">NDVI</div>

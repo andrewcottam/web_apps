@@ -71,9 +71,11 @@ const drawSource = new VectorSource();
 const drawLayer = new VectorLayer({
     source: drawSource,
     zIndex: OVERLAY_Z_INDEX + 1,
+    // Same drawn-polygon colors as openlayers/verify's default (pre-validation)
+    // feature style — a plain white fill with a grey outline.
     style: new Style({
-        fill: new Fill({ color: 'rgba(107, 155, 94, 0.2)' }),
-        stroke: new Stroke({ color: 'rgba(61, 107, 44, 0.9)', width: 2 }),
+        fill: new Fill({ color: 'rgba(255, 255, 255, 0.4)' }),
+        stroke: new Stroke({ color: '#888', width: 2 }),
     }),
 });
 
@@ -365,6 +367,7 @@ function showNdviLegend() {
 function hideNdviLegend() {
     document.getElementById('ndvi-legend').classList.remove('visible');
     document.getElementById('ndvi-legend-date').textContent = '';
+    document.getElementById('ndvi-layer-loading').classList.remove('visible');
     document.getElementById('ndvi-hover-tooltip').classList.remove('visible');
     ndviRasterLayer.setSource(null);
 }
@@ -495,8 +498,9 @@ function hideNdviPanel() {
 }
 
 function setNdviStatus(message, isError) {
+    const spinner = isError ? '' : '<span class="ndvi-spinner"></span>';
     document.getElementById('ndvi-panel-body').innerHTML =
-        `<div id="ndvi-status"${isError ? ' class="error"' : ''}>${escapeHtml(message)}</div>`;
+        `<div id="ndvi-status"${isError ? ' class="error"' : ''}>${spinner}${escapeHtml(message)}</div>`;
 }
 
 function escapeHtml(str) {
@@ -970,9 +974,15 @@ async function selectObservation(index) {
 // the image isn't from the exact date the chart point represents.
 async function renderSelectedRaster(observation, ndviData) {
     const dateLabel = document.getElementById('ndvi-legend-date');
+    const loadingEl = document.getElementById('ndvi-layer-loading');
     let renderedDate = observation.date;
     try {
         if (chartConfig.layerMode === 'rgb') {
+            // The NDVI cube is always already loaded by this point (analyzePolygon
+            // awaits it before a chart can even exist), so this loading state is
+            // only ever visible for the RGB cube's first fetch — see loadRgbData.
+            document.getElementById('ndvi-layer-loading-text').textContent = 'Loading visible imagery…';
+            loadingEl.classList.add('visible');
             const rgbData = await loadRgbData();
             if (!ensureProjectionRegistered(rgbData.crs)) {
                 dateLabel.textContent = `Unsupported CRS for the RGB datacube: ${rgbData.crs}`;
@@ -988,6 +998,8 @@ async function renderSelectedRaster(observation, ndviData) {
         console.error('Failed to render raster layer:', e);
         dateLabel.textContent = `Failed to load ${chartConfig.layerMode === 'rgb' ? 'RGB' : 'NDVI'} raster: ${e.message}`;
         return;
+    } finally {
+        loadingEl.classList.remove('visible');
     }
 
     const isNearestRgb = chartConfig.layerMode === 'rgb' && renderedDate.getTime() !== observation.date.getTime();
