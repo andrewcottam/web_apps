@@ -1060,8 +1060,8 @@ const App: React.FC = () => {
           <div style={{ flexShrink: 0 }}>
             {data.checks && data.checks.overall_status && (() => {
               const s = data.checks.overall_status;
-              const color = s === CheckStatus.Valid ? "#2e7d32" : s === CheckStatus.NeedsReview ? "#e65100" : "#c62828";
-              const bg    = s === CheckStatus.Valid ? "#f1f8e9" : s === CheckStatus.NeedsReview ? "#fff3e0" : "#ffebee";
+              const color = s === CheckStatus.Valid ? "#2e7d32" : s === CheckStatus.NeedsReview ? "#e65100" : s === CheckStatus.Invalid ? "#c62828" : "gray";
+              const bg    = s === CheckStatus.Valid ? "#f1f8e9" : s === CheckStatus.NeedsReview ? "#fff3e0" : s === CheckStatus.Invalid ? "#ffebee" : "#f5f5f5";
               return (
                 <div className="overall" style={{ background: bg, border: `1px solid ${color}30`, borderLeft: 'none', borderRight: 'none', borderRadius: 0 }}>
                   <div className="overall-banner">
