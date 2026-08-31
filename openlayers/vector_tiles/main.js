@@ -1501,7 +1501,9 @@ function buildCheckFilterRow(checkName, label) {
         button.dataset.check = checkName;
         button.dataset.status = status;
         button.setAttribute('aria-pressed', 'true');
-        button.title = status;
+        // 'Invalid' also governs 'Not checked' sites (see getCheckStatus) — spelled out
+        // here since there's no separate control for it.
+        button.title = status === 'Invalid' ? 'Invalid or Not Checked' : status;
         button.addEventListener('click', handleCheckStatusToggle);
 
         const swatch = document.createElement('span');
