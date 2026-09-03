@@ -9,6 +9,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@google/earthengine": "^0.1.195"
+    "@google/earthengine": "^0.1.419"
   }
 }
