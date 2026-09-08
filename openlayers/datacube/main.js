@@ -153,18 +153,159 @@ async function loginClicked() {
 }
 
 // ---------------------------------------------------------------------------
+// Persistent chunk cache (IndexedDB)
+// ---------------------------------------------------------------------------
+
+// The per-site `_timeseries.zarr` stores are chunked `[time, ≤64, ≤64]` (see
+// restor-servers' cloud_functions/datacube readme) — a few hundred chunk
+// objects totalling 100+ MB per cube, all of which this app fetches in full
+// on first use (see loadNdviData/loadRgbData below). GCS serves them with
+// `Cache-Control: public, max-age=3600`, so the browser's own HTTP cache stops
+// helping after an hour, and never helps at all on a different browser/device.
+// This cache keeps chunk bytes in IndexedDB indefinitely instead, so a cold
+// load only ever happens once per site per device.
+//
+// Freshness is tied to the store's `.zmetadata` object, which the datacube
+// pipeline rewrites every time it regenerates or incrementally updates a site
+// (see restor-servers' sentinel2_datacube.py) — so its Last-Modified changing
+// is exactly the signal that means "this site's cube changed, don't trust
+// what's cached for it." `.zmetadata` itself is always re-fetched over the
+// network (never served from this cache) so that check is never stale.
+// Last-Modified (not ETag) because it's a CORS-safelisted response header —
+// readable via fetch() cross-origin without the bucket needing to explicitly
+// expose it (see cors.json), unlike ETag.
+const CHUNK_CACHE_DB = 'datacube-chunk-cache-v1';
+const CHUNK_CACHE_STORE = 'chunks';
+
+function openChunkCacheDb() {
+    return new Promise((resolve, reject) => {
+        const req = indexedDB.open(CHUNK_CACHE_DB, 1);
+        req.onupgradeneeded = () => req.result.createObjectStore(CHUNK_CACHE_STORE);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+    });
+}
+
+// Memoized and allowed to fail soft — private browsing / disabled storage /
+// blocked IndexedDB should degrade to network-only, not break the app.
+let chunkCacheDbPromise = null;
+function getChunkCacheDb() {
+    if (!chunkCacheDbPromise) {
+        chunkCacheDbPromise = openChunkCacheDb().catch((e) => {
+            console.warn('IndexedDB chunk cache unavailable, falling back to network only:', e);
+            return null;
+        });
+    }
+    return chunkCacheDbPromise;
+}
+
+function idbGet(db, key) {
+    return new Promise((resolve) => {
+        const req = db.transaction(CHUNK_CACHE_STORE, 'readonly').objectStore(CHUNK_CACHE_STORE).get(key);
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => resolve(undefined);
+    });
+}
+
+function idbPut(db, key, value) {
+    return new Promise((resolve) => {
+        const tx = db.transaction(CHUNK_CACHE_STORE, 'readwrite');
+        tx.objectStore(CHUNK_CACHE_STORE).put(value, key);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => resolve();
+    });
+}
+
+function idbDeletePrefix(db, prefix) {
+    return new Promise((resolve) => {
+        const store = db.transaction(CHUNK_CACHE_STORE, 'readwrite').objectStore(CHUNK_CACHE_STORE);
+        const req = store.openCursor();
+        req.onsuccess = () => {
+            const cursor = req.result;
+            if (!cursor) { resolve(); return; }
+            if (typeof cursor.key === 'string' && cursor.key.startsWith(prefix)) cursor.delete();
+            cursor.continue();
+        };
+        req.onerror = () => resolve();
+    });
+}
+
+// Wraps the `fetch` a zarr.FetchStore uses for every request (whole-object
+// `get`s and ranged `getRange`s alike — both funnel through this) with the
+// IndexedDB cache above. `.zmetadata` is the one path always sent over the
+// network and used to detect a stale cache (see comment above); everything
+// else is served from IndexedDB when present. `onEachRequest()` fires after
+// every request (cache hit or network) so callers can surface progress.
+function makeCachingFetch(storeUrl, onEachRequest) {
+    return async (request) => {
+        const url = request.url;
+        const db = await getChunkCacheDb();
+
+        if (url.endsWith('.zmetadata')) {
+            const response = await fetch(request);
+            if (db && response.ok) {
+                const lastModified = response.headers.get('Last-Modified');
+                const lastModifiedKey = `last-modified::${storeUrl}`;
+                const bytes = new Uint8Array(await response.arrayBuffer());
+                const previousLastModified = await idbGet(db, lastModifiedKey);
+                if (lastModified && previousLastModified !== lastModified) {
+                    await idbDeletePrefix(db, `chunk::${storeUrl}::`);
+                    await idbPut(db, lastModifiedKey, lastModified);
+                }
+                onEachRequest();
+                return new Response(bytes, { status: response.status });
+            }
+            onEachRequest();
+            return response;
+        }
+
+        const cacheKey = `chunk::${storeUrl}::${url}::${request.headers.get('Range') || ''}`;
+        if (db) {
+            const cached = await idbGet(db, cacheKey);
+            if (cached) {
+                onEachRequest();
+                return new Response(cached, { status: 200 });
+            }
+        }
+
+        const response = await fetch(request);
+        if (!response.ok) {
+            onEachRequest();
+            return response;
+        }
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        if (db) idbPut(db, cacheKey, bytes); // fire-and-forget
+        onEachRequest();
+        return new Response(bytes, { status: response.status });
+    };
+}
+
+// Total chunk requests a full read of `node` will make — used to turn the
+// raw "requests completed so far" counter into a percentage.
+function chunkCount(node) {
+    return node.shape.reduce((total, dim, i) => total * Math.ceil(dim / node.chunks[i]), 1);
+}
+
+// ---------------------------------------------------------------------------
 // Zarr NDVI loading
 // ---------------------------------------------------------------------------
 
-// The whole per-site datacube is small (a handful of timesteps over a few hundred
-// pixels), so it's fetched and cached in full on first use rather than windowed to
-// the drawn polygon's bounding box.
+// The whole per-site datacube (a few hundred chunks, 100+ MB — see the cache
+// comment above) is fetched and cached in full on first use rather than
+// windowed to the drawn polygon's bounding box, because this app also needs
+// the full spatial grid for the "show this date across the whole view" raster
+// feature and for scrubbing quickly through dates — not just the AOI.
 let ndviDataPromise = null;
 
 function loadNdviData() {
     if (!ndviDataPromise) {
         ndviDataPromise = (async () => {
-            const rawStore = new zarr.FetchStore(ZARR_STORE_URL);
+            let total = 0, loaded = 0;
+            const onEachRequest = () => {
+                loaded++;
+                setNdviStatus(`Loading NDVI data…${total ? ` ${Math.min(100, Math.round((loaded / total) * 100))}%` : ''}`);
+            };
+            const rawStore = new zarr.FetchStore(ZARR_STORE_URL, { fetch: makeCachingFetch(ZARR_STORE_URL, onEachRequest) });
             const store = await zarr.withMaybeConsolidatedMetadata(rawStore);
             const root = await zarr.open(store, { kind: 'group' });
 
@@ -172,6 +313,8 @@ function loadNdviData() {
             const xNode = await zarr.open(root.resolve('x'), { kind: 'array' });
             const yNode = await zarr.open(root.resolve('y'), { kind: 'array' });
             const timeNode = await zarr.open(root.resolve('time'), { kind: 'array' });
+
+            total = chunkCount(ndviNode) + chunkCount(xNode) + chunkCount(yNode) + chunkCount(timeNode);
 
             const [ndvi, x, y, time] = await Promise.all([
                 zarr.get(ndviNode), zarr.get(xNode), zarr.get(yNode), zarr.get(timeNode),
@@ -206,7 +349,16 @@ let rgbDataPromise = null;
 function loadRgbData() {
     if (!rgbDataPromise) {
         rgbDataPromise = (async () => {
-            const rawStore = new zarr.FetchStore(RGB_STORE_URL);
+            let total = 0, loaded = 0;
+            const onEachRequest = () => {
+                loaded++;
+                const label = document.getElementById('ndvi-layer-loading-text');
+                if (label) {
+                    label.textContent =
+                        `Loading visible imagery…${total ? ` ${Math.min(100, Math.round((loaded / total) * 100))}%` : ''}`;
+                }
+            };
+            const rawStore = new zarr.FetchStore(RGB_STORE_URL, { fetch: makeCachingFetch(RGB_STORE_URL, onEachRequest) });
             const store = await zarr.withMaybeConsolidatedMetadata(rawStore);
             const root = await zarr.open(store, { kind: 'group' });
 
@@ -214,6 +366,8 @@ function loadRgbData() {
             const xNode = await zarr.open(root.resolve('x'), { kind: 'array' });
             const yNode = await zarr.open(root.resolve('y'), { kind: 'array' });
             const timeNode = await zarr.open(root.resolve('time'), { kind: 'array' });
+
+            total = chunkCount(rgbNode) + chunkCount(xNode) + chunkCount(yNode) + chunkCount(timeNode);
 
             const [rgb, x, y, time] = await Promise.all([
                 zarr.get(rgbNode), zarr.get(xNode), zarr.get(yNode), zarr.get(timeNode),
