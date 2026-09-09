@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Restoration Progress</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+    }
+
+    .map {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: lightblue;
+    }
+
+    #build-version {
+      position: absolute;
+      left: 8px;
+      bottom: 4px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 10px;
+      color: rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #login-container {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 10;
+    }
+
+    #login-button {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      background: white;
+      box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    #login-button img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    #login-button svg {
+      color: #666;
+    }
+
+    #toolbar {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      padding: 6px 6px 6px 14px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    #toolbar-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #222;
+      white-space: nowrap;
+      padding-right: 4px;
+      border-right: 1px solid #eee;
+    }
+
+    #toolbar-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    #toolbar button {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+      background: none;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #444;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    #toolbar button:hover {
+      background: #f2f2f2;
+    }
+
+    #toolbar button.active {
+      background: rgba(107, 155, 94, 0.18);
+      color: #3d6b2c;
+    }
+
+    #toolbar button:disabled {
+      color: #bbb;
+      cursor: not-allowed;
+      background: none;
+    }
+
+    #result-panel {
+      display: none;
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 480px;
+      max-width: calc(100vw - 40px);
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      padding: 14px 18px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      z-index: 10;
+      box-sizing: border-box;
+    }
+
+    #result-panel.visible {
+      display: block;
+    }
+
+    #result-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    #result-panel-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #222;
+    }
+
+    #result-panel-close {
+      border: none;
+      background: none;
+      font-size: 18px;
+      line-height: 1;
+      color: #888;
+      cursor: pointer;
+      padding: 2px;
+    }
+
+    #result-panel-close:hover {
+      color: #333;
+    }
+
+    #result-status {
+      font-size: 12px;
+      color: #888;
+      padding: 6px 0;
+    }
+
+    #result-status.error {
+      color: #c0605c;
+    }
+
+    .result-spinner {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 2px solid #ddd;
+      border-top-color: #6b9b5e;
+      animation: result-spin 0.7s linear infinite;
+      flex-shrink: 0;
+      vertical-align: -1px;
+      margin-right: 6px;
+    }
+
+    @keyframes result-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #444;
+      padding: 3px 0;
+    }
+
+    .result-row span:first-child {
+      color: #888;
+    }
+
+    #embedding-chart-stub {
+      margin-top: 12px;
+      padding: 14px 10px;
+      border: 1px dashed #ddd;
+      border-radius: 8px;
+      font-size: 11px;
+      color: #999;
+      text-align: center;
+    }
+
+    #embedding-chart-section {
+      margin-top: 12px;
+    }
+
+    #embedding-chart-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #444;
+      margin-bottom: 4px;
+    }
+
+    #embedding-chart {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    #embedding-chart .embedding-axis {
+      stroke: #ccc;
+      stroke-width: 1;
+    }
+
+    #embedding-chart text {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 9px;
+      fill: #888;
+    }
+
+    #embedding-chart .embedding-bar:hover {
+      opacity: 0.7;
+    }
+  </style>
+  <script type="module" crossorigin src="/web_apps/openlayers/restoration-progress/dist/assets/index-CZD0TkW7.js"></script>
+  <link rel="stylesheet" crossorigin href="/web_apps/openlayers/restoration-progress/dist/assets/index-CmhLOP92.css">
+</head>
+
+<body>
+  <div class="map" id="map"></div>
+  <div id="build-version"></div>
+
+  <div id="toolbar">
+    <span id="toolbar-title">Track restoration progress</span>
+    <div id="toolbar-buttons">
+      <button id="draw-button" type="button" title="Draw a reference site polygon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 3l4 18 5-7 7-5z"></path>
+        </svg>
+        Draw reference site
+      </button>
+      <button id="clear-button" type="button" title="Clear the drawn site" disabled>Clear</button>
+    </div>
+  </div>
+
+  <div id="login-container">
+    <button id="login-button">
+      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+    </button>
+  </div>
+
+  <div id="result-panel">
+    <div id="result-panel-header">
+      <span id="result-panel-title">Reference site</span>
+      <button id="result-panel-close" title="Close" aria-label="Close">&times;</button>
+    </div>
+    <div id="result-panel-body">
+      <div id="result-status"></div>
+    </div>
+  </div>
+
+</body>
+
+</html>
