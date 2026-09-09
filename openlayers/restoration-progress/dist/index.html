@@ -130,7 +130,7 @@
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      width: 480px;
+      width: 560px;
       max-width: calc(100vw - 40px);
       background: white;
       border-radius: 10px;
@@ -224,6 +224,18 @@
       margin-bottom: 4px;
     }
 
+    .chart-fullscreen-link {
+      font-size: 10px;
+      color: #2f7bb5;
+      text-decoration: none;
+      white-space: nowrap;
+      margin-left: auto;
+    }
+
+    .chart-fullscreen-link:hover {
+      text-decoration: underline;
+    }
+
     #embedding-chart-body {
       font-size: 11px;
       color: #999;
@@ -249,8 +261,25 @@
     #embedding-chart .embedding-bar:hover {
       opacity: 0.7;
     }
+
+    .embedding-chart-legend {
+      display: flex;
+      gap: 14px;
+      font-size: 10px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    .embedding-chart-legend-swatch {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 4px;
+      vertical-align: -1px;
+    }
   </style>
-  <script type="module" crossorigin src="/web_apps/openlayers/restoration-progress/dist/assets/index-DhoPufnZ.js"></script>
+  <script type="module" crossorigin src="/web_apps/openlayers/restoration-progress/dist/assets/index-Ciw7xaMy.js"></script>
   <link rel="stylesheet" crossorigin href="/web_apps/openlayers/restoration-progress/dist/assets/index-CmhLOP92.css">
 </head>
 
@@ -268,6 +297,14 @@
         </svg>
         Draw reference site
       </button>
+      <button id="compare-button" type="button" title="Click two points to compare their AlphaEarth embeddings">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="9" cy="12" r="6"></circle>
+          <circle cx="15" cy="12" r="6"></circle>
+        </svg>
+        Compare points
+      </button>
       <button id="clear-button" type="button" title="Clear the drawn site" disabled>Clear</button>
     </div>
   </div>
@@ -284,7 +321,7 @@
 
   <div id="result-panel">
     <div id="result-panel-header">
-      <span id="result-panel-title">Reference site</span>
+      <span id="result-panel-title"></span>
       <button id="result-panel-close" title="Close" aria-label="Close">&times;</button>
     </div>
     <div id="result-panel-body">
