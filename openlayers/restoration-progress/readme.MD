@@ -1,6 +1,6 @@
 # Restoration Progress
 
-Draw a reference site polygon, find its most stable pixel, and chart the AlphaEarth Foundations embedding at that point — a first step toward tracking a site's restoration progress against AlphaEarth embeddings.
+Draw a reference site polygon, find its most consistent pixel, and chart the AlphaEarth Foundations embedding at that point — a first step toward tracking a site's restoration progress against AlphaEarth embeddings.
 
 ## 📑 Table of Contents
 
@@ -14,8 +14,8 @@ Draw a reference site polygon, find its most stable pixel, and chart the AlphaEa
 ## How it works
 
 1. Draw a polygon on the map (**Draw reference site**).
-2. The polygon is sent to [`alphaearth-embedding`'s `/min-pixel`](https://europe-west6-restor-gis.cloudfunctions.net/alphaearth-embedding/min-pixel) endpoint (see [restor-servers' cloud_functions/alphaearth-embedding](../../../restor-servers/cloud_functions/alphaearth-embedding)), which returns the location of the polygon's most stable, natural-land-cover pixel.
-3. That location is shown as a point on the map, with its stability value and land-cover year.
+2. The polygon is sent to [`alphaearth-embedding`'s `/min-pixel`](https://europe-west6-restor-gis.cloudfunctions.net/alphaearth-embedding/min-pixel) endpoint (see [restor-servers' cloud_functions/alphaearth-embedding](../../../restor-servers/cloud_functions/alphaearth-embedding)), which returns the location of the polygon's most consistent, natural-land-cover pixel.
+3. That location is shown as a point on the map, with its consistency value and land-cover year.
 4. The same point's longitude/latitude is then sent to `alphaearth-embedding`'s base endpoint (`POST /`) to fetch its 64-dim AlphaEarth Foundations embedding for 2025, which is charted as a bar per band (A00-A63).
 
 Otherwise based on [openlayers/datacube](../datacube) for its map/auth/draw scaffolding (Firebase Google sign-in, `ol-mapbox-style` satellite basemap, `ol/interaction/Draw`, URL-synced lat/lon/zoom) — see that app's readme for the details of those pieces, which are unchanged here.

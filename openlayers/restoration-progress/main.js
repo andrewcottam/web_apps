@@ -226,7 +226,7 @@ function renderEmbeddingChart(embedding) {
 // AlphaEarth Foundations embedding for EMBEDDING_YEAR.
 function renderMinPixelResult({ value, longitude, latitude, land_cover_year }) {
     document.getElementById('result-panel-body').innerHTML = `
-        <div class="result-row"><span>Most stable pixel</span><span>${value.toFixed(4)}</span></div>
+        <div class="result-row"><span>Most consistent pixel</span><span>${value.toFixed(4)}</span></div>
         <div class="result-row"><span>Longitude</span><span>${longitude.toFixed(6)}</span></div>
         <div class="result-row"><span>Latitude</span><span>${latitude.toFixed(6)}</span></div>
         <div class="result-row"><span>Land cover year</span><span>${land_cover_year}</span></div>
@@ -243,11 +243,22 @@ async function loadEmbeddingChart(longitude, latitude) {
         const response = await fetch(ALPHAEARTH_EMBEDDING_BASE_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            // Passing 'year' (rather than omitting it) matters: with no
+            // year/years field at all, this endpoint defaults to fetching
+            // every available year (2017-2025), one lookup each — a single
+            // year keeps this to one.
             body: JSON.stringify({ longitude, latitude, year: EMBEDDING_YEAR }),
         });
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || `Request failed (${response.status})`);
-        if (body) body.innerHTML = renderEmbeddingChart(result.embedding);
+
+        // Response shape is { longitude, latitude, years: [{ year, embedding, cog_url } | { year, error }] }
+        // — one entry per requested year, even when only one was requested.
+        // Falls back to a bare top-level 'embedding' field for the older,
+        // single-year-only version of this endpoint.
+        const yearResult = (result.years && result.years[0]) || (result.embedding ? result : null);
+        if (!yearResult || yearResult.error) throw new Error((yearResult && yearResult.error) || 'No embedding returned.');
+        if (body) body.innerHTML = renderEmbeddingChart(yearResult.embedding);
     } catch (e) {
         console.error('alphaearth-embedding request failed:', e);
         if (body) body.textContent = `Failed to load embedding: ${e.message}`;
@@ -256,7 +267,7 @@ async function loadEmbeddingChart(longitude, latitude) {
 
 async function findReferenceSite(polygonCoords) {
     showResultPanel();
-    setResultStatus('Finding the most stable pixel…');
+    setResultStatus('Finding the most consistent pixel…');
     try {
         const response = await fetch(MIN_PIXEL_URL, {
             method: 'POST',
