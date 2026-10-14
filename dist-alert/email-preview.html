@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DIST-ALERT email preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f3f6f7;
+  --panel: #ffffff;
+  --ink: #17232b;
+  --muted: #5b6b75;
+  --line: #d8e0e4;
+  --brand: #005b7f;
+  --brand-soft: #e3eff4;
+  --ok: #2f7a52;
+  --ok-soft: #e6f3ec;
+  --warn: #9a6512;
+  --warn-soft: #fbf1df;
+  --err: #a83a26;
+  --err-soft: #f9e6e2;
+  --field: #fbfcfc;
+  --stage: #e9eef0;
+  color-scheme: light;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10181d; --panel: #172228; --ink: #e4ecef; --muted: #9aaab3; --line: #2a3a42;
+    --brand: #5fb3d6; --brand-soft: #18323d; --ok: #6cc497; --ok-soft: #173126;
+    --warn: #e2b062; --warn-soft: #33281a; --err: #ef8b77; --err-soft: #3a211c;
+    --field: #121c21; --stage: #0c1317; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10181d; --panel: #172228; --ink: #e4ecef; --muted: #9aaab3; --line: #2a3a42;
+  --brand: #5fb3d6; --brand-soft: #18323d; --ok: #6cc497; --ok-soft: #173126;
+  --warn: #e2b062; --warn-soft: #33281a; --err: #ef8b77; --err-soft: #3a211c;
+  --field: #121c21; --stage: #0c1317; color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: inherit; }
+html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 15px; line-height: 1.5;
+}
+header.top {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px;
+  padding: 18px 24px 14px; border-bottom: 1px solid var(--line); background: var(--panel);
+}
+header.top h1 { font-size: 19px; font-weight: 600; margin: 0; }
+header.top p { margin: 0; color: var(--muted); font-size: 14px; }
+main {
+  display: grid; grid-template-columns: minmax(320px, 440px) 1fr;
+  min-height: calc(100vh - 64px);
+}
+.side { background: var(--panel); border-right: 1px solid var(--line); padding: 20px 24px 32px; display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.stage { background: var(--stage); padding: 20px 24px 40px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+h2 { font-size: 14px; font-weight: 600; margin: 0 0 8px; }
+.hint { color: var(--muted); font-size: 13px; margin: 6px 0 0; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button {
+  font: inherit; font-size: 14px; padding: 7px 12px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--field); color: var(--ink); cursor: pointer;
+}
+.seg button[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: #fff; }
+:root[data-theme="dark"] .seg button[aria-pressed="true"] { color: #0c1317; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .seg button[aria-pressed="true"] { color: #0c1317; } }
+textarea, input[type="text"] {
+  width: 100%; font: inherit; color: var(--ink); background: var(--field);
+  border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+}
+textarea {
+  min-height: 260px; resize: vertical;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.45;
+}
+button:focus-visible, textarea:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+.btn {
+  font: inherit; font-size: 14px; font-weight: 500; padding: 8px 14px; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--line); background: var(--field); color: var(--ink);
+}
+.btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
+:root[data-theme="dark"] .btn.primary { color: #0c1317; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .btn.primary { color: #0c1317; } }
+.checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.checks li { font-size: 13.5px; padding: 8px 10px; border-radius: 8px; border-left: 3px solid; }
+.checks li.ok { background: var(--ok-soft); border-color: var(--ok); }
+.checks li.warn { background: var(--warn-soft); border-color: var(--warn); }
+.checks li.err { background: var(--err-soft); border-color: var(--err); }
+.checks code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12.5px; }
+details { border-top: 1px solid var(--line); padding-top: 14px; }
+summary { cursor: pointer; font-weight: 600; font-size: 14px; }
+.fields { display: grid; gap: 10px; margin-top: 12px; }
+.fields label { display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.toolbar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.inbox {
+  align-self: center; width: 100%; max-width: 680px; background: var(--panel);
+  border: 1px solid var(--line); border-radius: 12px; overflow: hidden; transition: max-width .2s ease;
+}
+.inbox.phone { max-width: 390px; }
+.meta { padding: 14px 18px; border-bottom: 1px solid var(--line); display: grid; gap: 2px; }
+.meta .subj { font-size: 17px; font-weight: 600; }
+.meta .from { font-size: 13px; color: var(--muted); }
+iframe { display: block; width: 100%; height: 640px; border: 0; background: #fff; }
+.empty { padding: 60px 24px; text-align: center; color: var(--muted); }
+@media (max-width: 860px) {
+  main { grid-template-columns: 1fr; }
+  .side { border-right: 0; border-bottom: 1px solid var(--line); }
+}
+@media (prefers-reduced-motion: reduce) { .inbox { transition: none; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>DIST-ALERT email preview</h1>
+  <p>Paste the HTML from Gemini and see the email as a customer will, filled with sample details.</p>
+</header>
+<main>
+  <section class="side" aria-label="Template and checks">
+    <div>
+      <h2 id="which-label">Which email is this?</h2>
+      <div class="seg" role="group" aria-labelledby="which-label" id="templatePicker"></div>
+    </div>
+
+    <div>
+      <h2><label for="html">Email HTML</label></h2>
+      <textarea id="html" spellcheck="false" placeholder="Paste the complete HTML here, from <!DOCTYPE html> to </html>."></textarea>
+      <div class="row">
+        <button class="btn primary" id="copyBtn" type="button">Copy HTML</button>
+        <button class="btn" id="clearBtn" type="button">Clear</button>
+      </div>
+      <p class="hint">The preview updates as you type. Your last paste is kept in this browser.</p>
+    </div>
+
+    <div>
+      <h2>Checks</h2>
+      <ul class="checks" id="checks" aria-live="polite"></ul>
+    </div>
+
+    <details>
+      <summary>Sample details</summary>
+      <div class="fields">
+        <label>Admin name<input type="text" id="f_admin_name"></label>
+        <label>Organisation<input type="text" id="f_organisation"></label>
+        <label>Site name<input type="text" id="f_site_name"></label>
+      </div>
+      <p class="hint">Try a very long site name to check the layout doesn't break.</p>
+    </details>
+  </section>
+
+  <section class="stage" aria-label="Preview">
+    <div class="toolbar">
+      <h2 style="margin:0">Preview</h2>
+      <div class="seg" role="group" aria-label="Screen size">
+        <button type="button" id="wDesktop" aria-pressed="true">Desktop</button>
+        <button type="button" id="wPhone" aria-pressed="false">Phone</button>
+      </div>
+    </div>
+    <div class="inbox" id="inbox">
+      <div class="meta">
+        <span class="subj" id="subj"></span>
+        <span class="from">From Restor DIST-ALERT, to <span id="toName"></span></span>
+      </div>
+      <div id="frameWrap"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  // Placeholders each template is filled with by dist-alert (report_generator.py).
+  // Required ones must appear or the email loses that content.
+  const TEMPLATES = {
+    trial_welcome: {
+      label: 'Trial welcome',
+      file: 'email_template_trial_welcome.html',
+      subject: 'Welcome to Restor DIST-ALERT monitoring',
+      required: ['admin_name', 'site_name'],
+      optional: ['organisation_suffix']
+    },
+    purchase_welcome: {
+      label: 'Purchase welcome',
+      file: 'email_template_purchase_welcome.html',
+      subject: 'Welcome to Restor DIST-ALERT monitoring',
+      required: ['admin_name', 'site_name'],
+      optional: ['organisation_suffix']
+    },
+    evaluation: {
+      label: 'Trial evaluation',
+      file: 'email_template_trial_evaluation.html',
+      subject: 'How was your DIST-ALERT trial?',
+      required: ['admin_name', 'site_name', 'feedback_block', 'add_sites_block'],
+      optional: ['organisation_suffix']
+    }
+  };
+
+  const DEFAULTS = {
+    admin_name: 'Ana Ribeiro',
+    organisation: 'Floresta Viva',
+    site_name: 'Serra da Estrela riparian corridor (phase 2)'
+  };
+
+  const BLOCKS = {
+    feedback_block: '<p style="margin: 0 0 16px 0;"><a href="#" style="color: #005b7f; font-weight: 600;">Share your feedback</a></p>',
+    add_sites_block: '<p style="margin: 0 0 16px 0;">Want to monitor more of your sites? <a href="#" style="color: #005b7f; font-weight: 600;">Subscribe to DIST-ALERT for additional sites</a>.</p>'
+  };
+
+  const $ = (id) => document.getElementById(id);
+  const store = {
+    get(k) { try { return localStorage.getItem('dist-email-preview:' + k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem('dist-email-preview:' + k, v); } catch (e) {} }
+  };
+
+  let current = store.get('template') || 'trial_welcome';
+  if (!TEMPLATES[current]) current = 'trial_welcome';
+  let phone = false;
+
+  // Template picker
+  const picker = $('templatePicker');
+  Object.entries(TEMPLATES).forEach(([key, t]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = t.label; b.dataset.key = key;
+    b.addEventListener('click', () => { current = key; store.set('template', key); syncPicker(); render(); });
+    picker.appendChild(b);
+  });
+  function syncPicker() {
+    picker.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.key === current)));
+  }
+
+  // Sample fields
+  ['admin_name', 'organisation', 'site_name'].forEach(k => {
+    const el = $('f_' + k);
+    el.value = store.get('f_' + k) ?? DEFAULTS[k];
+    el.addEventListener('input', () => { store.set('f_' + k, el.value); render(); });
+  });
+
+  const ta = $('html');
+  ta.value = store.get('html_' + current) || store.get('html') || '';
+  let timer;
+  ta.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => { store.set('html_' + current, ta.value); render(); }, 150);
+  });
+  picker.addEventListener('click', () => { ta.value = store.get('html_' + current) || ''; render(); });
+
+  $('clearBtn').addEventListener('click', () => { ta.value = ''; store.set('html_' + current, ''); render(); ta.focus(); });
+  $('copyBtn').addEventListener('click', async () => {
+    const text = clean(ta.value);
+    try { await navigator.clipboard.writeText(text); flash('Copied'); }
+    catch (e) { ta.value = text; ta.select(); flash('Selected, press Ctrl+C'); }
+  });
+  function flash(msg) {
+    const b = $('copyBtn'); const old = b.textContent; b.textContent = msg;
+    setTimeout(() => { b.textContent = old; }, 1400);
+  }
+
+  $('wDesktop').addEventListener('click', () => setWidth(false));
+  $('wPhone').addEventListener('click', () => setWidth(true));
+  function setWidth(p) {
+    phone = p;
+    $('wDesktop').setAttribute('aria-pressed', String(!p));
+    $('wPhone').setAttribute('aria-pressed', String(p));
+    $('inbox').classList.toggle('phone', p);
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // Gemini often wraps code in markdown fences; strip them.
+  function clean(raw) {
+    let s = raw.trim();
+    s = s.replace(/^```[a-zA-Z]*\s*\n?/, '').replace(/\n?```\s*$/, '');
+    return s.trim();
+  }
+
+  function values() {
+    const name = $('f_admin_name').value.trim();
+    const org = $('f_organisation').value.trim();
+    const site = $('f_site_name').value.trim();
+    return {
+      admin_name: esc(name || 'there'),
+      site_name: esc(site || 'your site'),
+      organisation_suffix: org ? ' (' + esc(org) + ')' : '',
+      feedback_block: BLOCKS.feedback_block,
+      add_sites_block: BLOCKS.add_sites_block
+    };
+  }
+
+  function check(html, t) {
+    const out = [];
+    if (!html) return out;
+    const known = new Set([...t.required, ...t.optional]);
+    const found = new Set();
+    const spaced = new Set();
+    const unknown = new Set();
+    (html.match(/\{\{[^{}]*\}\}/g) || []).forEach(m => {
+      const inner = m.slice(2, -2);
+      const name = inner.trim();
+      if (inner !== name && known.has(name)) spaced.add(name);
+      else if (known.has(name)) found.add(name);
+      else unknown.add(m);
+    });
+    t.required.forEach(p => {
+      if (!found.has(p) && !spaced.has(p)) out.push(['err', `Missing <code>{{${p}}}</code>. Without it the email won't show the ${label(p)}.`]);
+    });
+    spaced.forEach(p => out.push(['err', `Remove the spaces in <code>{{ ${p} }}</code>. It must be written exactly <code>{{${p}}}</code>.`]));
+    unknown.forEach(m => out.push(['err', `<code>${esc(m)}</code> isn't a recognised placeholder for this email, so it will appear to customers as typed. Check the spelling.`]));
+    if (/<script/i.test(html)) out.push(['err', 'Remove the <code>&lt;script&gt;</code> code. Email apps block it.']);
+    if (/<link[^>]+stylesheet/i.test(html)) out.push(['warn', 'This loads an external stylesheet. Most email apps ignore it, so put the styling on each element instead.']);
+    if (/<style[\s>]/i.test(html)) out.push(['warn', 'This has a <code>&lt;style&gt;</code> block. Gmail keeps most of it but some email apps drop it. Styling written on each element (inline) is safest; ask Gemini to "inline all CSS".']);
+    if (/<img[^>]+src=["'](?!https?:|data:)/i.test(html)) out.push(['warn', 'An image uses a local path. Images need a full web address starting with https:// to show in email.']);
+    if (!/<html[\s>]/i.test(html)) out.push(['warn', 'This looks like part of an email. Paste the full HTML, from <code>&lt;!DOCTYPE html&gt;</code> to <code>&lt;/html&gt;</code>.']);
+    if (!out.some(([k]) => k === 'err')) out.unshift(['ok', 'All the details this email needs are in place.']);
+    return out;
+  }
+
+  function label(p) {
+    return {
+      admin_name: "customer's name",
+      site_name: 'site name',
+      organisation_suffix: 'organisation',
+      feedback_block: 'feedback link',
+      add_sites_block: 'link to add more sites'
+    }[p] || p;
+  }
+
+  function render() {
+    syncPicker();
+    const t = TEMPLATES[current];
+    const raw = clean(ta.value);
+    $('subj').textContent = t.subject;
+    $('toName').textContent = $('f_admin_name').value.trim() || 'the customer';
+
+    const list = $('checks');
+    list.innerHTML = '';
+    const results = check(raw, t);
+    if (!raw) {
+      const li = document.createElement('li'); li.className = 'warn';
+      li.innerHTML = `Paste the HTML for <strong>${esc(t.label.toLowerCase())}</strong> (<code>${t.file}</code>) to see it here.`;
+      list.appendChild(li);
+    }
+    results.forEach(([kind, msg]) => {
+      const li = document.createElement('li'); li.className = kind; li.innerHTML = msg; list.appendChild(li);
+    });
+
+    const wrap = $('frameWrap');
+    if (!raw) { wrap.innerHTML = '<div class="empty">The email will appear here.</div>'; return; }
+    const v = values();
+    const filled = raw.replace(/\{\{(\w+)\}\}/g, (m, k) => (k in v ? v[k] : m));
+    let frame = wrap.querySelector('iframe');
+    if (!frame) {
+      wrap.innerHTML = '';
+      frame = document.createElement('iframe');
+      frame.title = 'Email preview';
+      frame.setAttribute('sandbox', 'allow-same-origin');
+      wrap.appendChild(frame);
+      frame.addEventListener('load', fit);
+    }
+    frame.srcdoc = filled;
+  }
+
+  function fit() {
+    const f = document.querySelector('#frameWrap iframe');
+    try {
+      const h = f.contentDocument.documentElement.scrollHeight;
+      f.style.height = Math.max(360, Math.min(h + 8, 4000)) + 'px';
+    } catch (e) {}
+  }
+  new ResizeObserver(() => fit()).observe($('inbox'));
+
+  render();
+})();
+</script>
+</body>
+</html>
