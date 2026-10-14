@@ -53,6 +53,7 @@ textarea { min-height: 260px; resize: vertical; font-family: ui-monospace, "SF M
 button:focus-visible, textarea:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 .row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .btn { font: inherit; font-size: 14px; font-weight: 500; padding: 8px 14px; border-radius: 8px; cursor: pointer; border: 1px solid var(--line); background: var(--field); color: var(--ink); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
 .btn.primary { background: var(--brand); border-color: var(--brand); color: var(--on-brand); }
 .checks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .checks li { font-size: 13.5px; padding: 8px 10px; border-radius: 8px; border-left: 3px solid; }
@@ -89,11 +90,11 @@ iframe { display: block; width: 100%; height: 640px; border: 0; background: #fff
 
     <div>
       <h2><label for="html">Template HTML</label></h2>
-      <textarea id="html" spellcheck="false" placeholder="Paste the complete HTML here, from <!DOCTYPE html> to </html>."></textarea>
+      <textarea id="html" spellcheck="false" title="Paste or edit the template HTML here. The preview updates as you type" placeholder="Paste the complete HTML here, from <!DOCTYPE html> to </html>."></textarea>
       <div class="row">
-        <button class="btn primary" id="copyBtn" type="button">Copy HTML</button>
-        <button class="btn" id="resetBtn" type="button">Load current version</button>
-        <button class="btn" id="clearBtn" type="button">Clear</button>
+        <button class="btn primary" id="copyBtn" type="button" title="Copy the HTML in the box to your clipboard, ready to paste into the template file on GitHub">Copy HTML</button>
+        <button class="btn" id="resetBtn" type="button" title="Replace what's in the box with the version currently in the restor-servers repo. Your edits in the box will be lost">Load current version</button>
+        <button class="btn" id="clearBtn" type="button" title="Empty the box so you can paste in new HTML. Your edits in the box will be lost">Clear</button>
       </div>
       <p class="hint" id="fileHint"></p>
     </div>
@@ -106,11 +107,11 @@ iframe { display: block; width: 100%; height: 640px; border: 0; background: #fff
     <details>
       <summary>Sample details</summary>
       <div class="fields">
-        <label>Admin name<input type="text" id="f_admin_name"></label>
-        <label>Organisation<input type="text" id="f_organisation"></label>
-        <label>Site name<input type="text" id="f_site_name"></label>
+        <label>Admin name<input type="text" id="f_admin_name" title="Shown as the customer's name, for example in 'Hello …'"></label>
+        <label>Organisation<input type="text" id="f_organisation" title="Shown after the site name, in brackets"></label>
+        <label>Site name<input type="text" id="f_site_name" title="The customer's site. Try a very long name to test the layout"></label>
         <label>Sites in the welcome email
-          <select id="f_site_count">
+          <select id="f_site_count" title="How many sites the customer started at once. With more than one, the welcome email lists them">
             <option value="1">1 site</option>
             <option value="3">3 sites</option>
             <option value="12">12 sites (list is capped at 10)</option>
@@ -125,8 +126,8 @@ iframe { display: block; width: 100%; height: 640px; border: 0; background: #fff
     <div class="toolbar">
       <h2 style="margin:0">Preview</h2>
       <div class="seg" role="group" aria-label="Screen size">
-        <button type="button" id="wDesktop" aria-pressed="true">Desktop</button>
-        <button type="button" id="wPhone" aria-pressed="false">Phone</button>
+        <button type="button" id="wDesktop" aria-pressed="true" title="Show the preview at desktop width">Desktop</button>
+        <button type="button" id="wPhone" aria-pressed="false" title="Show the preview at phone width, to check it still reads well on a small screen">Phone</button>
       </div>
     </div>
     <p class="status" id="sampleStatus"></p>
@@ -160,18 +161,21 @@ iframe { display: block; width: 100%; height: 640px; border: 0; background: #fff
   const TEMPLATES = {
     trial_welcome: {
       group: 'Emails', label: 'Trial welcome', kind: 'email',
+      tip: "Sent just before a free-trial customer's first report",
       file: 'email_templates/email_template_trial_welcome.html',
       subject: "Restor's Disturbance Alert Report Trial", multiSite: true,
       required: ['admin_name', 'site_name', 'site_list'], optional: ['organisation_suffix', 'organisation'], fallback: {}
     },
     purchase_welcome: {
       group: 'Emails', label: 'Purchase welcome', kind: 'email',
+      tip: "Sent just before a paying customer's first report",
       file: 'email_templates/email_template_purchase_welcome.html',
       subject: "Welcome to Restor's Disturbance Alert Report service", multiSite: true,
       required: ['admin_name', 'site_name', 'site_list'], optional: ['organisation_suffix', 'organisation'], fallback: {}
     },
     evaluation: {
       group: 'Emails', label: 'Trial evaluation', kind: 'email',
+      tip: 'Sent some days after the trial report, asking for feedback and offering more sites',
       file: 'email_templates/email_template_trial_evaluation.html',
       subject: 'How was your DIST-ALERT trial?',
       required: ['admin_name', 'site_name', 'feedback_block', 'add_sites_block'], optional: ['organisation_suffix', 'organisation'],
@@ -181,7 +185,8 @@ iframe { display: block; width: 100%; height: 640px; border: 0; background: #fff
       }
     },
     report_email_full: {
-      group: 'Reports', label: 'Report email (full)', kind: 'email', shares: 'report_email',
+      group: 'Emails', label: 'Report email (full)', kind: 'email', shares: 'report_email',
+      tip: 'The report email for full subscriptions. Shares its file with the light version',
       file: 'report_templates/report_template_email.html',
       subject: 'Quarterly DIST-ALERT report',
       required: ['email_title', 'site_name', 'email_severity_chip_color', 'alert_severity_badge_email', 'alert_banner',
@@ -203,13 +208,15 @@ iframe { display: block; width: 100%; height: 640px; border: 0; background: #fff
       })
     },
     report_email_light: {
-      group: 'Reports', label: 'Report email (light)', kind: 'email', shares: 'report_email',
+      group: 'Emails', label: 'Report email (light)', kind: 'email', shares: 'report_email',
+      tip: 'The report email for light subscriptions. Shares its file with the full version',
       file: 'report_templates/report_template_email.html',
       subject: 'Quarterly DIST-ALERT report (Light)',
       required: null, optional: [], fallback: null // filled from report_email_full below
     },
     detailed: {
-      group: 'Reports', label: 'Detailed report (full)', kind: 'page', shares: 'detailed',
+      group: 'Reports', label: 'Full', name: 'detailed report (full)', kind: 'page', shares: 'detailed',
+      tip: 'The web page opened from the full report email, with images for every disturbance',
       file: 'report_templates/report_template_detailed.html',
       subject: 'Detailed report web page (full)',
       required: ['report_title', 'site_name', 'severity_chip_color', 'alert_severity_badge_detailed', 'start_end_str',
@@ -232,7 +239,8 @@ iframe { display: block; width: 100%; height: 640px; border: 0; background: #fff
     }
   };
   TEMPLATES.detailed_light = Object.assign({}, TEMPLATES.detailed, {
-    label: 'Detailed report (light)', subject: 'Detailed report web page (light)'
+    label: 'Light', name: 'detailed report (light)', subject: 'Detailed report web page (light)',
+    tip: 'The web page opened from the light report email, with images for the first and last dates only'
   });
   TEMPLATES.report_email_light.required = TEMPLATES.report_email_full.required;
   TEMPLATES.report_email_light.fallback = Object.assign({}, TEMPLATES.report_email_full.fallback);
@@ -267,6 +275,7 @@ iframe { display: block; width: 100%; height: 640px; border: 0; background: #fff
     }
     const b = document.createElement('button');
     b.type = 'button'; b.textContent = t.label; b.dataset.key = key;
+    b.title = t.tip + ' (' + t.file.split('/').pop() + ')';
     b.addEventListener('click', () => select(key));
     groups[t.group].appendChild(b);
   });
@@ -398,6 +407,11 @@ iframe { display: block; width: 100%; height: 640px; border: 0; background: #fff
 
   function render() {
     picker.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.key === current)));
+    const rb = $('resetBtn');
+    rb.disabled = !CURRENT_HTML[current];
+    rb.title = rb.disabled
+      ? "There's no stored copy of this template in the page yet, so paste it in from the repo"
+      : "Replace what's in the box with the version currently in the restor-servers repo. Your edits in the box will be lost";
     const t = TEMPLATES[current];
     const raw = clean(ta.value);
     const page = t.kind === 'page';
@@ -412,7 +426,7 @@ iframe { display: block; width: 100%; height: 640px; border: 0; background: #fff
       (t.shares ? ' The full and light versions use the same file, so they share what you paste here.' : '') +
       ' Your last paste is kept in this browser; "Load current version" brings back the version in the repo.';
 
-    const isReport = t.group === 'Reports';
+    const isReport = current.startsWith('report_email') || t.kind === 'page';
     $('sampleStatus').textContent = !isReport ? '' : real
       ? 'Filled with a real Sabah Forest Loss Site report. The sample details on the left only apply to the welcome and evaluation emails.'
       : 'Generated report sections are shown as dashed boxes until real report data is added for this template.';
@@ -421,7 +435,7 @@ iframe { display: block; width: 100%; height: 640px; border: 0; background: #fff
     list.innerHTML = '';
     if (!raw) {
       const li = document.createElement('li'); li.className = 'warn';
-      li.innerHTML = `Paste the HTML for <strong>${esc(t.label.toLowerCase())}</strong> to see it here.`;
+      li.innerHTML = `Paste the HTML for <strong>${esc(t.name || t.label.toLowerCase())}</strong> to see it here.`;
       list.appendChild(li);
     }
     check(raw, t).forEach(([kind, msg]) => { const li = document.createElement('li'); li.className = kind; li.innerHTML = msg; list.appendChild(li); });
