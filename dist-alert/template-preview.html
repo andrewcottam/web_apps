@@ -186,7 +186,7 @@ iframe { display: block; width: 100%; height: 640px; border: 0; background: #fff
     report_email_full: {
       group: 'Emails', label: 'Report email (full)', kind: 'email', shares: 'report_email',
       tip: 'The report email for full subscriptions. Shares its file with the light version',
-      file: 'report_templates/report_template_email.html',
+      file: 'report_template_email.html',
       subject: 'Quarterly DIST-ALERT report',
       required: ['email_title', 'site_name', 'email_severity_chip_color', 'alert_severity_badge_email', 'alert_banner',
         'email_summary_bg', 'email_summary_border', 'email_summary_content', 'email_details_heading', 'report_org',
@@ -209,14 +209,14 @@ iframe { display: block; width: 100%; height: 640px; border: 0; background: #fff
     report_email_light: {
       group: 'Emails', label: 'Report email (light)', kind: 'email', shares: 'report_email',
       tip: 'The report email for light subscriptions. Shares its file with the full version',
-      file: 'report_templates/report_template_email.html',
+      file: 'report_template_email.html',
       subject: 'Quarterly DIST-ALERT report (Light)',
       required: null, optional: [], fallback: null // filled from report_email_full below
     },
     detailed: {
       group: 'Reports', label: 'Full', name: 'detailed report (full)', kind: 'page', shares: 'detailed',
       tip: 'The web page opened from the full report email, with images for every disturbance',
-      file: 'report_templates/report_template_detailed.html',
+      file: 'report_template_detailed.html',
       subject: 'Detailed report web page (full)',
       required: ['report_title', 'site_name', 'severity_chip_color', 'alert_severity_badge_detailed', 'start_end_str',
         'alert_banner', 'executive_summary_color', 'executive_summary_border', 'executive_summary_content',
@@ -304,8 +304,34 @@ iframe { display: block; width: 100%; height: 640px; border: 0; background: #fff
     timer = setTimeout(() => { store.set(htmlKey(current), ta.value); render(); }, 150);
   });
 
-  $('resetBtn').addEventListener('click', () => {
-    ta.value = repoVersion(current); store.set(htmlKey(current), ''); render(); ta.focus();
+  // restor-servers is private, so the live copy is read through the GitHub API with a personal access token
+  // (read-only "Contents" permission) that is kept in this browser's localStorage only.
+  const REPO_API = 'https://api.github.com/repos/andrewcottam/restor-servers/contents/cloud_functions/dist-alert/';
+  async function fetchLatest(key) {
+    let token = store.get('gh_token');
+    if (!token) {
+      token = (prompt('The restor-servers repo is private. Paste a GitHub personal access token with read access to its contents (it is stored only in this browser):') || '').trim();
+      if (!token) return null;
+      store.set('gh_token', token);
+    }
+    const file = TEMPLATES[key].file;
+    const r = await fetch(REPO_API + file + '?ref=main&_=' + Date.now(), {
+      cache: 'no-store',
+      headers: { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github.raw+json' }
+    });
+    if (r.status === 401 || r.status === 403) { store.set('gh_token', ''); throw new Error('GitHub rejected the token, so it was cleared. Click again to enter a new one.'); }
+    if (!r.ok) throw new Error('GitHub returned ' + r.status + ' for ' + file);
+    return r.text();
+  }
+  $('resetBtn').addEventListener('click', async () => {
+    const btn = $('resetBtn'), old = btn.textContent;
+    btn.disabled = true; btn.textContent = 'Loading…';
+    let html = null;
+    try { html = await fetchLatest(current); }
+    catch (e) { alert(e.message + (repoVersion(current) ? '\n\nLoading the copy stored in this page instead (may be out of date).' : '')); html = repoVersion(current); }
+    btn.textContent = old;
+    if (html === null) { render(); return; }
+    ta.value = html; store.set(htmlKey(current), ''); render(); ta.focus();
   });
   $('f_site_count').value = store.get('f_site_count') || '1';
   $('f_site_count').addEventListener('change', () => { store.set('f_site_count', $('f_site_count').value); render(); });
@@ -410,10 +436,8 @@ iframe { display: block; width: 100%; height: 640px; border: 0; background: #fff
   function render() {
     picker.querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.key === current)));
     const rb = $('resetBtn');
-    rb.disabled = !repoVersion(current);
-    rb.title = rb.disabled
-      ? "There's no stored copy of this template in the page yet, so paste it in from the repo"
-      : "Replace what's in the box with the version currently in the restor-servers repo. Your edits in the box will be lost";
+    rb.disabled = false;
+    rb.title = "Replace what's in the box with the version currently in the restor-servers repo. Your edits in the box will be lost";
     const t = TEMPLATES[current];
     const raw = clean(ta.value);
     const page = t.kind === 'page';
