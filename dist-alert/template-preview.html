@@ -328,7 +328,8 @@ iframe { display: block; width: 100%; height: 640px; border: 0; background: #fff
   }
 
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-  function clean(raw) { return raw.trim().replace(/^```[a-zA-Z]*\s*\n?/, '').replace(/\n?```\s*$/, '').trim(); }
+  // Drops every line that is only a markdown code fence (``` or ```html), wherever it appears
+  function clean(raw) { return raw.replace(/^[ \t]*```[a-zA-Z]*[ \t]*\r?$\n?/gm, '').trim(); }
 
   function values(key) {
     const t = TEMPLATES[key];
