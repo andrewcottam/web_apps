@@ -80,6 +80,19 @@ The COG's native CRS (typically a UTM zone) is registered with `proj4` via
 into the map's EPSG:3857 view — this must happen before first render or tile requests
 fail silently.
 
+Each source is opened with `nodata: NaN`. Without it, `ol/source/GeoTIFF` auto-detects
+the TIFF's declared nodata value, masks those pixels, and auto-stretches the remaining
+data's own min/max for display — which corrupts the raw 0-8/255 values the overlay
+style's exact-value comparisons depend on, and renders the whole COG footprint as solid
+opaque white instead of a transparent background with colored disturbance pixels.
+
+**Known limitation**: GPU reprojection of this very coarse (30m/pixel) raster can blend
+a thin ring of edge texels away from an exact `0`/`255`, tracing a faint false
+"disturbed" outline around the site boundary at close zoom. A tolerance band around
+those values would also risk swallowing genuine low-value disturbance classes (1-8)
+into "transparent", so this is accepted as a cosmetic artifact rather than risk hiding
+real disturbance.
+
 ## Technologies
 
 - OpenLayers 10
