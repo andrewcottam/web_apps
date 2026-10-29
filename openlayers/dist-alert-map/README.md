@@ -19,9 +19,10 @@ A lightweight OpenLayers viewer for the disturbance-alert COGs linked from DIST-
 ## Features
 
 - Client-side COG rendering (`ol/source/GeoTIFF` + WebGL) — no tile server needed
-- Basemap switcher: OSM / Satellite / Grey
+- Basemap switcher: OSM / Satellite (default) / Grey
 - Disturbance overlay on/off toggle
-- Pan/zoom constrained to the site's bounding box
+- Optional site boundary outline (`geom` param)
+- Pan/zoom constrained to the site's bounding box; can't zoom out far past it
 - Click anywhere to read off the lat/lon (click again on the readout to copy)
 
 ## Running Locally
@@ -57,6 +58,7 @@ is harmless but worth knowing.
 |---|---|---|
 | `cog` | URL(s), comma-separated | VEG-DIST-STATUS COG URL(s) for the disturbance overlay. Multiple COGs (one per MGRS tile) are mosaicked automatically. |
 | `bbox` | `minLon,minLat,maxLon,maxLat` | Site bounding box in EPSG:4326. Constrains the initial view and the pan/zoom range (padded 15%). Falls back to the COG's own extent if omitted. |
+| `geom` | GeoJSON geometry, URI-encoded | Site boundary (Polygon/MultiPolygon in EPSG:4326), drawn as an outline over the imagery. Omitted when the request geometry was itself just a bbox. |
 | `site` | string | Site name, shown as the page title and panel heading. |
 | `color` | hex, no `#` | Overlay color for disturbed pixels. Default `ff3b30`. |
 | `alpha` | 0-255 | Overlay opacity. Default `160`. |
@@ -86,12 +88,13 @@ data's own min/max for display — which corrupts the raw 0-8/255 values the ove
 style's exact-value comparisons depend on, and renders the whole COG footprint as solid
 opaque white instead of a transparent background with colored disturbance pixels.
 
-**Known limitation**: GPU reprojection of this very coarse (30m/pixel) raster can blend
-a thin ring of edge texels away from an exact `0`/`255`, tracing a faint false
-"disturbed" outline around the site boundary at close zoom. A tolerance band around
-those values would also risk swallowing genuine low-value disturbance classes (1-8)
-into "transparent", so this is accepted as a cosmetic artifact rather than risk hiding
-real disturbance.
+Both the GeoTIFF source and the WebGL layer are created with `interpolate: false`. The
+layer's own setting controls only the final display sampling; the *source's* setting is
+what matters here — it forces nearest-neighbour resampling during the reprojection from
+the COG's native UTM grid into the map's EPSG:3857 view. Without it on the source,
+that reprojection step blends adjacent class codes together at the raster's edge,
+tracing a false "disturbed" outline around the whole site boundary even though no such
+value exists anywhere in the source data.
 
 ## Technologies
 

@@ -5,8 +5,12 @@ import XYZ from 'ol/source/XYZ.js';
 import GeoTIFF from 'ol/source/GeoTIFF.js';
 import TileLayer from 'ol/layer/Tile.js';
 import WebGLTileLayer from 'ol/layer/WebGLTile.js';
+import VectorLayer from 'ol/layer/Vector.js';
+import VectorSource from 'ol/source/Vector.js';
+import GeoJSON from 'ol/format/GeoJSON.js';
+import { Style, Stroke } from 'ol/style.js';
 import { fromEPSGCode, register } from 'ol/proj/proj4.js';
-import { get as getProjection, transformExtent } from 'ol/proj.js';
+import { transformExtent, transform as transformCoord } from 'ol/proj.js';
 
 register(proj4);
 
@@ -23,6 +27,17 @@ const cogUrls = (params.get('cog') || '')
 const bboxParam = params.get('bbox');
 const bbox4326 = bboxParam ? bboxParam.split(',').map(Number) : null;
 
+// Site boundary geometry (GeoJSON, URI-encoded), drawn as an outline over the imagery.
+const geomParam = params.get('geom');
+let siteGeoJSON = null;
+if (geomParam) {
+  try {
+    siteGeoJSON = JSON.parse(decodeURIComponent(geomParam));
+  } catch (err) {
+    console.error('Failed to parse geom param:', err);
+  }
+}
+
 const siteName = params.get('site') || '';
 if (siteName) {
   document.getElementById('site-name').textContent = siteName;
@@ -38,16 +53,16 @@ const r = parseInt(overlayColor.slice(0, 2), 16);
 const g = parseInt(overlayColor.slice(2, 4), 16);
 const b = parseInt(overlayColor.slice(4, 6), 16);
 
-// Basemaps
+// Basemaps — satellite is the default, since it gives useful context the other two don't.
 const basemaps = {
-  osm: new TileLayer({ source: new OSM(), visible: true }),
+  osm: new TileLayer({ source: new OSM(), visible: false }),
   satellite: new TileLayer({
     source: new XYZ({
       url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
       attributions: 'Tiles © Esri',
       maxZoom: 19,
     }),
-    visible: false,
+    visible: true,
   }),
   grey: new TileLayer({
     source: new XYZ({
@@ -76,22 +91,23 @@ if (cogUrls.length > 0) {
   // nodata value, masks those pixels to 0, and auto-stretches the remaining data's own
   // min/max for display — which corrupts the raw values the style's exact-value
   // comparisons below depend on. `nodata: NaN` disables that and passes raw values through.
+  //
+  // `interpolate: false` on the SOURCE (not just the layer, below) forces nearest-neighbour
+  // resampling during the reprojection from the COG's native UTM grid into the map's
+  // EPSG:3857 view itself — without it, that reprojection step blends adjacent class codes
+  // together at the raster's edge, tracing a false "disturbed" outline around the site
+  // boundary even though no such value exists anywhere in the source data.
   geoTiffSource = new GeoTIFF({
     sources: cogUrls.map((url) => ({ url, nodata: NaN })),
     normalize: false,
+    interpolate: false,
   });
 
   overlayLayer = new WebGLTileLayer({
     source: geoTiffSource,
     visible: true,
-    // Categorical data: bilinear sampling would blend class codes together at tile edges,
-    // breaking the style's exact-value comparisons below.
+    // Nearest-neighbour for the final display sampling too.
     interpolate: false,
-    // GPU reprojection of this very coarse (30m/pixel) categorical raster can blend a thin
-    // ring of edge texels away from an exact 0/255, tracing a faint false "disturbed"
-    // outline around the site boundary. A tolerance band would also risk swallowing genuine
-    // low-value disturbance classes (1-8) into "transparent", so we accept that cosmetic
-    // edge artifact rather than risk hiding real disturbance.
     style: {
       color: [
         'case',
@@ -112,9 +128,9 @@ function padExtent([minX, minY, maxX, maxY], fraction) {
 }
 
 async function init() {
-  // The COG's native CRS (often a specific UTM zone) must be registered with proj4 before
-  // OpenLayers can reproject it into the map's EPSG:3857 view — otherwise the WebGL tile
-  // renderer's on-the-fly reprojection silently produces NaNs for any tile request.
+  // The COG's native CRS (typically a UTM zone) must be registered with proj4 before
+  // OpenLayers can reproject it into the map's EPSG:3857 view — otherwise reprojection
+  // silently produces NaNs for any tile request.
   //
   // A failed/unreachable COG (dead link, bucket CORS not yet configured, network hiccup)
   // must not take down the whole page — the basemap should still render without it. When
@@ -147,16 +163,36 @@ async function init() {
   if (bbox4326) {
     const extent3857 = transformExtent(bbox4326, 'EPSG:4326', 'EPSG:3857');
     restrictedExtent = padExtent(extent3857, 0.15);
-    initialView = new View({ minZoom: 2, maxZoom: 20 });
+    initialView = new View();
     initialView.fit(restrictedExtent, { size: mapSize, padding: [20, 20, 20, 20] });
   } else if (geoTiffViewConfig) {
-    const srcProjection = getProjection(geoTiffViewConfig.projection) || getProjection('EPSG:4326');
-    const extent3857 = transformExtent(geoTiffViewConfig.extent, srcProjection, 'EPSG:3857');
+    const extent3857 = transformExtent(geoTiffViewConfig.extent, geoTiffViewConfig.projection, 'EPSG:3857');
     restrictedExtent = padExtent(extent3857, 0.15);
-    initialView = new View({ minZoom: 2, maxZoom: 20 });
+    initialView = new View();
     initialView.fit(restrictedExtent, { size: mapSize, padding: [20, 20, 20, 20] });
   } else {
-    initialView = new View({ center: [0, 0], zoom: 2, minZoom: 2, maxZoom: 20 });
+    initialView = new View({ center: [0, 0], zoom: 2 });
+  }
+
+  // Don't let the user zoom out past (much beyond) the site extent, or in past native
+  // raster resolution.
+  const fittedZoom = initialView.getZoom();
+  if (fittedZoom !== undefined) {
+    initialView.setMinZoom(Math.max(0, fittedZoom - 1));
+    initialView.setMaxZoom(fittedZoom + 8);
+  }
+
+  if (siteGeoJSON) {
+    const format = new GeoJSON();
+    const features = format.readFeatures(
+      { type: 'Feature', geometry: siteGeoJSON, properties: {} },
+      { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' }
+    );
+    const boundaryLayer = new VectorLayer({
+      source: new VectorSource({ features }),
+      style: new Style({ stroke: new Stroke({ color: '#ffd84d', width: 2 }) }),
+    });
+    layers.push(boundaryLayer);
   }
 
   const map = new Map({
@@ -209,7 +245,7 @@ function setupInteractions(map) {
   let lastCoordText = '';
 
   map.on('singleclick', (evt) => {
-    const [lon, lat] = transformExtent([...evt.coordinate, ...evt.coordinate], 'EPSG:3857', 'EPSG:4326');
+    const [lon, lat] = transformCoord(evt.coordinate, 'EPSG:3857', 'EPSG:4326');
     lastCoordText = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
     coordsEl.innerHTML = `${lastCoordText}<span class="hint">lat, lon — click to copy</span>`;
     coordsEl.classList.add('visible');
