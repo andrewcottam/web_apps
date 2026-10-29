@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DIST-ALERT Interactive Map</title>
+    <style>
+      html, body {
+        margin: 0;
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      }
+      #map {
+        width: 100%;
+        height: 100%;
+      }
+      #panel {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        z-index: 10;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 8px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        padding: 12px 14px;
+        font-size: 13px;
+        min-width: 160px;
+      }
+      #panel h1 {
+        font-size: 13px;
+        font-weight: 600;
+        margin: 0 0 8px 0;
+        color: #222;
+      }
+      #panel fieldset {
+        border: none;
+        margin: 0 0 8px 0;
+        padding: 0;
+      }
+      #panel legend {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: #777;
+        padding: 0 0 4px 0;
+      }
+      #panel label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin: 2px 0;
+        cursor: pointer;
+      }
+      #coords {
+        position: absolute;
+        bottom: 12px;
+        left: 12px;
+        z-index: 10;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 6px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        padding: 6px 10px;
+        font-size: 12px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        color: #333;
+        display: none;
+        cursor: pointer;
+      }
+      #coords.visible {
+        display: block;
+      }
+      #coords .hint {
+        display: block;
+        font-size: 10px;
+        color: #999;
+        font-family: inherit;
+      }
+    </style>
+    <script type="module" crossorigin src="/web_apps/openlayers/dist-alert-map/dist/assets/index-iLG6tPa6.js"></script>
+    <link rel="stylesheet" crossorigin href="/web_apps/openlayers/dist-alert-map/dist/assets/index-BtPuoxOl.css">
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <div id="panel">
+      <h1 id="site-name">DIST-ALERT Map</h1>
+      <fieldset id="basemap-group">
+        <legend>Base map</legend>
+        <label><input type="radio" name="basemap" value="osm" checked /> OSM</label>
+        <label><input type="radio" name="basemap" value="satellite" /> Satellite</label>
+        <label><input type="radio" name="basemap" value="grey" /> Grey</label>
+      </fieldset>
+      <fieldset>
+        <legend>Overlay</legend>
+        <label><input type="checkbox" id="overlay-toggle" checked /> Disturbance alerts</label>
+      </fieldset>
+    </div>
+
+    <div id="coords" title="Click to copy">—</div>
+
+  </body>
+</html>
