@@ -1,6 +1,6 @@
 # DIST-ALERT Interactive Map
 
-A lightweight OpenLayers viewer for the disturbance-alert COGs linked from DIST-ALERT reports. Renders the VEG-DIST-STATUS overlay directly from its public Cloud Optimized GeoTIFF URL on top of a switchable basemap, with a toggle for the disturbance layer and click-to-get-coordinates.
+A lightweight OpenLayers viewer for the disturbance-alert COGs linked from DIST-ALERT reports. Renders the VEG-DIST-STATUS overlay directly from its public Cloud Optimized GeoTIFF URL on top of a satellite basemap, with a toggle for the disturbance layer and click-to-get-coordinates.
 
 ## 📑 Table of Contents
 
@@ -19,8 +19,9 @@ A lightweight OpenLayers viewer for the disturbance-alert COGs linked from DIST-
 ## Features
 
 - Client-side COG rendering (`ol/source/GeoTIFF` + WebGL) — no tile server needed
-- Basemap switcher: OSM / Satellite (default) / Grey
+- High-resolution Esri satellite basemap
 - Disturbance overlay on/off toggle
+- Site name and monitoring period shown in the panel, matching the report
 - Optional site boundary outline (`geom` param)
 - Pan/zoom constrained to the site's bounding box; can't zoom out far past it
 - Click anywhere on the map to read off the lat/lon in the panel (click the readout to copy)
@@ -60,6 +61,7 @@ is harmless but worth knowing.
 | `bbox` | `minLon,minLat,maxLon,maxLat` | Site bounding box in EPSG:4326. Constrains the initial view and the pan/zoom range (padded 15%). Falls back to the COG's own extent if omitted. |
 | `geom` | GeoJSON geometry, URI-encoded | Site boundary (Polygon/MultiPolygon in EPSG:4326), drawn as an outline over the imagery. Omitted when the request geometry was itself just a bbox. |
 | `site` | string | Site name, shown as the page title and panel heading. |
+| `period` | string | Monitoring period label (e.g. "Q2 2024"), shown under the site name. Same `start_end_str` shown in the report. |
 | `color` | hex, no `#` | Overlay color for disturbed pixels. Default `ff0000`, matching the report's own default `dist_color`. The report always passes its actual `dist_color` explicitly, so this default only applies when opening the viewer without that param. |
 | `alpha` | 0-255 | Overlay opacity. Default `255` (fully opaque). |
 

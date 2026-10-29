@@ -1,6 +1,5 @@
 import { Map, View } from 'ol';
 import proj4 from 'proj4';
-import OSM from 'ol/source/OSM.js';
 import XYZ from 'ol/source/XYZ.js';
 import GeoTIFF from 'ol/source/GeoTIFF.js';
 import TileLayer from 'ol/layer/Tile.js';
@@ -44,6 +43,12 @@ if (siteName) {
   document.title = `${siteName} — DIST-ALERT`;
 }
 
+// Monitoring period (e.g. "Q2 2024", "May 2024"), same label shown in the report.
+const period = params.get('period') || '';
+if (period) {
+  document.getElementById('period').textContent = period;
+}
+
 // Overlay color: VEG-DIST-STATUS is a categorical raster (0 = no disturbance, 1-8 = disturbance
 // classes, 255 = nodata). We render every disturbed pixel as a single fully opaque color.
 //
@@ -58,34 +63,15 @@ const g = parseInt(overlayColor.slice(2, 4), 16);
 const b = parseInt(overlayColor.slice(4, 6), 16);
 const overlayAlpha = overlayAlpha255 / 255;
 
-// Basemaps — satellite is the default, since it gives useful context the other two don't.
-const basemaps = {
-  osm: new TileLayer({ source: new OSM(), visible: false }),
-  satellite: new TileLayer({
-    source: new XYZ({
-      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-      attributions: 'Tiles © Esri',
-      maxZoom: 19,
-    }),
-    visible: true,
+const satelliteLayer = new TileLayer({
+  source: new XYZ({
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attributions: 'Tiles © Esri',
+    maxZoom: 19,
   }),
-  grey: new TileLayer({
-    source: new XYZ({
-      url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-      attributions: 'Tiles © Esri',
-      maxZoom: 16,
-    }),
-    visible: false,
-  }),
-};
+});
 
-function setBasemap(name) {
-  for (const [key, layer] of Object.entries(basemaps)) {
-    layer.setVisible(key === name);
-  }
-}
-
-const layers = [basemaps.osm, basemaps.satellite, basemaps.grey];
+const layers = [satelliteLayer];
 
 let overlayLayer = null;
 let geoTiffSource = null;
@@ -120,7 +106,7 @@ if (cogUrls.length > 0) {
         ['==', ['band', 1], 255], [0, 0, 0, 0],
         [r, g, b, overlayAlpha],
       ],
-        },
+    },
   });
 
   layers.push(overlayLayer);
@@ -230,11 +216,6 @@ function setupInteractions(map) {
     if (clampedX !== center[0] || clampedY !== center[1]) {
       view.setCenter([clampedX, clampedY]);
     }
-  });
-
-  // Basemap switcher
-  document.getElementById('basemap-group').addEventListener('change', (evt) => {
-    setBasemap(evt.target.value);
   });
 
   // Disturbance overlay toggle

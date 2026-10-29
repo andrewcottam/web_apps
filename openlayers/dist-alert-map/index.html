@@ -30,8 +30,13 @@
       #panel h1 {
         font-size: 13px;
         font-weight: 600;
-        margin: 0 0 8px 0;
+        margin: 0;
         color: #222;
+      }
+      #panel #period {
+        font-size: 11px;
+        color: #777;
+        margin: 2px 0 8px 0;
       }
       #panel fieldset {
         border: none;
@@ -80,12 +85,7 @@
 
     <div id="panel">
       <h1 id="site-name">DIST-ALERT Map</h1>
-      <fieldset id="basemap-group">
-        <legend>Base map</legend>
-        <label><input type="radio" name="basemap" value="osm" /> OSM</label>
-        <label><input type="radio" name="basemap" value="satellite" checked /> Satellite</label>
-        <label><input type="radio" name="basemap" value="grey" /> Grey</label>
-      </fieldset>
+      <p id="period"></p>
       <fieldset>
         <legend>Overlay</legend>
         <label><input type="checkbox" id="overlay-toggle" checked /> Disturbance alerts</label>
