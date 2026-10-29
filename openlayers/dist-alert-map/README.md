@@ -61,7 +61,7 @@ is harmless but worth knowing.
 | `geom` | GeoJSON geometry, URI-encoded | Site boundary (Polygon/MultiPolygon in EPSG:4326), drawn as an outline over the imagery. Omitted when the request geometry was itself just a bbox. |
 | `site` | string | Site name, shown as the page title and panel heading. |
 | `color` | hex, no `#` | Overlay color for disturbed pixels. Default `ff3b30`. |
-| `alpha` | 0-255 | Overlay opacity. Default `160`. |
+| `alpha` | 0-255 | Overlay opacity. Default `255` (fully opaque). |
 
 **Example:**
 ```
@@ -97,11 +97,12 @@ tracing a false "disturbed" outline around the whole site boundary even though n
 value exists anywhere in the source data.
 
 The `alpha` URL param is 0-255 (matching `color`, and the report's own RGBA
-conventions), but it's divided by 255 before use — OL's WebGL style `color` literal
-expects alpha as a 0-1 float, unlike r/g/b which stay 0-255. Passing 0-255 straight
-through overflows the premultiplied color math and renders solid opaque white instead
-of a semi-transparent color (this hit the *default* alpha value, 160, in production:
-anything ≤255 "worked" by accident only at alpha=255 itself).
+conventions, default `255`/fully opaque), but it's divided by 255 before use — OL's
+WebGL style `color` literal expects alpha as a 0-1 float, unlike r/g/b which stay
+0-255. Passing 0-255 straight through overflows the premultiplied color math and
+renders solid opaque white regardless of the requested color — this previously hit
+the then-default alpha value of 160 in production, since only alpha=255 happened to
+render "correctly" (fully opaque) by coincidence.
 
 The site boundary outline defaults to `rgba(120,120,120,0.863)` — matching
 `create-rs-preview`'s default `outline_colour` of `(120,120,120,220)` used for the same
