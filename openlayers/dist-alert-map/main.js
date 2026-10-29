@@ -51,7 +51,7 @@ if (siteName) {
 // but OL's WebGL style `color` literal expects alpha as a 0-1 float, unlike r/g/b which stay
 // 0-255 — passing 0-255 straight through overflows the premultiplied color math and clamps
 // to solid white instead of a semi-transparent color.
-const overlayColor = (params.get('color') || 'ff3b30').replace('#', '');
+const overlayColor = (params.get('color') || 'ff0000').replace('#', '');
 const overlayAlpha255 = Number(params.get('alpha') || '255');
 const r = parseInt(overlayColor.slice(0, 2), 16);
 const g = parseInt(overlayColor.slice(2, 4), 16);
