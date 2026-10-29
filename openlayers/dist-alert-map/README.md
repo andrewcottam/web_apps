@@ -96,6 +96,17 @@ that reprojection step blends adjacent class codes together at the raster's edge
 tracing a false "disturbed" outline around the whole site boundary even though no such
 value exists anywhere in the source data.
 
+The `alpha` URL param is 0-255 (matching `color`, and the report's own RGBA
+conventions), but it's divided by 255 before use — OL's WebGL style `color` literal
+expects alpha as a 0-1 float, unlike r/g/b which stay 0-255. Passing 0-255 straight
+through overflows the premultiplied color math and renders solid opaque white instead
+of a semi-transparent color (this hit the *default* alpha value, 160, in production:
+anything ≤255 "worked" by accident only at alpha=255 itself).
+
+The site boundary outline defaults to `rgba(120,120,120,0.863)` — matching
+`create-rs-preview`'s default `outline_colour` of `(120,120,120,220)` used for the same
+boundary on the report's own preview images.
+
 ## Technologies
 
 - OpenLayers 10

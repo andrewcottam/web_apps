@@ -47,11 +47,17 @@ if (siteName) {
 // Overlay color: VEG-DIST-STATUS is a categorical raster (0 = no disturbance, 1-8 = disturbance
 // classes, 255 = nodata). We render every disturbed pixel as a single semi-transparent color,
 // matching the single-color CDM overlay already used for the report's cumulative image.
+//
+// The `alpha` URL param is 0-255 (matching `color`, and the report's own RGBA conventions),
+// but OL's WebGL style `color` literal expects alpha as a 0-1 float, unlike r/g/b which stay
+// 0-255 — passing 0-255 straight through overflows the premultiplied color math and clamps
+// to solid white instead of a semi-transparent color.
 const overlayColor = (params.get('color') || 'ff3b30').replace('#', '');
-const overlayAlpha = Number(params.get('alpha') || '160');
+const overlayAlpha255 = Number(params.get('alpha') || '160');
 const r = parseInt(overlayColor.slice(0, 2), 16);
 const g = parseInt(overlayColor.slice(2, 4), 16);
 const b = parseInt(overlayColor.slice(4, 6), 16);
+const overlayAlpha = overlayAlpha255 / 255;
 
 // Basemaps — satellite is the default, since it gives useful context the other two don't.
 const basemaps = {
@@ -115,7 +121,7 @@ if (cogUrls.length > 0) {
         ['==', ['band', 1], 255], [0, 0, 0, 0],
         [r, g, b, overlayAlpha],
       ],
-    },
+        },
   });
 
   layers.push(overlayLayer);
@@ -190,7 +196,9 @@ async function init() {
     );
     const boundaryLayer = new VectorLayer({
       source: new VectorSource({ features }),
-      style: new Style({ stroke: new Stroke({ color: '#ffd84d', width: 2 }) }),
+      // Matches the default outline_colour (120,120,120,220) create-rs-preview uses for the
+      // site boundary on the report's own preview images.
+      style: new Style({ stroke: new Stroke({ color: 'rgba(120,120,120,0.863)', width: 2 }) }),
     });
     layers.push(boundaryLayer);
   }
