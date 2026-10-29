@@ -63,6 +63,8 @@ const g = parseInt(overlayColor.slice(2, 4), 16);
 const b = parseInt(overlayColor.slice(4, 6), 16);
 const overlayAlpha = overlayAlpha255 / 255;
 
+document.getElementById('legend-swatch').style.backgroundColor = `#${overlayColor}`;
+
 const satelliteLayer = new TileLayer({
   source: new XYZ({
     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',

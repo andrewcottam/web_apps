@@ -42,19 +42,19 @@
         margin: 0 0 8px 0;
         padding: 0;
       }
-      #panel legend {
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        color: #777;
-        padding: 0 0 4px 0;
-      }
       #panel label {
         display: flex;
         align-items: center;
         gap: 6px;
         margin: 2px 0;
         cursor: pointer;
+      }
+      #legend-swatch {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+        flex-shrink: 0;
       }
       #panel .coords-hint {
         font-size: 11px;
@@ -78,7 +78,7 @@
         font-family: inherit;
       }
     </style>
-    <script type="module" crossorigin src="/web_apps/openlayers/dist-alert-map/dist/assets/index-CphK5rTM.js"></script>
+    <script type="module" crossorigin src="/web_apps/openlayers/dist-alert-map/dist/assets/index-Bu045asj.js"></script>
     <link rel="stylesheet" crossorigin href="/web_apps/openlayers/dist-alert-map/dist/assets/index-BtPuoxOl.css">
   </head>
   <body>
@@ -88,11 +88,13 @@
       <h1 id="site-name">DIST-ALERT Map</h1>
       <p id="period"></p>
       <fieldset>
-        <legend>Overlay</legend>
-        <label><input type="checkbox" id="overlay-toggle" checked /> Disturbance alerts</label>
+        <label>
+          <input type="checkbox" id="overlay-toggle" checked />
+          <span id="legend-swatch"></span>
+          Vegetation Disturbances
+        </label>
       </fieldset>
       <fieldset>
-        <legend>Coordinates</legend>
         <p class="coords-hint">Click on the map to get the coordinates.</p>
         <div id="coords" title="Click to copy">—</div>
       </fieldset>
