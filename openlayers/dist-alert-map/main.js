@@ -71,14 +71,27 @@ let overlayLayer = null;
 let geoTiffSource = null;
 
 if (cogUrls.length > 0) {
+  // VEG-DIST-STATUS is an 8-bit categorical raster (exact integer class codes 0-8, 255
+  // nodata). Without `nodata: NaN`, ol/source/GeoTIFF auto-detects the TIFF's declared
+  // nodata value, masks those pixels to 0, and auto-stretches the remaining data's own
+  // min/max for display — which corrupts the raw values the style's exact-value
+  // comparisons below depend on. `nodata: NaN` disables that and passes raw values through.
   geoTiffSource = new GeoTIFF({
-    sources: cogUrls.map((url) => ({ url })),
+    sources: cogUrls.map((url) => ({ url, nodata: NaN })),
     normalize: false,
   });
 
   overlayLayer = new WebGLTileLayer({
     source: geoTiffSource,
     visible: true,
+    // Categorical data: bilinear sampling would blend class codes together at tile edges,
+    // breaking the style's exact-value comparisons below.
+    interpolate: false,
+    // GPU reprojection of this very coarse (30m/pixel) categorical raster can blend a thin
+    // ring of edge texels away from an exact 0/255, tracing a faint false "disturbed"
+    // outline around the site boundary. A tolerance band would also risk swallowing genuine
+    // low-value disturbance classes (1-8) into "transparent", so we accept that cosmetic
+    // edge artifact rather than risk hiding real disturbance.
     style: {
       color: [
         'case',
