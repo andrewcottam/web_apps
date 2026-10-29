@@ -102,10 +102,27 @@ async function init() {
   // The COG's native CRS (often a specific UTM zone) must be registered with proj4 before
   // OpenLayers can reproject it into the map's EPSG:3857 view — otherwise the WebGL tile
   // renderer's on-the-fly reprojection silently produces NaNs for any tile request.
+  //
+  // A failed/unreachable COG (dead link, bucket CORS not yet configured, network hiccup)
+  // must not take down the whole page — the basemap should still render without it. When
+  // every source fails, ol/source/GeoTIFF's getView() promise can hang rather than reject,
+  // so this is raced against a timeout rather than relying on try/catch alone.
   let geoTiffViewConfig = null;
   if (geoTiffSource) {
-    geoTiffViewConfig = await geoTiffSource.getView();
-    await fromEPSGCode(geoTiffViewConfig.projection.getCode());
+    try {
+      const timeout = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Timed out loading COG')), 8000)
+      );
+      geoTiffViewConfig = await Promise.race([geoTiffSource.getView(), timeout]);
+      await fromEPSGCode(geoTiffViewConfig.projection.getCode());
+    } catch (err) {
+      console.error('Disturbance overlay COG failed to load:', err);
+      geoTiffViewConfig = null;
+      overlayLayer.setVisible(false);
+      overlayLayer = null;
+      document.getElementById('overlay-toggle').disabled = true;
+      document.getElementById('overlay-toggle').checked = false;
+    }
   }
 
   const mapEl = document.getElementById('map');
