@@ -23,7 +23,7 @@ A lightweight OpenLayers viewer for the disturbance-alert COGs linked from DIST-
 - Disturbance overlay on/off toggle
 - Optional site boundary outline (`geom` param)
 - Pan/zoom constrained to the site's bounding box; can't zoom out far past it
-- Click anywhere to read off the lat/lon (click again on the readout to copy)
+- Click anywhere on the map to read off the lat/lon in the panel (click the readout to copy)
 
 ## Running Locally
 

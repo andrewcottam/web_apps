@@ -255,7 +255,6 @@ function setupInteractions(map) {
     const [lon, lat] = transformCoord(evt.coordinate, 'EPSG:3857', 'EPSG:4326');
     lastCoordText = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
     coordsEl.innerHTML = `${lastCoordText}<span class="hint">lat, lon — click to copy</span>`;
-    coordsEl.classList.add('visible');
   });
 
   coordsEl.addEventListener('click', () => {
