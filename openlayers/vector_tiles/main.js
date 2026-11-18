@@ -870,13 +870,19 @@ function updateCheckFiltersAvailability() {
     document.querySelectorAll('.check-status-btn').forEach((button) => {
         button.disabled = !available;
     });
-    // Centroids carry no check data, so rather than showing a section of disabled
-    // buttons, hide "More filters" entirely there. Back in Geometries mode, restore the
-    // list to whatever expanded/collapsed state the toggle was left in.
-    const toggle = document.getElementById('more-filters-toggle');
-    const list = document.getElementById('check-filters-list');
-    if (toggle) toggle.hidden = !available;
-    if (list) list.hidden = !available || toggle?.getAttribute('aria-expanded') !== 'true';
+    // Centroids carry no check data, so rather than showing a popover of disabled
+    // buttons, hide the Advanced button (and close its popover) in that mode.
+    const button = document.getElementById('advanced-filters-button');
+    if (button) button.hidden = !available;
+    if (!available) setAdvancedFiltersOpen(false);
+}
+
+function setAdvancedFiltersOpen(open) {
+    const popover = document.getElementById('advanced-filters-popover');
+    const button = document.getElementById('advanced-filters-button');
+    if (!popover || !button) return;
+    popover.hidden = !open;
+    button.setAttribute('aria-expanded', String(open));
 }
 
 // Shared style logic for the polygon sites layers (MVT or live FGB).
@@ -1567,6 +1573,10 @@ document.addEventListener('keydown', function (event) {
         closeChecksModal();
         return;
     }
+    if (!document.getElementById('advanced-filters-popover').hidden) {
+        setAdvancedFiltersOpen(false);
+        return;
+    }
     if (feature_menu_feature) {
         hideFeatureMenu();
         document.getElementById('popup').style.display = "none";
@@ -2110,11 +2120,10 @@ document.addEventListener("DOMContentLoaded", function () {
         checkFiltersList.appendChild(buildCheckFilterRow(cf.name, cf.label || cf.name));
     });
 
-    document.getElementById('more-filters-toggle').addEventListener('click', function () {
-        const expanded = this.getAttribute('aria-expanded') === 'true';
-        this.setAttribute('aria-expanded', String(!expanded));
-        checkFiltersList.hidden = expanded;
+    document.getElementById('advanced-filters-button').addEventListener('click', function () {
+        setAdvancedFiltersOpen(this.getAttribute('aria-expanded') !== 'true');
     });
+    document.getElementById('advanced-filters-close').addEventListener('click', () => setAdvancedFiltersOpen(false));
 
     document.querySelectorAll("input[name='render-mode']").forEach(radio => {
         radio.addEventListener("change", handleRenderModeChange);

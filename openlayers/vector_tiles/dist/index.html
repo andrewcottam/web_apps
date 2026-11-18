@@ -57,19 +57,22 @@
       display: block;
     }
 
-    #filter-panel .filter-row {
+    #filter-panel .filter-row,
+    #advanced-filters-popover .filter-row {
       display: flex;
       align-items: baseline;
       justify-content: space-between;
       margin-bottom: 8px;
     }
 
-    #filter-panel .filter-row-spaced {
-      margin-top: 6px;
+    #filter-panel .filter-row-spaced,
+    #advanced-filters-popover .filter-row-spaced {
+      margin-top: 18px;
       align-items: center;
     }
 
-    #filter-panel .filter-label {
+    #filter-panel .filter-label,
+    #advanced-filters-popover .filter-label {
       font-size: 11px;
       font-weight: 600;
       color: #888;
@@ -77,7 +80,8 @@
       letter-spacing: 0.04em;
     }
 
-    #filter-panel .filter-label-row {
+    #filter-panel .filter-label-row,
+    #advanced-filters-popover .filter-label-row {
       display: flex;
       align-items: center;
       gap: 5px;
@@ -200,7 +204,7 @@
       background: #f0f0f0;
       border-radius: 8px;
       padding: 2px;
-      margin-bottom: 14px;
+      margin-bottom: 24px;
     }
 
     #filter-panel .mode-switch input {
@@ -237,16 +241,21 @@
       cursor: not-allowed;
     }
 
-    /* #filter-panel scrolls internally once "More filters" pushes it past the viewport
-       (see that rule's comment) — pin this to the bottom of that scroll area so it's
-       reachable without having to scroll all the way down to find it, rather than
-       drifting off wherever the content happens to end. */
-    #reset-filters-button {
+    /* #filter-panel scrolls internally once its content outgrows the viewport (see that
+       rule's comment) — pin the Reset/Advanced row to the bottom of that scroll area so
+       it's always reachable rather than drifting off wherever the content ends. */
+    #filter-actions {
       position: sticky;
       bottom: 0;
-      display: block;
-      width: 100%;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
       margin-top: 14px;
+      background: white;
+    }
+
+    #reset-filters-button,
+    #advanced-filters-button {
       padding: 7px 0;
       background: white;
       border: 1px solid #ddd;
@@ -255,11 +264,41 @@
       font-weight: 600;
       color: #666;
       cursor: pointer;
-      box-shadow: 0 -6px 6px -6px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Both actions are small square icon buttons (inline SVGs in the markup): "sliders"
+       for Advanced, a circular arrow for Reset. */
+    #reset-filters-button,
+    #advanced-filters-button {
+      flex: 0 0 30px;
+      height: 30px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #reset-filters-button svg,
+    #advanced-filters-button svg {
+      width: 16px;
+      height: 16px;
+      pointer-events: none;
+    }
+
+    #advanced-filters-button[hidden] {
+      display: none;
+    }
+
+    #advanced-filters-button[aria-expanded="true"] {
+      background: #eef3f8;
+      border-color: #b9c9da;
+      color: #333;
     }
 
     #reset-filters-button:hover,
-    #reset-filters-button:focus-visible {
+    #reset-filters-button:focus-visible,
+    #advanced-filters-button:hover,
+    #advanced-filters-button:focus-visible {
       background: #f5f5f5;
       color: #333;
       outline: none;
@@ -448,7 +487,8 @@
        toggles independently (not exclusive, unlike #render-mode-switch) — colors match
        CHECK_STATUS_COLORS in main.js so this reads the same as the check-status pills
        shown in the popup and checks modal. */
-    #filter-panel .check-status-switch {
+    #filter-panel .check-status-switch,
+    #advanced-filters-popover .check-status-switch {
       display: flex;
       gap: 4px;
       flex-shrink: 0;
@@ -461,7 +501,8 @@
        itself is a separate inner span (rather than sized via padding on the button) so
        its border/background stay pinned to exactly 16x16 regardless of the button's hit
        area, with no box-shadow/clip edge cases to fight. */
-    #filter-panel .check-status-btn {
+    #filter-panel .check-status-btn,
+    #advanced-filters-popover .check-status-btn {
       width: 18px;
       height: 18px;
       margin: -2px;
@@ -474,7 +515,8 @@
       cursor: pointer;
     }
 
-    #filter-panel .check-status-swatch {
+    #filter-panel .check-status-swatch,
+    #advanced-filters-popover .check-status-swatch {
       width: 11px;
       height: 11px;
       border-radius: 3px;
@@ -484,29 +526,34 @@
       pointer-events: none;
     }
 
-    #filter-panel .check-status-btn.check-status-valid[aria-pressed="true"] .check-status-swatch {
+    #filter-panel .check-status-btn.check-status-valid[aria-pressed="true"] .check-status-swatch,
+    #advanced-filters-popover .check-status-btn.check-status-valid[aria-pressed="true"] .check-status-swatch {
       background: rgba(107, 155, 94, 0.35);
       border-color: #6b9b5e;
     }
 
-    #filter-panel .check-status-btn.check-status-needs-review[aria-pressed="true"] .check-status-swatch {
+    #filter-panel .check-status-btn.check-status-needs-review[aria-pressed="true"] .check-status-swatch,
+    #advanced-filters-popover .check-status-btn.check-status-needs-review[aria-pressed="true"] .check-status-swatch {
       background: rgba(211, 154, 78, 0.35);
       border-color: #d39a4e;
     }
 
-    #filter-panel .check-status-btn.check-status-invalid[aria-pressed="true"] .check-status-swatch {
+    #filter-panel .check-status-btn.check-status-invalid[aria-pressed="true"] .check-status-swatch,
+    #advanced-filters-popover .check-status-btn.check-status-invalid[aria-pressed="true"] .check-status-swatch {
       background: rgba(192, 96, 92, 0.35);
       border-color: #c0605c;
     }
 
-    #filter-panel .check-status-btn.check-status-not-checked[aria-pressed="true"] .check-status-swatch {
+    #filter-panel .check-status-btn.check-status-not-checked[aria-pressed="true"] .check-status-swatch,
+    #advanced-filters-popover .check-status-btn.check-status-not-checked[aria-pressed="true"] .check-status-swatch {
       background: rgba(136, 136, 136, 0.35);
       border-color: #888;
     }
 
     /* Master row pinned to the top of the scrolling checks list so it's always
        reachable; the bottom border separates it from the individual checks. */
-    #filter-panel .check-all-row {
+    #filter-panel .check-all-row,
+    #advanced-filters-popover .check-all-row {
       position: sticky;
       top: 0;
       z-index: 1;
@@ -516,64 +563,79 @@
       margin-bottom: 8px;
     }
 
-    #filter-panel .check-status-btn:disabled {
+    #filter-panel .check-status-btn:disabled,
+    #advanced-filters-popover .check-status-btn:disabled {
       cursor: not-allowed;
     }
 
-    #filter-panel .check-status-btn:disabled .check-status-swatch {
+    #filter-panel .check-status-btn:disabled .check-status-swatch,
+    #advanced-filters-popover .check-status-btn:disabled .check-status-swatch {
       opacity: 0.5;
     }
 
-    /* "More filters" is collapsed by default (see CHECK_FILTERS in main.js) — eleven
-       per-check switches at once, on top of the always-visible area/public/private
-       controls, was too much to take in as a flat list. */
-    #more-filters-toggle {
+    /* Advanced (per-check) filters open in a popover floating over the filter panel —
+       a bit wider than the panel (so long check names like "Overlap with Protected Areas" don't wrap), dropped down from its top edge so the mode switch and
+       search stay visible above it. It's a sibling of #filter-panel (not inside it)
+       because the panel scrolls/clips its own overflow. */
+    #advanced-filters-popover {
+      position: absolute;
+      top: 150px;
+      right: 10px;
+      width: 330px;
+      box-sizing: border-box;
+      max-height: calc(100vh - 170px);
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+      padding: 12px 16px 14px;
+      z-index: 5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    #advanced-filters-popover[hidden],
+    #filter-panel:not(.visible) + #advanced-filters-popover {
+      display: none;
+    }
+
+    #advanced-filters-popover .advanced-filters-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      width: 100%;
-      margin-top: 12px;
-      padding: 6px 2px;
-      background: none;
-      border: none;
       font-size: 11px;
       font-weight: 600;
       color: #888;
       text-transform: uppercase;
       letter-spacing: 0.04em;
+    }
+
+    #advanced-filters-close {
+      background: none;
+      border: none;
+      font-size: 18px;
+      line-height: 1;
+      color: #888;
       cursor: pointer;
+      padding: 0 2px;
     }
 
-    #more-filters-toggle[hidden] {
-      display: none;
-    }
-
-    #more-filters-toggle:hover,
-    #more-filters-toggle:focus-visible {
+    #advanced-filters-close:hover,
+    #advanced-filters-close:focus-visible {
       color: #333;
       outline: none;
     }
 
-    #more-filters-chevron {
-      transition: transform 0.15s ease;
-    }
-
-    #more-filters-toggle[aria-expanded="true"] #more-filters-chevron {
-      transform: rotate(180deg);
-    }
-
     #check-filters-list {
-      max-height: 260px;
+      flex: 1;
+      min-height: 0;
       overflow-y: auto;
       margin: 4px 0 0;
       /* Top padding matches .check-status-btn's -4px margin (see that rule's comment)
          — without it, the negative margin pulls each row's status buttons up past this
          container's own top edge, and overflow-y clips their tops off. */
       padding: 4px 2px 0 0;
-    }
-
-    #check-filters-list[hidden] {
-      display: none;
     }
 
     #check-filters-list .filter-row {
@@ -1010,7 +1072,7 @@
     }
 
   </style>
-  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.df158916.js"></script>
+  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.76b3dd52.js"></script>
   <link rel="stylesheet" href="/web_apps/openlayers/vector_tiles/dist/assets/index.5fd94eca.css">
 </head>
 
@@ -1073,12 +1135,27 @@
       </span>
     </div>
     <div class="filter-toggle" id="site-type-list"></div>
-    <button type="button" id="more-filters-toggle" aria-expanded="false" aria-controls="check-filters-list">
-      <span>More filters</span>
-      <span id="more-filters-chevron">▾</span>
-    </button>
-    <div id="check-filters-list" hidden></div>
-    <button type="button" id="reset-filters-button">Reset filters</button>
+    <div id="filter-actions">
+      <button type="button" id="advanced-filters-button" aria-expanded="false" aria-haspopup="true" aria-controls="advanced-filters-popover" aria-label="Advanced filters" title="Advanced filters">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true">
+          <line x1="2" y1="4" x2="14" y2="4"/><circle cx="10" cy="4" r="1.8" fill="white"/>
+          <line x1="2" y1="8" x2="14" y2="8"/><circle cx="5.5" cy="8" r="1.8" fill="white"/>
+          <line x1="2" y1="12" x2="14" y2="12"/><circle cx="11" cy="12" r="1.8" fill="white"/>
+        </svg>
+      </button>
+      <button type="button" id="reset-filters-button" aria-label="Reset filters" title="Reset filters">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M13 8a5 5 0 1 1-1.6-3.7"/><polyline points="12.6 1.8 12.6 4.6 9.8 4.6"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div id="advanced-filters-popover" hidden>
+    <div class="advanced-filters-header">
+      <span>Advanced filters</span>
+      <button type="button" id="advanced-filters-close" aria-label="Close advanced filters">&times;</button>
+    </div>
+    <div id="check-filters-list"></div>
   </div>
   <div id="popup">
   </div>
