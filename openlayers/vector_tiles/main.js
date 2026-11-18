@@ -1141,7 +1141,9 @@ function closeChecksModal() {
 
 function buildPhotoUrl(siteId, photoId) {
     // Same endpoint restor.eco's own frontend uses; redirects (307) to a public GCS object.
-    return `https://restor2-prod-1-api.restor.eco/sites/5/${siteId}/photo/${photoId}`;
+    // The ?width= variant keeps the EXIF orientation tag; the unsized "original" has it stripped,
+    // which made portrait phone photos render sideways. Also much smaller than the original.
+    return `https://restor2-prod-1-api.restor.eco/sites/5/${siteId}/photo/${photoId}?width=800`;
 }
 
 function countryCodeToFlagEmoji(code) {
