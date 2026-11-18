@@ -35,7 +35,7 @@
       position: absolute;
       top: 62px;
       right: 10px;
-      width: 275px;
+      width: 282px;
       /* With "More filters" expanded the panel can outgrow the viewport on shorter
          screens — scroll the whole panel rather than letting it run off the bottom
          edge. overscroll-behavior keeps that scroll from chaining into the map
@@ -101,15 +101,92 @@
     }
 
     #filter-panel .filter-value {
-      font-size: 12px;
+      font-size: 14px;
       font-weight: 600;
       color: #222;
+    }
+
+    #filter-panel .filter-unit {
+      font-size: 13px;
+      font-weight: 500;
+      color: #777;
     }
 
     #filter-panel input[type="range"] {
       width: 100%;
       margin: 0 0 14px 0;
       accent-color: #6b9b5e;
+    }
+
+    #filter-panel .dual-range {
+      position: relative;
+      height: 18px;
+      margin: 0 0 14px 0;
+    }
+
+    #filter-panel .dual-range-track,
+    #filter-panel .dual-range-fill {
+      position: absolute;
+      top: 7px;
+      height: 4px;
+      border-radius: 2px;
+    }
+
+    #filter-panel .dual-range-track {
+      left: 0;
+      right: 0;
+      background: #d8d8d8;
+    }
+
+    #filter-panel .dual-range-fill {
+      background: #6b9b5e;
+    }
+
+    #filter-panel .dual-range input[type="range"] {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 18px;
+      margin: 0;
+      background: transparent;
+      pointer-events: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    #filter-panel .dual-range input[type="range"]::-webkit-slider-runnable-track {
+      background: transparent;
+      height: 18px;
+    }
+
+    #filter-panel .dual-range input[type="range"]::-moz-range-track {
+      background: transparent;
+    }
+
+    #filter-panel .dual-range input[type="range"]::-webkit-slider-thumb {
+      pointer-events: auto;
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      margin-top: 1px;
+      border-radius: 50%;
+      background: #6b9b5e;
+      border: 2px solid #fff;
+      box-shadow: 0 0 2px rgba(0,0,0,0.4);
+      cursor: pointer;
+    }
+
+    #filter-panel .dual-range input[type="range"]::-moz-range-thumb {
+      pointer-events: auto;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #6b9b5e;
+      border: 2px solid #fff;
+      box-shadow: 0 0 2px rgba(0,0,0,0.4);
+      cursor: pointer;
     }
 
     #filter-panel .filter-toggle {
@@ -188,34 +265,27 @@
       outline: none;
     }
 
-    #centroid-loading {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 6px;
-      font-size: 11px;
-      color: #888;
-      margin: -8px 0 12px;
+/* Circular download-style progress ring inside a render-mode button label. Driven
+       by --pct (0-100) via a conic-gradient; the center is masked out to leave a ring. */
+    #filter-panel .mode-switch .load-ring {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      margin-left: 6px;
+      vertical-align: -2px;
+      border-radius: 50%;
+      background: conic-gradient(#6b9b5e calc(var(--pct, 0) * 1%), #d8d8d8 0);
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px));
+      mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 3.5px));
     }
 
-    #centroid-loading[hidden] {
+    #filter-panel .mode-switch .load-ring[hidden] {
       display: none;
     }
 
-    #centroid-loading .centroid-loading-spinner {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      border: 1.5px solid #ddd;
-      border-top-color: #6b9b5e;
-      animation: centroid-loading-spin 0.7s linear infinite;
-      flex-shrink: 0;
-    }
-
-    @keyframes centroid-loading-spin {
-      to {
-        transform: rotate(360deg);
-      }
+    /* The Centroids button is disabled while its data loads; keep the ring readable. */
+    #filter-panel .mode-switch input:disabled + label.loading {
+      opacity: 0.8;
     }
 
     #filter-panel .site-search {
@@ -309,30 +379,6 @@
       color: #888;
     }
 
-    #geometries-loading {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 6px;
-      font-size: 11px;
-      color: #888;
-      margin: -8px 0 12px;
-    }
-
-    #geometries-loading[hidden] {
-      display: none;
-    }
-
-    #geometries-loading .centroid-loading-spinner {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      border: 1.5px solid #ddd;
-      border-top-color: #6b9b5e;
-      animation: centroid-loading-spin 0.7s linear infinite;
-      flex-shrink: 0;
-    }
-
     /* Only shown in Centroids mode (see updateStatusBar in main.js) — sites_centroids.fgb
        is loaded once, in full, up front (see loadAllCentroids's comment), so counting
        its features gives an accurate total. Geometries mode's mvt_tile_layer/
@@ -404,7 +450,7 @@
        shown in the popup and checks modal. */
     #filter-panel .check-status-switch {
       display: flex;
-      gap: 6px;
+      gap: 4px;
       flex-shrink: 0;
     }
 
@@ -416,9 +462,9 @@
        its border/background stay pinned to exactly 16x16 regardless of the button's hit
        area, with no box-shadow/clip edge cases to fight. */
     #filter-panel .check-status-btn {
-      width: 24px;
-      height: 24px;
-      margin: -4px;
+      width: 18px;
+      height: 18px;
+      margin: -2px;
       padding: 0;
       border: none;
       background: none;
@@ -429,9 +475,9 @@
     }
 
     #filter-panel .check-status-swatch {
-      width: 16px;
-      height: 16px;
-      border-radius: 4px;
+      width: 11px;
+      height: 11px;
+      border-radius: 3px;
       background: #e2e2e2;
       border: 1.5px solid #e2e2e2;
       transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
@@ -451,6 +497,23 @@
     #filter-panel .check-status-btn.check-status-invalid[aria-pressed="true"] .check-status-swatch {
       background: rgba(192, 96, 92, 0.35);
       border-color: #c0605c;
+    }
+
+    #filter-panel .check-status-btn.check-status-not-checked[aria-pressed="true"] .check-status-swatch {
+      background: rgba(136, 136, 136, 0.35);
+      border-color: #888;
+    }
+
+    /* Master row pinned to the top of the scrolling checks list so it's always
+       reachable; the bottom border separates it from the individual checks. */
+    #filter-panel .check-all-row {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: white;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 6px;
+      margin-bottom: 8px;
     }
 
     #filter-panel .check-status-btn:disabled {
@@ -479,6 +542,10 @@
       text-transform: uppercase;
       letter-spacing: 0.04em;
       cursor: pointer;
+    }
+
+    #more-filters-toggle[hidden] {
+      display: none;
     }
 
     #more-filters-toggle:hover,
@@ -704,6 +771,19 @@
       color: white;
       font-size: 9px;
       font-weight: 700;
+      line-height: 1;
+    }
+
+    #popup .popup-check-chip {
+      display: inline-flex;
+      align-items: center;
+      height: 18px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #e4e4e4;
+      color: #666;
+      font-size: 11px;
+      font-weight: 600;
       line-height: 1;
     }
 
@@ -946,26 +1026,27 @@
     </div>
     <div class="mode-switch" id="render-mode-switch">
       <input type="radio" name="render-mode" id="mode-geometries" value="geometries" checked>
-      <label for="mode-geometries">Geometries</label>
+      <label for="mode-geometries">Geometries<span class="load-ring" id="geometries-ring" hidden></span></label>
       <input type="radio" name="render-mode" id="mode-centroids" value="centroids" disabled>
-      <label for="mode-centroids">Centroids</label>
-    </div>
-    <div id="centroid-loading" hidden>
-      <span class="centroid-loading-spinner"></span>
-      <span>Loading centroids… <span id="centroid-loading-pct">0%</span></span>
-    </div>
-    <div id="geometries-loading" hidden>
-      <span class="centroid-loading-spinner"></span>
-      <span>Loading geometries…</span>
+      <label for="mode-centroids">Centroids<span class="load-ring" id="centroid-ring" hidden></span></label>
     </div>
     <div class="filter-row">
       <span class="filter-label-row">
-        <label class="filter-label" for="slider">Max area</label>
-        <span class="filter-info-icon" title="Filter the visible sites by area (logarithmic scale)">i</span>
+        <label class="filter-label" for="min-slider">Area</label>
+        <span class="filter-info-icon" title="Show only sites between the min and max area (logarithmic scale; min 0 includes all small sites)">i</span>
       </span>
-      <span><span class="filter-value" id="slider-value">3000</span> <span id="slider-unit">km²</span></span>
+      <span>
+        <span class="filter-value" id="min-slider-value">0</span> <span class="filter-unit" id="min-slider-unit">ha</span>
+        <span class="filter-unit">–</span>
+        <span class="filter-value" id="slider-value">3000</span> <span class="filter-unit" id="slider-unit">km²</span>
+      </span>
     </div>
-    <input type="range" id="slider" min="0" max="1000" value="685">
+    <div class="dual-range">
+      <div class="dual-range-track"></div>
+      <div class="dual-range-fill" id="dual-range-fill"></div>
+      <input type="range" id="min-slider" min="0" max="1000" value="0" aria-label="Minimum area">
+      <input type="range" id="slider" min="0" max="1000" value="685" aria-label="Maximum area">
+    </div>
     <div class="filter-toggle">
       <label class="switch-row">
         <span class="legend-swatch legend-public"></span>

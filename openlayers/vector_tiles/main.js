@@ -87,6 +87,11 @@ function getUrlParameters() {
         result.area = parseFloat(area);
     }
 
+    const minArea = urlParams.get('minarea');
+    if (minArea && !isNaN(parseFloat(minArea)) && parseFloat(minArea) > 0) {
+        result.minarea = parseFloat(minArea);
+    }
+
     const vis = urlParams.get('vis');
     if (vis) {
         result.vis = vis.split(',').filter(Boolean);
@@ -150,23 +155,41 @@ vector_tile_source.setLoader(async function (extent, _resolution, projection, su
     }
 });
 
-function setGeometriesLoadingIndicator(visible) {
-    const el = document.getElementById('geometries-loading');
-    if (el) el.hidden = !visible;
+// Geometry progress is completed/started loads within the current burst of activity
+// (FGB extents + MVT tiles together): totals reset once everything is idle again, and
+// a minimum of 8% keeps the ring visibly "on" when the first load has only just begun.
+let geometriesLoadCount = 0;
+let geometriesLoadTotal = 0;
+let geometriesLoadDone = 0;
+
+function updateGeometriesProgress() {
+    if (geometriesLoadCount === 0) {
+        geometriesLoadTotal = 0;
+        geometriesLoadDone = 0;
+        setRingProgress('geometries-ring', false);
+        return;
+    }
+    const pct = Math.max(8, Math.round((geometriesLoadDone / geometriesLoadTotal) * 100));
+    setRingProgress('geometries-ring', true, pct);
 }
 
 // A viewport can straddle multiple extents that load concurrently (e.g. panning
 // while a previous load is still in flight), so track an in-flight count rather
 // than toggling on a single start/end pair.
-let geometriesLoadCount = 0;
-vector_tile_source.on('featuresloadstart', () => {
+function geometriesLoadStarted() {
     geometriesLoadCount++;
-    setGeometriesLoadingIndicator(true);
-});
-vector_tile_source.on(['featuresloadend', 'featuresloaderror'], () => {
+    geometriesLoadTotal++;
+    updateGeometriesProgress();
+}
+
+function geometriesLoadFinished() {
     geometriesLoadCount = Math.max(0, geometriesLoadCount - 1);
-    if (geometriesLoadCount === 0) setGeometriesLoadingIndicator(false);
-});
+    geometriesLoadDone++;
+    updateGeometriesProgress();
+}
+
+vector_tile_source.on('featuresloadstart', geometriesLoadStarted);
+vector_tile_source.on(['featuresloadend', 'featuresloaderror'], geometriesLoadFinished);
 
 // Site centroid vector source: loaded once, in full, from sites_centroids.fgb (a
 // deliberately narrow schema — see cloud_functions/export-sites-to-fgb — small enough
@@ -210,13 +233,28 @@ async function fetchEntireFile(url, headers, onProgress) {
     return buffer;
 }
 
-function setCentroidLoadingIndicator(visible, percent) {
-    const el = document.getElementById('centroid-loading');
-    if (!el) return;
-    el.hidden = !visible;
-    if (visible && percent !== undefined) {
-        document.getElementById('centroid-loading-pct').textContent = `${percent}%`;
+// Native HTML tooltip (title attribute) on the ring and its button while loading, so
+// hovering shows "Loading in progress: NN%"; removed again once loading finishes.
+function setRingProgress(ringId, visible, percent) {
+    const ring = document.getElementById(ringId);
+    if (!ring) return;
+    ring.hidden = !visible;
+    const label = ring.parentElement;
+    label.classList.toggle('loading', visible);
+    if (visible && percent !== undefined) ring.style.setProperty('--pct', percent);
+    if (visible) {
+        const current = ring.style.getPropertyValue('--pct') || 0;
+        const text = `Loading in progress: ${current}%`;
+        ring.title = text;
+        label.title = text;
+    } else {
+        ring.removeAttribute('title');
+        label.removeAttribute('title');
     }
+}
+
+function setCentroidLoadingIndicator(visible, percent) {
+    setRingProgress('centroid-ring', visible, percent);
 }
 
 // Disabled by default in index.html and whenever centroid_source is cleared (logout,
@@ -258,7 +296,7 @@ async function loadAllCentroids() {
         setCentroidsModeEnabled(true);
         updateStatusBar();
         // Site search runs against centroid_source (see searchSites) — if the box was
-        // showing its "Loading sites…" placeholder, refresh now that data has arrived.
+        // showing its "Loading site centroids…" placeholder, refresh now that data has arrived.
         const searchInput = document.getElementById('site-search-input');
         if (searchInput && document.activeElement === searchInput) {
             searchInput.dispatchEvent(new Event('input'));
@@ -415,6 +453,20 @@ function getAreaThresholdKm2() {
     return sliderPositionToAreaKm2(parseFloat(document.getElementById('slider').value));
 }
 
+// The min-area slider shares the max slider's log mapping, except position 0 means
+// "no minimum" (0 km²) so every site is included by default.
+function minSliderPositionToAreaKm2(position) {
+    return position <= 0 ? 0 : sliderPositionToAreaKm2(position);
+}
+
+function minAreaKm2ToSliderPosition(areaKm2) {
+    return areaKm2 <= 0 ? 0 : areaKm2ToSliderPosition(areaKm2);
+}
+
+function getMinAreaThresholdKm2() {
+    return minSliderPositionToAreaKm2(parseFloat(document.getElementById('min-slider').value));
+}
+
 // Driven by the always-visible Site type switches — a site is shown only if its
 // site_type is in this set. Alphabetical by display label (not SITE_TYPE_LABELS' code
 // order), except Landscape and Area Of Interest are pinned to the bottom rather than
@@ -471,18 +523,15 @@ const CHECK_FILTERS = [
     { name: 'Profile Completeness' },
     { name: 'Triangle check' },
 ];
-const CHECK_FILTER_STATUSES = ['Valid', 'Needs Review', 'Invalid'];
+const CHECK_FILTER_STATUSES = ['Valid', 'Needs Review', 'Invalid', 'Not checked'];
 
-// Default visible set per check: the 3 toggleable statuses above, plus 'Not
-// checked' (e.g. landcover checks skipped for very large sites) — there's no
-// button for it yet, but a site shouldn't be hidden by default just because a
-// check didn't run. See getCheckStatus's comment for the toggleable/default
-// distinction; TODO: add a real 4th toggle for this instead of always-on.
-const DEFAULT_VISIBLE_CHECK_STATUSES = [...CHECK_FILTER_STATUSES, 'Not checked'];
+// Default visible set per check: every status, including 'Not checked' (e.g. landcover
+// checks skipped for very large sites), so nothing is hidden until you narrow it.
+const DEFAULT_VISIBLE_CHECK_STATUSES = [...CHECK_FILTER_STATUSES];
 
 // Single-letter codes for compact "checks" URL encoding — see buildStateParams/
 // getUrlParameters.
-const CHECK_STATUS_CODES = { 'Valid': 'V', 'Needs Review': 'N', 'Invalid': 'I' };
+const CHECK_STATUS_CODES = { 'Valid': 'V', 'Needs Review': 'N', 'Invalid': 'I', 'Not checked': 'X' };
 const CHECK_STATUS_CODES_INVERSE = Object.fromEntries(
     Object.entries(CHECK_STATUS_CODES).map(([status, code]) => [code, status])
 );
@@ -506,9 +555,7 @@ const CHECK_TILE_PROPERTY_KEYS = {
     'Profile Completeness': 'check_profile',
     'Triangle check': 'check_triangle',
 };
-// CHECK_STATUS_CODES_INVERSE plus 'X', the tile-only code for the real (but
-// non-filterable) "Not checked" status — never offered as a filter button, so it's
-// not part of CHECK_STATUS_CODES/CHECK_FILTER_STATUSES.
+// Tile property code -> status; 'X' (Not checked) is part of CHECK_STATUS_CODES too.
 const CHECK_CODE_TO_STATUS = { ...CHECK_STATUS_CODES_INVERSE, X: 'Not checked' };
 
 // One visible-statuses Set per check, keyed by check name (not by the filter's display
@@ -526,24 +573,50 @@ function buildCheckFilterVisibleStatuses() {
 var checkFilterVisibleStatuses = buildCheckFilterVisibleStatuses();
 
 // Returns a named verification check's status for a feature, decoded from its
-// compact tile property (see CHECK_TILE_PROPERTY_KEYS) — 'Invalid' if the property
-// is unset (the site has no verification data at all, e.g. it predates the check or
-// wasn't run for it) or holds an unrecognized code. Sites missing the check are
-// lumped in with "Invalid" rather than kept in some separate always-shown/
-// always-hidden case, so they stay visible until "Invalid" is unchecked for that
-// filter, same as a site the check actually flagged. Every one of these filters has
-// no effect in Centroids mode either way; the switches are disabled there (see
+// compact tile property (see CHECK_TILE_PROPERTY_KEYS) or, for live FGB features, from
+// the full verification_checks. 'Not checked' if neither has anything for this check
+// (skipped, never run, or the site has no verification data at all). Skipped sites
+// have their own 'Not checked' filter button. Every one of these filters
+// has no effect in Centroids mode either way; the switches are disabled there (see
 // updateCheckFiltersAvailability) rather than silently doing nothing.
 function getCheckStatus(feature, checkName) {
     const key = CHECK_TILE_PROPERTY_KEYS[checkName];
     const code = key ? feature.get(key) : undefined;
-    return CHECK_CODE_TO_STATUS[code] || 'Invalid';
+    if (CHECK_CODE_TO_STATUS[code]) return CHECK_CODE_TO_STATUS[code];
+    // Live FGB features (zoomed in) carry the full verification_checks JSON instead of
+    // the compact tile codes above — without this fallback every check would read as
+    // 'Invalid' there and the filter buttons would have no effect.
+    return getFullCheckStatuses(feature)[checkName] || 'Not checked';
+}
+
+// check name -> normalized status, parsed once per feature from verification_checks
+// (filters re-evaluate every feature on each repaint, so don't re-parse the JSON).
+const fullCheckStatusCache = new WeakMap();
+const FULL_CHECK_STATUS_NORMALIZED = {
+    'valid': 'Valid',
+    'needs review': 'Needs Review',
+    'invalid': 'Invalid',
+    'not checked': 'Not checked',
+};
+function getFullCheckStatuses(feature) {
+    let statuses = fullCheckStatusCache.get(feature);
+    if (!statuses) {
+        statuses = {};
+        parseListField(feature.get('verification_checks')).forEach((check) => {
+            if (!check || typeof check !== 'object' || !check.name) return;
+            const normalized = FULL_CHECK_STATUS_NORMALIZED[String(check.status || '').trim().toLowerCase()];
+            if (normalized) statuses[check.name] = normalized;
+        });
+        fullCheckStatusCache.set(feature, statuses);
+    }
+    return statuses;
 }
 
 // Shared visibility predicate for the sites layers, so both respect the same
 // area threshold/status filters without duplicating logic.
 function isSiteVisible(feature) {
     const threshold = getAreaThresholdKm2();
+    const minThreshold = getMinAreaThresholdKm2();
     const areaKm2 = getSurfaceAreaKm2(feature);
     const vis = decodeEnum(feature.get('site_visibility'), SITE_VISIBILITY_LABELS);
     const siteType = decodeEnum(feature.get('site_type'), SITE_TYPE_LABELS);
@@ -554,7 +627,7 @@ function isSiteVisible(feature) {
     // site size — always hide it rather than let it slip through as "smaller than
     // any threshold".
     return !(
-        areaKm2 > threshold || areaKm2 < 0 || !visibleStatuses.has(vis) ||
+        areaKm2 > threshold || areaKm2 < minThreshold || areaKm2 < 0 || !visibleStatuses.has(vis) ||
         !visibleSiteTypes.has(siteType) || !checksOk
     );
 }
@@ -567,10 +640,11 @@ function isSiteVisible(feature) {
 // on checks that don't apply here.
 function isCentroidFeatureVisible(feature) {
     const threshold = getAreaThresholdKm2();
+    const minThreshold = getMinAreaThresholdKm2();
     const areaKm2 = getSurfaceAreaKm2(feature);
     const vis = decodeEnum(feature.get('site_visibility'), SITE_VISIBILITY_LABELS);
     const siteType = decodeEnum(feature.get('site_type'), SITE_TYPE_LABELS);
-    return !(areaKm2 > threshold || areaKm2 < 0 || !visibleStatuses.has(vis) || !visibleSiteTypes.has(siteType));
+    return !(areaKm2 > threshold || areaKm2 < minThreshold || areaKm2 < 0 || !visibleStatuses.has(vis) || !visibleSiteTypes.has(siteType));
 }
 
 // Status bar showing how many sites currently match the filters — only in Centroids
@@ -635,6 +709,7 @@ const centroid_webgl_style = {
         // thresholdHa mirrors the slider's km² threshold converted to hectares, since
         // sites_centroids.fgb stores surface_area_ha, not surface_area_km2.
         thresholdHa: getAreaThresholdKm2() * 100,
+        minThresholdHa: getMinAreaThresholdKm2() * 100,
         showPublic: visibleStatuses.has('PUBLIC') ? 1 : 0,
         showPrivate: visibleStatuses.has('PRIVATE') ? 1 : 0,
         showRestoration: visibleSiteTypes.has('RESTORATION') ? 1 : 0,
@@ -645,6 +720,7 @@ const centroid_webgl_style = {
     },
     filter: ['all',
         ['<=', ['get', 'surface_area_ha'], ['var', 'thresholdHa']],
+        ['>=', ['get', 'surface_area_ha'], ['var', 'minThresholdHa']],
         ['any',
             ['all', ['==', ['get', 'site_visibility'], 0], ['==', ['var', 'showPublic'], 1]],
             ['all', ['==', ['get', 'site_visibility'], 1], ['==', ['var', 'showPrivate'], 1]],
@@ -709,7 +785,7 @@ function applyConfirmedHover(feature, layer) {
     var pu = document.getElementById('popup');
     if (hoveredFeature && hoveredFeature.get('id') !== undefined) {
         pu.style.display = "block";
-        pu.innerHTML = buildPopupHtml(hoveredFeature.getProperties());
+        pu.innerHTML = buildPopupHtml(hoveredFeature.getProperties(), !hoveredIsCentroid);
     } else {
         pu.style.display = "none";
     }
@@ -769,9 +845,17 @@ function handleRenderModeChange(event) {
 // isSiteVisible) — disable rather than hide them in Centroids mode, matching the
 // "Show site checks" context-menu item's treatment of the same schema gap.
 function updateCheckFiltersAvailability() {
+    const available = renderMode === 'geometries';
     document.querySelectorAll('.check-status-btn').forEach((button) => {
-        button.disabled = renderMode !== 'geometries';
+        button.disabled = !available;
     });
+    // Centroids carry no check data, so rather than showing a section of disabled
+    // buttons, hide "More filters" entirely there. Back in Geometries mode, restore the
+    // list to whatever expanded/collapsed state the toggle was left in.
+    const toggle = document.getElementById('more-filters-toggle');
+    const list = document.getElementById('check-filters-list');
+    if (toggle) toggle.hidden = !available;
+    if (list) list.hidden = !available || toggle?.getAttribute('aria-expanded') !== 'true';
 }
 
 // Shared style logic for the polygon sites layers (MVT or live FGB).
@@ -825,12 +909,25 @@ const mvt_tile_source = new VectorTileSource({
 });
 mvt_tile_source.setTileLoadFunction(authenticatedMvtTileLoadFunction);
 
+// Same geometries progress ring as the FGB source: on a slow connection the
+// pre-generated MVT tiles can take a while too. Shares the load counters above.
+mvt_tile_source.on('tileloadstart', geometriesLoadStarted);
+mvt_tile_source.on(['tileloadend', 'tileloaderror'], geometriesLoadFinished);
+
+// Draw larger sites first so smaller ones sit on top of them. Hit-testing follows draw
+// order (topmost wins), so without this a big polygon drawn after a small one inside it
+// swallows the hover/click and the small site can never be focused.
+function renderLargestFirst(a, b) {
+    return getSurfaceAreaKm2(b) - getSurfaceAreaKm2(a);
+}
+
 // Create the sites vector tile layer (zoom 0-10, pre-generated MVT tiles)
 const mvt_tile_layer = new VectorTileLayer({
     source: mvt_tile_source,
     maxZoom: SOURCE_CUTOVER_ZOOM,
     visible: false,
     style: siteStyle,
+    renderOrder: renderLargestFirst,
 });
 
 // Create the sites vector layer (zoom >8, live FlatGeobuf features)
@@ -839,6 +936,7 @@ const vector_tile_layer = new VectorLayer({
     minZoom: SOURCE_CUTOVER_ZOOM,
     visible: false,
     style: siteStyle,
+    renderOrder: renderLargestFirst,
 });
 
 // Centroid layer: a single WebGLPointsLayer covering the whole dataset at every zoom
@@ -896,6 +994,9 @@ function buildStateParams() {
         params.set('area', areaKm2.toPrecision(6));
     }
 
+    const minAreaKm2 = getMinAreaThresholdKm2();
+    if (minAreaKm2 > 0) params.set('minarea', minAreaKm2.toPrecision(6));
+
     const visSorted = [...visibleStatuses].sort().join(',');
     if (visSorted !== 'PUBLIC') params.set('vis', visSorted);
 
@@ -907,8 +1008,6 @@ function buildStateParams() {
     CHECK_FILTERS.forEach((cf) => {
         const statuses = checkFilterVisibleStatuses[cf.name];
         if (statuses.size === DEFAULT_VISIBLE_CHECK_STATUSES.length) return; // default: nothing excluded
-        // 'Not checked' has no URL code (no toggle button controls it — see
-        // DEFAULT_VISIBLE_CHECK_STATUSES) and is dropped from the encoded set here.
         const codes = [...statuses].filter((s) => CHECK_STATUS_CODES[s]).map((s) => CHECK_STATUS_CODES[s]).sort().join('');
         checksParts.push(`${cf.name}:${codes}`);
     });
@@ -1017,7 +1116,7 @@ function showFeatureMenu(feature, layer, coordinate) {
         map_popup.setPosition(coordinate);
         const pu = document.getElementById('popup');
         pu.style.display = "block";
-        pu.innerHTML = buildPopupHtml(props);
+        pu.innerHTML = buildPopupHtml(props, layer !== centroid_webgl_layer);
     }
 }
 
@@ -1099,9 +1198,30 @@ function buildVerificationPillsHtml(checks) {
         .join('');
 }
 
-function buildChecksModalBody(checks) {
+// Full verification_checks (names + messages) when the feature carries it (live FGB
+// features); otherwise falls back to the compact per-check status codes the zoomed-out
+// MVT tiles carry (see CHECK_TILE_PROPERTY_KEYS), which give each check's status but
+// no explanatory message. Checks with no code at all (property unset) are skipped.
+function getVerificationChecks(props) {
+    const full = parseListField(props['verification_checks']).filter(Boolean);
+    if (full.length) return { checks: full, fromTileCodes: false };
+    const fromCodes = [];
+    CHECK_FILTERS.forEach((cf) => {
+        const code = props[CHECK_TILE_PROPERTY_KEYS[cf.name]];
+        const status = CHECK_CODE_TO_STATUS[code];
+        if (status) fromCodes.push({ name: cf.label || cf.name, status });
+    });
+    return { checks: fromCodes, fromTileCodes: fromCodes.length > 0 };
+}
+
+// zoomedOut: the feature came from the compact MVT tiles, which carry no per-check
+// messages — an empty list there means the checks were skipped, and the reason is only
+// available from the full data loaded when zoomed in.
+function buildChecksModalBody(checks, fromTileCodes, zoomedOut = false) {
     if (!checks.length) {
-        return '<div class="checks-modal-empty">No verification checks available for this site.</div>';
+        return zoomedOut
+            ? '<div class="checks-modal-empty">The checks for this site have been skipped. To see the reason, zoom in to this site.</div>'
+            : '<div class="checks-modal-empty">No verification checks available for this site.</div>';
     }
     const sorted = [...checks].sort((a, b) => {
         const statusA = (a && typeof a === 'object' ? a.status : a) || 'Unknown';
@@ -1110,7 +1230,10 @@ function buildChecksModalBody(checks) {
         const rankB = CHECK_STATUS_ORDER.indexOf(statusB);
         return (rankA === -1 ? CHECK_STATUS_ORDER.length : rankA) - (rankB === -1 ? CHECK_STATUS_ORDER.length : rankB);
     });
-    return sorted.map((check) => {
+    const note = fromTileCodes
+        ? '<div class="checks-modal-empty">Summary from map tiles. Zoom in to a site for detailed check messages.</div>'
+        : '';
+    return note + sorted.map((check) => {
         const isObject = check && typeof check === 'object';
         const name = isObject ? (check.name || 'Check') : String(check);
         const status = (isObject ? check.status : check) || 'Unknown';
@@ -1128,10 +1251,10 @@ function buildChecksModalBody(checks) {
     }).join('');
 }
 
-function openChecksModal(props) {
-    const checks = parseListField(props['verification_checks']).filter(Boolean);
+function openChecksModal(props, zoomedOut = false) {
+    const { checks, fromTileCodes } = getVerificationChecks(props);
     document.getElementById('checks-modal-title').textContent = props['name'] || 'Untitled site';
-    document.getElementById('checks-modal-body').innerHTML = buildChecksModalBody(checks);
+    document.getElementById('checks-modal-body').innerHTML = buildChecksModalBody(checks, fromTileCodes, zoomedOut);
     document.getElementById('checks-modal-backdrop').classList.add('open');
 }
 
@@ -1153,9 +1276,11 @@ function countryCodeToFlagEmoji(code) {
     return String.fromCodePoint(...codePoints);
 }
 
-function buildPopupHtml(props) {
+// hasCheckData: false for centroid features, whose narrow schema never carries check
+// data — there, an empty check list means "not available", not "skipped".
+function buildPopupHtml(props, hasCheckData = true) {
     const areaHa = formatSurfaceAreaHa(props);
-    const verificationChecks = parseListField(props['verification_checks']).filter(Boolean);
+    const verificationChecks = getVerificationChecks(props).checks;
     const fields = [
         ['Area', areaHa],
         ['Stage', formatEnum(decodeEnum(props['stage'], STAGE_LABELS))],
@@ -1198,6 +1323,10 @@ function buildPopupHtml(props) {
                 <hr class="popup-divider">
                 <div class="popup-section-header">Checks</div>
                 <div class="popup-check-pills">${checkPills}</div>
+                ` : hasCheckData ? `
+                <hr class="popup-divider">
+                <div class="popup-section-header">Checks</div>
+                <div class="popup-check-pills"><span class="popup-check-chip" title="No verification checks were run for this site">Not checked</span></div>
                 ` : ''}
             </div>
         </div>
@@ -1388,7 +1517,7 @@ document.getElementById('feature-menu-zoom').addEventListener('click', function 
 
 document.getElementById('feature-menu-checks').addEventListener('click', function () {
     if (!feature_menu_feature) return;
-    openChecksModal(feature_menu_feature.getProperties());
+    openChecksModal(feature_menu_feature.getProperties(), feature_menu_layer === mvt_tile_layer);
     hideFeatureMenu();
 });
 
@@ -1440,6 +1569,18 @@ function updateSliderLabel(areaKm2) {
     }
 }
 
+function updateMinSliderLabel(areaKm2) {
+    const valueEl = document.getElementById('min-slider-value');
+    const unitEl = document.getElementById('min-slider-unit');
+    if (areaKm2 >= 1) {
+        valueEl.innerText = formatNumber(areaKm2);
+        unitEl.innerText = 'km²';
+    } else {
+        valueEl.innerText = areaKm2 === 0 ? '0' : formatNumber(areaKm2 * 100);
+        unitEl.innerText = 'ha';
+    }
+}
+
 // Update layer style when slider changes
 // Debounced separately from the map re-style above — updateStatusBar scans every
 // loaded centroid feature, which is cheap once but would add up fired on every 'input'
@@ -1453,12 +1594,49 @@ function scheduleStatusBarUpdate() {
     }, 150);
 }
 
+// Keeps the two thumbs of the shared area range from crossing, and draws the
+// highlighted segment between them.
+function updateDualRangeFill() {
+    const min = document.getElementById('min-slider');
+    const max = document.getElementById('slider');
+    const span = parseFloat(max.max) - parseFloat(max.min);
+    const lo = ((parseFloat(min.value) - parseFloat(min.min)) / span) * 100;
+    const hi = ((parseFloat(max.value) - parseFloat(max.min)) / span) * 100;
+    const fill = document.getElementById('dual-range-fill');
+    fill.style.left = `${lo}%`;
+    fill.style.width = `${Math.max(hi - lo, 0)}%`;
+    // When both thumbs sit at the far right, the max thumb would cover the min one;
+    // raise the min thumb so it can still be dragged back down.
+    min.style.zIndex = parseFloat(min.value) >= parseFloat(max.max) - 5 ? 2 : 1;
+    max.style.zIndex = 1;
+}
+
 document.getElementById('slider').addEventListener('input', function () {
+    const minEl = document.getElementById('min-slider');
+    if (parseFloat(this.value) < parseFloat(minEl.value)) {
+        this.value = minEl.value;
+    }
     const areaKm2 = sliderPositionToAreaKm2(parseFloat(this.value));
     updateSliderLabel(areaKm2);
+    updateDualRangeFill();
     mvt_tile_layer.changed();
     vector_tile_layer.changed();
     centroid_webgl_layer.updateStyleVariables({ thresholdHa: areaKm2 * 100 });
+    scheduleStatusBarUpdate();
+    scheduleUrlSync();
+});
+
+document.getElementById('min-slider').addEventListener('input', function () {
+    const maxEl = document.getElementById('slider');
+    if (parseFloat(this.value) > parseFloat(maxEl.value)) {
+        this.value = maxEl.value;
+    }
+    const areaKm2 = minSliderPositionToAreaKm2(parseFloat(this.value));
+    updateMinSliderLabel(areaKm2);
+    updateDualRangeFill();
+    mvt_tile_layer.changed();
+    vector_tile_layer.changed();
+    centroid_webgl_layer.updateStyleVariables({ minThresholdHa: areaKm2 * 100 });
     scheduleStatusBarUpdate();
     scheduleUrlSync();
 });
@@ -1473,9 +1651,68 @@ function handleCheckStatusToggle(event) {
     } else {
         statuses.delete(button.dataset.status);
     }
+    syncAllChecksRow();
     mvt_tile_layer.changed();
     vector_tile_layer.changed();
     scheduleUrlSync();
+}
+
+// A master button is "on" only when that status is selected for every check; otherwise
+// it shows as off (mixed state).
+function syncAllChecksRow() {
+    document.querySelectorAll('.check-all-btn').forEach((button) => {
+        const status = button.dataset.status;
+        const allOn = CHECK_FILTERS.every((cf) => checkFilterVisibleStatuses[cf.name].has(status));
+        button.setAttribute('aria-pressed', String(allOn));
+    });
+}
+
+// Master toggle: if the status is on for every check, turn it off for all; otherwise
+// turn it on for all.
+function handleAllChecksToggle(event) {
+    const status = event.currentTarget.dataset.status;
+    const turnOn = event.currentTarget.getAttribute('aria-pressed') !== 'true';
+    CHECK_FILTERS.forEach((cf) => {
+        const statuses = checkFilterVisibleStatuses[cf.name];
+        if (turnOn) statuses.add(status); else statuses.delete(status);
+    });
+    document.querySelectorAll(`.check-status-btn[data-check][data-status="${status}"]`).forEach((button) => {
+        button.setAttribute('aria-pressed', String(turnOn));
+    });
+    syncAllChecksRow();
+    mvt_tile_layer.changed();
+    vector_tile_layer.changed();
+    scheduleUrlSync();
+}
+
+// First row of "More filters": one button per status that sets that status for every
+// check at once.
+function buildAllChecksRow() {
+    const row = document.createElement('div');
+    row.className = 'filter-row check-all-row';
+
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'filter-label';
+    labelSpan.textContent = 'All checks';
+    row.appendChild(labelSpan);
+
+    const switchGroup = document.createElement('div');
+    switchGroup.className = 'check-status-switch';
+    CHECK_FILTER_STATUSES.forEach((status) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `check-status-btn check-all-btn check-status-${statusSlug(status)}`;
+        button.dataset.status = status;
+        button.setAttribute('aria-pressed', 'true');
+        button.title = `${status}: toggle for all checks`;
+        button.addEventListener('click', handleAllChecksToggle);
+        const swatch = document.createElement('span');
+        swatch.className = 'check-status-swatch';
+        button.appendChild(swatch);
+        switchGroup.appendChild(button);
+    });
+    row.appendChild(switchGroup);
+    return row;
 }
 
 // 'Needs Review' -> 'needs-review', for building each status button's modifier class.
@@ -1504,9 +1741,7 @@ function buildCheckFilterRow(checkName, label) {
         button.dataset.check = checkName;
         button.dataset.status = status;
         button.setAttribute('aria-pressed', 'true');
-        // 'Invalid' also governs 'Not checked' sites (see getCheckStatus) — spelled out
-        // here since there's no separate control for it.
-        button.title = status === 'Invalid' ? 'Invalid or Not Checked' : status;
+        button.title = status === 'Not checked' ? 'Not checked (skipped or no data)' : status;
         button.addEventListener('click', handleCheckStatusToggle);
 
         const swatch = document.createElement('span');
@@ -1579,6 +1814,9 @@ function resetFilters() {
     const slider = document.getElementById('slider');
     slider.value = areaKm2ToSliderPosition(RESET_AREA_KM2);
     updateSliderLabel(RESET_AREA_KM2);
+    document.getElementById('min-slider').value = 0;
+    updateMinSliderLabel(0);
+    updateDualRangeFill();
 
     visibleStatuses = new Set(['PUBLIC']);
     document.querySelectorAll("input[name='options']").forEach((checkbox) => {
@@ -1591,14 +1829,16 @@ function resetFilters() {
     });
 
     checkFilterVisibleStatuses = buildCheckFilterVisibleStatuses();
-    document.querySelectorAll('.check-status-btn').forEach((button) => {
+    document.querySelectorAll('.check-status-btn[data-check]').forEach((button) => {
         button.setAttribute('aria-pressed', 'true');
     });
+    syncAllChecksRow();
 
     mvt_tile_layer.changed();
     vector_tile_layer.changed();
     centroid_webgl_layer.updateStyleVariables({
         thresholdHa: RESET_AREA_KM2 * 100,
+        minThresholdHa: 0,
         showPublic: 1,
         showPrivate: 0,
         showRestoration: visibleSiteTypes.has('RESTORATION') ? 1 : 0,
@@ -1631,6 +1871,11 @@ function applyUrlFilters(params) {
     slider.value = areaKm2ToSliderPosition(areaKm2);
     updateSliderLabel(areaKm2);
 
+    const minAreaKm2 = params.minarea !== undefined ? params.minarea : 0;
+    document.getElementById('min-slider').value = minAreaKm2ToSliderPosition(minAreaKm2);
+    updateMinSliderLabel(minAreaKm2);
+    updateDualRangeFill();
+
     const validVis = (params.vis || []).filter((v) => SITE_VISIBILITY_VALUES.includes(v));
     visibleStatuses = new Set(validVis.length ? validVis : ['PUBLIC']);
     document.querySelectorAll("input[name='options']").forEach((checkbox) => {
@@ -1648,20 +1893,20 @@ function applyUrlFilters(params) {
         Object.entries(params.checks).forEach(([name, codes]) => {
             if (!checkFilterVisibleStatuses[name]) return; // unknown check name — ignore
             const statuses = codes.map((c) => CHECK_STATUS_CODES_INVERSE[c]).filter(Boolean);
-            // 'Not checked' has no URL code (see buildStateParams) and stays
-            // always-on regardless of what this URL encodes for the toggleable statuses.
-            checkFilterVisibleStatuses[name] = new Set([...statuses, 'Not checked']);
+            checkFilterVisibleStatuses[name] = new Set(statuses);
         });
     }
-    document.querySelectorAll('.check-status-btn').forEach((button) => {
+    document.querySelectorAll('.check-status-btn[data-check]').forEach((button) => {
         const pressed = checkFilterVisibleStatuses[button.dataset.check].has(button.dataset.status);
         button.setAttribute('aria-pressed', String(pressed));
     });
+    syncAllChecksRow();
 
     mvt_tile_layer.changed();
     vector_tile_layer.changed();
     centroid_webgl_layer.updateStyleVariables({
         thresholdHa: areaKm2 * 100,
+        minThresholdHa: minAreaKm2 * 100,
         showPublic: visibleStatuses.has('PUBLIC') ? 1 : 0,
         showPrivate: visibleStatuses.has('PRIVATE') ? 1 : 0,
         showRestoration: visibleSiteTypes.has('RESTORATION') ? 1 : 0,
@@ -1735,7 +1980,7 @@ function renderSiteSearchResults(matches, query) {
         return;
     }
     if (centroid_source.getFeatures().length === 0) {
-        el.innerHTML = '<div class="site-search-empty">Loading sites…</div>';
+        el.innerHTML = '<div class="site-search-empty">Loading site centroids…</div>';
         el.hidden = false;
         return;
     }
@@ -1838,6 +2083,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     const checkFiltersList = document.getElementById('check-filters-list');
+    checkFiltersList.appendChild(buildAllChecksRow());
     CHECK_FILTERS.forEach((cf) => {
         checkFiltersList.appendChild(buildCheckFilterRow(cf.name, cf.label || cf.name));
     });
@@ -1861,3 +2107,4 @@ document.addEventListener("DOMContentLoaded", function () {
 
     initSiteSearch();
 });
+updateDualRangeFill();
