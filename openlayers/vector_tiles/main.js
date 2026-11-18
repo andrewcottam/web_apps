@@ -791,6 +791,27 @@ function applyConfirmedHover(feature, layer) {
     }
 }
 
+// Drops the confirmed hover target entirely (clearing the centroid highlight and hiding
+// the popup, no debounce) so the next pointermove starts from a clean slate — it
+// re-shows the popup only if the cursor is actually over a site by then. Used when a
+// modal closes: the popup that was pinned while it was open would otherwise stay
+// visible and just follow the mouse, with no hovered feature to ever hide it.
+function resetHover() {
+    if (hoverDebounceTimeout) {
+        clearTimeout(hoverDebounceTimeout);
+        hoverDebounceTimeout = null;
+    }
+    pendingHoverFeature = undefined;
+    pendingHoverLayer = null;
+    if (hoveredFeature && hoveredIsCentroid) hoveredFeature.set('hovered', 0);
+    hoveredFeature = null;
+    hoveredIsCentroid = false;
+    selected_feature.current = undefined;
+    mvt_tile_layer.changed();
+    vector_tile_layer.changed();
+    document.getElementById('popup').style.display = "none";
+}
+
 function updateHoverCandidate(feature, layer) {
     if (feature === hoveredFeature) {
         // Already confirmed; cancel any pending switch away from it.
@@ -1260,6 +1281,7 @@ function openChecksModal(props, zoomedOut = false) {
 
 function closeChecksModal() {
     document.getElementById('checks-modal-backdrop').classList.remove('open');
+    resetHover();
 }
 
 // The API only serves fixed widths (100, 200, 400, 600, 800, ...); other values return 400.
