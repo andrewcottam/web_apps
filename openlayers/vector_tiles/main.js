@@ -1139,11 +1139,12 @@ function closeChecksModal() {
     document.getElementById('checks-modal-backdrop').classList.remove('open');
 }
 
-function buildPhotoUrl(siteId, photoId) {
+// The API only serves fixed widths (100, 200, 400, 600, 800, ...); other values return 400.
+function buildPhotoUrl(siteId, photoId, width = 600) {
     // Same endpoint restor.eco's own frontend uses; redirects (307) to a public GCS object.
     // The ?width= variant keeps the EXIF orientation tag; the unsized "original" has it stripped,
     // which made portrait phone photos render sideways. Also much smaller than the original.
-    return `https://restor2-prod-1-api.restor.eco/sites/5/${siteId}/photo/${photoId}?width=800`;
+    return `https://restor2-prod-1-api.restor.eco/sites/5/${siteId}/photo/${photoId}?width=${width}`;
 }
 
 function countryCodeToFlagEmoji(code) {
@@ -1179,7 +1180,7 @@ function buildPopupHtml(props) {
 
     return `
         <div class="popup-inner">
-            ${photoUrl ? `<img class="popup-photo" src="${escapeHtml(photoUrl)}" alt="">` : ''}
+            ${photoUrl ? `<img class="popup-photo" src="${escapeHtml(photoUrl)}" srcset="${escapeHtml(buildPhotoUrl(props['id'], photoIds[0], 400))} 400w, ${escapeHtml(photoUrl)} 600w" sizes="282px" alt="">` : ''}
             <div class="popup-content">
                 <div class="popup-title-row">
                     <div class="popup-title">${escapeHtml(props['name'] || 'Untitled site')}</div>
