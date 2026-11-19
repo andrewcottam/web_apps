@@ -1260,22 +1260,26 @@ function buildChecksModalBody(checks, fromTileCodes, zoomedOut = false) {
     const note = fromTileCodes
         ? '<div class="checks-modal-empty">Summary from map tiles. Zoom in to a site for detailed check messages.</div>'
         : '';
-    return note + sorted.map((check) => {
+    const rows = sorted.map((check) => {
         const isObject = check && typeof check === 'object';
         const name = isObject ? (check.name || 'Check') : String(check);
         const status = (isObject ? check.status : check) || 'Unknown';
         const message = isObject ? safe(check.status_message) : '';
         const color = CHECK_STATUS_COLORS[status] || 'gray';
         return `
-            <div class="check-row">
-                <div class="check-info">
-                    <div class="check-name">${escapeHtml(name)}</div>
-                    ${message ? `<div class="check-message">${escapeHtml(message)}</div>` : ''}
-                </div>
-                <span class="check-status-pill" style="background:${color}">${escapeHtml(status)}</span>
-            </div>
+            <tr>
+                <td class="col-check"><div class="check-name">${escapeHtml(name)}</div></td>
+                <td><div class="check-message">${message ? escapeHtml(message) : '&mdash;'}</div></td>
+                <td class="col-status"><span class="check-status-pill" style="background:${color}">${escapeHtml(status)}</span></td>
+            </tr>
         `;
     }).join('');
+    return note + `
+        <table class="checks-table">
+            <thead><tr><th class="col-check">Check</th><th>Description</th><th class="col-status">Status</th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>
+    `;
 }
 
 function openChecksModal(props, zoomedOut = false) {

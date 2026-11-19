@@ -973,7 +973,7 @@
     }
 
     #checks-modal {
-      width: 420px;
+      width: 740px;
       max-width: 90vw;
       max-height: 80vh;
       background: white;
@@ -990,7 +990,7 @@
       align-items: flex-start;
       justify-content: space-between;
       gap: 12px;
-      padding: 16px 18px;
+      padding: 10px 14px;
       border-bottom: 1px solid #eee;
     }
 
@@ -1017,26 +1017,45 @@
     }
 
     #checks-modal .checks-modal-body {
-      padding: 8px 18px 18px;
+      padding: 0 6px 6px;
       overflow-y: auto;
     }
 
-    #checks-modal .check-row {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 10px 0;
+    /* Three-column table: Check | Description | Status. Header row stays pinned while the
+       body scrolls. */
+    #checks-modal .checks-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    #checks-modal .checks-table th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: white;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 6px 8px 5px;
+      border-bottom: 1px solid #e4e4e4;
+    }
+
+    #checks-modal .checks-table td {
+      padding: 5px 8px;
+      vertical-align: top;
       border-bottom: 1px solid #f2f2f2;
     }
 
-    #checks-modal .check-row:last-child {
+    #checks-modal .checks-table tr:last-child td {
       border-bottom: none;
     }
 
-    #checks-modal .check-info {
-      min-width: 0;
-    }
+    #checks-modal .checks-table .col-check { width: 30%; }
+    #checks-modal .checks-table .col-status { width: 120px; text-align: center; }
 
     #checks-modal .check-name {
       font-size: 13px;
@@ -1047,7 +1066,6 @@
     #checks-modal .check-message {
       font-size: 12px;
       color: #777;
-      margin-top: 2px;
     }
 
     #checks-modal .check-status-pill {
@@ -1068,11 +1086,11 @@
     #checks-modal .checks-modal-empty {
       font-size: 13px;
       color: #888;
-      padding: 12px 0;
+      padding: 12px 10px;
     }
 
   </style>
-  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.76b3dd52.js"></script>
+  <script type="module" crossorigin src="/web_apps/openlayers/vector_tiles/dist/assets/index.eefd4105.js"></script>
   <link rel="stylesheet" href="/web_apps/openlayers/vector_tiles/dist/assets/index.5fd94eca.css">
 </head>
 
