@@ -268,3 +268,39 @@ tr:not(:last-child) th {}
   color: #666;
   word-break: break-all;
 }
+
+/* Shared layout for the Land Cover, Sites and WDPA result lists: name on the left, percentage on the right */
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 6px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid #ddd;
+  font-size: 10px;
+  font-weight: 600;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.result-row .pct {
+  color: #444;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.landcover {
+  padding: 6px 0;
+}
+
+.landcover + .landcover {
+  border-top: 1px solid #eee;
+}

@@ -83,6 +83,13 @@ const getUrlParameters = (): { lat?: number; lng?: number; zoom?: number } => {
   return result;
 };
 
+// Formats a 0-1 fraction as a percentage; tiny non-zero values show as "<1%" instead of a misleading "0%"
+const formatPct = (fraction: unknown): string =>
+  typeof fraction !== "number" ? "" : fraction > 0 && fraction < 0.01 ? "<1%" : `${Math.round(fraction * 100)}%`;
+
+// "built area" -> "Built Area"
+const titleCase = (s: string): string => s.replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+
 const App: React.FC = () => {
   const mapRef = useRef<HTMLDivElement>(null);
   const drawnFeatureRef = useRef<any>(null);
@@ -955,20 +962,17 @@ const App: React.FC = () => {
 
                   {selectedTab === "Land Cover" && data.landcover && (
                     <>
-                    <JsonViewer
-                      data={{
-                        // New response shape: { items: [{ name, fraction }], source }. Falls back to the old flat { class: fraction } shape.
-                        ...Object.fromEntries(
-                          (Array.isArray(data.landcover.items)
-                            ? data.landcover.items.map((i: { name: string; fraction: number }) => [i.name, i.fraction])
-                            : Object.entries(data.landcover)
-                          ).map(([key, value]: [string, unknown]) => [
-                            key,
-                            typeof value === "number" ? `${(value * 100).toFixed(0)}%` : value
-                          ])
-                        )
-                      }}
-                    />
+                    <div className="result-header"><span>Class</span><span>Share of site</span></div>
+                    {/* New response shape: { items: [{ name, fraction }], source }. Falls back to the old flat { class: fraction } shape. */}
+                    {(Array.isArray(data.landcover.items)
+                      ? data.landcover.items.map((i: { name: string; fraction: number }) => [i.name, i.fraction])
+                      : Object.entries(data.landcover).filter(([, v]) => typeof v === "number")
+                    ).map(([name, fraction]: [string, number]) => (
+                      <div key={name} className="landcover result-row">
+                        <span>{titleCase(name)}</span>
+                        <span className="pct">{formatPct(fraction)}</span>
+                      </div>
+                    ))}
                     {data.landcover.source && <div className="data-source">Source: {data.landcover.source}</div>}
                     </>
                   )}
@@ -991,11 +995,12 @@ const App: React.FC = () => {
                   )}
                   {selectedTab === "WDPA" && data.wdpa && data.wdpa.items && (
                     <div>
+                      <div className="result-header"><span>Protected area</span><span>Overlap with this site</span></div>
                       {data.wdpa.items.map((feature: any) => {
                         const wdpaid = feature?.wdpaid;
                         return (
                           wdpaid && (
-                            <div key={wdpaid} className="wdpa">
+                            <div key={wdpaid} className="wdpa result-row">
                               <a
                                 href={`https://www.protectedplanet.net/${wdpaid}`}
                                 target="_blank"
@@ -1003,6 +1008,7 @@ const App: React.FC = () => {
                               >
                                 {feature.name}
                               </a>
+                              <span className="pct">{formatPct(feature.overlap_percentage)}</span>
                             </div>
                           )
                         );
@@ -1026,6 +1032,7 @@ const App: React.FC = () => {
                   )}
                   {selectedTab === "Sites" && data.sites && data.sites.items && (
                     <div>
+                      <div className="result-header"><span>Site</span><span>Overlap with this site</span></div>
                       {data.sites.items
                         .filter((feature: any) => {
                           // Filter private sites for non-restor.eco users
@@ -1037,12 +1044,13 @@ const App: React.FC = () => {
                           const siteId = feature?.id;
                           return (
                             siteId && (
-                              <div key={siteId} className="site">
+                              <div key={siteId} className="site result-row">
                                 {feature.site_visibility == 'PUBLIC' ? (
                                   <span><a href={`https://restor.eco/sites/${siteId}`} target="_blank" rel="noopener noreferrer" >{feature.name}</a></span>
                                 ) : (
                                   <span className="private">{feature.name}</span>
                                 )}
+                                <span className="pct">{formatPct(feature.overlap_percentage)}</span>
                               </div>
                             )
                           );
