@@ -60,6 +60,7 @@ button:focus-visible {
   border-top: none;
   padding: 12px 14px;
   background-color: #fff;
+  color: #213547; /* the box is always white, so don't inherit the near-white text colour used in dark mode */
   font-size: 12px;
 }
 
