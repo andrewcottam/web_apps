@@ -189,7 +189,7 @@ tr:not(:last-child) th {}
   background: transparent;
   padding: 3px 10px;
   border-radius: 6px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: #666;
   cursor: pointer;
