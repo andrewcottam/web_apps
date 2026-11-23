@@ -159,10 +159,6 @@ th {
 tr:not(:last-child) th {}
 
 /* List rows on the Sites, WDPA and OSM tabs: breathing room plus a faint divider */
-.site, .wdpa, .osm {
-  padding: 6px 0;
-}
-
 .site + .site, .wdpa + .wdpa, .osm + .osm {
   border-top: 1px solid #eee;
 }
@@ -296,7 +292,7 @@ tr:not(:last-child) th {}
 }
 
 .result-row {
-  padding: 6px 0;
+  padding: 3px 0;
 }
 
 .result-row + .result-row {
