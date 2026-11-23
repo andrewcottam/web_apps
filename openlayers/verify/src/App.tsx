@@ -1072,7 +1072,7 @@ const App: React.FC = () => {
                   )}
                   {/* Always render the checks, but conditionally show them */}
                   <div style={{ display: selectedTab === "Checks" ? "block" : "none" }} key={JSON.stringify(data)}>
-                    {data.checks && <div className="result-header"><span>Check</span><span>Status</span></div>}
+                    {data.checks && <div className="result-header"><span>Check</span><span className="chip-cell">Status</span></div>}
                     {data.checks && data.checks.items.map((check: Check) => (
                       <CheckDiv key={check.name}
                         check={check}

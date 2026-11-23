@@ -305,3 +305,10 @@ tr:not(:last-child) th {}
 .result-row + .result-row {
   border-top: 1px solid #eee;
 }
+
+/* Fixed-width status column on the Checks tab so the chips (and their header) are centred in one column */
+.chip-cell {
+  width: 110px;
+  display: flex;
+  justify-content: center;
+}

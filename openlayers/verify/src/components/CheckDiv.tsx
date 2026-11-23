@@ -33,6 +33,7 @@ const CheckDiv: React.FC<Props> = ({ check }) => {
   return (
     <div className="result-row" id={check.name}>
       <span>{formatKey(check.name)}</span>
+      <div className="chip-cell">
       <div
         style={{
           backgroundColor,
@@ -48,6 +49,7 @@ const CheckDiv: React.FC<Props> = ({ check }) => {
         title={check.status_message}
       >
         {check.status}
+      </div>
       </div>
     </div>
   );
