@@ -107,6 +107,7 @@ h4 {
   bottom: 20px;
   width: 460px;
   background: white;
+  color: #213547; /* the panel is always white, so don't inherit the near-white text colour used in dark mode */
   border: 1px solid #ccc;
   border-radius: 4px;
   display: flex;
