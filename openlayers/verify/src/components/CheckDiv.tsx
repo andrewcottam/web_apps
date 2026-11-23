@@ -31,35 +31,24 @@ const CheckDiv: React.FC<Props> = ({ check }) => {
   const backgroundColor = getCategoryColor(check.status);
 
   return (
-    <div className="category-table" id={check.name}>
-      <table>
-        <tbody>
-          <tr>
-            <th>
-              {formatKey(check.name)}
-            </th>
-            <td>
-              <div
-                style={{
-                  backgroundColor,
-                  marginLeft: 8,
-                  color: 'white',
-                  padding: '2px 9px',
-                  borderRadius: '999px',
-                  fontWeight: 500,
-                  fontSize: '11px',
-                  letterSpacing: '0.02em',
-                  width: 'fit-content',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
-                }}
-                title={check.status_message}
-              >
-                {check.status}
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <div className="result-row" id={check.name}>
+      <span>{formatKey(check.name)}</span>
+      <div
+        style={{
+          backgroundColor,
+          color: 'white',
+          padding: '2px 9px',
+          borderRadius: '999px',
+          fontWeight: 500,
+          fontSize: '11px',
+          letterSpacing: '0.02em',
+          width: 'fit-content',
+          boxShadow: '0 1px 2px rgba(0,0,0,0.15)',
+        }}
+        title={check.status_message}
+      >
+        {check.status}
+      </div>
     </div>
   );
 };

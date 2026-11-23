@@ -31,7 +31,6 @@ import IconButton from "@mui/material/IconButton";
 import Avatar from '@mui/material/Avatar';
 
 // Components
-import JsonViewer from "./components/JsonViewer";
 
 // Types
 import { CheckStatus } from "./types/Enums";
@@ -957,7 +956,15 @@ const App: React.FC = () => {
                   className="content_box"
                 >
                   {selectedTab === "Geometric" && data.geometric && (
-                    <JsonViewer data={{ Area: data.geometric.area_str, 'Average Segment Length': data.geometric.average_segment_length_str, Compactness: data.geometric.compactness, 'Is valid': data.geometric.is_valid, Perimeter: data.geometric.perimeter_str, Vertices: data.geometric.points }} />
+                    <>
+                      <div className="result-header"><span>Property</span><span>Value</span></div>
+                      {Object.entries({ Area: data.geometric.area_str, 'Average Segment Length': data.geometric.average_segment_length_str, Compactness: data.geometric.compactness, 'Is valid': data.geometric.is_valid, Perimeter: data.geometric.perimeter_str, Vertices: data.geometric.points }).map(([label, value]) => (
+                        <div key={label} className="result-row">
+                          <span>{label}</span>
+                          <span className="pct">{String(value)}</span>
+                        </div>
+                      ))}
+                    </>
                   )}
 
                   {selectedTab === "Land Cover" && data.landcover && (
@@ -1065,6 +1072,7 @@ const App: React.FC = () => {
                   )}
                   {/* Always render the checks, but conditionally show them */}
                   <div style={{ display: selectedTab === "Checks" ? "block" : "none" }} key={JSON.stringify(data)}>
+                    {data.checks && <div className="result-header"><span>Check</span><span>Status</span></div>}
                     {data.checks && data.checks.items.map((check: Check) => (
                       <CheckDiv key={check.name}
                         check={check}

@@ -297,10 +297,10 @@ tr:not(:last-child) th {}
   font-variant-numeric: tabular-nums;
 }
 
-.landcover {
+.result-row {
   padding: 6px 0;
 }
 
-.landcover + .landcover {
+.result-row + .result-row {
   border-top: 1px solid #eee;
 }
