@@ -58,7 +58,7 @@ button:focus-visible {
 .content_box {
   border: 1px solid #ccc;
   border-top: none;
-  padding: 4px;
+  padding: 12px 14px;
   background-color: #fff;
   font-size: 12px;
 }
@@ -160,6 +160,15 @@ tr:not(:last-child) th {}
   margin-left: 10px;
 }
 
+/* List rows on the Sites, WDPA and OSM tabs: breathing room plus a faint divider */
+.site, .wdpa, .osm {
+  padding: 6px 0;
+}
+
+.site + .site, .wdpa + .wdpa, .osm + .osm {
+  border-top: 1px solid #eee;
+}
+
 
 .message {
   font-weight: 300;
@@ -251,8 +260,11 @@ tr:not(:last-child) th {}
 
 /* Dataset used for a result tab, shown under the table */
 .data-source {
-  margin-top: 8px;
-  font-size: 12px;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid #ddd;
+  font-size: 11px;
+  line-height: 1.5;
   color: #666;
   word-break: break-all;
 }
