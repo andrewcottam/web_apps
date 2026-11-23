@@ -938,8 +938,8 @@ const App: React.FC = () => {
                   {(["Checks", "Geometric"] as const).map(t => (
                     <button key={t} className={`tab${selectedTab === t ? " active" : ""}`} onClick={() => setSelectedTab(t)}>{t}</button>
                   ))}
-                  {includeSites    && <button className={`tab${selectedTab === "Sites"      ? " active" : ""}`} onClick={() => setSelectedTab("Sites")}>Sites</button>}
                   {includeLandCover && <button className={`tab${selectedTab === "Land Cover" ? " active" : ""}`} onClick={() => setSelectedTab("Land Cover")}>Land Cover</button>}
+                  {includeSites    && <button className={`tab${selectedTab === "Sites"      ? " active" : ""}`} onClick={() => setSelectedTab("Sites")}>Sites</button>}
                   {includeOSM      && <button className={`tab${selectedTab === "OSM"        ? " active" : ""}`} onClick={() => setSelectedTab("OSM")}>OSM</button>}
                   {includeWDPA     && <button className={`tab${selectedTab === "WDPA"       ? " active" : ""}`} onClick={() => setSelectedTab("WDPA")}>WDPA</button>}
                   {includeMangroves && <button className={`tab${selectedTab === "Mangroves"  ? " active" : ""}`} onClick={() => setSelectedTab("Mangroves")}>Mangroves</button>}
@@ -1093,8 +1093,8 @@ const App: React.FC = () => {
             <div className="checkboxes" style={{ padding: '6px 15px 10px', borderTop: '1px solid #eee' }}>
               <div style={{ fontSize: '10px', fontWeight: 600, color: '#999', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' }}>Options</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 14px' }}>
-                <label><input type="checkbox" checked={includeSites} onChange={e => setIncludeSites(e.target.checked)} /> Sites</label>
                 <label><input type="checkbox" checked={includeLandCover} onChange={e => setIncludeLandCover(e.target.checked)} /> Land Cover</label>
+                <label><input type="checkbox" checked={includeSites} onChange={e => setIncludeSites(e.target.checked)} /> Sites</label>
                 <label><input type="checkbox" checked={includeWDPA} onChange={e => setIncludeWDPA(e.target.checked)} /> WDPA</label>
                 <label><input type="checkbox" checked={includeMangroves} onChange={e => setIncludeMangroves(e.target.checked)} /> Mangroves</label>
                 <label><input type="checkbox" checked={includeOSM} onChange={e => setIncludeOSM(e.target.checked)} /> OSM</label>
