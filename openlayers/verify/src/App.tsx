@@ -1047,6 +1047,12 @@ const App: React.FC = () => {
                             )
                           );
                         })}
+                      {data.sites.source && (
+                        <div className="data-source">
+                          Source: {data.sites.source}
+                          {data.sites.last_updated && `, last updated ${String(data.sites.last_updated).replace('T', ' ').slice(0, 16)} UTC`}
+                        </div>
+                      )}
                     </div>
                   )}
                   {/* Always render the checks, but conditionally show them */}
