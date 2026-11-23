@@ -248,3 +248,11 @@ tr:not(:last-child) th {}
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* Dataset used for a result tab, shown under the table */
+.data-source {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #666;
+  word-break: break-all;
+}

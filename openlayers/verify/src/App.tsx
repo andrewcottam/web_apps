@@ -954,6 +954,7 @@ const App: React.FC = () => {
                   )}
 
                   {selectedTab === "Land Cover" && data.landcover && (
+                    <>
                     <JsonViewer
                       data={{
                         // New response shape: { items: [{ name, fraction }], source }. Falls back to the old flat { class: fraction } shape.
@@ -965,10 +966,11 @@ const App: React.FC = () => {
                             key,
                             typeof value === "number" ? `${(value * 100).toFixed(0)}%` : value
                           ])
-                        ),
-                        ...(data.landcover.source ? { Source: data.landcover.source } : {})
+                        )
                       }}
                     />
+                    {data.landcover.source && <div className="data-source">Source: {data.landcover.source}</div>}
+                    </>
                   )}
                   {selectedTab === "OSM" && data.osm && data.osm.features && (
                     <div>
@@ -1005,6 +1007,7 @@ const App: React.FC = () => {
                           )
                         );
                       })}
+                      {data.wdpa.source && <div className="data-source">Source: {data.wdpa.source}</div>}
                     </div>
                   )}
                   {selectedTab === "Mangroves" && data.mangroves && (
