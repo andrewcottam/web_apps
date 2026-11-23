@@ -955,12 +955,19 @@ const App: React.FC = () => {
 
                   {selectedTab === "Land Cover" && data.landcover && (
                     <JsonViewer
-                      data={Object.fromEntries(
-                        Object.entries(data.landcover).map(([key, value]) => [
-                          key,
-                          typeof value === "number" ? `${(value * 100).toFixed(0)}%` : value
-                        ])
-                      )}
+                      data={{
+                        // New response shape: { items: [{ name, fraction }], source }. Falls back to the old flat { class: fraction } shape.
+                        ...Object.fromEntries(
+                          (Array.isArray(data.landcover.items)
+                            ? data.landcover.items.map((i: { name: string; fraction: number }) => [i.name, i.fraction])
+                            : Object.entries(data.landcover)
+                          ).map(([key, value]: [string, unknown]) => [
+                            key,
+                            typeof value === "number" ? `${(value * 100).toFixed(0)}%` : value
+                          ])
+                        ),
+                        ...(data.landcover.source ? { Source: data.landcover.source } : {})
+                      }}
                     />
                   )}
                   {selectedTab === "OSM" && data.osm && data.osm.features && (
