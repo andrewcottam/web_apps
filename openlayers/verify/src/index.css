@@ -158,10 +158,6 @@ th {
 
 tr:not(:last-child) th {}
 
-.osm {
-  margin-left: 10px;
-}
-
 /* List rows on the Sites, WDPA and OSM tabs: breathing room plus a faint divider */
 .site, .wdpa, .osm {
   padding: 6px 0;

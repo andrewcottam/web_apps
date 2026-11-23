@@ -985,19 +985,24 @@ const App: React.FC = () => {
                   )}
                   {selectedTab === "OSM" && data.osm && data.osm.features && (
                     <div>
-                      <div>
-                        {data.osm.features.map((rel: { type: string; id: number }) => (
-                          <div key={rel.id} className="osm">
-                            <a
-                              href={`https://www.openstreetmap.org/${rel.type}/${rel.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {rel.type} ID: {rel.id}
-                            </a>
+                      <div className="result-header"><span>Feature</span><span>Overlap with this site</span></div>
+                      {data.osm.features.map((rel: { id: string | number; landuse?: string; overlap_percentage?: number }) => {
+                        // Ids look like "w953926953" (w = way, r = relation, n = node); anything else (e.g. "objectid:12") has no OSM page
+                        const m = String(rel.id).match(/^([wrn])(\d+)$/);
+                        const osmType = m ? ({ w: "way", r: "relation", n: "node" } as const)[m[1] as "w" | "r" | "n"] : null;
+                        const label = `${rel.landuse ? titleCase(String(rel.landuse).replace(/_/g, " ")) : "Feature"}${m ? ` (${osmType} ${m[2]})` : ""}`;
+                        return (
+                          <div key={rel.id} className="osm result-row">
+                            {m ? (
+                              <a href={`https://www.openstreetmap.org/${osmType}/${m[2]}`} target="_blank" rel="noopener noreferrer">{label}</a>
+                            ) : (
+                              <span>{label}</span>
+                            )}
+                            <span className="pct">{formatPct(rel.overlap_percentage)}</span>
                           </div>
-                        ))}
-                      </div>
+                        );
+                      })}
+                      {data.osm.source && <div className="data-source">Source: {data.osm.source}</div>}
                     </div>
                   )}
                   {selectedTab === "WDPA" && data.wdpa && data.wdpa.items && (
@@ -1023,20 +1028,32 @@ const App: React.FC = () => {
                       {data.wdpa.source && <div className="data-source">Source: {data.wdpa.source}</div>}
                     </div>
                   )}
-                  {selectedTab === "Mangroves" && data.mangroves && (
-                    <div style={{ padding: "8px" }}>
+                  {selectedTab === "Mangroves" && data.mangroves && (() => {
+                    const m = data.mangroves;
+                    const distance = m.status === "Inside"
+                      ? "Inside mangroves"
+                      : typeof m.distance_meters === "number"
+                        ? m.distance_meters >= 1000 ? `${(m.distance_meters / 1000).toFixed(1)} km away` : `${Math.round(m.distance_meters)} m away`
+                        : "Outside mangroves";
+                    const rows: [string, string][] = [
+                      ["Status", String(m.status)],
+                      ["Distance to mangroves", distance],
+                      ...(typeof m.overlap_percentage === "number" ? [["Overlap with this site", formatPct(m.overlap_percentage)] as [string, string]] : []),
+                      ...(typeof m.overlap_area_ha === "number" ? [["Overlap area", `${m.overlap_area_ha} ha`] as [string, string]] : []),
+                    ];
+                    return (
                       <div>
-                        <strong>Distance to mangroves:</strong>{" "}
-                        {data.mangroves.status === "Inside"
-                          ? "Inside mangroves"
-                          : data.mangroves.distance_meters !== null
-                            ? data.mangroves.distance_meters >= 1000
-                              ? `${(data.mangroves.distance_meters / 1000).toFixed(1)} km away`
-                              : `${Math.round(data.mangroves.distance_meters)} m away`
-                            : "Outside mangroves"}
+                        <div className="result-header"><span>Property</span><span>Value</span></div>
+                        {rows.map(([label, value]) => (
+                          <div key={label} className="result-row">
+                            <span>{label}</span>
+                            <span className="pct">{value}</span>
+                          </div>
+                        ))}
+                        {m.source && <div className="data-source">Source: {m.source}</div>}
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                   {selectedTab === "Sites" && data.sites && data.sites.items && (
                     <div>
                       <div className="result-header"><span>Site</span><span>Overlap with this site</span></div>
