@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EU Stay Calculator</title>
+<style>
+  :root {
+    --bg:#f6f7f9; --card:#fff; --text:#1c2430; --muted:#667085; --line:#e3e7ee;
+    --present:#2f6fed; --present-t:#fff; --ok:#c9f0d3; --ok-line:#2e9e55;
+    --limit:#ffd9a8; --bad:#e5484d; --accent:#2f6fed;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#11151b; --card:#1a2029; --text:#e8ecf2; --muted:#9aa4b2; --line:#2b3340;
+      --ok:#1f4a31; --ok-line:#3fbf6b; --limit:#5a4020; }
+  }
+  * { box-sizing:border-box }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif }
+  header { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:14px 16px; background:var(--card); border-bottom:1px solid var(--line) }
+  h1 { font-size:18px; margin:0 }
+  main { max-width:1100px; margin:0 auto; padding:16px }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:16px }
+  button { font:inherit; padding:7px 14px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--text); cursor:pointer }
+  button.primary { background:var(--accent); border-color:var(--accent); color:#fff }
+  input[type=date] { font:inherit; padding:6px 8px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--text) }
+  .row { display:flex; flex-wrap:wrap; gap:10px; align-items:center }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px }
+  .stat .v { font-size:26px; font-weight:700 }
+  .stat .l { color:var(--muted); font-size:13px }
+  .banner { padding:10px 14px; border-radius:10px; background:var(--limit); margin-bottom:16px }
+  .banner.err { background:#fde0e0 }
+  #login { max-width:420px; margin:12vh auto; text-align:center }
+  .nav { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px }
+  .months { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:16px }
+  .month h3 { margin:0 0 6px; font-size:14px }
+  .grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px }
+  .dow { text-align:center; font-size:11px; color:var(--muted) }
+  .day { aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:12px; border-radius:6px; cursor:pointer; border:1px solid transparent; user-select:none }
+  .day:hover { border-color:var(--accent) }
+  .day.present { background:var(--present); color:var(--present-t) }
+  .day.ok { background:var(--ok) }
+  .day.limit { background:var(--limit); font-weight:700 }
+  .day.bad { background:var(--bad); color:#fff }
+  .day.today { outline:2px solid var(--text); outline-offset:-2px }
+  .day.sel { border:2px dashed var(--accent) }
+  .legend { display:flex; flex-wrap:wrap; gap:14px; font-size:13px; color:var(--muted); margin-top:12px }
+  .legend i { display:inline-block; width:14px; height:14px; border-radius:4px; vertical-align:-2px; margin-right:5px }
+  ul { list-style:none; margin:0; padding:0 }
+  li { display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid var(--line) }
+  .hidden { display:none !important }
+  .muted { color:var(--muted); font-size:13px }
+</style>
+</head>
+<body>
+<div id="login" class="card hidden">
+  <h1>EU Stay Calculator</h1>
+  <p class="muted">Sign in with Google to see and edit your stays.</p>
+  <button id="signin" class="primary">Sign in with Google</button>
+  <p id="loginerr" class="muted"></p>
+</div>
+
+<div id="app" class="hidden">
+<header>
+  <h1>🇪🇺 EU Stay Calculator <span class="muted">· 90 days in any 180</span></h1>
+  <div class="row"><span id="who" class="muted"></span><button id="signout" class="hidden">Sign out</button></div>
+</header>
+<main>
+  <div id="banner"></div>
+
+  <div class="card">
+    <div class="row" style="margin-bottom:12px">
+      <label for="arrive"><b>If we are in the EU from</b></label>
+      <input type="date" id="arrive">
+      <button id="arriveToday">Today</button>
+    </div>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="card">
+    <div class="nav">
+      <button id="prev">← Earlier</button>
+      <b id="range"></b>
+      <button id="next">Later →</button>
+    </div>
+    <div class="months" id="months"></div>
+    <div class="legend">
+      <span><i style="background:var(--present)"></i>Present in EU</span>
+      <span><i style="background:var(--ok)"></i>Can stay</span>
+      <span><i style="background:var(--limit)"></i>Last permitted day</span>
+      <span><i style="background:var(--bad)"></i>Over the limit</span>
+      <span><i style="outline:2px solid var(--text);outline-offset:-2px"></i>Today</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <b>Add a stay</b>
+    <p class="muted" style="margin:4px 0 10px">Click a first and last day on the calendar (or pick dates), then add. Click a single day twice for a one-day stay.</p>
+    <div class="row">
+      <label>From <input type="date" id="from"></label>
+      <label>To <input type="date" id="to"></label>
+      <button id="add" class="primary">Add stay</button>
+      <button id="clear">Clear</button>
+    </div>
+    <h4 style="margin:16px 0 4px">Recorded stays</h4>
+    <ul id="stays"></ul>
+  </div>
+</main>
+</div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
