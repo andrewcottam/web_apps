@@ -114,8 +114,8 @@ $('arriveToday').onclick = () => {
   const t = new Date(todayStr + 'T00:00:00Z'); viewStart = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() - 2, 1));
   render();
 };
-$('prev').onclick = () => { viewStart = new Date(Date.UTC(viewStart.getUTCFullYear(), viewStart.getUTCMonth() - 3, 1)); render(); };
-$('next').onclick = () => { viewStart = new Date(Date.UTC(viewStart.getUTCFullYear(), viewStart.getUTCMonth() + 3, 1)); render(); };
+$('prev').onclick = () => { viewStart = new Date(Date.UTC(viewStart.getUTCFullYear(), viewStart.getUTCMonth() - 1, 1)); render(); };
+$('next').onclick = () => { viewStart = new Date(Date.UTC(viewStart.getUTCFullYear(), viewStart.getUTCMonth() + 1, 1)); render(); };
 
 // ---------- storage + auth ----------
 function showApp() { $('login').classList.add('hidden'); $('app').classList.remove('hidden'); render(); }
