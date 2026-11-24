@@ -1,7 +1,7 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Only the people listed here can read or write the shared stays document.
+    // Only the people listed here can read or write stays (each person only their own).
     // Replace with the Google account emails of everyone who should have access.
     function allowed() {
       return request.auth != null
