@@ -8,7 +8,7 @@ service cloud.firestore {
         && request.auth.token.email_verified == true
         && request.auth.token.email in [
           'a.cottam@gmail.com',
-          'partner@example.com'
+          'lynda.cottam@gmail.com'
         ];
     }
     match /eu-stays/shared {
