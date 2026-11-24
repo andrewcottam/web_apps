@@ -131,7 +131,7 @@ if (LOCAL) {
   ]);
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app), db = getFirestore(app);
-  const ref = doc(db, 'eu-stays', 'shared');
+  const OWNER = 'a.cottam@gmail.com'; // stays recorded before per-user storage live in eu-stays/shared
   $('signin').onclick = async () => {
     $('loginerr').textContent = '';
     try { await signInWithPopup(auth, new GoogleAuthProvider()); }
@@ -143,11 +143,13 @@ if (LOCAL) {
     if (!user) {
       $('app').classList.add('hidden'); $('login').classList.remove('hidden'); $('signout').classList.add('hidden'); return;
     }
+    const ref = doc(db, 'eu-stays', user.uid);
     $('login').classList.remove('hidden'); $('app').classList.add('hidden');
     msg('Signed in as ' + user.email + ' - loading your stays...');
     try {
       const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timed out - has the Firestore database been created?')), 15000));
-      const snap = await Promise.race([getDoc(ref), timeout]);
+      let snap = await Promise.race([getDoc(ref), timeout]);
+      if (!snap.exists() && user.email === OWNER) snap = await Promise.race([getDoc(doc(db, 'eu-stays', 'shared')), timeout]); // one-off migration
       stays = snap.exists() ? (snap.data().stays || []) : [];
     } catch (e) {
       msg('Signed in as ' + user.email + ' but could not load stays: ' + (e.code || '') + ' ' + e.message +
