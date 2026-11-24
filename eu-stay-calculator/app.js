@@ -34,13 +34,22 @@ function render() {
     ? `Arriving on <b>${fmt(arrive)}</b>, the last day we can be in the EU is <b>${fmt(plan.lastDay)}</b> (${span} days). We must leave by then.`
     : `Arriving on <b>${fmt(arrive)}</b> we would already be at the 90-day limit: no days are available.`;
 
+  // does arriving a little later allow a much longer stay? (days drop out of the window in lumps)
+  let later = '';
+  for (let i = 1; i <= 30; i++) {
+    const alt = toIso(toDay(arrive) + i);
+    const p = maxStayFrom(set, alt);
+    if (p.days > plan.days) { later = ` Arriving on <b>${fmt(alt)}</b> instead would allow <b>${p.days} days</b>, until <b>${fmt(p.lastDay)}</b>.`; break; }
+  }
+  $('headline').innerHTML += later;
+
   // stats
   const used = usedInWindow(set, toDay(arrive) - 1);
   const stat = (v, l) => `<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`;
   $('stats').innerHTML =
     stat(used, `days used in the ${WINDOW} days before ${arrive}`) +
-    stat(Math.max(0, LIMIT - used), 'days left at that point') +
-    stat(plan.days, `more days we can stay from ${plan.first}`) +
+    stat(Math.max(0, LIMIT - used), 'days free on the arrival day') +
+    stat(plan.days, `days we can stay in total (includes days that drop out of the 180-day window while we are there)`) +
     stat(plan.days ? plan.lastDay : '—', 'last permitted day');
   $('banner').innerHTML = (LOCAL ? '<div class="banner">Local mode: no Firebase config set, so there is no login and data is saved in this browser only. See the README.</div>' : '') +
     (bad.size ? `<div class="banner err">The recorded stays exceed ${LIMIT} days in a ${WINDOW}-day window (${bad.size} day${bad.size > 1 ? 's' : ''} in red).</div>` : '');
