@@ -12,10 +12,8 @@ service cloud.firestore {
         ];
     }
     // Each person's stays are stored in their own document, keyed by their auth uid.
-    // 'shared' is the legacy document: readable (for one-off migration) but no longer writable.
     match /eu-stays/{uid} {
-      allow read: if allowed() && (request.auth.uid == uid || uid == 'shared');
-      allow write: if allowed() && request.auth.uid == uid;
+      allow read, write: if allowed() && request.auth.uid == uid;
     }
     match /{document=**} {
       allow read, write: if false;

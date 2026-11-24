@@ -131,7 +131,6 @@ if (LOCAL) {
   ]);
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app), db = getFirestore(app);
-  const OWNER = 'a.cottam@gmail.com'; // stays recorded before per-user storage live in eu-stays/shared
   $('signin').onclick = async () => {
     $('loginerr').textContent = '';
     try { await signInWithPopup(auth, new GoogleAuthProvider()); }
@@ -148,14 +147,8 @@ if (LOCAL) {
     msg('Signed in as ' + user.email + ' - loading your stays...');
     try {
       const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timed out - has the Firestore database been created?')), 15000));
-      let snap = await Promise.race([getDoc(ref), timeout]);
-      let migrated = false;
-      if (!snap.exists() && user.email === OWNER) { // one-off migration from the legacy shared document
-        snap = await Promise.race([getDoc(doc(db, 'eu-stays', 'shared')), timeout]);
-        migrated = snap.exists();
-      }
+      const snap = await Promise.race([getDoc(ref), timeout]);
       stays = snap.exists() ? (snap.data().stays || []) : [];
-      if (migrated) await setDoc(ref, { stays, updatedBy: user.email, updatedAt: new Date().toISOString(), migratedFrom: 'shared' });
     } catch (e) {
       msg('Signed in as ' + user.email + ' but could not load stays: ' + (e.code || '') + ' ' + e.message +
         '. Check the Firestore database exists and firestore.rules lists this email.');
