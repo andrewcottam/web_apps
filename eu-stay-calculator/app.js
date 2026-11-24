@@ -26,6 +26,13 @@ function render() {
   const limitDay = plan.days ? planLast : planFirst - 1;
   const today = toDay(todayStr);
 
+  // headline
+  const fmt = iso => new Date(iso + 'T00:00:00Z').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const span = plan.days ? toDay(plan.lastDay) - toDay(plan.first) + 1 : 0;
+  $('headline').innerHTML = plan.days
+    ? `Arriving on <b>${fmt(arrive)}</b>, the last day we can be in the EU is <b>${fmt(plan.lastDay)}</b> (${span} days). We must leave by then.`
+    : `Arriving on <b>${fmt(arrive)}</b> we would already be at the 90-day limit: no days are available.`;
+
   // stats
   const used = usedInWindow(set, toDay(arrive) - 1);
   const stat = (v, l) => `<div class="stat"><div class="v">${v}</div><div class="l">${l}</div></div>`;
@@ -95,8 +102,16 @@ $('stays').addEventListener('click', async e => {
   const i = e.target.dataset?.del; if (i === undefined) return;
   stays.splice(+i, 1); render(); await save();
 });
-$('arrive').onchange = render;
-$('arriveToday').onclick = () => { $('arrive').value = todayStr; render(); };
+$('arrive').onchange = () => {
+  const v = $('arrive').value;
+  if (v) { const t = new Date(v + 'T00:00:00Z'); viewStart = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() - 1, 1)); }
+  render();
+};
+$('arriveToday').onclick = () => {
+  $('arrive').value = todayStr;
+  const t = new Date(todayStr + 'T00:00:00Z'); viewStart = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() - 2, 1));
+  render();
+};
 $('prev').onclick = () => { viewStart = new Date(Date.UTC(viewStart.getUTCFullYear(), viewStart.getUTCMonth() - 3, 1)); render(); };
 $('next').onclick = () => { viewStart = new Date(Date.UTC(viewStart.getUTCFullYear(), viewStart.getUTCMonth() + 3, 1)); render(); };
 
