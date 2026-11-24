@@ -54,6 +54,12 @@ function render() {
   $('banner').innerHTML = (LOCAL ? '<div class="banner">Local mode: no Firebase config set, so there is no login and data is saved in this browser only. See the README.</div>' : '') +
     (bad.size ? `<div class="banner err">The recorded stays exceed ${LIMIT} days in a ${WINDOW}-day window (${bad.size} day${bad.size > 1 ? 's' : ''} in red).</div>` : '');
 
+  // hypothetical stay (planned days + the first day that would break the rule) so tooltips can show the rolling count
+  const blockedDay = limitDay + 1;
+  const withPlan = new Set(set);
+  for (let d = planFirst; d <= planLast; d++) withPlan.add(d);
+  const withBlocked = new Set(withPlan); withBlocked.add(blockedDay);
+
   // calendar
   const frag = [];
   for (let m = 0; m < 6; m++) {
@@ -69,11 +75,14 @@ function render() {
       const cls = ['day'];
       if (set.has(d)) cls.push(bad.has(d) ? 'bad' : 'present');
       else if (d >= planFirst && d <= planLast) cls.push('ok');
+      else if (d === blockedDay && !set.has(d)) cls.push('bad');
       if (d === planLast && !set.has(d) && plan.days) cls.push('limit');
       if (d === today) cls.push('today');
       if (iso === sel.from || iso === sel.to || (sel.from && sel.to && iso > sel.from && iso < sel.to)) cls.push('sel');
-      const u = usedInWindow(set, d);
-      const tip = `${short(iso)}: ${u} of ${LIMIT} days used in the ${WINDOW}-day period ${short(toIso(d - WINDOW + 1))} to ${short(iso)}`;
+      const planned = !set.has(d) && d >= planFirst && d <= planLast;
+      const isBlocked = d === blockedDay && !set.has(d);
+      const u = usedInWindow(isBlocked ? withBlocked : (d >= planFirst && d <= planLast ? withPlan : set), d);
+      const tip = `${short(iso)}${isBlocked ? ' (if we stayed this day)' : planned ? ' (planned stay)' : ''}: ${u} of ${LIMIT} days used in the ${WINDOW}-day period ${short(toIso(d - WINDOW + 1))} to ${short(iso)}`;
       h += `<div class="${cls.join(' ')}" data-d="${iso}" title="${tip}">${dd}</div>`;
     }
     frag.push(h + '</div></div>');
