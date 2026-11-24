@@ -149,8 +149,13 @@ if (LOCAL) {
     try {
       const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timed out - has the Firestore database been created?')), 15000));
       let snap = await Promise.race([getDoc(ref), timeout]);
-      if (!snap.exists() && user.email === OWNER) snap = await Promise.race([getDoc(doc(db, 'eu-stays', 'shared')), timeout]); // one-off migration
+      let migrated = false;
+      if (!snap.exists() && user.email === OWNER) { // one-off migration from the legacy shared document
+        snap = await Promise.race([getDoc(doc(db, 'eu-stays', 'shared')), timeout]);
+        migrated = snap.exists();
+      }
       stays = snap.exists() ? (snap.data().stays || []) : [];
+      if (migrated) await setDoc(ref, { stays, updatedBy: user.email, updatedAt: new Date().toISOString(), migratedFrom: 'shared' });
     } catch (e) {
       msg('Signed in as ' + user.email + ' but could not load stays: ' + (e.code || '') + ' ' + e.message +
         '. Check the Firestore database exists and firestore.rules lists this email.');
