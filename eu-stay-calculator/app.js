@@ -121,22 +121,27 @@ if (LOCAL) {
     catch (e) { $('loginerr').textContent = e.message; }
   };
   $('signout').onclick = () => signOut(auth);
+  const msg = t => { $('loginerr').textContent = t; };
   onAuthStateChanged(auth, async user => {
     if (!user) {
       $('app').classList.add('hidden'); $('login').classList.remove('hidden'); $('signout').classList.add('hidden'); return;
     }
+    $('login').classList.remove('hidden'); $('app').classList.add('hidden');
+    msg('Signed in as ' + user.email + ' - loading your stays...');
     try {
-      const snap = await getDoc(ref);
+      const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timed out - has the Firestore database been created?')), 15000));
+      const snap = await Promise.race([getDoc(ref), timeout]);
       stays = snap.exists() ? (snap.data().stays || []) : [];
     } catch (e) {
-      $('loginerr').textContent = 'Signed in as ' + user.email + ' but access was denied. Is this email in firestore.rules?';
-      await signOut(auth); return;
+      msg('Signed in as ' + user.email + ' but could not load stays: ' + (e.code || '') + ' ' + e.message +
+        '. Check the Firestore database exists and firestore.rules lists this email.');
+      return; // stay signed in so the message remains visible
     }
     save = async () => {
       try { await setDoc(ref, { stays, updatedBy: user.email, updatedAt: new Date().toISOString() }); }
       catch (e) { alert('Could not save: ' + e.message); }
     };
-    $('who').textContent = user.email; $('signout').classList.remove('hidden');
+    msg(''); $('who').textContent = user.email; $('signout').classList.remove('hidden');
     showApp();
   });
 }
