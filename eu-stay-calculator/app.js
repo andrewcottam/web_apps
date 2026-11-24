@@ -16,6 +16,7 @@ $('arrive').value = todayStr;
 { const t = new Date(todayStr + 'T00:00:00Z'); viewStart = new Date(Date.UTC(t.getUTCFullYear(), t.getUTCMonth() - 2, 1)); }
 
 // ---------- rendering ----------
+const short = iso => new Date(iso + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 function render() {
   stays.sort((a, b) => a.start.localeCompare(b.start));
   const set = presenceSet(stays);
@@ -63,7 +64,8 @@ function render() {
       if (d === today) cls.push('today');
       if (iso === sel.from || iso === sel.to || (sel.from && sel.to && iso > sel.from && iso < sel.to)) cls.push('sel');
       const u = usedInWindow(set, d);
-      h += `<div class="${cls.join(' ')}" data-d="${iso}" title="${iso}: ${u}/${LIMIT} days used in the last ${WINDOW}">${dd}</div>`;
+      const tip = `${short(iso)}: ${u} of ${LIMIT} days used in the ${WINDOW}-day period ${short(toIso(d - WINDOW + 1))} to ${short(iso)}`;
+      h += `<div class="${cls.join(' ')}" data-d="${iso}" title="${tip}">${dd}</div>`;
     }
     frag.push(h + '</div></div>');
   }
