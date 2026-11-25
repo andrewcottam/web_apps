@@ -48,7 +48,7 @@ No further configuration is needed — GitHub Pages serves static files directly
 
 - **`public/Andrew_Cottam_CV.pdf`** — the real CV. Keep this filename so the "Download CV" buttons keep working; replace the file whenever the CV is updated.
 - **`public/logos/`** — organisation logos (`restor`, `overstory`, `jrc`, `unep-wcmc`, `jncc`), extracted from the CV PDF. Not currently shown (the Experience timeline is text-only); to show a logo, uncomment the matching `<img>` line in `index.html` (look for `<!-- <img src="public/logos/..." ... /> -->` inside `#experience`).
-- **Headshot (optional)** — a commented-out `<img class="hero__photo">` placeholder sits at the top of the hero section in `index.html`. Add an image to `public/` and uncomment it if you want a photo later.
+- **`public/headshot.jpg`** — the hero photo, also resized into `public/favicon-16.png` / `favicon-32.png` / `favicon-180.png` for the browser tab icon. Replace `headshot.jpg` and regenerate the favicons with `sips` if the photo changes, e.g. `sips -s format png -z 32 32 public/headshot.jpg --out public/favicon-32.png`.
 - **Open Graph preview image (optional)** — for a richer LinkedIn preview, add a 1200×630 image (e.g. `public/og-image.png`) and uncomment the `og:image` meta tag near the top of `index.html`, using the site's full deployed URL.
 
 ## Structure
