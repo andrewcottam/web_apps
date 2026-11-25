@@ -329,10 +329,12 @@ a:hover, a:focus { text-decoration: underline; }
   background: var(--forest);
 }
 .timeline__logo {
-  width: 32px;
-  height: 32px;
+  height: 36px;
+  width: auto;
+  max-width: 160px;
   object-fit: contain;
-  margin-bottom: 8px;
+  object-position: left center;
+  margin-bottom: 10px;
 }
 .timeline__dates {
   font-size: 0.85rem;
