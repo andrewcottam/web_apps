@@ -328,6 +328,26 @@ a:hover, a:focus { text-decoration: underline; }
 }
 .card p:last-child { margin-bottom: 0; }
 
+.card__list {
+  margin: 0;
+  padding-left: 1.2em;
+  font-size: 0.96rem;
+  color: #4a4a4a;
+}
+.card__list li {
+  margin-bottom: 0.6em;
+}
+.card__list li:last-child { margin-bottom: 0; }
+
+.card--work-wide {
+  grid-column: span 2;
+}
+@media (max-width: 640px) {
+  .card--work-wide {
+    grid-column: span 1;
+  }
+}
+
 .card__icon {
   display: inline-flex;
   width: 40px;
